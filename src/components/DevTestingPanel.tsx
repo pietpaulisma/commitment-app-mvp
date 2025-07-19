@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function DevTestingPanel() {
+  console.log('🧪 DevTestingPanel component loaded!')
+  
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const [isOpen, setIsOpen] = useState(false)
@@ -15,8 +17,11 @@ export default function DevTestingPanel() {
 
   // Temporarily show for all logged in users for testing
   if (!user) {
+    console.log('❌ No user, hiding panel')
     return null
   }
+  
+  console.log('✅ Rendering test panel for user:', user?.email)
 
   const switchRole = async (newRole: UserRole) => {
     if (!user) return
