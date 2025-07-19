@@ -236,10 +236,10 @@ export default function MobileWorkoutLogger() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
     )
@@ -247,9 +247,9 @@ export default function MobileWorkoutLogger() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-gray-600">Please log in to track your workouts.</p>
+          <p className="text-gray-400">Please log in to track your workouts.</p>
         </div>
       </div>
     )
@@ -259,10 +259,10 @@ export default function MobileWorkoutLogger() {
   const recoveryExercises = exercises.filter(ex => ex.type === 'recovery').slice(0, 3)
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-950 pb-20">
       {/* Daily Target Progress - Mobile First */}
       {dailyTarget > 0 && (
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4">
           <div className="text-center">
             <h2 className="text-lg font-semibold mb-2">
               {getTotalPoints() >= dailyTarget ? "🎯 Target Complete!" : "Today's Target"}
@@ -290,14 +290,14 @@ export default function MobileWorkoutLogger() {
 
       <div className="p-4 space-y-4">
         {/* Quick Add Buttons */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <h3 className="text-lg font-semibold mb-3">Quick Add</h3>
+        <div className="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
+          <h3 className="text-lg font-semibold mb-3 text-white">Quick Add</h3>
           <div className="grid grid-cols-2 gap-3">
             {popularExercises.map((exercise) => (
               <button
                 key={exercise.id}
                 onClick={() => quickAddExercise(exercise)}
-                className="bg-blue-50 hover:bg-blue-100 text-blue-800 p-3 rounded-lg text-sm font-medium transition-colors border border-blue-200"
+                className="bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 p-3 rounded-lg text-sm font-medium transition-colors border border-blue-700"
               >
                 <div className="font-semibold">{exercise.name}</div>
                 <div className="text-xs opacity-75">{exercise.points_per_unit} pts/{exercise.unit}</div>
@@ -308,14 +308,14 @@ export default function MobileWorkoutLogger() {
           {recoveryExercises.length > 0 && (
             <>
               <div className="mt-4 mb-2">
-                <span className="text-sm font-medium text-gray-600">Recovery Exercises</span>
+                <span className="text-sm font-medium text-gray-400">Recovery Exercises</span>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 {recoveryExercises.map((exercise) => (
                   <button
                     key={exercise.id}
                     onClick={() => quickAddExercise(exercise, 5)}
-                    className="bg-green-50 hover:bg-green-100 text-green-800 p-3 rounded-lg text-sm font-medium transition-colors border border-green-200"
+                    className="bg-green-900/50 hover:bg-green-800/50 text-green-300 p-3 rounded-lg text-sm font-medium transition-colors border border-green-700"
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">{exercise.name}</span>
@@ -329,17 +329,17 @@ export default function MobileWorkoutLogger() {
         </div>
 
         {/* Workout Form */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <h3 className="text-lg font-semibold mb-4">Log Workout</h3>
+        <div className="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
+          <h3 className="text-lg font-semibold mb-4 text-white">Log Workout</h3>
           
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Exercise Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Exercise</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Exercise</label>
               <select 
                 value={selectedExercise?.id || ''} 
                 onChange={(e) => handleExerciseChange(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-700 text-white"
               >
                 <option value="">Select an exercise...</option>
                 <optgroup label="Regular Exercises">
@@ -363,14 +363,14 @@ export default function MobileWorkoutLogger() {
               <>
                 {/* Exercise Info Card */}
                 <div className={`p-3 rounded-lg ${
-                  selectedExercise.type === 'recovery' ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'
+                  selectedExercise.type === 'recovery' ? 'bg-blue-900/30 border border-blue-700' : 'bg-gray-700 border border-gray-600'
                 }`}>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="font-medium">Type: {selectedExercise.type}</span>
-                    <span className="font-bold text-green-600">{selectedExercise.points_per_unit} pts/{selectedExercise.unit}</span>
+                    <span className="font-medium text-gray-200">Type: {selectedExercise.type}</span>
+                    <span className="font-bold text-green-400">{selectedExercise.points_per_unit} pts/{selectedExercise.unit}</span>
                   </div>
                   {selectedExercise.type === 'recovery' && (
-                    <div className="text-xs text-blue-600 mt-1">
+                    <div className="text-xs text-blue-400 mt-1">
                       💡 Recovery exercises help with rest and mobility
                     </div>
                   )}
@@ -378,9 +378,9 @@ export default function MobileWorkoutLogger() {
                 
                 {/* Quantity Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} 
-                    <span className="text-gray-500 ml-1">({selectedExercise.unit})</span>
+                    <span className="text-gray-400 ml-1">({selectedExercise.unit})</span>
                   </label>
                   <input 
                     type="number" 
@@ -388,7 +388,7 @@ export default function MobileWorkoutLogger() {
                     min="0" 
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-700 text-white"
                     placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
                     required
                   />
@@ -397,14 +397,14 @@ export default function MobileWorkoutLogger() {
                 {/* Weight Input */}
                 {selectedExercise.is_weighted && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
                     <input 
                       type="number" 
                       step="any" 
                       min="0" 
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                      className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-700 text-white"
                       placeholder="Enter weight (optional)"
                     />
                   </div>
@@ -412,10 +412,10 @@ export default function MobileWorkoutLogger() {
 
                 {/* Points Preview */}
                 {quantity && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-800">Points for this workout:</span>
-                      <span className="text-2xl font-bold text-green-600">{calculatePoints()}</span>
+                      <span className="font-medium text-green-300">Points for this workout:</span>
+                      <span className="text-2xl font-bold text-green-400">{calculatePoints()}</span>
                     </div>
                   </div>
                 )}
@@ -433,23 +433,23 @@ export default function MobileWorkoutLogger() {
         </div>
 
         {/* Today's Summary */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <h3 className="text-lg font-semibold mb-4">Today's Summary</h3>
+        <div className="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
+          <h3 className="text-lg font-semibold mb-4 text-white">Today's Summary</h3>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{getTotalPoints()}</div>
-              <div className="text-sm text-gray-600">Total Points</div>
+              <div className="text-2xl font-bold text-green-400">{getTotalPoints()}</div>
+              <div className="text-sm text-gray-400">Total Points</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{getRecoveryPercentage()}%</div>
-              <div className="text-sm text-gray-600">Recovery</div>
+              <div className="text-2xl font-bold text-blue-400">{getRecoveryPercentage()}%</div>
+              <div className="text-sm text-gray-400">Recovery</div>
             </div>
           </div>
 
           {/* Recovery Warning */}
           {getRecoveryPercentage() > 25 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-yellow-800 text-center">
+            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4">
+              <p className="text-sm text-yellow-300 text-center">
                 ⚠️ Recovery exercises exceed 25% of your daily total
               </p>
             </div>
@@ -457,27 +457,27 @@ export default function MobileWorkoutLogger() {
 
           {/* Today's Workouts */}
           <div>
-            <h4 className="font-medium mb-3">Today's Workouts ({todaysLogs.length})</h4>
+            <h4 className="font-medium mb-3 text-white">Today's Workouts ({todaysLogs.length})</h4>
             {todaysLogs.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-4">No workouts logged yet today</p>
+              <p className="text-gray-400 text-sm text-center py-4">No workouts logged yet today</p>
             ) : (
               <div className="space-y-2">
                 {todaysLogs.slice(0, 5).map(log => (
-                  <div key={log.id} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                  <div key={log.id} className="flex justify-between items-center py-2 px-3 bg-gray-700 rounded-lg">
                     <div>
-                      <span className="font-medium text-sm">{log.exercises?.name || 'Unknown'}</span>
-                      <div className="text-xs text-gray-500">
+                      <span className="font-medium text-sm text-white">{log.exercises?.name || 'Unknown'}</span>
+                      <div className="text-xs text-gray-400">
                         {log.count || log.duration} {log.exercises?.unit || ''}
                         {log.exercises?.type === 'recovery' && (
-                          <span className="ml-2 bg-blue-100 text-blue-800 px-1 rounded text-xs">Recovery</span>
+                          <span className="ml-2 bg-blue-900/50 text-blue-300 px-1 rounded text-xs">Recovery</span>
                         )}
                       </div>
                     </div>
-                    <span className="font-bold text-green-600 text-sm">{log.points} pts</span>
+                    <span className="font-bold text-green-400 text-sm">{log.points} pts</span>
                   </div>
                 ))}
                 {todaysLogs.length > 5 && (
-                  <div className="text-center text-sm text-gray-500 py-2">
+                  <div className="text-center text-sm text-gray-400 py-2">
                     +{todaysLogs.length - 5} more workouts
                   </div>
                 )}

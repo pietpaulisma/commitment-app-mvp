@@ -22,7 +22,7 @@ type DashboardStats = {
   }>
 }
 
-export default function MobileDashboard() {
+export default function DarkMobileDashboard() {
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
@@ -50,7 +50,6 @@ export default function MobileDashboard() {
       weekAgo.setDate(weekAgo.getDate() - 7)
       const weekAgoString = weekAgo.toISOString().split('T')[0]
 
-      // Get today's points
       const { data: todayLogs } = await supabase
         .from('logs')
         .select('points')
@@ -59,7 +58,6 @@ export default function MobileDashboard() {
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target
       let todayTarget = 0
       if (profile.group_id) {
         const { data: groupSettings } = await supabase
@@ -74,7 +72,6 @@ export default function MobileDashboard() {
         }
       }
 
-      // Get weekly total
       const { data: weeklyLogs } = await supabase
         .from('logs')
         .select('points')
@@ -83,7 +80,6 @@ export default function MobileDashboard() {
 
       const weeklyTotal = weeklyLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get recent workouts
       const { data: recentWorkouts } = await supabase
         .from('logs')
         .select(`
@@ -103,7 +99,6 @@ export default function MobileDashboard() {
         created_at: workout.created_at
       })) || []
 
-      // Get current streak (simplified)
       const { data: checkins } = await supabase
         .from('daily_checkins')
         .select('checkin_date, is_complete')
@@ -122,7 +117,6 @@ export default function MobileDashboard() {
         }
       }
 
-      // Get group rank (simplified)
       let groupRank = 0
       let totalMembers = 0
       if (profile.group_id) {
@@ -133,7 +127,6 @@ export default function MobileDashboard() {
 
         totalMembers = groupMembers?.length || 0
 
-        // Simple rank calculation based on today's points
         const { data: memberPoints } = await supabase
           .from('logs')
           .select('user_id, points')
@@ -170,10 +163,10 @@ export default function MobileDashboard() {
 
   if (authLoading || profileLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="mt-2 text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     )
@@ -254,13 +247,13 @@ export default function MobileDashboard() {
 
         {/* Group Position */}
         {stats.totalMembers > 0 && (
-          <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-700">
             <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900 mb-1">Group Position</div>
-              <div className="text-3xl font-bold text-purple-600 mb-1">
+              <div className="text-lg font-semibold text-white mb-1">Group Position</div>
+              <div className="text-3xl font-bold text-purple-400 mb-1">
                 #{stats.groupRank}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-400">
                 out of {stats.totalMembers} members today
               </div>
             </div>
@@ -268,33 +261,33 @@ export default function MobileDashboard() {
         )}
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h3 className="text-lg font-semibold mb-3">Quick Actions</h3>
+        <div className="bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-700">
+          <h3 className="text-lg font-semibold mb-3 text-white">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <Link 
               href="/workout"
-              className="bg-blue-50 hover:bg-blue-100 text-blue-800 p-4 rounded-lg text-center font-medium transition-colors border border-blue-200"
+              className="bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 p-4 rounded-lg text-center font-medium transition-colors border border-blue-700"
             >
               <div className="text-xl mb-1">💪</div>
               <div>Log Workout</div>
             </Link>
             <Link 
               href="/targets"
-              className="bg-purple-50 hover:bg-purple-100 text-purple-800 p-4 rounded-lg text-center font-medium transition-colors border border-purple-200"
+              className="bg-purple-900/50 hover:bg-purple-800/50 text-purple-300 p-4 rounded-lg text-center font-medium transition-colors border border-purple-700"
             >
               <div className="text-xl mb-1">🎯</div>
               <div>View Targets</div>
             </Link>
             <Link 
               href="/leaderboard"
-              className="bg-yellow-50 hover:bg-yellow-100 text-yellow-800 p-4 rounded-lg text-center font-medium transition-colors border border-yellow-200"
+              className="bg-yellow-900/50 hover:bg-yellow-800/50 text-yellow-300 p-4 rounded-lg text-center font-medium transition-colors border border-yellow-700"
             >
               <div className="text-xl mb-1">🏆</div>
               <div>Leaderboard</div>
             </Link>
             <Link 
               href="/profile"
-              className="bg-green-50 hover:bg-green-100 text-green-800 p-4 rounded-lg text-center font-medium transition-colors border border-green-200"
+              className="bg-green-900/50 hover:bg-green-800/50 text-green-300 p-4 rounded-lg text-center font-medium transition-colors border border-green-700"
             >
               <div className="text-xl mb-1">👤</div>
               <div>Profile</div>
@@ -303,12 +296,12 @@ export default function MobileDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h3 className="text-lg font-semibold mb-3">Recent Workouts</h3>
+        <div className="bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-700">
+          <h3 className="text-lg font-semibold mb-3 text-white">Recent Workouts</h3>
           {stats.recentWorkouts.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-2">🏃‍♂️</div>
-              <p className="text-gray-600 mb-3">No workouts yet</p>
+              <p className="text-gray-400 mb-3">No workouts yet</p>
               <Link 
                 href="/workout"
                 className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg font-medium"
@@ -321,12 +314,12 @@ export default function MobileDashboard() {
               {stats.recentWorkouts.slice(0, 3).map(workout => (
                 <div key={workout.id} className="flex justify-between items-center py-2">
                   <div>
-                    <div className="font-medium text-sm">{workout.exercise_name}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="font-medium text-sm text-white">{workout.exercise_name}</div>
+                    <div className="text-xs text-gray-400">
                       {new Date(workout.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-green-600">
+                  <div className="text-sm font-bold text-green-400">
                     +{workout.points} pts
                   </div>
                 </div>
@@ -335,7 +328,7 @@ export default function MobileDashboard() {
                 <div className="text-center pt-2">
                   <Link 
                     href="/profile"
-                    className="text-blue-600 text-sm font-medium"
+                    className="text-blue-400 text-sm font-medium"
                   >
                     View all workouts →
                   </Link>
@@ -346,7 +339,7 @@ export default function MobileDashboard() {
         </div>
 
         {/* Motivational Message */}
-        <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl p-4 text-center">
+        <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl p-4 text-center">
           {progressPercentage >= 100 ? (
             <>
               <div className="text-xl mb-1">🎉</div>

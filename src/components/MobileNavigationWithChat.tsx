@@ -3,13 +3,15 @@
 import { useProfile } from '@/hooks/useProfile'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { 
   HomeIcon, 
   PlusCircleIcon, 
   TrophyIcon, 
   ChartBarIcon,
   UserIcon,
-  CogIcon
+  CogIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 import {
   HomeIcon as HomeIconSolid,
@@ -17,12 +19,15 @@ import {
   TrophyIcon as TrophyIconSolid,
   ChartBarIcon as ChartBarIconSolid,
   UserIcon as UserIconSolid,
-  CogIcon as CogIconSolid
+  CogIcon as CogIconSolid,
+  ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid
 } from '@heroicons/react/24/solid'
+import GroupChat from '@/components/GroupChat'
 
-export default function MobileNavigation() {
+export default function MobileNavigationWithChat() {
   const { profile, loading, isSupremeAdmin, isGroupAdmin, hasAdminPrivileges } = useProfile()
   const pathname = usePathname()
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   if (loading || !profile) {
     return null
@@ -99,6 +104,16 @@ export default function MobileNavigation() {
         </div>
       </div>
 
+      {/* Floating Chat Button - Only show if user has a group */}
+      {profile.group_id && (
+        <button
+          onClick={() => setIsChatOpen(true)}
+          className="lg:hidden fixed bottom-20 right-4 bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg transition-colors z-40"
+        >
+          <ChatBubbleLeftRightIcon className="w-6 h-6" />
+        </button>
+      )}
+
       {/* Bottom Navigation for Mobile */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 shadow-lg">
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6">
@@ -165,10 +180,20 @@ export default function MobileNavigation() {
                   Targets
                 </Link>
 
+                {profile.group_id && (
+                  <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="text-gray-300 hover:text-white flex items-center space-x-1"
+                  >
+                    <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                    <span>Group Chat</span>
+                  </button>
+                )}
+
                 {isGroupAdmin && !isSupremeAdmin && (
                   <Link 
                     href="/group-admin" 
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-blue-400 hover:text-blue-300 font-medium"
                   >
                     Manage Group
                   </Link>
@@ -177,7 +202,7 @@ export default function MobileNavigation() {
                 {hasAdminPrivileges && (
                   <Link 
                     href="/admin" 
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-blue-400 hover:text-blue-300 font-medium"
                   >
                     Admin Panel
                   </Link>
@@ -187,19 +212,19 @@ export default function MobileNavigation() {
                   <>
                     <Link 
                       href="/admin/exercises" 
-                      className="text-purple-600 hover:text-purple-800 font-medium"
+                      className="text-purple-400 hover:text-purple-300 font-medium"
                     >
                       Manage Exercises
                     </Link>
                     <Link 
                       href="/admin/groups" 
-                      className="text-purple-600 hover:text-purple-800 font-medium"
+                      className="text-purple-400 hover:text-purple-300 font-medium"
                     >
                       Manage Groups
                     </Link>
                     <Link 
                       href="/admin/users" 
-                      className="text-purple-600 hover:text-purple-800 font-medium"
+                      className="text-purple-400 hover:text-purple-300 font-medium"
                     >
                       Manage Users
                     </Link>
@@ -211,9 +236,9 @@ export default function MobileNavigation() {
             <div className="flex items-center space-x-4">
               <Link 
                 href="/profile" 
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm text-gray-300 hover:text-white"
               >
-                <span className="text-gray-600">Signed in as </span>
+                <span className="text-gray-300">Signed in as </span>
                 <span className="font-medium hover:underline">{profile.email}</span>
               </Link>
               
@@ -236,6 +261,12 @@ export default function MobileNavigation() {
 
       {/* Spacer for mobile bottom nav */}
       <div className="lg:hidden h-16"></div>
+
+      {/* Group Chat Modal */}
+      <GroupChat 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+      />
     </>
   )
 }

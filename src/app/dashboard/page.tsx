@@ -1,13 +1,13 @@
 'use client'
 
-import MobileNavigation from '@/components/MobileNavigation'
-import MobileDashboard from '@/components/MobileDashboard'
+import NewMobileNavigation from '@/components/NewMobileNavigation'
+import NewDashboard from '@/components/NewDashboard'
 
 export default function Dashboard() {
   return (
     <>
-      <MobileNavigation />
-      <MobileDashboard />
+      <NewMobileNavigation />
+      <NewDashboard />
     </>
   )
 }
