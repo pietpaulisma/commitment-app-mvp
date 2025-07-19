@@ -57,7 +57,21 @@ export function useProfile() {
   }, [user])
 
   // Check for role preview override (for testing purposes)
-  const roleOverride = typeof window !== 'undefined' ? localStorage.getItem('role-preview-override') as UserRole : null
+  const [roleOverride, setRoleOverride] = useState<UserRole | null>(null)
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const override = localStorage.getItem('role-preview-override') as UserRole
+        if (override && (override === 'user' || override === 'group_admin' || override === 'supreme_admin')) {
+          setRoleOverride(override)
+        }
+      } catch (error) {
+        console.error('Error reading role override from localStorage:', error)
+      }
+    }
+  }, [])
+  
   const effectiveRole = roleOverride || profile?.role
 
   const isSupremeAdmin = effectiveRole === 'supreme_admin'

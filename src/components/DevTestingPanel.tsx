@@ -17,27 +17,37 @@ export default function DevTestingPanel() {
   }
 
   const toggleRolePreview = (newRole: UserRole) => {
-    if (previewRole === newRole) {
-      // If clicking the same role, turn off preview
-      setPreviewRole(null)
-      localStorage.removeItem('role-preview-override')
-    } else {
-      // Set new preview role
-      setPreviewRole(newRole)
-      localStorage.setItem('role-preview-override', newRole)
+    try {
+      if (previewRole === newRole) {
+        // If clicking the same role, turn off preview
+        setPreviewRole(null)
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('role-preview-override')
+        }
+      } else {
+        // Set new preview role
+        setPreviewRole(newRole)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('role-preview-override', newRole)
+        }
+      }
+      
+      // Trigger a page refresh to apply the new role preview
+      window.location.reload()
+    } catch (error) {
+      console.error('Error toggling role preview:', error)
     }
-    
-    // Trigger a page refresh to apply the new role preview
-    window.location.reload()
   }
 
   const currentDisplayRole = previewRole || profile?.role
 
   // Initialize preview role from localStorage on component mount
   useEffect(() => {
-    const savedPreview = localStorage.getItem('role-preview-override') as UserRole
-    if (savedPreview) {
-      setPreviewRole(savedPreview)
+    if (typeof window !== 'undefined') {
+      const savedPreview = localStorage.getItem('role-preview-override') as UserRole
+      if (savedPreview && (savedPreview === 'user' || savedPreview === 'group_admin' || savedPreview === 'supreme_admin')) {
+        setPreviewRole(savedPreview)
+      }
     }
   }, [])
 
