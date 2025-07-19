@@ -27,9 +27,9 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-2">
-              <button className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+              <a href="/workout" className="block w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 text-center">
                 Log Workout
-              </button>
+              </a>
               <button className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700">
                 View Progress
               </button>
