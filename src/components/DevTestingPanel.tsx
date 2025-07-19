@@ -6,25 +6,15 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function DevTestingPanel() {
-  console.log('🧪 DevTestingPanel component loaded!')
-  
-  // Super simple test - just render a visible div
-  return (
-    <div 
-      style={{
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        backgroundColor: 'red',
-        color: 'white',
-        padding: '10px',
-        zIndex: 9999,
-        borderRadius: '5px'
-      }}
-    >
-      🧪 TEST PANEL
-    </div>
-  )
+  const { user } = useAuth()
+  const { profile, loading: profileLoading } = useProfile()
+  const [isOpen, setIsOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  // Only show for supreme admins
+  if (!user || profileLoading || profile?.role !== 'supreme_admin') {
+    return null
+  }
 
   const switchRole = async (newRole: UserRole) => {
     if (!user) return
