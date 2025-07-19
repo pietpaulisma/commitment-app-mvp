@@ -7,12 +7,12 @@ import { useAuth } from '@/contexts/AuthContext'
 
 export default function DevTestingPanel() {
   const { user } = useAuth()
-  const { profile } = useProfile()
+  const { profile, loading: profileLoading } = useProfile()
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // Only show in development or if current user is supreme_admin
-  if (process.env.NODE_ENV === 'production' && profile?.role !== 'supreme_admin') {
+  // Only show for supreme admins
+  if (!user || profileLoading || profile?.role !== 'supreme_admin') {
     return null
   }
 
@@ -107,7 +107,7 @@ export default function DevTestingPanel() {
 
       <div className="mt-3 pt-3 border-t border-gray-200">
         <p className="text-xs text-gray-400">
-          {process.env.NODE_ENV === 'development' ? 'Dev Mode' : 'Admin Testing'}
+          Supreme Admin Testing
         </p>
       </div>
     </div>
