@@ -56,13 +56,20 @@ export function useProfile() {
     loadProfile()
   }, [user])
 
-  const isSupremeAdmin = profile?.role === 'supreme_admin'
-  const isGroupAdmin = profile?.role === 'group_admin' 
-  const isUser = profile?.role === 'user'
+  // Check for role preview override (for testing purposes)
+  const roleOverride = typeof window !== 'undefined' ? localStorage.getItem('role-preview-override') as UserRole : null
+  const effectiveRole = roleOverride || profile?.role
+
+  const isSupremeAdmin = effectiveRole === 'supreme_admin'
+  const isGroupAdmin = effectiveRole === 'group_admin' 
+  const isUser = effectiveRole === 'user'
   const hasAdminPrivileges = isSupremeAdmin || isGroupAdmin
 
+  // Create an effective profile with the override role if applicable
+  const effectiveProfile = profile && roleOverride ? { ...profile, role: roleOverride } : profile
+
   return {
-    profile,
+    profile: effectiveProfile,
     loading,
     error,
     isSupremeAdmin,

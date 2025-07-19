@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useProfile, UserRole } from '@/hooks/useProfile'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -9,34 +9,37 @@ export default function DevTestingPanel() {
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const [isOpen, setIsOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [previewRole, setPreviewRole] = useState<UserRole | null>(null)
 
   // Only show for supreme admins
   if (!user || profileLoading || profile?.role !== 'supreme_admin') {
     return null
   }
 
-  const switchRole = async (newRole: UserRole) => {
-    if (!user) return
-    
-    setLoading(true)
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', user.id)
-
-      if (error) throw error
-      
-      // Refresh the page to reload profile data
-      window.location.reload()
-    } catch (error) {
-      console.error('Error switching role:', error)
-      alert('Failed to switch role: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    } finally {
-      setLoading(false)
+  const toggleRolePreview = (newRole: UserRole) => {
+    if (previewRole === newRole) {
+      // If clicking the same role, turn off preview
+      setPreviewRole(null)
+      localStorage.removeItem('role-preview-override')
+    } else {
+      // Set new preview role
+      setPreviewRole(newRole)
+      localStorage.setItem('role-preview-override', newRole)
     }
+    
+    // Trigger a page refresh to apply the new role preview
+    window.location.reload()
   }
+
+  const currentDisplayRole = previewRole || profile?.role
+
+  // Initialize preview role from localStorage on component mount
+  useEffect(() => {
+    const savedPreview = localStorage.getItem('role-preview-override') as UserRole
+    if (savedPreview) {
+      setPreviewRole(savedPreview)
+    }
+  }, [])
 
   if (!isOpen) {
     return (
@@ -64,50 +67,71 @@ export default function DevTestingPanel() {
       </div>
       
       <div className="mb-3">
-        <p className="text-sm text-gray-600">Current Role:</p>
+        <p className="text-sm text-gray-600">
+          {previewRole ? 'Previewing Role:' : 'Current Role:'}
+          {previewRole && <span className="text-xs text-orange-600 ml-1">(Preview Mode)</span>}
+        </p>
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          profile?.role === 'supreme_admin' 
+          currentDisplayRole === 'supreme_admin' 
             ? 'bg-purple-100 text-purple-800'
-            : profile?.role === 'group_admin' 
+            : currentDisplayRole === 'group_admin' 
             ? 'bg-blue-100 text-blue-800' 
             : 'bg-gray-100 text-gray-800'
         }`}>
-          {profile?.role === 'supreme_admin' ? 'Supreme Admin' : 
-           profile?.role === 'group_admin' ? 'Group Admin' : 'User'}
+          {currentDisplayRole === 'supreme_admin' ? 'Supreme Admin' : 
+           currentDisplayRole === 'group_admin' ? 'Group Admin' : 'User'}
         </span>
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs text-gray-500 mb-2">Switch to:</p>
+        <p className="text-xs text-gray-500 mb-2">Preview as:</p>
         
         <button
-          onClick={() => switchRole('user')}
-          disabled={loading || profile?.role === 'user'}
-          className="w-full text-left px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded"
+          onClick={() => toggleRolePreview('user')}
+          className={`w-full text-left px-3 py-2 text-sm rounded ${
+            previewRole === 'user' 
+              ? 'bg-orange-100 text-orange-800 border border-orange-300' 
+              : 'bg-gray-100 hover:bg-gray-200'
+          }`}
         >
-          👤 Regular User
+          👤 Regular User {previewRole === 'user' && '✓'}
         </button>
         
         <button
-          onClick={() => switchRole('group_admin')}
-          disabled={loading || profile?.role === 'group_admin'}
-          className="w-full text-left px-3 py-2 text-sm bg-blue-100 hover:bg-blue-200 disabled:opacity-50 rounded"
+          onClick={() => toggleRolePreview('group_admin')}
+          className={`w-full text-left px-3 py-2 text-sm rounded ${
+            previewRole === 'group_admin' 
+              ? 'bg-orange-100 text-orange-800 border border-orange-300' 
+              : 'bg-blue-100 hover:bg-blue-200'
+          }`}
         >
-          👥 Group Admin
+          👥 Group Admin {previewRole === 'group_admin' && '✓'}
         </button>
         
         <button
-          onClick={() => switchRole('supreme_admin')}
-          disabled={loading || profile?.role === 'supreme_admin'}
-          className="w-full text-left px-3 py-2 text-sm bg-purple-100 hover:bg-purple-200 disabled:opacity-50 rounded"
+          onClick={() => toggleRolePreview('supreme_admin')}
+          className={`w-full text-left px-3 py-2 text-sm rounded ${
+            previewRole === 'supreme_admin' 
+              ? 'bg-orange-100 text-orange-800 border border-orange-300' 
+              : 'bg-purple-100 hover:bg-purple-200'
+          }`}
         >
-          👑 Supreme Admin
+          👑 Supreme Admin {previewRole === 'supreme_admin' && '✓'}
         </button>
+
+        {previewRole && (
+          <button
+            onClick={() => toggleRolePreview(previewRole)}
+            className="w-full text-center px-3 py-2 text-sm bg-red-100 text-red-800 hover:bg-red-200 rounded"
+          >
+            🔄 Reset to Original Role
+          </button>
+        )}
       </div>
 
       <div className="mt-3 pt-3 border-t border-gray-200">
         <p className="text-xs text-gray-400">
-          Supreme Admin Testing
+          Role Preview Testing - Database role unchanged
         </p>
       </div>
     </div>
