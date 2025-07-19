@@ -41,6 +41,13 @@ export default function RoleBasedNavigation() {
                 Leaderboard
               </Link>
 
+              <Link 
+                href="/targets" 
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Targets
+              </Link>
+
               {isGroupAdmin && !isSupremeAdmin && (
                 <Link 
                   href="/group-admin" 

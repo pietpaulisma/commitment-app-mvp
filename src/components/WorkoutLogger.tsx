@@ -32,6 +32,8 @@ export default function WorkoutLogger() {
   const [weight, setWeight] = useState('')
   const [todaysLogs, setTodaysLogs] = useState<WorkoutLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [dailyTarget, setDailyTarget] = useState(0)
+  const [userProfile, setUserProfile] = useState<any>(null)
 
   useEffect(() => {
     loadData()
@@ -42,6 +44,22 @@ export default function WorkoutLogger() {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+
+      if (user) {
+        // Load user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+        
+        setUserProfile(profile)
+
+        // Load daily target if user has a group
+        if (profile?.group_id) {
+          await loadDailyTarget(user.id, profile)
+        }
+      }
 
       // Load exercises
       const { data: exerciseData } = await supabase
@@ -79,6 +97,76 @@ export default function WorkoutLogger() {
       setTodaysLogs(data || [])
     } catch (error) {
       console.error('Error loading logs:', error)
+    }
+  }
+
+  async function loadDailyTarget(userId: string, profile: any) {
+    try {
+      // Get group settings
+      const { data: groupSettings } = await supabase
+        .from('group_settings')
+        .select('*')
+        .eq('group_id', profile.group_id)
+        .single()
+
+      if (groupSettings) {
+        // Calculate today's target
+        const today = new Date()
+        const daysSinceStart = Math.floor((today.getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+        const target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+        
+        setDailyTarget(target)
+
+        // Check if today's checkin exists, if not create it
+        const todayString = today.toISOString().split('T')[0]
+        const { data: existingCheckin } = await supabase
+          .from('daily_checkins')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('checkin_date', todayString)
+          .single()
+
+        if (!existingCheckin) {
+          // Create today's checkin record
+          await supabase
+            .from('daily_checkins')
+            .insert({
+              user_id: userId,
+              checkin_date: todayString,
+              target_points: target,
+              total_points: 0,
+              recovery_points: 0,
+              is_complete: false,
+              penalty_paid: false,
+              penalty_amount: 0
+            })
+        }
+      }
+    } catch (error) {
+      console.error('Error loading daily target:', error)
+    }
+  }
+
+  async function updateDailyCheckin() {
+    if (!user || !userProfile?.group_id) return
+
+    try {
+      const todayString = new Date().toISOString().split('T')[0]
+      const totalPoints = getTotalPoints()
+      const recoveryPoints = getRecoveryPoints()
+      const isComplete = totalPoints >= dailyTarget
+
+      await supabase
+        .from('daily_checkins')
+        .update({
+          total_points: totalPoints,
+          recovery_points: recoveryPoints,
+          is_complete: isComplete
+        })
+        .eq('user_id', user.id)
+        .eq('checkin_date', todayString)
+    } catch (error) {
+      console.error('Error updating daily checkin:', error)
     }
   }
 
@@ -122,6 +210,7 @@ export default function WorkoutLogger() {
         setWeight('')
         setSelectedExercise(null)
         await loadTodaysLogs(user.id)
+        await updateDailyCheckin()
         alert(`Workout logged! Earned ${points} points.`)
       }
     } catch (error) {
@@ -262,6 +351,56 @@ export default function WorkoutLogger() {
 
         {/* Daily Summary */}
         <div className="space-y-6">
+          {/* Daily Target Progress */}
+          {dailyTarget > 0 && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4">Daily Target Progress</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Target:</span>
+                  <span className="font-bold text-blue-600">{dailyTarget} points</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current:</span>
+                  <span className="font-bold text-green-600">{getTotalPoints()} points</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Remaining:</span>
+                  <span className="font-bold text-orange-600">{Math.max(0, dailyTarget - getTotalPoints())} points</span>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="mt-3">
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Progress</span>
+                    <span>{Math.round((getTotalPoints() / dailyTarget) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className={`h-3 rounded-full transition-all duration-300 ${
+                        getTotalPoints() >= dailyTarget ? 'bg-green-500' : 'bg-blue-500'
+                      }`}
+                      style={{ width: `${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Status Badge */}
+                <div className="mt-3">
+                  {getTotalPoints() >= dailyTarget ? (
+                    <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-center font-medium">
+                      🎯 Daily Target Complete!
+                    </div>
+                  ) : (
+                    <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg text-center font-medium">
+                      💪 Keep Going!
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Today's Stats */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold mb-4">Today's Progress</h3>
