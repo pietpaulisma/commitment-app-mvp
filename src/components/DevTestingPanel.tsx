@@ -13,8 +13,8 @@ export default function DevTestingPanel() {
 
   console.log('DevTestingPanel - user:', !!user, 'profileLoading:', profileLoading, 'profile role:', profile?.role)
 
-  // Only show for supreme admins
-  if (!user || profileLoading || profile?.role !== 'supreme_admin') {
+  // Temporarily show for all logged in users for testing
+  if (!user) {
     return null
   }
 
