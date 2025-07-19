@@ -73,6 +73,12 @@ export default function RoleBasedNavigation() {
                   >
                     Manage Groups
                   </Link>
+                  <Link 
+                    href="/admin/users" 
+                    className="text-purple-600 hover:text-purple-800 font-medium"
+                  >
+                    Manage Users
+                  </Link>
                 </>
               )}
             </div>
