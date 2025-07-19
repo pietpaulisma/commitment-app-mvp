@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Logger - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Sign in to Log Workouts
+                </h2>
+            </div>
+            <form id="loginForm" class="mt-8 space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input id="email" name="email" type="email" required 
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required 
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div id="loginError" class="text-red-600 text-sm hidden"></div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">
+                    <span id="loginText">Sign in</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Workout Logger -->
+    <div id="workoutLogger" class="min-h-screen bg-gray-50 hidden">
+        <!-- Header -->
+        <div class="bg-white shadow">
+            <div class="max-w-4xl mx-auto px-4 py-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Workout Logger</h1>
+                        <p class="text-gray-600">Track your exercises and earn points</p>
+                    </div>
+                    <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Workout Form -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Log New Workout</h3>
+                        
+                        <form id="workoutForm" class="space-y-4">
+                            <!-- Exercise Selection -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Exercise</label>
+                                <select id="exerciseSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Select an exercise...</option>
+                                </select>
+                            </div>
+
+                            <!-- Exercise Details -->
+                            <div id="exerciseDetails" class="hidden space-y-4">
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="font-medium">Type:</span>
+                                        <span id="exerciseType" class="ml-2"></span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Points per unit:</span>
+                                        <span id="exercisePoints" class="ml-2 text-green-600 font-bold"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Recovery Badge -->
+                                <div id="recoveryBadge" class="hidden">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        🧘 Recovery Exercise (Counts toward 25% max)
+                                    </span>
+                                </div>
+
+                                <!-- Quantity Input -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Quantity (<span id="exerciseUnit"></span>)
+                                    </label>
+                                    <input id="quantityInput" type="number" step="any" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                           placeholder="Enter quantity">
+                                </div>
+
+                                <!-- Weight Input (for weighted exercises) -->
+                                <div id="weightInput" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                                    <input id="weight" type="number" step="any" min="0" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                           placeholder="Enter weight (optional)">
+                                </div>
+
+                                <!-- Points Preview -->
+                                <div id="pointsPreview" class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm font-medium text-green-800">Points for this workout:</span>
+                                        <span id="calculatedPoints" class="text-lg font-bold text-green-600">0</span>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" id="submitBtn" 
+                                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Log Workout
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Daily Summary -->
+                <div class="space-y-6">
+                    <!-- Today's Stats -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Today's Progress</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Total Points:</span>
+                                <span id="totalPoints" class="font-bold text-green-600">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Regular Workouts:</span>
+                                <span id="regularPoints" class="font-bold">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Recovery Workouts:</span>
+                                <span id="recoveryPoints" class="font-bold text-blue-600">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Recovery %:</span>
+                                <span id="recoveryPercentage" class="font-bold">0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Recovery Warning -->
+                        <div id="recoveryWarning" class="hidden mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p class="text-sm text-yellow-800">
+                                ⚠️ Recovery exercises can only count for up to 25% of your daily total.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Workouts -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Today's Workouts</h3>
+                        <div id="todaysWorkouts" class="space-y-2">
+                            <p class="text-gray-500 text-sm">No workouts logged yet today</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://cltndnfdtytimrwticej.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsdG5kbmZkdHl0aW1yd3RpY2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2NjI5NjgsImV4cCI6MjA2MzIzODk2OH0.LOuFaGry_HSw5zGEYupq6Q-j4I2rdTZOF3Pv6bMpSiM'
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+        let currentUser = null
+        let exercises = []
+        let todaysLogs = []
+
+        // DOM elements
+        const loginPage = document.getElementById('loginPage')
+        const workoutLogger = document.getElementById('workoutLogger')
+        const loginForm = document.getElementById('loginForm')
+        const exerciseSelect = document.getElementById('exerciseSelect')
+        const workoutForm = document.getElementById('workoutForm')
+
+        // Check authentication
+        checkAuth()
+
+        async function checkAuth() {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                currentUser = user
+                await loadWorkoutLogger()
+            }
+        }
+
+        // Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault()
+            const email = document.getElementById('email').value
+            const password = document.getElementById('password').value
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+                if (error) {
+                    document.getElementById('loginError').textContent = error.message
+                    document.getElementById('loginError').classList.remove('hidden')
+                } else {
+                    currentUser = data.user
+                    await loadWorkoutLogger()
+                }
+            } catch (err) {
+                console.error('Login error:', err)
+            }
+        })
+
+        // Load workout logger
+        async function loadWorkoutLogger() {
+            try {
+                // Load exercises
+                const { data: exerciseData } = await supabase
+                    .from('exercises')
+                    .select('*')
+                    .order('name')
+
+                exercises = exerciseData || []
+                populateExerciseSelect()
+
+                // Load today's logs
+                await loadTodaysLogs()
+
+                // Show workout logger
+                loginPage.classList.add('hidden')
+                workoutLogger.classList.remove('hidden')
+            } catch (error) {
+                console.error('Error loading workout logger:', error)
+            }
+        }
+
+        function populateExerciseSelect() {
+            exerciseSelect.innerHTML = '<option value="">Select an exercise...</option>'
+            
+            // Group by type
+            const regularExercises = exercises.filter(ex => ex.type !== 'recovery')
+            const recoveryExercises = exercises.filter(ex => ex.type === 'recovery')
+
+            if (regularExercises.length > 0) {
+                const regularGroup = document.createElement('optgroup')
+                regularGroup.label = 'Regular Exercises'
+                regularExercises.forEach(exercise => {
+                    const option = document.createElement('option')
+                    option.value = exercise.id
+                    option.textContent = `${exercise.name} (${exercise.points_per_unit} pts/${exercise.unit})`
+                    regularGroup.appendChild(option)
+                })
+                exerciseSelect.appendChild(regularGroup)
+            }
+
+            if (recoveryExercises.length > 0) {
+                const recoveryGroup = document.createElement('optgroup')
+                recoveryGroup.label = 'Recovery Exercises'
+                recoveryExercises.forEach(exercise => {
+                    const option = document.createElement('option')
+                    option.value = exercise.id
+                    option.textContent = `${exercise.name} (${exercise.points_per_unit} pts/${exercise.unit})`
+                    recoveryGroup.appendChild(option)
+                })
+                exerciseSelect.appendChild(recoveryGroup)
+            }
+        }
+
+        // Exercise selection handler
+        exerciseSelect.addEventListener('change', (e) => {
+            const exerciseId = e.target.value
+            if (exerciseId) {
+                const exercise = exercises.find(ex => ex.id === exerciseId)
+                showExerciseDetails(exercise)
+            } else {
+                document.getElementById('exerciseDetails').classList.add('hidden')
+            }
+        })
+
+        function showExerciseDetails(exercise) {
+            document.getElementById('exerciseType').textContent = exercise.type
+            document.getElementById('exercisePoints').textContent = `${exercise.points_per_unit} pts`
+            document.getElementById('exerciseUnit').textContent = exercise.unit
+
+            // Show/hide recovery badge
+            if (exercise.type === 'recovery') {
+                document.getElementById('recoveryBadge').classList.remove('hidden')
+            } else {
+                document.getElementById('recoveryBadge').classList.add('hidden')
+            }
+
+            // Show/hide weight input
+            if (exercise.is_weighted) {
+                document.getElementById('weightInput').classList.remove('hidden')
+            } else {
+                document.getElementById('weightInput').classList.add('hidden')
+            }
+
+            document.getElementById('exerciseDetails').classList.remove('hidden')
+            document.getElementById('quantityInput').focus()
+        }
+
+        // Quantity input handler for real-time points calculation
+        document.getElementById('quantityInput').addEventListener('input', calculatePoints)
+
+        function calculatePoints() {
+            const exerciseId = exerciseSelect.value
+            const quantity = parseFloat(document.getElementById('quantityInput').value) || 0
+            
+            if (exerciseId && quantity > 0) {
+                const exercise = exercises.find(ex => ex.id === exerciseId)
+                const points = Math.round(quantity * parseFloat(exercise.points_per_unit))
+                document.getElementById('calculatedPoints').textContent = points
+                
+                // Check recovery cap
+                if (exercise.type === 'recovery') {
+                    checkRecoveryCap(points)
+                }
+            } else {
+                document.getElementById('calculatedPoints').textContent = '0'
+            }
+        }
+
+        function checkRecoveryCap(newRecoveryPoints) {
+            const currentRecovery = getCurrentRecoveryPoints()
+            const currentRegular = getCurrentRegularPoints()
+            const totalAfterAdd = currentRecovery + newRecoveryPoints + currentRegular
+            const recoveryAfterAdd = currentRecovery + newRecoveryPoints
+            const recoveryPercentage = (recoveryAfterAdd / totalAfterAdd) * 100
+
+            if (recoveryPercentage > 25) {
+                document.getElementById('recoveryWarning').classList.remove('hidden')
+            } else {
+                document.getElementById('recoveryWarning').classList.add('hidden')
+            }
+        }
+
+        // Workout form submission
+        workoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault()
+            
+            const exerciseId = exerciseSelect.value
+            const quantity = parseFloat(document.getElementById('quantityInput').value)
+            const weight = parseFloat(document.getElementById('weight').value) || 0
+            
+            if (!exerciseId || !quantity) return
+
+            const exercise = exercises.find(ex => ex.id === exerciseId)
+            const points = Math.round(quantity * parseFloat(exercise.points_per_unit))
+            
+            try {
+                // Insert log
+                const { error } = await supabase
+                    .from('logs')
+                    .insert({
+                        user_id: currentUser.id,
+                        exercise_id: exerciseId,
+                        count: exercise.unit === 'rep' ? quantity : 0,
+                        weight: weight,
+                        duration: exercise.is_time_based ? quantity : 0,
+                        points: points,
+                        date: new Date().toISOString().split('T')[0],
+                        timestamp: Date.now()
+                    })
+
+                if (error) {
+                    console.error('Error logging workout:', error)
+                    alert('Error logging workout: ' + error.message)
+                } else {
+                    // Reset form
+                    workoutForm.reset()
+                    exerciseSelect.value = ''
+                    document.getElementById('exerciseDetails').classList.add('hidden')
+                    
+                    // Reload today's logs
+                    await loadTodaysLogs()
+                    
+                    alert(`Workout logged! Earned ${points} points.`)
+                }
+            } catch (error) {
+                console.error('Error:', error)
+                alert('An error occurred while logging your workout.')
+            }
+        })
+
+        // Load today's logs
+        async function loadTodaysLogs() {
+            const today = new Date().toISOString().split('T')[0]
+            
+            try {
+                const { data: logs } = await supabase
+                    .from('logs')
+                    .select(`
+                        *,
+                        exercises(name, type, unit)
+                    `)
+                    .eq('user_id', currentUser.id)
+                    .eq('date', today)
+                    .order('created_at', { ascending: false })
+
+                todaysLogs = logs || []
+                updateDailyStats()
+                displayTodaysWorkouts()
+            } catch (error) {
+                console.error('Error loading logs:', error)
+            }
+        }
+
+        function updateDailyStats() {
+            const regularPoints = getCurrentRegularPoints()
+            const recoveryPoints = getCurrentRecoveryPoints()
+            const totalPoints = regularPoints + recoveryPoints
+            const recoveryPercentage = totalPoints > 0 ? Math.round((recoveryPoints / totalPoints) * 100) : 0
+
+            document.getElementById('totalPoints').textContent = totalPoints
+            document.getElementById('regularPoints').textContent = regularPoints
+            document.getElementById('recoveryPoints').textContent = recoveryPoints
+            document.getElementById('recoveryPercentage').textContent = `${recoveryPercentage}%`
+        }
+
+        function getCurrentRegularPoints() {
+            return todaysLogs
+                .filter(log => log.exercises?.type !== 'recovery')
+                .reduce((sum, log) => sum + (log.points || 0), 0)
+        }
+
+        function getCurrentRecoveryPoints() {
+            return todaysLogs
+                .filter(log => log.exercises?.type === 'recovery')
+                .reduce((sum, log) => sum + (log.points || 0), 0)
+        }
+
+        function displayTodaysWorkouts() {
+            const container = document.getElementById('todaysWorkouts')
+            
+            if (todaysLogs.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm">No workouts logged yet today</p>'
+                return
+            }
+
+            container.innerHTML = todaysLogs.map(log => `
+                <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                    <div>
+                        <span class="font-medium">${log.exercises?.name || 'Unknown'}</span>
+                        <span class="text-sm text-gray-500 ml-2">
+                            ${log.count || log.duration || 0} ${log.exercises?.unit || ''}
+                        </span>
+                        ${log.exercises?.type === 'recovery' ? '<span class="text-xs bg-blue-100 text-blue-800 px-1 rounded ml-1">Recovery</span>' : ''}
+                    </div>
+                    <span class="font-bold text-green-600">${log.points} pts</span>
+                </div>
+            `).join('')
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut()
+            workoutLogger.classList.add('hidden')
+            loginPage.classList.remove('hidden')
+        })
+    </script>
+</body>
+</html>

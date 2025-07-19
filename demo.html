@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commitment App - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Sign in to Commitment App
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600">
+                    Demo version - shows what we've built so far
+                </p>
+            </div>
+            <form id="loginForm" class="mt-8 space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input id="email" name="email" type="email" required 
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Enter your email">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required 
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Enter your password">
+                </div>
+                <div id="loginError" class="text-red-600 text-sm hidden"></div>
+                <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <span id="loginText">Sign in</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="min-h-screen bg-gray-50 hidden">
+        <div class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Commitment App</h1>
+                        <p class="text-gray-600">Welcome back, <span id="userEmail"></span></p>
+                        <p class="text-sm text-gray-500">Role: <span id="userRole"></span></p>
+                    </div>
+                    <button id="logoutBtn" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Profile Card -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Your Profile</h3>
+                    <p class="text-gray-600">Email: <span id="profileEmail"></span></p>
+                    <p class="text-gray-600">Role: <span id="profileRole"></span></p>
+                    <p class="text-gray-600">Group: <span id="profileGroup">Not assigned</span></p>
+                    <p class="text-gray-600">Location: <span id="profileLocation">Not set</span></p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Quick Stats</h3>
+                    <p class="text-gray-600">Total Points: <span class="font-bold text-green-600">0</span></p>
+                    <p class="text-gray-600">Current Streak: <span class="font-bold text-blue-600">0 days</span></p>
+                    <p class="text-gray-600">Weekly Goal: <span class="font-bold text-purple-600">100 pts</span></p>
+                    <div class="mt-3">
+                        <div class="bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full w-0"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">0% of weekly goal</p>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Quick Actions</h3>
+                    <div class="space-y-2">
+                        <button class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700" onclick="showWorkoutModal()">
+                            📝 Log Workout
+                        </button>
+                        <button class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700" onclick="showGroupModal()">
+                            👥 View Group
+                        </button>
+                        <button class="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700" onclick="showStatsModal()">
+                            📊 View Stats
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-lg shadow p-6 md:col-span-2 lg:col-span-3">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <span class="text-green-600 text-sm">💪</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">No workouts logged yet</p>
+                                <p class="text-xs text-gray-500">Start logging your workouts to see activity here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Modal -->
+    <div id="workoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-lg font-semibold mb-4">Log Workout</h3>
+            <p class="text-gray-600 mb-4">This feature will allow you to:</p>
+            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-4">
+                <li>Select from approved exercises</li>
+                <li>Enter workout quantity</li>
+                <li>Calculate points automatically</li>
+                <li>Track recovery workouts (25% cap)</li>
+            </ul>
+            <button onclick="closeModal('workoutModal')" class="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Group Modal -->
+    <div id="groupModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-lg font-semibold mb-4">Group Features</h3>
+            <p class="text-gray-600 mb-4">Group functionality includes:</p>
+            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-4">
+                <li>Group leaderboard</li>
+                <li>Daily targets that increase over time</li>
+                <li>Group chat</li>
+                <li>Member progress tracking</li>
+                <li>Penalty system</li>
+            </ul>
+            <button onclick="closeModal('groupModal')" class="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="statsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-lg font-semibold mb-4">Statistics</h3>
+            <p class="text-gray-600 mb-4">Stats features will show:</p>
+            <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-4">
+                <li>Personal streaks and totals</li>
+                <li>Recovery vs regular workout breakdown</li>
+                <li>Daily target progression</li>
+                <li>Group rankings</li>
+                <li>Achievement badges</li>
+            </ul>
+            <button onclick="closeModal('statsModal')" class="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://cltndnfdtytimrwticej.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsdG5kbmZkdHl0aW1yd3RpY2VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2NjI5NjgsImV4cCI6MjA2MzIzODk2OH0.LOuFaGry_HSw5zGEYupq6Q-j4I2rdTZOF3Pv6bMpSiM'
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+
+        // DOM elements
+        const loginPage = document.getElementById('loginPage')
+        const dashboardPage = document.getElementById('dashboardPage')
+        const loginForm = document.getElementById('loginForm')
+        const loginError = document.getElementById('loginError')
+        const loginText = document.getElementById('loginText')
+
+        // Check if user is already logged in
+        checkAuth()
+
+        async function checkAuth() {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                await showDashboard(user)
+            }
+        }
+
+        // Login form handler
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault()
+            loginText.textContent = 'Signing in...'
+            loginError.classList.add('hidden')
+
+            const email = document.getElementById('email').value
+            const password = document.getElementById('password').value
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                })
+
+                if (error) {
+                    loginError.textContent = error.message
+                    loginError.classList.remove('hidden')
+                } else {
+                    await showDashboard(data.user)
+                }
+            } catch (err) {
+                loginError.textContent = 'An unexpected error occurred'
+                loginError.classList.remove('hidden')
+            } finally {
+                loginText.textContent = 'Sign in'
+            }
+        })
+
+        async function showDashboard(user) {
+            try {
+                // Get user profile
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single()
+
+                // Update UI
+                document.getElementById('userEmail').textContent = user.email
+                document.getElementById('userRole').textContent = profile?.role || 'user'
+                document.getElementById('profileEmail').textContent = user.email
+                document.getElementById('profileRole').textContent = profile?.role || 'user'
+                
+                if (profile?.group_id) {
+                    document.getElementById('profileGroup').textContent = profile.group_id
+                }
+                
+                if (profile?.location) {
+                    document.getElementById('profileLocation').textContent = profile.location
+                }
+
+                // Show dashboard
+                loginPage.classList.add('hidden')
+                dashboardPage.classList.remove('hidden')
+            } catch (error) {
+                console.error('Error loading profile:', error)
+                // Show dashboard anyway with basic info
+                document.getElementById('userEmail').textContent = user.email
+                document.getElementById('profileEmail').textContent = user.email
+                loginPage.classList.add('hidden')
+                dashboardPage.classList.remove('hidden')
+            }
+        }
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut()
+            dashboardPage.classList.add('hidden')
+            loginPage.classList.remove('hidden')
+        })
+
+        // Modal functions
+        function showWorkoutModal() {
+            document.getElementById('workoutModal').classList.remove('hidden')
+        }
+
+        function showGroupModal() {
+            document.getElementById('groupModal').classList.remove('hidden')
+        }
+
+        function showStatsModal() {
+            document.getElementById('statsModal').classList.remove('hidden')
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden')
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('bg-opacity-50')) {
+                e.target.classList.add('hidden')
+            }
+        })
+    </script>
+</body>
+</html>
