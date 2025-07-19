@@ -34,6 +34,22 @@ export default function RoleBasedNavigation() {
                 Log Workout
               </Link>
 
+              <Link 
+                href="/leaderboard" 
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Leaderboard
+              </Link>
+
+              {isGroupAdmin && !isSupremeAdmin && (
+                <Link 
+                  href="/group-admin" 
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Manage Group
+                </Link>
+              )}
+
               {hasAdminPrivileges && (
                 <Link 
                   href="/admin" 
@@ -63,10 +79,13 @@ export default function RoleBasedNavigation() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="text-sm">
+            <Link 
+              href="/profile" 
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
               <span className="text-gray-600">Signed in as </span>
-              <span className="font-medium">{profile.email}</span>
-            </div>
+              <span className="font-medium hover:underline">{profile.email}</span>
+            </Link>
             
             <div className="flex items-center">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
