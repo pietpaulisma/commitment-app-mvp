@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 type Exercise = {
   id: string
@@ -12,23 +13,77 @@ type Exercise = {
   is_time_based: boolean
 }
 
-// Mock data for now - will connect to Supabase later
-const mockExercises: Exercise[] = [
-  { id: 'squats', name: 'Squats', type: 'squat', unit: 'rep', points_per_unit: 1, is_weighted: true, is_time_based: false },
-  { id: 'pullups', name: 'Pull-ups', type: 'pullup', unit: 'rep', points_per_unit: 4, is_weighted: true, is_time_based: false },
-  { id: 'burpees', name: 'Burpees', type: 'burpee', unit: 'rep', points_per_unit: 3, is_weighted: false, is_time_based: false },
-  { id: 'plank', name: 'Plank', type: 'plank', unit: 'minute', points_per_unit: 25, is_weighted: false, is_time_based: true },
-  { id: 'yoga', name: 'Yoga', type: 'recovery', unit: 'minute', points_per_unit: 10, is_weighted: false, is_time_based: true },
-]
+type WorkoutLog = {
+  id: string
+  exercise_id: string
+  count: number
+  weight: number
+  duration: number
+  points: number
+  date: string
+  exercises?: Exercise
+}
 
 export default function WorkoutLogger() {
+  const [user, setUser] = useState<any>(null)
+  const [exercises, setExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
   const [quantity, setQuantity] = useState('')
   const [weight, setWeight] = useState('')
-  const [todaysLogs, setTodaysLogs] = useState<any[]>([])
+  const [todaysLogs, setTodaysLogs] = useState<WorkoutLog[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  async function loadData() {
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+
+      // Load exercises
+      const { data: exerciseData } = await supabase
+        .from('exercises')
+        .select('*')
+        .order('name')
+      
+      setExercises(exerciseData || [])
+
+      // Load today's logs if user is logged in
+      if (user) {
+        await loadTodaysLogs(user.id)
+      }
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadTodaysLogs(userId: string) {
+    const today = new Date().toISOString().split('T')[0]
+    
+    try {
+      const { data } = await supabase
+        .from('logs')
+        .select(`
+          *,
+          exercises(name, type, unit)
+        `)
+        .eq('user_id', userId)
+        .eq('date', today)
+        .order('created_at', { ascending: false })
+
+      setTodaysLogs(data || [])
+    } catch (error) {
+      console.error('Error loading logs:', error)
+    }
+  }
 
   const handleExerciseChange = (exerciseId: string) => {
-    const exercise = mockExercises.find(ex => ex.id === exerciseId)
+    const exercise = exercises.find(ex => ex.id === exerciseId)
     setSelectedExercise(exercise || null)
     setQuantity('')
     setWeight('')
@@ -41,26 +96,38 @@ export default function WorkoutLogger() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedExercise || !quantity) return
+    if (!selectedExercise || !quantity || !user) return
 
     const points = calculatePoints()
-    
-    // Mock log entry
-    const newLog = {
-      id: Date.now().toString(),
-      exercise: selectedExercise,
-      quantity: parseFloat(quantity),
-      weight: parseFloat(weight) || 0,
-      points: points,
-      timestamp: new Date()
-    }
+    const weightValue = parseFloat(weight) || 0
 
-    setTodaysLogs(prev => [newLog, ...prev])
-    setQuantity('')
-    setWeight('')
-    setSelectedExercise(null)
-    
-    alert(`Workout logged! Earned ${points} points.`)
+    try {
+      const { error } = await supabase
+        .from('logs')
+        .insert({
+          user_id: user.id,
+          exercise_id: selectedExercise.id,
+          count: selectedExercise.unit === 'rep' ? parseFloat(quantity) : 0,
+          weight: weightValue,
+          duration: selectedExercise.is_time_based ? parseFloat(quantity) : 0,
+          points: points,
+          date: new Date().toISOString().split('T')[0],
+          timestamp: Date.now()
+        })
+
+      if (error) {
+        alert('Error logging workout: ' + error.message)
+      } else {
+        setQuantity('')
+        setWeight('')
+        setSelectedExercise(null)
+        await loadTodaysLogs(user.id)
+        alert(`Workout logged! Earned ${points} points.`)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('An error occurred while logging your workout.')
+    }
   }
 
   const getTotalPoints = () => {
@@ -69,7 +136,7 @@ export default function WorkoutLogger() {
 
   const getRecoveryPoints = () => {
     return todaysLogs
-      .filter(log => log.exercise?.type === 'recovery')
+      .filter(log => log.exercises?.type === 'recovery')
       .reduce((sum, log) => sum + (log.points || 0), 0)
   }
 
@@ -98,14 +165,14 @@ export default function WorkoutLogger() {
                 >
                   <option value="">Select an exercise...</option>
                   <optgroup label="Regular Exercises">
-                    {mockExercises.filter(ex => ex.type !== 'recovery').map(exercise => (
+                    {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
                       <option key={exercise.id} value={exercise.id}>
                         {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
                       </option>
                     ))}
                   </optgroup>
                   <optgroup label="Recovery Exercises">
-                    {mockExercises.filter(ex => ex.type === 'recovery').map(exercise => (
+                    {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
                       <option key={exercise.id} value={exercise.id}>
                         {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
                       </option>
@@ -237,11 +304,11 @@ export default function WorkoutLogger() {
                 todaysLogs.map(log => (
                   <div key={log.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                     <div>
-                      <span className="font-medium">{log.exercise?.name || 'Unknown'}</span>
+                      <span className="font-medium">{log.exercises?.name || 'Unknown'}</span>
                       <span className="text-sm text-gray-500 ml-2">
-                        {log.quantity} {log.exercise?.unit || ''}
+                        {log.count || log.duration} {log.exercises?.unit || ''}
                       </span>
-                      {log.exercise?.type === 'recovery' && (
+                      {log.exercises?.type === 'recovery' && (
                         <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded ml-1">Recovery</span>
                       )}
                     </div>
