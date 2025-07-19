@@ -11,6 +11,8 @@ export default function DevTestingPanel() {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  console.log('DevTestingPanel - user:', !!user, 'profileLoading:', profileLoading, 'profile role:', profile?.role)
+
   // Only show for supreme admins
   if (!user || profileLoading || profile?.role !== 'supreme_admin') {
     return null
