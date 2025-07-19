@@ -1,13 +1,13 @@
 'use client'
 
-import NewMobileNavigation from '@/components/NewMobileNavigation'
-import NewDashboard from '@/components/NewDashboard'
+import RectangularNavigation from '@/components/RectangularNavigation'
+import RectangularDashboard from '@/components/RectangularDashboard'
 
 export default function Dashboard() {
   return (
     <>
-      <NewMobileNavigation />
-      <NewDashboard />
+      <RectangularNavigation />
+      <RectangularDashboard />
     </>
   )
 }

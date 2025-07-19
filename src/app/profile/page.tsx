@@ -1,12 +1,12 @@
 'use client'
 
-import NewMobileNavigation from '@/components/NewMobileNavigation'
+import RectangularNavigation from '@/components/RectangularNavigation'
 import NewMobileProfile from '@/components/NewMobileProfile'
 
 export default function ProfilePage() {
   return (
     <>
-      <NewMobileNavigation />
+      <RectangularNavigation />
       <NewMobileProfile />
     </>
   )
