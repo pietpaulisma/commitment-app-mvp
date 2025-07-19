@@ -56,23 +56,20 @@ export function useProfile() {
     loadProfile()
   }, [user])
 
-  // Check for role preview override (for testing purposes)
+  // Check for role preview override (for testing purposes) - only client-side
   const [roleOverride, setRoleOverride] = useState<UserRole | null>(null)
+  const [mounted, setMounted] = useState(false)
   
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const override = localStorage.getItem('role-preview-override') as UserRole
-        if (override && (override === 'user' || override === 'group_admin' || override === 'supreme_admin')) {
-          setRoleOverride(override)
-        }
-      } catch (error) {
-        console.error('Error reading role override from localStorage:', error)
-      }
+    setMounted(true)
+    const override = localStorage.getItem('role-preview-override') as UserRole
+    if (override && (override === 'user' || override === 'group_admin' || override === 'supreme_admin')) {
+      setRoleOverride(override)
     }
   }, [])
   
-  const effectiveRole = roleOverride || profile?.role
+  // Use original role until mounted to avoid SSR issues
+  const effectiveRole = mounted ? (roleOverride || profile?.role) : profile?.role
 
   const isSupremeAdmin = effectiveRole === 'supreme_admin'
   const isGroupAdmin = effectiveRole === 'group_admin' 
@@ -80,7 +77,7 @@ export function useProfile() {
   const hasAdminPrivileges = isSupremeAdmin || isGroupAdmin
 
   // Create an effective profile with the override role if applicable
-  const effectiveProfile = profile && roleOverride ? { ...profile, role: roleOverride } : profile
+  const effectiveProfile = profile && mounted && roleOverride ? { ...profile, role: roleOverride } : profile
 
   return {
     profile: effectiveProfile,

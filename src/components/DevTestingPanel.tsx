@@ -10,6 +10,7 @@ export default function DevTestingPanel() {
   const { profile, loading: profileLoading } = useProfile()
   const [isOpen, setIsOpen] = useState(false)
   const [previewRole, setPreviewRole] = useState<UserRole | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   // Only show for supreme admins
   if (!user || profileLoading || profile?.role !== 'supreme_admin') {
@@ -17,39 +18,35 @@ export default function DevTestingPanel() {
   }
 
   const toggleRolePreview = (newRole: UserRole) => {
-    try {
-      if (previewRole === newRole) {
-        // If clicking the same role, turn off preview
-        setPreviewRole(null)
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('role-preview-override')
-        }
-      } else {
-        // Set new preview role
-        setPreviewRole(newRole)
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('role-preview-override', newRole)
-        }
-      }
-      
-      // Trigger a page refresh to apply the new role preview
-      window.location.reload()
-    } catch (error) {
-      console.error('Error toggling role preview:', error)
+    if (previewRole === newRole) {
+      // If clicking the same role, turn off preview
+      setPreviewRole(null)
+      localStorage.removeItem('role-preview-override')
+    } else {
+      // Set new preview role
+      setPreviewRole(newRole)
+      localStorage.setItem('role-preview-override', newRole)
     }
+    
+    // Trigger a page refresh to apply the new role preview
+    window.location.reload()
   }
 
   const currentDisplayRole = previewRole || profile?.role
 
-  // Initialize preview role from localStorage on component mount
+  // Initialize after mount to avoid SSR issues
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedPreview = localStorage.getItem('role-preview-override') as UserRole
-      if (savedPreview && (savedPreview === 'user' || savedPreview === 'group_admin' || savedPreview === 'supreme_admin')) {
-        setPreviewRole(savedPreview)
-      }
+    setMounted(true)
+    const savedPreview = localStorage.getItem('role-preview-override') as UserRole
+    if (savedPreview && (savedPreview === 'user' || savedPreview === 'group_admin' || savedPreview === 'supreme_admin')) {
+      setPreviewRole(savedPreview)
     }
   }, [])
+
+  // Don't render until mounted to avoid SSR issues
+  if (!mounted) {
+    return null
+  }
 
   if (!isOpen) {
     return (
