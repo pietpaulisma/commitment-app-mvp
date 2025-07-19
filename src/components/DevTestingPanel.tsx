@@ -8,20 +8,23 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function DevTestingPanel() {
   console.log('🧪 DevTestingPanel component loaded!')
   
-  const { user } = useAuth()
-  const { profile, loading: profileLoading } = useProfile()
-  const [isOpen, setIsOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-
-  console.log('DevTestingPanel - user:', !!user, 'profileLoading:', profileLoading, 'profile role:', profile?.role)
-
-  // Temporarily show for all logged in users for testing
-  if (!user) {
-    console.log('❌ No user, hiding panel')
-    return null
-  }
-  
-  console.log('✅ Rendering test panel for user:', user?.email)
+  // Super simple test - just render a visible div
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        backgroundColor: 'red',
+        color: 'white',
+        padding: '10px',
+        zIndex: 9999,
+        borderRadius: '5px'
+      }}
+    >
+      🧪 TEST PANEL
+    </div>
+  )
 
   const switchRole = async (newRole: UserRole) => {
     if (!user) return
