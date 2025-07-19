@@ -139,12 +139,16 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
           message: newMessage.trim()
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('Chat error:', error)
+        alert(`Failed to send message: ${error.message}. Check console for details.`)
+        return
+      }
 
       setNewMessage('')
     } catch (error) {
       console.error('Error sending message:', error)
-      alert('Failed to send message. Please try again.')
+      alert('Failed to send message. Please check console for details.')
     } finally {
       setSending(false)
     }
