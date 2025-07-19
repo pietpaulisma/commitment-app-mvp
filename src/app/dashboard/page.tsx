@@ -1,20 +1,23 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 
 export default function Dashboard() {
-  const { user, loading, signOut } = useAuth()
+  const { user, loading: authLoading, signOut } = useAuth()
+  const { profile, loading: profileLoading, isSupremeAdmin, isGroupAdmin, hasAdminPrivileges } = useProfile()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push('/login')
     }
-  }, [user, loading, router])
+  }, [user, authLoading, router])
 
-  if (loading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -25,28 +28,27 @@ export default function Dashboard() {
     )
   }
 
-  if (!user) {
+  if (!user || !profile) {
     return null
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user.email}</p>
-            </div>
-            <button
-              onClick={signOut}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-            >
-              Sign Out
-            </button>
+      <RoleBasedNavigation />
+      
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {profile.email}</p>
           </div>
+          <button
+            onClick={signOut}
+            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+          >
+            Sign Out
+          </button>
         </div>
-      </div>
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -73,6 +75,11 @@ export default function Dashboard() {
               <button className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700">
                 View Progress
               </button>
+              {hasAdminPrivileges && (
+                <a href="/admin" className="block w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 text-center">
+                  Admin Panel
+                </a>
+              )}
             </div>
           </div>
           
