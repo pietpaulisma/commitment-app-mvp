@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export default function SupremeAdminDashboard() {
-  const [exercises, setExercises] = useState([])
-  const [groups, setGroups] = useState([])
-  const [users, setUsers] = useState([])
+  const [exercises, setExercises] = useState<any[]>([])
+  const [groups, setGroups] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -62,12 +62,12 @@ export default function SupremeAdminDashboard() {
             + Add New Exercise
           </button>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {exercises.slice(0, 6).map((exercise: any) => (
-              <div key={exercise.id} className="border rounded-lg p-3">
-                <h4 className="font-medium">{exercise.name}</h4>
-                <p className="text-sm text-gray-600">Type: {exercise.type}</p>
-                <p className="text-sm text-gray-600">Unit: {exercise.unit}</p>
-                <p className="text-sm text-gray-600">Points: {exercise.points_per_unit}</p>
+            {exercises.slice(0, 6).map((exercise: unknown) => (
+              <div key={(exercise as any).id} className="border rounded-lg p-3">
+                <h4 className="font-medium">{(exercise as any).name}</h4>
+                <p className="text-sm text-gray-600">Type: {(exercise as any).type}</p>
+                <p className="text-sm text-gray-600">Unit: {(exercise as any).unit}</p>
+                <p className="text-sm text-gray-600">Points: {(exercise as any).points_per_unit}</p>
               </div>
             ))}
           </div>
@@ -83,11 +83,11 @@ export default function SupremeAdminDashboard() {
         <div className="space-y-2">
           <p className="text-sm text-gray-600">Total Groups: {groups.length}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {groups.slice(0, 4).map((group: any) => (
-              <div key={group.id} className="border rounded-lg p-3">
-                <h4 className="font-medium">{group.name}</h4>
-                <p className="text-sm text-gray-600">Admin: {group.admin_id}</p>
-                <p className="text-sm text-gray-600">Start: {group.start_date}</p>
+            {groups.slice(0, 4).map((group: unknown) => (
+              <div key={(group as any).id} className="border rounded-lg p-3">
+                <h4 className="font-medium">{(group as any).name}</h4>
+                <p className="text-sm text-gray-600">Admin: {(group as any).admin_id}</p>
+                <p className="text-sm text-gray-600">Start: {(group as any).start_date}</p>
                 <button className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded mt-2">
                   Manage
                 </button>
@@ -103,11 +103,11 @@ export default function SupremeAdminDashboard() {
         <div className="space-y-2">
           <p className="text-sm text-gray-600">Total Users: {users.length}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {users.slice(0, 4).map((user: any) => (
-              <div key={user.id} className="border rounded-lg p-3">
-                <h4 className="font-medium">{user.email}</h4>
-                <p className="text-sm text-gray-600">Role: {user.role}</p>
-                <p className="text-sm text-gray-600">Location: {user.location || 'Not set'}</p>
+            {users.slice(0, 4).map((user: unknown) => (
+              <div key={(user as any).id} className="border rounded-lg p-3">
+                <h4 className="font-medium">{(user as any).email}</h4>
+                <p className="text-sm text-gray-600">Role: {(user as any).role}</p>
+                <p className="text-sm text-gray-600">Location: {(user as any).location || 'Not set'}</p>
                 <button className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mt-2">
                   Edit
                 </button>

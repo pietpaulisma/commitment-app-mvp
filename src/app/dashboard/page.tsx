@@ -55,7 +55,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Commitment App</h1>
-              <p className="text-gray-600">Welcome back, {user?.email}</p>
+              <p className="text-gray-600">Welcome back, {(user as any)?.email}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -71,10 +71,10 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Your Profile</h3>
-            <p className="text-gray-600">Role: {profile?.role || 'Loading...'}</p>
-            <p className="text-gray-600">Email: {profile?.email || 'Loading...'}</p>
-            {profile?.group_id && (
-              <p className="text-gray-600">Group ID: {profile.group_id}</p>
+            <p className="text-gray-600">Role: {(profile as any)?.role || 'Loading...'}</p>
+            <p className="text-gray-600">Email: {(profile as any)?.email || 'Loading...'}</p>
+            {(profile as any)?.group_id && (
+              <p className="text-gray-600">Group ID: {(profile as any).group_id}</p>
             )}
           </div>
 
