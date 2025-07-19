@@ -90,15 +90,6 @@ export default function WorkoutPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-semibold text-blue-900 mb-2">Interactive Version Available</h4>
-          <p className="text-blue-800 text-sm">
-            This is a static preview. For the full interactive workout logger with real Supabase integration, 
-            open the demo file: <code className="bg-blue-100 px-1 rounded">workout-logger-demo.html</code>
-          </p>
-        </div>
-      </div>
     </div>
   )
 }

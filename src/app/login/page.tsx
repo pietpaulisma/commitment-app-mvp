@@ -32,13 +32,10 @@ export default function Login() {
               Sign In
             </button>
           </form>
-          <div className="mt-4 text-center space-y-2">
-            <a href="/dashboard" className="block text-blue-600 hover:text-blue-800 text-sm">
-              Skip to Dashboard (Demo)
+          <div className="mt-4 text-center">
+            <a href="/dashboard" className="text-blue-600 hover:text-blue-800 text-sm">
+              Skip to Dashboard
             </a>
-            <p className="text-xs text-gray-500">
-              For working login, use: <code className="bg-gray-100 px-1 rounded">demo.html</code>
-            </p>
           </div>
         </div>
       </div>
