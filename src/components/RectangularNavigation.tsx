@@ -128,6 +128,26 @@ export default function RectangularNavigation() {
         </div>
       </div>
 
+      {/* Mobile Navigation Header */}
+      <nav className="lg:hidden bg-black border-b border-gray-800">
+        <div className="px-4">
+          <div className="flex justify-between items-center py-3">
+            <div className="text-lg font-bold text-white">
+              Commitment App
+            </div>
+
+            <Link 
+              href="/profile" 
+              className="text-gray-300 hover:text-white transition-colors duration-200"
+            >
+              <div className="w-8 h-8 bg-blue-600 flex items-center justify-center">
+                <UserIcon className="w-4 h-4 text-white" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Desktop Navigation (Modern Clean) */}
       <nav className="hidden lg:block bg-black border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-6">
