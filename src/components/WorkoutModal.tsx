@@ -108,19 +108,31 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       const exerciseList = groupExercises?.map(ge => ge.exercises).filter(Boolean) || []
       console.log('Processed exercise list:', exerciseList)
       
-      // Get today's workout counts
-      const { data: todayLogs } = await supabase
-        .from('logs')
-        .select('exercise_id, count, duration')
-        .eq('user_id', user.id)
-        .eq('date', today)
+      // Try to get today's workout counts (may fail if logs table doesn't exist)
+      let todayLogs = []
+      try {
+        const { data } = await supabase
+          .from('logs')
+          .select('exercise_id, count, duration')
+          .eq('user_id', user.id)
+          .eq('date', today)
+        todayLogs = data || []
+      } catch (error) {
+        console.log('Logs table not accessible, skipping progress tracking')
+      }
       
-      // Get yesterday's workouts for recommendations
-      const { data: yesterdayLogs } = await supabase
-        .from('logs')
-        .select('exercise_id, exercises(name, type)')
-        .eq('user_id', user.id)
-        .eq('date', yesterday)
+      // Try to get yesterday's workouts (may fail if logs table doesn't exist)
+      let yesterdayLogs = []
+      try {
+        const { data } = await supabase
+          .from('logs')
+          .select('exercise_id, exercises(name, type)')
+          .eq('user_id', user.id)
+          .eq('date', yesterday)
+        yesterdayLogs = data || []
+      } catch (error) {
+        console.log('Cannot load yesterday logs for recommendations')
+      }
       
       // Process exercises with progress
       const exercisesWithProgress: ExerciseWithProgress[] = exerciseList.map(exercise => {
@@ -315,22 +327,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           
           {!exercisesLoading && exercises.length > 0 && (
             <>
-            <div className="bg-gray-800 border border-gray-600 p-4 mb-4">
-              <h4 className="text-white font-semibold mb-2">Debug: {exercises.length} exercises loaded</h4>
-              <div className="text-xs text-gray-400 mb-2">
-                {exercises.slice(0, 3).map(ex => ex.name).join(', ')}
-                {exercises.length > 3 && '...'}
-              </div>
-              <div className="text-xs text-gray-500">
-                Grouped: {Object.entries(groupedExercises).map(([type, exs]) => `${type}: ${exs.length}`).join(', ')}
-              </div>
-              <div className="text-xs text-gray-500">
-                Types: {exercises.map(ex => ex.type).join(', ')}
-              </div>
-              <div className="text-xs text-gray-500">
-                Recommendations: {recommendedExercises.length}
-              </div>
-            </div>
           {/* Recommended Workouts */}
           {recommendedExercises.length > 0 && (
             <div>
@@ -364,22 +360,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             </div>
           )}
 
-          {/* Test: Simple Exercise List */}
-          <div>
-            <h4 className="text-lg font-semibold text-white mb-4">All Exercises (Test)</h4>
-            <div className="space-y-2">
-              {exercises.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  onClick={() => quickAddExercise(exercise)}
-                  className="w-full p-3 text-left bg-gray-800 border border-gray-700 hover:bg-gray-700 transition-colors"
-                >
-                  <div className="text-white font-medium">{exercise.emoji} {exercise.name}</div>
-                  <div className="text-xs text-gray-400">{exercise.points_per_unit} pts/{exercise.unit}</div>
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* All Exercises by Category */}
           {Object.entries(groupedExercises).map(([type, typeExercises]) => {

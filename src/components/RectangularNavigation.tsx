@@ -41,19 +41,23 @@ export default function RectangularNavigation() {
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target
+      // Get today's target (fallback to 100 if group_settings table doesn't exist)
       let target = 100
-      if (profile.group_id) {
-        const { data: groupSettings } = await supabase
-          .from('group_settings')
-          .select('*')
-          .eq('group_id', profile.group_id)
-          .single()
+      try {
+        if (profile.group_id) {
+          const { data: groupSettings } = await supabase
+            .from('group_settings')
+            .select('*')
+            .eq('group_id', profile.group_id)
+            .single()
 
-        if (groupSettings) {
-          const daysSinceStart = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
-          target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+          if (groupSettings) {
+            const daysSinceStart = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+          }
         }
+      } catch (error) {
+        console.log('Group settings not available, using default target of 100')
       }
 
       setDailyProgress(todayPoints)

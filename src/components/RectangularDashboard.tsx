@@ -91,22 +91,24 @@ export default function RectangularDashboard() {
       }
 
       // Get recent group activity (workouts from all members)
-      if (profile.group_id) {
-        const { data: activityData } = await supabase
-          .from('logs')
-          .select(`
-            id,
-            user_id,
-            points,
-            created_at,
-            exercises (name),
-            profiles!inner (email, group_id)
-          `)
-          .eq('profiles.group_id', profile.group_id)
-          .order('created_at', { ascending: false })
-          .limit(8)
+      let formattedActivity = []
+      try {
+        if (profile.group_id) {
+          const { data: activityData } = await supabase
+            .from('logs')
+            .select(`
+              id,
+              user_id,
+              points,
+              created_at,
+              exercises (name),
+              profiles!inner (email, group_id)
+            `)
+            .eq('profiles.group_id', profile.group_id)
+            .order('created_at', { ascending: false })
+            .limit(8)
 
-        const formattedActivity = activityData?.map(activity => ({
+          formattedActivity = activityData?.map(activity => ({
           id: activity.id,
           user_email: activity.profiles?.email || 'Unknown',
           exercise_name: activity.exercises?.name || 'Unknown Exercise',
@@ -115,7 +117,11 @@ export default function RectangularDashboard() {
           is_own_activity: activity.user_id === user.id
         })) || []
 
-        setRecentActivity(formattedActivity)
+          setRecentActivity(formattedActivity)
+        }
+      } catch (error) {
+        console.log('Logs table not accessible, skipping activity data')
+        setRecentActivity([])
       }
 
     } catch (error) {
