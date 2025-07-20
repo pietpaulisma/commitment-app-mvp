@@ -290,6 +290,16 @@ export default function NewMobileProfile() {
                     </div>
                     <span className="text-xs text-purple-400">Supreme</span>
                   </Link>
+                  <Link 
+                    href="/admin/group-exercises"
+                    className="flex items-center justify-between p-3 bg-purple-900/30 hover:bg-purple-800/30 rounded-lg border border-purple-700 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <CogIcon className="w-5 h-5 text-purple-400 mr-3" />
+                      <span className="text-purple-300 font-medium">Manage Group Exercises</span>
+                    </div>
+                    <span className="text-xs text-purple-400">Supreme</span>
+                  </Link>
                 </>
               )}
               
