@@ -129,7 +129,7 @@ export default function RectangularNavigation() {
       </div>
 
       {/* Mobile Navigation Header */}
-      <nav className="lg:hidden bg-black border-b border-gray-800">
+      <nav className="lg:hidden sticky top-0 z-40 bg-black border-b border-gray-800">
         <div className="px-4">
           <div className="flex justify-between items-center py-3">
             <div className="text-lg font-bold text-white">
@@ -149,7 +149,7 @@ export default function RectangularNavigation() {
       </nav>
 
       {/* Desktop Navigation (Modern Clean) */}
-      <nav className="hidden lg:block bg-black border-b border-gray-800">
+      <nav className="hidden lg:block sticky top-0 z-40 bg-black border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center py-4">
             <div className="text-xl font-bold text-white">
