@@ -43,12 +43,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [quantity, setQuantity] = useState('')
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
+  const [exercisesLoading, setExercisesLoading] = useState(false)
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && user && profile?.group_id) {
+      console.log('Loading exercises for group:', profile.group_id)
       loadExercises()
     }
-  }, [isOpen])
+  }, [isOpen, user, profile?.group_id])
 
   const getExerciseEmoji = (exercise: Exercise): string => {
     const name = exercise.name.toLowerCase()
@@ -78,21 +80,33 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   }
 
   const loadExercises = async () => {
-    if (!profile?.group_id || !user) return
+    if (!profile?.group_id || !user) {
+      console.log('Cannot load exercises - missing profile or user:', { profile: !!profile, user: !!user })
+      return
+    }
 
     try {
+      setExercisesLoading(true)
+      console.log('Loading exercises for group:', profile.group_id)
       const today = new Date().toISOString().split('T')[0]
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
       // Get exercises for the group
-      const { data: groupExercises } = await supabase
+      const { data: groupExercises, error: exerciseError } = await supabase
         .from('group_exercises')
         .select(`
           exercises (*)
         `)
         .eq('group_id', profile.group_id)
 
+      if (exerciseError) {
+        console.error('Error loading group exercises:', exerciseError)
+        return
+      }
+
+      console.log('Raw group exercises:', groupExercises)
       const exerciseList = groupExercises?.map(ge => ge.exercises).filter(Boolean) || []
+      console.log('Processed exercise list:', exerciseList)
       
       // Get today's workout counts
       const { data: todayLogs } = await supabase
@@ -125,8 +139,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       
       setExercises(exercisesWithProgress)
       setRecommendedExercises(recommendations)
+      console.log('Exercises loaded successfully:', exercisesWithProgress.length)
     } catch (error) {
       console.error('Error loading exercises:', error)
+    } finally {
+      setExercisesLoading(false)
     }
   }
   
@@ -279,6 +296,23 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-20">
+          {exercisesLoading && (
+            <div className="text-center py-8">
+              <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
+              <p className="mt-2 text-gray-400 text-sm">Loading exercises...</p>
+            </div>
+          )}
+          
+          {!exercisesLoading && exercises.length === 0 && (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">🏋️</div>
+              <h3 className="text-lg font-semibold text-white mb-2">No Exercises Found</h3>
+              <p className="text-gray-400 text-sm">No exercises are set up for your group yet.</p>
+            </div>
+          )}
+          
+          {!exercisesLoading && exercises.length > 0 && (
+            <>
           {/* Recommended Workouts */}
           {recommendedExercises.length > 0 && (
             <div>
@@ -463,6 +497,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               </>
             )}
           </form>
+            </>
+          )}
         </div>
     </div>
   )
