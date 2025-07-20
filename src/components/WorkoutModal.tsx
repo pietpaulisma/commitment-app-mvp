@@ -274,13 +274,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   if (!isOpen) return null
 
-  const groupedExercises = {
-    strength: exercises.filter(ex => ex.type === 'strength'),
-    cardio: exercises.filter(ex => ex.type === 'cardio'),
-    flexibility: exercises.filter(ex => ex.type === 'flexibility'),
-    recovery: exercises.filter(ex => ex.type === 'recovery'),
-    endurance: exercises.filter(ex => ex.type === 'endurance')
-  }
+  // Group exercises by their actual types
+  const groupedExercises = exercises.reduce((groups, exercise) => {
+    const type = exercise.type || 'other'
+    if (!groups[type]) {
+      groups[type] = []
+    }
+    groups[type].push(exercise)
+    return groups
+  }, {} as Record<string, ExerciseWithProgress[]>)
 
   return (
     <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
@@ -321,6 +323,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               </div>
               <div className="text-xs text-gray-500">
                 Grouped: {Object.entries(groupedExercises).map(([type, exs]) => `${type}: ${exs.length}`).join(', ')}
+              </div>
+              <div className="text-xs text-gray-500">
+                Types: {exercises.map(ex => ex.type).join(', ')}
               </div>
               <div className="text-xs text-gray-500">
                 Recommendations: {recommendedExercises.length}
@@ -380,10 +385,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           {Object.entries(groupedExercises).map(([type, typeExercises]) => {
             if (typeExercises.length === 0) return null
             
+            const typeEmoji = {
+              strength: '💪',
+              cardio: '❤️', 
+              flexibility: '🧘',
+              recovery: '😴',
+              endurance: '🏃',
+              other: '🏋️'
+            }[type] || '🏋️'
+            
             return (
               <div key={type}>
                 <h4 className="text-lg font-semibold text-white mb-4 capitalize">
-                  {type} {type === 'strength' ? '💪' : type === 'cardio' ? '❤️' : type === 'flexibility' ? '🧘' : type === 'recovery' ? '😴' : '🏃'}
+                  {type} {typeEmoji}
                 </h4>
                 <div className="space-y-2">
                   {typeExercises.map((exercise) => (
