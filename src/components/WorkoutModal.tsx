@@ -46,6 +46,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [exercisesLoading, setExercisesLoading] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(100)
+  const [showSportSelection, setShowSportSelection] = useState(false)
+  const [selectedSportType, setSelectedSportType] = useState('')
+  const [selectedIntensity, setSelectedIntensity] = useState('medium')
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -337,10 +340,50 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   }
 
   const quickAddExercise = (exercise: ExerciseWithProgress, defaultQuantity: number = 10) => {
+    // Check if exercise name is 'sport' (case insensitive) for sport selection
+    if (exercise.name.toLowerCase() === 'sport') {
+      setShowSportSelection(true)
+      return
+    }
+    
     setSelectedExercise(exercise)
     setQuantity(defaultQuantity.toString())
     setWeight('')
+    setShowSportSelection(false)
   }
+
+  const handleSportSelection = (sportType: string) => {
+    // Create a virtual sport exercise with the selected type
+    const sportExercise: ExerciseWithProgress = {
+      id: `sport_${selectedIntensity}`,
+      name: `${sportType} (${selectedIntensity})`,
+      type: 'cardio',
+      unit: 'minute',
+      points_per_unit: selectedIntensity === 'light' ? 125 : selectedIntensity === 'medium' ? 250 : 375,
+      is_weighted: false,
+      is_time_based: true,
+      todayCount: 0,
+      emoji: '🏃'
+    }
+    
+    setSelectedExercise(sportExercise)
+    setQuantity('30') // Default 30 minutes
+    setWeight('')
+    setShowSportSelection(false)
+  }
+
+  const sportTypes = [
+    { name: 'Canoeing', emoji: '🛶' },
+    { name: 'Mountain Biking', emoji: '🚵' },
+    { name: 'Surfing', emoji: '🏄' },
+    { name: 'Running', emoji: '🏃' },
+    { name: 'Swimming', emoji: '🏊' },
+    { name: 'Hiking', emoji: '🥾' },
+    { name: 'Tennis', emoji: '🎾' },
+    { name: 'Football', emoji: '⚽' },
+    { name: 'Basketball', emoji: '🏀' },
+    { name: 'Volleyball', emoji: '🏐' }
+  ]
 
   if (!isOpen) return null
 
@@ -352,26 +395,48 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   return (
     <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
-        {/* Header with Progress */}
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-700">
-          <div className="flex justify-between items-center p-4">
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-white mb-2">Log Workout</h3>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 bg-gray-700 h-2 relative overflow-hidden">
-                  <div 
-                    className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500"
-                    style={{ width: `${progressPercentage}%` }}
-                  />
+        {/* Header with Progress Bar like main screen */}
+        <div className="sticky top-0 bg-black border-b border-gray-700">
+          <div className="flex">
+            {/* Progress Bar (80% width) */}
+            <div className="flex-1 relative h-16 bg-blue-600 border-r border-gray-700 overflow-hidden">
+              {/* Progress Background */}
+              <div 
+                className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out"
+                style={{ width: `${progressPercentage}%` }}
+              />
+              
+              {/* Progress Content */}
+              <div className="relative h-full flex items-center justify-between px-6 text-white">
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-semibold">
+                    {progressPercentage >= 100 ? 'Complete!' : 'Log Workout'}
+                  </span>
+                  <span className="text-xs opacity-75">
+                    {dailyProgress}/{dailyTarget} points
+                  </span>
                 </div>
-                <span className="text-sm text-gray-300 min-w-[80px]">
-                  {dailyProgress}/{dailyTarget} pts
-                </span>
+                
+                <div className="flex flex-col items-end">
+                  <span className="text-xl font-bold">
+                    {Math.round(progressPercentage)}%
+                  </span>
+                  <span className="text-xs opacity-75">
+                    {progressPercentage >= 100 ? '🎉' : '💪'}
+                  </span>
+                </div>
               </div>
+
+              {/* Subtle glow when complete */}
+              {progressPercentage >= 100 && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+              )}
             </div>
+
+            {/* X Button (20% width) */}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700 ml-4"
+              className="w-20 h-16 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors duration-200"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
@@ -394,7 +459,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             </div>
           )}
           
-          {!exercisesLoading && exercises.length > 0 && (
+          {!exercisesLoading && exercises.length > 0 && !showSportSelection && (
             <>
               {/* Recommended Workouts */}
               {recommendedExercises.length > 0 && (
@@ -511,6 +576,50 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     </p>
                   </div>
                   
+                  {/* Intensity Selector for Sport */}
+                  {selectedExercise.id.startsWith('sport_') && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Intensity Level</label>
+                      <div className="space-y-2">
+                        {[
+                          { id: 'light', name: 'Light', points: 125, emoji: '🚶' },
+                          { id: 'medium', name: 'Medium', points: 250, emoji: '🏃' },
+                          { id: 'intense', name: 'Intense', points: 375, emoji: '💨' }
+                        ].map((intensity) => (
+                          <button
+                            key={intensity.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedIntensity(intensity.id)
+                              // Update the exercise with new points
+                              const updatedExercise = {
+                                ...selectedExercise,
+                                points_per_unit: intensity.points,
+                                name: selectedExercise.name.replace(/\(.*\)/, `(${intensity.name})`)
+                              }
+                              setSelectedExercise(updatedExercise)
+                            }}
+                            className={`w-full p-3 text-left transition-colors border ${
+                              selectedIntensity === intensity.id
+                                ? 'bg-blue-900/50 border-blue-500 text-blue-300'
+                                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-lg">{intensity.emoji}</span>
+                                <span className="font-medium">{intensity.name}</span>
+                              </div>
+                              <span className="text-sm font-bold">
+                                {intensity.points} pts/min
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Quantity Input */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -566,6 +675,77 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 </form>
               )}
             </>
+          )}
+
+          {/* Sport Selection Screen */}
+          {showSportSelection && (
+            <div className="p-4 space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">🏃 Choose Your Sport</h3>
+                <p className="text-gray-400 text-sm">Select the type of sport activity</p>
+              </div>
+
+              {/* Sport Types */}
+              <div className="space-y-2">
+                {sportTypes.map((sport) => (
+                  <button
+                    key={sport.name}
+                    onClick={() => handleSportSelection(sport.name)}
+                    className="w-full p-3 text-left transition-colors border-b border-gray-700 bg-gray-800 hover:bg-gray-700"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl">{sport.emoji}</span>
+                        <div className="font-medium text-white">{sport.name}</div>
+                      </div>
+                      <div className="text-sm font-bold text-green-400">
+                        {selectedIntensity === 'light' ? '125' : selectedIntensity === 'medium' ? '250' : '375'} pts/min
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Intensity Selection */}
+              <div className="mt-6 p-4 bg-gray-800 border border-gray-700">
+                <h4 className="text-white font-semibold mb-3">Intensity Level</h4>
+                <div className="space-y-2">
+                  {[
+                    { id: 'light', name: 'Light', points: 125, emoji: '🚶' },
+                    { id: 'medium', name: 'Medium', points: 250, emoji: '🏃' },
+                    { id: 'intense', name: 'Intense', points: 375, emoji: '💨' }
+                  ].map((intensity) => (
+                    <button
+                      key={intensity.id}
+                      onClick={() => setSelectedIntensity(intensity.id)}
+                      className={`w-full p-3 text-left transition-colors border ${
+                        selectedIntensity === intensity.id
+                          ? 'bg-blue-900/50 border-blue-500 text-blue-300'
+                          : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-lg">{intensity.emoji}</span>
+                          <span className="font-medium">{intensity.name}</span>
+                        </div>
+                        <span className="text-sm font-bold">
+                          {intensity.points} pts/min
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Back Button */}
+              <button
+                onClick={() => setShowSportSelection(false)}
+                className="w-full bg-gray-700 text-white py-3 px-4 hover:bg-gray-600 transition-colors font-semibold border border-gray-600"
+              >
+                ← Back to Exercises
+              </button>
+            </div>
           )}
         </div>
     </div>
