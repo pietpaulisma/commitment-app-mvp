@@ -292,7 +292,7 @@ export default function UserManagementPage() {
           <p className="text-sm text-gray-400">Manage users & roles</p>
         </div>
         <button
-          onClick={() => router.push('/admin')}
+          onClick={() => router.push('/profile')}
           className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700"
         >
           <span className="text-2xl">×</span>

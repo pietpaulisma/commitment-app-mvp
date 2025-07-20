@@ -179,7 +179,7 @@ export default function GroupManagementPage() {
           <p className="text-sm text-gray-400">Manage groups & admins</p>
         </div>
         <button
-          onClick={() => router.push('/admin')}
+          onClick={() => router.push('/profile')}
           className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700"
         >
           <span className="text-2xl">×</span>

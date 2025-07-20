@@ -171,10 +171,10 @@ export default function GroupExercisesPage() {
             <p className="text-gray-400 mt-1">Assign exercises to groups</p>
           </div>
           <button
-            onClick={() => router.push('/admin')}
+            onClick={() => router.push('/profile')}
             className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 font-semibold transition-colors border border-gray-600"
           >
-            Back to Admin
+            Back to Profile
           </button>
         </div>
 
