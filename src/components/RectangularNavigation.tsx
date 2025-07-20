@@ -3,6 +3,7 @@
 import { useProfile } from '@/hooks/useProfile'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { 
   ChatBubbleLeftRightIcon,
   UserIcon
@@ -15,10 +16,13 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function RectangularNavigation() {
   const { profile, loading } = useProfile()
   const { user } = useAuth()
+  const pathname = usePathname()
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(100)
+
+  const isOnProfilePage = pathname === '/profile'
 
   useEffect(() => {
     if (user && profile) {
@@ -141,11 +145,15 @@ export default function RectangularNavigation() {
             </div>
 
             <Link 
-              href="/profile" 
+              href={isOnProfilePage ? "/dashboard" : "/profile"} 
               className="text-gray-300 hover:text-white transition-colors duration-200"
             >
               <div className="w-8 h-8 bg-blue-600 flex items-center justify-center">
-                <UserIcon className="w-4 h-4 text-white" />
+                {isOnProfilePage ? (
+                  <span className="text-white text-lg font-bold">×</span>
+                ) : (
+                  <UserIcon className="w-4 h-4 text-white" />
+                )}
               </div>
             </Link>
           </div>
@@ -162,12 +170,16 @@ export default function RectangularNavigation() {
 
             <div className="flex items-center space-x-4">
               <Link 
-                href="/profile" 
+                href={isOnProfilePage ? "/dashboard" : "/profile"} 
                 className="text-sm text-gray-300 hover:text-white flex items-center space-x-2 font-medium border border-gray-700 hover:border-gray-600 px-3 py-2 transition-colors duration-200"
               >
-                <span>Profile</span>
+                <span>{isOnProfilePage ? "Back to Dashboard" : "Profile"}</span>
                 <div className="w-8 h-8 bg-blue-600 flex items-center justify-center">
-                  <UserIcon className="w-4 h-4 text-white" />
+                  {isOnProfilePage ? (
+                    <span className="text-white text-lg font-bold">×</span>
+                  ) : (
+                    <UserIcon className="w-4 h-4 text-white" />
+                  )}
                 </div>
               </Link>
             </div>
