@@ -313,6 +313,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           
           {!exercisesLoading && exercises.length > 0 && (
             <>
+            <div className="bg-gray-800 border border-gray-600 p-4 mb-4">
+              <h4 className="text-white font-semibold mb-2">Debug: {exercises.length} exercises loaded</h4>
+              <div className="text-xs text-gray-400">
+                {exercises.slice(0, 3).map(ex => ex.name).join(', ')}
+                {exercises.length > 3 && '...'}
+              </div>
+            </div>
           {/* Recommended Workouts */}
           {recommendedExercises.length > 0 && (
             <div>
