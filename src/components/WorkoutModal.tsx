@@ -44,13 +44,57 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
   const [exercisesLoading, setExercisesLoading] = useState(false)
+  const [dailyProgress, setDailyProgress] = useState(0)
+  const [dailyTarget, setDailyTarget] = useState(100)
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
       console.log('Loading exercises for group:', profile.group_id)
       loadExercises()
+      loadDailyProgress()
     }
   }, [isOpen, user, profile?.group_id])
+
+  const loadDailyProgress = async () => {
+    if (!user || !profile) return
+
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Get today's points
+      const { data: todayLogs } = await supabase
+        .from('logs')
+        .select('points')
+        .eq('user_id', user.id)
+        .eq('date', today)
+
+      const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+
+      // Get today's target (fallback to 100 if group_settings table doesn't exist)
+      let target = 100
+      try {
+        if (profile.group_id) {
+          const { data: groupSettings } = await supabase
+            .from('group_settings')
+            .select('*')
+            .eq('group_id', profile.group_id)
+            .single()
+
+          if (groupSettings) {
+            const daysSinceStart = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+          }
+        }
+      } catch (error) {
+        console.log('Group settings not available, using default target of 100')
+      }
+
+      setDailyProgress(todayPoints)
+      setDailyTarget(target)
+    } catch (error) {
+      console.error('Error loading daily progress:', error)
+    }
+  }
 
   const getExerciseEmoji = (exercise: Exercise): string => {
     const name = exercise.name.toLowerCase()
@@ -273,6 +317,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           onWorkoutAdded()
         }
         
+        // Refresh daily progress
+        loadDailyProgress()
+        
         // Close modal
         onClose()
         
@@ -297,30 +344,41 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   if (!isOpen) return null
 
-  // Group exercises by their actual types
-  const groupedExercises = exercises.reduce((groups, exercise) => {
-    const type = exercise.type || 'other'
-    if (!groups[type]) {
-      groups[type] = []
-    }
-    groups[type].push(exercise)
-    return groups
-  }, {} as Record<string, ExerciseWithProgress[]>)
+  // Group exercises by their actual types, with recovery separate
+  const allExercises = exercises.filter(ex => ex.type !== 'recovery')
+  const recoveryExercises = exercises.filter(ex => ex.type === 'recovery')
+  
+  const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
 
   return (
     <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-gray-900">
-          <h3 className="text-lg font-bold text-white">Log Workout</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
+        {/* Header with Progress */}
+        <div className="sticky top-0 bg-gray-900 border-b border-gray-700">
+          <div className="flex justify-between items-center p-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-white mb-2">Log Workout</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 bg-gray-700 h-2 relative overflow-hidden">
+                  <div 
+                    className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+                <span className="text-sm text-gray-300 min-w-[80px]">
+                  {dailyProgress}/{dailyTarget} pts
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700 ml-4"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-20">
+        <div className="flex-1 overflow-y-auto">
           {exercisesLoading && (
             <div className="text-center py-8">
               <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
@@ -338,67 +396,86 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           
           {!exercisesLoading && exercises.length > 0 && (
             <>
-          {/* Recommended Workouts */}
-          {recommendedExercises.length > 0 && (
-            <div>
-              <h4 className="text-lg font-semibold text-white mb-4">Recommended for You</h4>
-              <div className="space-y-3">
-                {recommendedExercises.map((rec, index) => (
-                  <button
-                    key={rec.exercise.id}
-                    onClick={() => quickAddExercise(rec.exercise)}
-                    className={`w-full p-4 border-l-4 text-left transition-colors ${
-                      rec.priority === 'high' 
-                        ? 'bg-blue-900/30 border-blue-400 hover:bg-blue-900/50' 
-                        : 'bg-green-900/30 border-green-400 hover:bg-green-900/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{rec.exercise.emoji}</span>
-                        <div>
-                          <div className="font-semibold text-white">{rec.exercise.name}</div>
-                          <div className="text-xs text-gray-400">{rec.reason}</div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-300">
-                        {rec.exercise.points_per_unit} pts/{rec.exercise.unit}
+              {/* Recommended Workouts */}
+              {recommendedExercises.length > 0 && (
+                <div className="p-4 pb-0">
+                  <h4 className="text-lg font-semibold text-white mb-3">Recommended for You</h4>
+                </div>
+              )}
+              {recommendedExercises.map((rec, index) => (
+                <button
+                  key={rec.exercise.id}
+                  onClick={() => quickAddExercise(rec.exercise)}
+                  className={`w-full p-3 text-left transition-colors border-b border-gray-700 ${
+                    rec.priority === 'high' 
+                      ? 'bg-blue-900/30 hover:bg-blue-900/50' 
+                      : 'bg-green-900/30 hover:bg-green-900/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">{rec.exercise.emoji}</span>
+                      <div>
+                        <div className="font-semibold text-white">{rec.exercise.name}</div>
+                        <div className="text-xs text-gray-400">{rec.reason}</div>
                       </div>
                     </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+                    <div className="text-sm font-bold text-green-400">
+                      {rec.exercise.points_per_unit} pts
+                    </div>
+                  </div>
+                </button>
+              ))}
 
+              {/* All Main Exercises */}
+              {allExercises.length > 0 && (
+                <div className="p-4 pb-0">
+                  <h4 className="text-lg font-semibold text-white mb-3">All Exercises</h4>
+                </div>
+              )}
+              {allExercises.map((exercise) => (
+                <button
+                  key={exercise.id}
+                  onClick={() => quickAddExercise(exercise)}
+                  className={`w-full p-3 text-left transition-colors border-b border-gray-700 ${
+                    exercise.todayCount > 0
+                      ? 'bg-green-900/30 hover:bg-green-900/50'
+                      : 'bg-gray-800 hover:bg-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">{exercise.emoji}</span>
+                      <div>
+                        <div className="font-medium text-white">{exercise.name}</div>
+                        {exercise.todayCount > 0 && (
+                          <div className="text-xs text-green-400">
+                            Done {exercise.todayCount}x today
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-sm font-bold text-green-400">
+                      {exercise.points_per_unit} pts
+                    </div>
+                  </div>
+                </button>
+              ))}
 
-          {/* All Exercises by Category */}
-          {Object.entries(groupedExercises).map(([type, typeExercises]) => {
-            if (typeExercises.length === 0) return null
-            
-            const typeEmoji = {
-              strength: '💪',
-              cardio: '❤️', 
-              flexibility: '🧘',
-              recovery: '😴',
-              endurance: '🏃',
-              other: '🏋️'
-            }[type] || '🏋️'
-            
-            return (
-              <div key={type}>
-                <h4 className="text-lg font-semibold text-white mb-4 capitalize">
-                  {type} {typeEmoji}
-                </h4>
-                <div className="space-y-2">
-                  {typeExercises.map((exercise) => (
+              {/* Recovery Exercises at Bottom */}
+              {recoveryExercises.length > 0 && (
+                <>
+                  <div className="p-4 pb-0">
+                    <h4 className="text-lg font-semibold text-white mb-3">Recovery 😴</h4>
+                  </div>
+                  {recoveryExercises.map((exercise) => (
                     <button
                       key={exercise.id}
                       onClick={() => quickAddExercise(exercise)}
-                      className={`w-full p-4 text-left transition-colors border ${
+                      className={`w-full p-3 text-left transition-colors border-b border-gray-700 ${
                         exercise.todayCount > 0
-                          ? 'bg-green-900/30 border-green-600 hover:bg-green-900/50'
-                          : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+                          ? 'bg-blue-900/30 hover:bg-blue-900/50'
+                          : 'bg-gray-800 hover:bg-gray-700'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -406,132 +483,88 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           <span className="text-xl">{exercise.emoji}</span>
                           <div>
                             <div className="font-medium text-white">{exercise.name}</div>
-                            <div className="text-xs text-gray-400">
-                              {exercise.points_per_unit} pts/{exercise.unit}
-                              {exercise.is_weighted && ' • Weighted'}
-                              {exercise.is_time_based && ' • Timed'}
-                            </div>
+                            {exercise.todayCount > 0 && (
+                              <div className="text-xs text-blue-400">
+                                Done {exercise.todayCount}x today
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          {exercise.todayCount > 0 && (
-                            <div className="text-sm font-bold text-green-400">
-                              Done {exercise.todayCount}x today
-                            </div>
-                          )}
-                          <div className="text-xs text-gray-500">
-                            Tap to log
-                          </div>
+                        <div className="text-sm font-bold text-green-400">
+                          {exercise.points_per_unit} pts
                         </div>
                       </div>
                     </button>
                   ))}
-                </div>
-              </div>
-            )
-          })}
-
-          {/* Manual Exercise Selection */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Exercise</label>
-              <select 
-                value={selectedExercise?.id || ''} 
-                onChange={(e) => {
-                  const exercise = exercises.find(ex => ex.id === e.target.value)
-                  setSelectedExercise(exercise || null)
-                }}
-                className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
-              >
-                <option value="">Or select manually...</option>
-                {Object.entries(groupedExercises).map(([type, typeExercises]) => {
-                  if (typeExercises.length === 0) return null
-                  return (
-                    <optgroup key={type} label={`${type.charAt(0).toUpperCase() + type.slice(1)} Exercises`}>
-                      {typeExercises.map(exercise => (
-                        <option key={exercise.id} value={exercise.id}>
-                          {exercise.emoji} {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                          {exercise.todayCount > 0 ? ` - Done ${exercise.todayCount}x today` : ''}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )
-                })}
-              </select>
-            </div>
-
-            {selectedExercise && (
-              <>
-                {/* Exercise Info */}
-                <div className={`p-3 ${
-                  selectedExercise.type === 'recovery' ? 'bg-blue-900/30 border border-blue-700' : 'bg-gray-700 border border-gray-600'
-                }`}>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-medium text-gray-200">Type: {selectedExercise.type}</span>
-                    <span className="font-bold text-green-400">{selectedExercise.points_per_unit} pts/{selectedExercise.unit}</span>
+                </>
+              )}
+              
+              {/* Exercise Input Form */}
+              {selectedExercise && (
+                <form onSubmit={handleSubmit} className="p-4 space-y-4 bg-gray-800 border-t border-gray-700">
+                  <div className="text-center">
+                    <h4 className="text-lg font-semibold text-white mb-2">
+                      {selectedExercise.emoji} {selectedExercise.name}
+                    </h4>
+                    <p className="text-sm text-gray-400">
+                      {selectedExercise.points_per_unit} pts per {selectedExercise.unit}
+                    </p>
                   </div>
-                  {selectedExercise.type === 'recovery' && (
-                    <div className="text-xs text-blue-400 mt-1">
-                      💡 Recovery exercises help with rest and mobility
-                    </div>
-                  )}
-                </div>
-                
-                {/* Quantity Input */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} 
-                    <span className="text-gray-400 ml-1">({selectedExercise.unit})</span>
-                  </label>
-                  <input 
-                    type="number" 
-                    step="any" 
-                    min="0" 
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
-                    placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
-                    required
-                  />
-                </div>
-
-                {/* Weight Input */}
-                {selectedExercise.is_weighted && (
+                  
+                  {/* Quantity Input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} 
+                      <span className="text-gray-400 ml-1">({selectedExercise.unit})</span>
+                    </label>
                     <input 
                       type="number" 
                       step="any" 
                       min="0" 
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
-                      placeholder="Enter weight (optional)"
+                      placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
+                      required
                     />
                   </div>
-                )}
 
-                {/* Points Preview */}
-                {quantity && (
-                  <div className="bg-green-900/30 border border-green-700 p-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-300">Points:</span>
-                      <span className="text-xl font-bold text-green-400">{calculatePoints()}</span>
+                  {/* Weight Input */}
+                  {selectedExercise.is_weighted && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
+                      <input 
+                        type="number" 
+                        step="any" 
+                        min="0" 
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
+                        placeholder="Enter weight (optional)"
+                      />
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Submit Button */}
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 px-4 hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Logging...' : 'Log Workout'}
-                </button>
-              </>
-            )}
-          </form>
+                  {/* Points Preview */}
+                  {quantity && (
+                    <div className="bg-green-900/30 border border-green-700 p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-green-300">Points:</span>
+                        <span className="text-xl font-bold text-green-400">{calculatePoints()}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 text-white py-3 px-4 hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Logging...' : 'Log Workout'}
+                  </button>
+                </form>
+              )}
             </>
           )}
         </div>
