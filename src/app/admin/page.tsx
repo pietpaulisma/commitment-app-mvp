@@ -111,6 +111,12 @@ export default function AdminPage() {
                   Manage Exercises
                 </a>
                 <a 
+                  href="/admin/group-exercises" 
+                  className="block w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 text-center"
+                >
+                  Assign Exercises to Groups
+                </a>
+                <a 
                   href="/admin/users" 
                   className="block w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 text-center"
                 >
