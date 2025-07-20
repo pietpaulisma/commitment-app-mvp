@@ -16,6 +16,18 @@ type Exercise = {
   is_time_based: boolean
 }
 
+type ExerciseWithProgress = Exercise & {
+  todayCount: number
+  emoji: string
+  lastDone?: string
+}
+
+type RecommendedExercise = {
+  exercise: ExerciseWithProgress
+  reason: string
+  priority: 'high' | 'medium' | 'low'
+}
+
 type WorkoutModalProps = {
   isOpen: boolean
   onClose: () => void
@@ -25,8 +37,9 @@ type WorkoutModalProps = {
 export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: WorkoutModalProps) {
   const { user } = useAuth()
   const { profile } = useProfile()
-  const [exercises, setExercises] = useState<Exercise[]>([])
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
+  const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
+  const [recommendedExercises, setRecommendedExercises] = useState<RecommendedExercise[]>([])
+  const [selectedExercise, setSelectedExercise] = useState<ExerciseWithProgress | null>(null)
   const [quantity, setQuantity] = useState('')
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
@@ -37,10 +50,41 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }, [isOpen])
 
+  const getExerciseEmoji = (exercise: Exercise): string => {
+    const name = exercise.name.toLowerCase()
+    const type = exercise.type.toLowerCase()
+    
+    // Specific exercise mappings
+    if (name.includes('push') || name.includes('press')) return '💪'
+    if (name.includes('pull') || name.includes('row')) return '🦵'
+    if (name.includes('squat')) return '🏃'
+    if (name.includes('deadlift')) return '🏋️'
+    if (name.includes('run') || name.includes('jog')) return '🏃'
+    if (name.includes('walk')) return '🚶'
+    if (name.includes('swim')) return '🏊'
+    if (name.includes('cycle') || name.includes('bike')) return '🚴'
+    if (name.includes('plank')) return '🧘'
+    if (name.includes('stretch') || name.includes('yoga')) return '🧘'
+    if (name.includes('cardio')) return '❤️'
+    
+    // Type-based mappings
+    if (type === 'strength') return '💪'
+    if (type === 'cardio') return '❤️'
+    if (type === 'flexibility') return '🧘'
+    if (type === 'recovery') return '😴'
+    if (type === 'endurance') return '🏃'
+    
+    return '🏋️' // Default gym emoji
+  }
+
   const loadExercises = async () => {
-    if (!profile?.group_id) return
+    if (!profile?.group_id || !user) return
 
     try {
+      const today = new Date().toISOString().split('T')[0]
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      
+      // Get exercises for the group
       const { data: groupExercises } = await supabase
         .from('group_exercises')
         .select(`
@@ -49,10 +93,93 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         .eq('group_id', profile.group_id)
 
       const exerciseList = groupExercises?.map(ge => ge.exercises).filter(Boolean) || []
-      setExercises(exerciseList as Exercise[])
+      
+      // Get today's workout counts
+      const { data: todayLogs } = await supabase
+        .from('logs')
+        .select('exercise_id, count, duration')
+        .eq('user_id', user.id)
+        .eq('date', today)
+      
+      // Get yesterday's workouts for recommendations
+      const { data: yesterdayLogs } = await supabase
+        .from('logs')
+        .select('exercise_id, exercises(name, type)')
+        .eq('user_id', user.id)
+        .eq('date', yesterday)
+      
+      // Process exercises with progress
+      const exercisesWithProgress: ExerciseWithProgress[] = exerciseList.map(exercise => {
+        const todayCount = todayLogs?.filter(log => log.exercise_id === exercise.id).length || 0
+        const emoji = getExerciseEmoji(exercise)
+        
+        return {
+          ...exercise,
+          todayCount,
+          emoji
+        }
+      })
+      
+      // Generate recommendations
+      const recommendations = generateRecommendations(exercisesWithProgress, yesterdayLogs || [])
+      
+      setExercises(exercisesWithProgress)
+      setRecommendedExercises(recommendations)
     } catch (error) {
       console.error('Error loading exercises:', error)
     }
+  }
+  
+  const generateRecommendations = (exercises: ExerciseWithProgress[], yesterdayLogs: any[]): RecommendedExercise[] => {
+    const recommendations: RecommendedExercise[] = []
+    
+    // Get yesterday's exercise types
+    const yesterdayTypes = yesterdayLogs.map(log => log.exercises?.type).filter(Boolean)
+    
+    // Recommend balance - if they did strength yesterday, suggest cardio/flexibility
+    if (yesterdayTypes.includes('strength')) {
+      const cardioExercise = exercises.find(ex => ex.type === 'cardio' && ex.todayCount === 0)
+      if (cardioExercise) {
+        recommendations.push({
+          exercise: cardioExercise,
+          reason: 'Balance yesterday\'s strength training',
+          priority: 'high'
+        })
+      }
+      
+      const flexibilityExercise = exercises.find(ex => ex.type === 'flexibility' && ex.todayCount === 0)
+      if (flexibilityExercise) {
+        recommendations.push({
+          exercise: flexibilityExercise,
+          reason: 'Recovery and flexibility',
+          priority: 'medium'
+        })
+      }
+    }
+    
+    // If they did cardio yesterday, suggest strength
+    if (yesterdayTypes.includes('cardio')) {
+      const strengthExercise = exercises.find(ex => ex.type === 'strength' && ex.todayCount === 0)
+      if (strengthExercise) {
+        recommendations.push({
+          exercise: strengthExercise,
+          reason: 'Build strength after cardio',
+          priority: 'high'
+        })
+      }
+    }
+    
+    // Always recommend recovery if they haven't done any today
+    const recoveryExercise = exercises.find(ex => ex.type === 'recovery' && ex.todayCount === 0)
+    if (recoveryExercise && yesterdayLogs.length > 0) {
+      recommendations.push({
+        exercise: recoveryExercise,
+        reason: 'Important for muscle recovery',
+        priority: 'medium'
+      })
+    }
+    
+    return recommendations.slice(0, 3) // Limit to 3 recommendations
   }
 
   const calculatePoints = () => {
@@ -122,7 +249,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
-  const quickAddExercise = (exercise: Exercise, defaultQuantity: number = 10) => {
+  const quickAddExercise = (exercise: ExerciseWithProgress, defaultQuantity: number = 10) => {
     setSelectedExercise(exercise)
     setQuantity(defaultQuantity.toString())
     setWeight('')
@@ -130,8 +257,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   if (!isOpen) return null
 
-  const popularExercises = exercises.filter(ex => ex.type !== 'recovery').slice(0, 6)
-  const recoveryExercises = exercises.filter(ex => ex.type === 'recovery').slice(0, 3)
+  const groupedExercises = {
+    strength: exercises.filter(ex => ex.type === 'strength'),
+    cardio: exercises.filter(ex => ex.type === 'cardio'),
+    flexibility: exercises.filter(ex => ex.type === 'flexibility'),
+    recovery: exercises.filter(ex => ex.type === 'recovery'),
+    endurance: exercises.filter(ex => ex.type === 'endurance')
+  }
 
   return (
     <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
@@ -146,46 +278,89 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
-          {/* Quick Add Buttons */}
-          {popularExercises.length > 0 && (
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-20">
+          {/* Recommended Workouts */}
+          {recommendedExercises.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-300 mb-3">Quick Add</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {popularExercises.map((exercise) => (
+              <h4 className="text-lg font-semibold text-white mb-4">Recommended for You</h4>
+              <div className="space-y-3">
+                {recommendedExercises.map((rec, index) => (
                   <button
-                    key={exercise.id}
-                    onClick={() => quickAddExercise(exercise)}
-                    className="bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 p-3 text-sm font-medium transition-colors border border-blue-700"
+                    key={rec.exercise.id}
+                    onClick={() => quickAddExercise(rec.exercise)}
+                    className={`w-full p-4 border-l-4 text-left transition-colors ${
+                      rec.priority === 'high' 
+                        ? 'bg-blue-900/30 border-blue-400 hover:bg-blue-900/50' 
+                        : 'bg-green-900/30 border-green-400 hover:bg-green-900/50'
+                    }`}
                   >
-                    <div className="font-semibold">{exercise.name}</div>
-                    <div className="text-xs opacity-75">{exercise.points_per_unit} pts/{exercise.unit}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Recovery Exercises */}
-          {recoveryExercises.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-300 mb-3">Recovery</h4>
-              <div className="grid grid-cols-1 gap-2">
-                {recoveryExercises.map((exercise) => (
-                  <button
-                    key={exercise.id}
-                    onClick={() => quickAddExercise(exercise, 5)}
-                    className="bg-green-900/50 hover:bg-green-800/50 text-green-300 p-3 text-sm font-medium transition-colors border border-green-700"
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">{exercise.name}</span>
-                      <span className="text-xs opacity-75">{exercise.points_per_unit} pts/{exercise.unit}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{rec.exercise.emoji}</span>
+                        <div>
+                          <div className="font-semibold text-white">{rec.exercise.name}</div>
+                          <div className="text-xs text-gray-400">{rec.reason}</div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-300">
+                        {rec.exercise.points_per_unit} pts/{rec.exercise.unit}
+                      </div>
                     </div>
                   </button>
                 ))}
               </div>
             </div>
           )}
+
+          {/* All Exercises by Category */}
+          {Object.entries(groupedExercises).map(([type, typeExercises]) => {
+            if (typeExercises.length === 0) return null
+            
+            return (
+              <div key={type}>
+                <h4 className="text-lg font-semibold text-white mb-4 capitalize">
+                  {type} {type === 'strength' ? '💪' : type === 'cardio' ? '❤️' : type === 'flexibility' ? '🧘' : type === 'recovery' ? '😴' : '🏃'}
+                </h4>
+                <div className="space-y-2">
+                  {typeExercises.map((exercise) => (
+                    <button
+                      key={exercise.id}
+                      onClick={() => quickAddExercise(exercise)}
+                      className={`w-full p-4 text-left transition-colors border ${
+                        exercise.todayCount > 0
+                          ? 'bg-green-900/30 border-green-600 hover:bg-green-900/50'
+                          : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-xl">{exercise.emoji}</span>
+                          <div>
+                            <div className="font-medium text-white">{exercise.name}</div>
+                            <div className="text-xs text-gray-400">
+                              {exercise.points_per_unit} pts/{exercise.unit}
+                              {exercise.is_weighted && ' • Weighted'}
+                              {exercise.is_time_based && ' • Timed'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {exercise.todayCount > 0 && (
+                            <div className="text-sm font-bold text-green-400">
+                              Done {exercise.todayCount}x today
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500">
+                            Tap to log
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
 
           {/* Manual Exercise Selection */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -199,21 +374,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 }}
                 className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
               >
-                <option value="">Select an exercise...</option>
-                <optgroup label="Regular Exercises">
-                  {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
-                    <option key={exercise.id} value={exercise.id}>
-                      {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Recovery Exercises">
-                  {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
-                    <option key={exercise.id} value={exercise.id}>
-                      {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                    </option>
-                  ))}
-                </optgroup>
+                <option value="">Or select manually...</option>
+                {Object.entries(groupedExercises).map(([type, typeExercises]) => {
+                  if (typeExercises.length === 0) return null
+                  return (
+                    <optgroup key={type} label={`${type.charAt(0).toUpperCase() + type.slice(1)} Exercises`}>
+                      {typeExercises.map(exercise => (
+                        <option key={exercise.id} value={exercise.id}>
+                          {exercise.emoji} {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                          {exercise.todayCount > 0 ? ` - Done ${exercise.todayCount}x today` : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )
+                })}
               </select>
             </div>
 
