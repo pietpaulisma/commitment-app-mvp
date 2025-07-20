@@ -270,10 +270,10 @@ export default function UserManagementPage() {
 
   if (authLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
+          <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
     )
@@ -284,42 +284,50 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       <RoleBasedNavigation />
       
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-            <p className="text-gray-600">Manage all users, roles, and group assignments</p>
+            <h1 className="text-3xl font-bold text-white">USER MANAGEMENT</h1>
+            <p className="text-gray-400 mt-1">Manage all users, roles, and group assignments</p>
           </div>
-          <button
-            onClick={signOut}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-          >
-            Sign Out
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push('/admin')}
+              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 font-semibold transition-colors border border-gray-600"
+            >
+              Back to Admin
+            </button>
+            <button
+              onClick={signOut}
+              className="bg-red-600 text-white px-6 py-3 hover:bg-red-700 font-semibold transition-colors border border-red-500"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow mb-6 p-6">
+        <div className="bg-gray-900 border border-gray-700 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search Users</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">SEARCH USERS</label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by email, location, or group..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Role</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">FILTER BY ROLE</label>
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Roles</option>
                 <option value="user">User</option>
@@ -328,7 +336,7 @@ export default function UserManagementPage() {
               </select>
             </div>
             <div className="flex items-end">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-400">
                 Showing {filteredUsers.length} of {users.length} users
               </div>
             </div>
@@ -336,15 +344,15 @@ export default function UserManagementPage() {
 
           {/* Bulk Actions */}
           {selectedUsers.size > 0 && (
-            <div className="border-t pt-4">
+            <div className="border-t border-gray-700 pt-4">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-300">
                   {selectedUsers.size} users selected
                 </span>
                 <select
                   value={bulkAction}
                   onChange={(e) => setBulkAction(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Action</option>
                   <option value="change_role">Change Role</option>
@@ -356,7 +364,7 @@ export default function UserManagementPage() {
                   <select
                     value={bulkRole}
                     onChange={(e) => setBulkRole(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Role</option>
                     <option value="user">User</option>
@@ -369,7 +377,7 @@ export default function UserManagementPage() {
                   <select
                     value={bulkGroupId}
                     onChange={(e) => setBulkGroupId(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Group</option>
                     {groups.map(group => (
@@ -380,13 +388,13 @@ export default function UserManagementPage() {
 
                 <button
                   onClick={handleBulkAction}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 font-semibold transition-colors border border-blue-500"
                 >
                   Apply
                 </button>
                 <button
                   onClick={clearSelection}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                  className="bg-gray-600 text-white px-4 py-2 hover:bg-gray-700 font-semibold transition-colors border border-gray-500"
                 >
                   Clear Selection
                 </button>
@@ -397,23 +405,23 @@ export default function UserManagementPage() {
 
         {loading ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading users...</p>
+            <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
+            <p className="mt-2 text-gray-400">Loading users...</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">All Users ({filteredUsers.length})</h3>
-              <div className="flex gap-2">
+          <div className="bg-gray-900 border border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-white">ALL USERS ({filteredUsers.length})</h3>
+              <div className="flex gap-3">
                 <button
                   onClick={selectAllUsers}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
+                  className="bg-blue-600 text-white px-3 py-1 hover:bg-blue-500 text-sm font-semibold transition-colors border border-blue-500"
                 >
                   Select All
                 </button>
                 <button
                   onClick={clearSelection}
-                  className="text-gray-600 hover:text-gray-800 text-sm"
+                  className="bg-gray-600 text-white px-3 py-1 hover:bg-gray-500 text-sm font-semibold transition-colors border border-gray-500"
                 >
                   Clear
                 </button>
@@ -422,51 +430,51 @@ export default function UserManagementPage() {
             
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-800">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">
                       <input
                         type="checkbox"
                         checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
                         onChange={selectedUsers.size === filteredUsers.length ? clearSelection : selectAllUsers}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-700"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Group</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stats</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Active</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Group</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Stats</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Last Active</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-gray-900 divide-y divide-gray-700">
                   {filteredUsers.map((userData) => (
-                    <tr key={userData.id} className={`hover:bg-gray-50 ${selectedUsers.has(userData.id) ? 'bg-blue-50' : ''}`}>
+                    <tr key={userData.id} className={`hover:bg-gray-800 transition-colors ${selectedUsers.has(userData.id) ? 'bg-blue-900/30' : ''}`}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedUsers.has(userData.id)}
                           onChange={() => toggleUserSelection(userData.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-700"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{userData.email}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm font-semibold text-white">{userData.email}</div>
+                        <div className="text-sm text-gray-400">
                           Joined {new Date(userData.created_at).toLocaleDateString()}
                         </div>
-                        <div className="text-sm text-gray-500">Weight: {userData.preferred_weight}kg</div>
+                        <div className="text-sm text-gray-400">Weight: {userData.preferred_weight}kg</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <select
                           value={userData.role}
                           onChange={(e) => updateUserRole(userData.id, e.target.value)}
-                          className={`text-xs font-medium px-2.5 py-0.5 rounded-full border-0 ${
-                            userData.role === 'supreme_admin' ? 'bg-purple-100 text-purple-800' :
-                            userData.role === 'group_admin' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
+                          className={`text-xs font-bold px-3 py-1 border ${
+                            userData.role === 'supreme_admin' ? 'bg-purple-600 text-white border-purple-500' :
+                            userData.role === 'group_admin' ? 'bg-blue-600 text-white border-blue-500' :
+                            'bg-gray-600 text-white border-gray-500'
                           }`}
                         >
                           <option value="user">User</option>
@@ -478,7 +486,7 @@ export default function UserManagementPage() {
                         <select
                           value={userData.group_id || ''}
                           onChange={(e) => updateUserGroup(userData.id, e.target.value || null)}
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
+                          className="text-sm border border-gray-600 bg-gray-700 text-white px-2 py-1"
                         >
                           <option value="">No Group</option>
                           {groups.map(group => (
@@ -486,17 +494,17 @@ export default function UserManagementPage() {
                           ))}
                         </select>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {userData.location}
                         {userData.is_weekly_mode && (
-                          <div className="text-xs text-blue-600">Weekly Mode</div>
+                          <div className="text-xs text-blue-400">Weekly Mode</div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>{userData.total_points} pts</div>
-                        <div className="text-xs text-gray-500">{userData.total_workouts} workouts</div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        <div className="font-bold text-green-400">{userData.total_points} pts</div>
+                        <div className="text-xs text-gray-400">{userData.total_workouts} workouts</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                         {userData.last_workout 
                           ? new Date(userData.last_workout).toLocaleDateString()
                           : 'Never'
@@ -505,7 +513,7 @@ export default function UserManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => deleteUser(userData.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="bg-red-600 text-white px-3 py-1 hover:bg-red-700 font-semibold transition-colors border border-red-500"
                         >
                           Delete
                         </button>
@@ -518,7 +526,7 @@ export default function UserManagementPage() {
 
             {filteredUsers.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-gray-500">No users found matching your criteria</p>
+                <p className="text-gray-400">No users found matching your criteria</p>
               </div>
             )}
           </div>

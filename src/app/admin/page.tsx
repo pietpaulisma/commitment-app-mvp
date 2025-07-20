@@ -25,10 +25,10 @@ export default function AdminPage() {
 
   if (authLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+          <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
+          <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
     )
@@ -39,20 +39,20 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       <RoleBasedNavigation />
       
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-white">Admin Panel</h1>
+            <p className="text-gray-400 mt-1">
               {isSupremeAdmin ? 'Supreme Admin Dashboard' : 'Group Admin Dashboard'}
             </p>
           </div>
           <button
             onClick={signOut}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+            className="bg-red-600 text-white px-6 py-3 hover:bg-red-700 font-semibold transition-colors border border-red-500"
           >
             Sign Out
           </button>
@@ -60,19 +60,19 @@ export default function AdminPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Group Management */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Group Management</h3>
-            <div className="space-y-2">
+          <div className="bg-gray-900 border border-gray-700 p-6">
+            <h3 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">Group Management</h3>
+            <div className="space-y-3">
               <a 
                 href="/admin/groups" 
-                className="block w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 text-center"
+                className="block w-full bg-blue-600 text-white py-3 hover:bg-blue-500 text-center font-semibold transition-colors border border-blue-500"
               >
                 View My Group
               </a>
               {isSupremeAdmin && (
                 <a 
                   href="/admin/groups/all" 
-                  className="block w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 text-center"
+                  className="block w-full bg-purple-600 text-white py-3 hover:bg-purple-500 text-center font-semibold transition-colors border border-purple-500"
                 >
                   All Groups
                 </a>
@@ -81,18 +81,18 @@ export default function AdminPage() {
           </div>
 
           {/* Member Management */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Members</h3>
-            <div className="space-y-2">
+          <div className="bg-gray-900 border border-gray-700 p-6">
+            <h3 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">Members</h3>
+            <div className="space-y-3">
               <a 
                 href="/admin/members" 
-                className="block w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 text-center"
+                className="block w-full bg-green-600 text-white py-3 hover:bg-green-500 text-center font-semibold transition-colors border border-green-500"
               >
                 Manage Members
               </a>
               <a 
                 href="/admin/leaderboard" 
-                className="block w-full bg-yellow-600 text-white py-2 rounded-md hover:bg-yellow-700 text-center"
+                className="block w-full bg-yellow-600 text-white py-3 hover:bg-yellow-500 text-center font-semibold transition-colors border border-yellow-500"
               >
                 Leaderboard
               </a>
@@ -101,24 +101,24 @@ export default function AdminPage() {
 
           {/* Supreme Admin Only */}
           {isSupremeAdmin && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">System Management</h3>
-              <div className="space-y-2">
+            <div className="bg-gray-900 border border-gray-700 p-6">
+              <h3 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">System Management</h3>
+              <div className="space-y-3">
                 <a 
                   href="/admin/exercises" 
-                  className="block w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 text-center"
+                  className="block w-full bg-purple-600 text-white py-3 hover:bg-purple-500 text-center font-semibold transition-colors border border-purple-500"
                 >
                   Manage Exercises
                 </a>
                 <a 
                   href="/admin/group-exercises" 
-                  className="block w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 text-center"
+                  className="block w-full bg-green-600 text-white py-3 hover:bg-green-500 text-center font-semibold transition-colors border border-green-500"
                 >
                   Assign Exercises to Groups
                 </a>
                 <a 
                   href="/admin/users" 
-                  className="block w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 text-center"
+                  className="block w-full bg-indigo-600 text-white py-3 hover:bg-indigo-500 text-center font-semibold transition-colors border border-indigo-500"
                 >
                   All Users
                 </a>
@@ -127,13 +127,13 @@ export default function AdminPage() {
           )}
 
           {/* Reports */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reports</h3>
-            <div className="space-y-2">
-              <button className="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700">
+          <div className="bg-gray-900 border border-gray-700 p-6">
+            <h3 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-2">Reports</h3>
+            <div className="space-y-3">
+              <button className="w-full bg-gray-600 text-white py-3 hover:bg-gray-500 font-semibold transition-colors border border-gray-500">
                 Activity Report
               </button>
-              <button className="w-full bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700">
+              <button className="w-full bg-gray-600 text-white py-3 hover:bg-gray-500 font-semibold transition-colors border border-gray-500">
                 Points Summary
               </button>
             </div>

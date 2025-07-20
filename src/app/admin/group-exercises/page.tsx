@@ -167,12 +167,12 @@ export default function GroupExercisesPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Manage Group Exercises</h1>
-            <p className="text-gray-400 mt-2">Assign exercises to groups</p>
+            <h1 className="text-3xl font-bold text-white">MANAGE GROUP EXERCISES</h1>
+            <p className="text-gray-400 mt-1">Assign exercises to groups</p>
           </div>
           <button
             onClick={() => router.push('/admin')}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 transition-colors"
+            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 font-semibold transition-colors border border-gray-600"
           >
             Back to Admin
           </button>
@@ -181,7 +181,7 @@ export default function GroupExercisesPage() {
         {/* Group Selection */}
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Select Group
+            SELECT GROUP
           </label>
           <select
             value={selectedGroup}
@@ -203,7 +203,7 @@ export default function GroupExercisesPage() {
             <div className="mb-6">
               <button
                 onClick={() => assignAllExercisesToGroup(selectedGroup)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 mr-4 transition-colors"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 mr-4 font-semibold transition-colors border border-green-500"
               >
                 Assign All Exercises to Group
               </button>
@@ -216,7 +216,7 @@ export default function GroupExercisesPage() {
               {/* Assigned Exercises */}
               <div>
                 <h2 className="text-xl font-semibold mb-4 text-green-400">
-                  Assigned Exercises ({selectedGroupExercises.length})
+                  ASSIGNED EXERCISES ({selectedGroupExercises.length})
                 </h2>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {selectedGroupExercises.map(exercise => (
@@ -232,7 +232,7 @@ export default function GroupExercisesPage() {
                       </div>
                       <button
                         onClick={() => toggleExerciseAssignment(exercise.id, selectedGroup)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm transition-colors"
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm font-semibold transition-colors border border-red-500"
                       >
                         Remove
                       </button>
@@ -244,7 +244,7 @@ export default function GroupExercisesPage() {
               {/* Available Exercises */}
               <div>
                 <h2 className="text-xl font-semibold mb-4 text-blue-400">
-                  Available Exercises ({availableExercises.length})
+                  AVAILABLE EXERCISES ({availableExercises.length})
                 </h2>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {availableExercises.map(exercise => (
@@ -260,7 +260,7 @@ export default function GroupExercisesPage() {
                       </div>
                       <button
                         onClick={() => toggleExerciseAssignment(exercise.id, selectedGroup)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm transition-colors"
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm font-semibold transition-colors border border-green-500"
                       >
                         Assign
                       </button>
