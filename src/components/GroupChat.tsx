@@ -37,22 +37,51 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
       
       // Set up real-time subscription
       const channel = supabase
-        .channel('group_chat')
+        .channel(`group_chat_${profile.group_id}`)
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'INSERT',
             schema: 'public',
             table: 'chat_messages',
             filter: `group_id=eq.${profile.group_id}`
           },
-          (payload) => {
-            if (payload.eventType === 'INSERT') {
-              loadMessages() // Reload to get user info
+          async (payload) => {
+            console.log('Real-time message received:', payload)
+            // Skip if this is our own message (already added optimistically)
+            if (payload.new && payload.new.user_id !== user?.id) {
+              try {
+                // Get user info for the new message
+                const { data: userInfo } = await supabase
+                  .from('profiles')
+                  .select('email, role')
+                  .eq('id', payload.new.user_id)
+                  .single()
+
+                const newMessage = {
+                  id: payload.new.id,
+                  group_id: payload.new.group_id,
+                  user_id: payload.new.user_id,
+                  message: payload.new.message,
+                  created_at: payload.new.created_at,
+                  user_email: userInfo?.email || 'Unknown',
+                  user_role: userInfo?.role || 'user'
+                }
+
+                setMessages(prev => [...prev, newMessage])
+              } catch (error) {
+                console.error('Error processing real-time message:', error)
+                // Fallback to full reload only for others' messages
+                if (payload.new.user_id !== user?.id) {
+                  loadMessages()
+                }
+              }
             }
           }
         )
-        .subscribe()
+        .subscribe((status) => {
+          console.log('Subscription status:', status)
+        })
 
       return () => {
         supabase.removeChannel(channel)
@@ -129,25 +158,60 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
     e.preventDefault()
     if (!newMessage.trim() || !user || !profile?.group_id || sending) return
 
+    const messageText = newMessage.trim()
+    const tempId = `temp-${Date.now()}`
+    
+    // Optimistic update - show message immediately
+    const optimisticMessage = {
+      id: tempId,
+      group_id: profile.group_id,
+      user_id: user.id,
+      message: messageText,
+      created_at: new Date().toISOString(),
+      user_email: profile.email,
+      user_role: profile.role
+    }
+
+    setMessages(prev => [...prev, optimisticMessage])
+    setNewMessage('')
     setSending(true)
+
     try {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('chat_messages')
         .insert({
           group_id: profile.group_id,
           user_id: user.id,
-          message: newMessage.trim()
+          message: messageText
         })
+        .select()
 
       if (error) {
-        console.error('Chat error:', error)
-        alert(`Failed to send message: ${error.message}. Check console for details.`)
+        console.error('Chat error details:', error)
+        // Remove the optimistic message on error
+        setMessages(prev => prev.filter(msg => msg.id !== tempId))
+        setNewMessage(messageText) // Restore the message text
+        alert(`Failed to send message: ${error.message}`)
         return
       }
 
-      setNewMessage('')
+      // Replace optimistic message with real one
+      if (data && data[0]) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempId ? {
+            ...optimisticMessage,
+            id: data[0].id,
+            created_at: data[0].created_at
+          } : msg
+        ))
+      }
+
+      console.log('Message sent successfully:', data)
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('Unexpected error sending message:', error)
+      // Remove the optimistic message on error
+      setMessages(prev => prev.filter(msg => msg.id !== tempId))
+      setNewMessage(messageText) // Restore the message text
       alert('Failed to send message. Please check console for details.')
     } finally {
       setSending(false)
@@ -250,7 +314,9 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                 <div
                   className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
                     message.user_id === user?.id
-                      ? 'bg-blue-600 text-white'
+                      ? message.id.startsWith('temp-') 
+                        ? 'bg-blue-500 text-white opacity-70' 
+                        : 'bg-blue-600 text-white'
                       : 'bg-gray-700 text-white'
                   }`}
                 >
@@ -262,8 +328,11 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                     </div>
                   )}
                   <div className="text-sm">{message.message}</div>
-                  <div className="text-xs opacity-75 mt-1">
-                    {formatTime(message.created_at)}
+                  <div className="text-xs opacity-75 mt-1 flex items-center space-x-1">
+                    <span>{formatTime(message.created_at)}</span>
+                    {message.id.startsWith('temp-') && (
+                      <span className="text-xs">⏳</span>
+                    )}
                   </div>
                 </div>
               </div>
