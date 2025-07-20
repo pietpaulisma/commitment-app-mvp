@@ -91,7 +91,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       const today = new Date().toISOString().split('T')[0]
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
-      // Get exercises for the group
+      // First, let's see what's in group_exercises table
       const { data: groupExercises, error: exerciseError } = await supabase
         .from('group_exercises')
         .select(`
@@ -105,8 +105,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       }
 
       console.log('Raw group exercises:', groupExercises)
+      console.log('Group exercises count:', groupExercises?.length || 0)
+      
+      // Also get ALL exercises to compare
+      const { data: allExercises } = await supabase
+        .from('exercises')
+        .select('*')
+      
+      console.log('Total exercises in database:', allExercises?.length || 0)
+      console.log('All exercise names:', allExercises?.map(ex => ex.name) || [])
+
       const exerciseList = groupExercises?.map(ge => ge.exercises).filter(Boolean) || []
-      console.log('Processed exercise list:', exerciseList)
+      console.log('Exercises available for workout logging:', exerciseList.length)
+      console.log('Available exercise names:', exerciseList.map(ex => ex.name))
       
       // Try to get today's workout counts (may fail if logs table doesn't exist)
       let todayLogs = []
