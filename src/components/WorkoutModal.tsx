@@ -134,8 +134,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const recoveryExercises = exercises.filter(ex => ex.type === 'recovery').slice(0, 3)
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-600 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-gray-900">
           <h3 className="text-lg font-bold text-white">Log Workout</h3>
@@ -147,7 +146,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
           {/* Quick Add Buttons */}
           {popularExercises.length > 0 && (
             <div>
@@ -291,7 +290,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             )}
           </form>
         </div>
-      </div>
     </div>
   )
 }

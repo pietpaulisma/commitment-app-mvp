@@ -255,27 +255,24 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
 
   if (!profile?.group_id) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-        <div className="bg-gray-900 border border-gray-600 w-full max-w-md p-6">
-          <div className="text-center">
-            <div className="text-4xl mb-4">💬</div>
-            <h3 className="text-xl font-bold text-white mb-2">No Group Chat</h3>
-            <p className="text-gray-400 mb-4">You need to be in a group to access the chat.</p>
-            <button
-              onClick={onClose}
-              className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
-            >
-              Close
-            </button>
-          </div>
+      <div className="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="text-4xl mb-4">💬</div>
+          <h3 className="text-xl font-bold text-white mb-2">No Group Chat</h3>
+          <p className="text-gray-400 mb-4">You need to be in a group to access the chat.</p>
+          <button
+            onClick={onClose}
+            className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 border border-gray-600 w-full max-w-md h-[600px] flex flex-col">
+    <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-700">
           <div>
@@ -365,7 +362,6 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
             {newMessage.length}/500 characters
           </div>
         </form>
-      </div>
     </div>
   )
 }
