@@ -1,18 +1,17 @@
 @import "tailwindcss";
 
-/* Brutalist design theme */
+/* Clean modern dark theme */
 :root {
   --background: #000000;
   --foreground: #ffffff;
   --card-background: #111111;
   --border-color: #333333;
   --text-muted: #888888;
-  --accent-red: #ff0000;
-  --accent-blue: #0066ff;
-  --accent-green: #00ff00;
-  --accent-yellow: #ffff00;
-  --accent-purple: #9900ff;
-  --accent-cyan: #00ffff;
+  --accent-blue: #3b82f6;
+  --accent-green: #10b981;
+  --accent-red: #ef4444;
+  --accent-purple: #8b5cf6;
+  --accent-yellow: #f59e0b;
 }
 
 @theme inline {
@@ -26,52 +25,44 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  font-weight: 600;
+  font-weight: 400;
 }
 
-/* Brutalist utility classes */
-.bg-brutalist-card {
+/* Modern utility classes */
+.bg-modern-card {
   background-color: var(--card-background);
 }
 
-.border-brutalist {
+.border-modern {
   border-color: var(--border-color);
-  border-width: 2px;
+  border-width: 1px;
   border-style: solid;
 }
 
-.text-brutalist-muted {
+.text-modern-muted {
   color: var(--text-muted);
 }
 
-/* No rounded corners anywhere */
+/* Keep rectangular corners but cleaner */
 * {
   border-radius: 0 !important;
 }
 
-/* Bold headers */
+/* Clean modern headers */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Button reset for brutalist style */
-.btn-brutalist {
-  border-radius: 0;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border: 2px solid;
-  transition: all 0.1s ease;
+  letter-spacing: 0.025em;
 }
 
-.btn-brutalist:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 currentColor;
+/* Modern button styles */
+.btn-modern {
+  border-radius: 0;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease;
 }
 
-.btn-brutalist:active {
-  transform: translate(0, 0);
-  box-shadow: 2px 2px 0 currentColor;
+.btn-modern:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }

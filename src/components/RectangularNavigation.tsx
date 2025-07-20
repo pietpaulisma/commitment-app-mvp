@@ -72,44 +72,44 @@ export default function RectangularNavigation() {
 
   return (
     <>
-      {/* Bottom Navigation - Brutalist Design */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white">
+      {/* Bottom Navigation - Modern Clean Design */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-700">
         <div className="flex">
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={() => setIsWorkoutOpen(true)}
-            className="flex-1 relative h-16 bg-red-600 border-r-4 border-white overflow-hidden group hover:bg-red-500 transition-colors duration-100"
+            className="flex-1 relative h-16 bg-blue-600 border-r border-gray-700 overflow-hidden group hover:bg-blue-500 transition-colors duration-200"
           >
             {/* Progress Background */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-green-400 transition-all duration-300 ease-out"
+              className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out"
               style={{ width: `${progressPercentage}%` }}
             />
             
             {/* Button Content */}
             <div className="relative h-full flex items-center justify-between px-6 text-white">
               <div className="flex flex-col items-start">
-                <span className="text-sm font-black uppercase tracking-wider">
-                  {isComplete ? 'COMPLETE!' : 'WORKOUT'}
+                <span className="text-sm font-semibold">
+                  {isComplete ? 'Complete!' : 'Log Workout'}
                 </span>
-                <span className="text-xs font-bold uppercase">
-                  {dailyProgress}/{dailyTarget} PTS
+                <span className="text-xs opacity-75">
+                  {dailyProgress}/{dailyTarget} points
                 </span>
               </div>
               
               <div className="flex flex-col items-end">
-                <span className="text-2xl font-black">
+                <span className="text-xl font-bold">
                   {Math.round(progressPercentage)}%
                 </span>
-                <span className="text-xs font-bold">
-                  {isComplete ? 'DONE' : 'GO'}
+                <span className="text-xs opacity-75">
+                  {isComplete ? '🎉' : '💪'}
                 </span>
               </div>
             </div>
 
-            {/* Flash effect when complete */}
+            {/* Subtle glow when complete */}
             {isComplete && (
-              <div className="absolute inset-0 bg-yellow-400 opacity-30 animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
             )}
           </button>
 
@@ -117,33 +117,33 @@ export default function RectangularNavigation() {
           <button
             onClick={() => setIsChatOpen(true)}
             disabled={!profile.group_id}
-            className={`w-20 h-16 flex items-center justify-center transition-colors duration-100 ${
+            className={`w-20 h-16 flex items-center justify-center transition-colors duration-200 ${
               profile.group_id 
-                ? 'bg-blue-600 hover:bg-blue-500 text-white border-2 border-white' 
-                : 'bg-gray-600 text-gray-400 cursor-not-allowed border-2 border-gray-400'
+                ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white' 
+                : 'bg-gray-900 text-gray-500 cursor-not-allowed'
             }`}
           >
-            <ChatBubbleLeftRightIcon className="w-8 h-8" />
+            <ChatBubbleLeftRightIcon className="w-6 h-6" />
           </button>
         </div>
       </div>
 
-      {/* Desktop Navigation (Brutalist) */}
-      <nav className="hidden lg:block bg-black border-b-4 border-white">
+      {/* Desktop Navigation (Modern Clean) */}
+      <nav className="hidden lg:block bg-black border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between items-center py-6">
-            <div className="text-2xl font-black text-white uppercase tracking-wider">
-              COMMITMENT APP
+          <div className="flex justify-between items-center py-4">
+            <div className="text-xl font-bold text-white">
+              Commitment App
             </div>
 
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
               <Link 
                 href="/profile" 
-                className="text-sm text-white hover:text-yellow-400 flex items-center space-x-3 font-bold uppercase tracking-wide border-2 border-white hover:border-yellow-400 px-4 py-2 transition-colors duration-100"
+                className="text-sm text-gray-300 hover:text-white flex items-center space-x-2 font-medium border border-gray-700 hover:border-gray-600 px-3 py-2 transition-colors duration-200"
               >
-                <span>PROFILE</span>
-                <div className="w-8 h-8 bg-purple-600 border-2 border-white flex items-center justify-center">
-                  <UserIcon className="w-5 h-5 text-white" />
+                <span>Profile</span>
+                <div className="w-8 h-8 bg-blue-600 flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-white" />
                 </div>
               </Link>
             </div>

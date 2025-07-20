@@ -255,17 +255,17 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
 
   if (!profile?.group_id) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-        <div className="bg-black border-4 border-white w-full max-w-md p-8">
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-900 border border-gray-600 w-full max-w-md p-6">
           <div className="text-center">
-            <div className="text-6xl mb-6">💬</div>
-            <h3 className="text-2xl font-black text-white mb-4 uppercase tracking-wider">NO GROUP CHAT</h3>
-            <p className="text-gray-300 mb-6 font-bold uppercase">YOU NEED TO BE IN A GROUP TO ACCESS CHAT</p>
+            <div className="text-4xl mb-4">💬</div>
+            <h3 className="text-xl font-bold text-white mb-2">No Group Chat</h3>
+            <p className="text-gray-400 mb-4">You need to be in a group to access the chat.</p>
             <button
               onClick={onClose}
-              className="bg-red-600 text-white px-6 py-3 border-2 border-white hover:bg-red-500 hover:border-yellow-400 font-black uppercase tracking-wider"
+              className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 transition-colors"
             >
-              CLOSE
+              Close
             </button>
           </div>
         </div>
@@ -274,36 +274,36 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-      <div className="bg-black border-4 border-white w-full max-w-md h-[600px] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-gray-600 w-full max-w-md h-[600px] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b-4 border-white bg-red-600">
+        <div className="flex justify-between items-center p-4 border-b border-gray-700">
           <div>
-            <h3 className="text-xl font-black text-white uppercase tracking-wider">{groupName} CHAT</h3>
-            <p className="text-sm text-gray-200 font-bold uppercase">GROUP DISCUSSION</p>
+            <h3 className="text-lg font-semibold text-white">{groupName} Chat</h3>
+            <p className="text-sm text-gray-400">Group discussion</p>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:text-yellow-400 transition-colors border-2 border-white hover:border-yellow-400 p-2"
+            className="text-gray-400 hover:text-white transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-              <path strokeLinecap="square" strokeLinejoin="miter" d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-900">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
-            <div className="text-center py-8 border-2 border-white">
-              <div className="animate-spin h-8 w-8 border-4 border-white border-t-red-600 mx-auto"></div>
-              <p className="mt-4 text-white text-sm font-black uppercase">LOADING MESSAGES...</p>
+            <div className="text-center py-8">
+              <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
+              <p className="mt-2 text-gray-400 text-sm">Loading messages...</p>
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-8 border-2 border-white">
-              <div className="text-5xl mb-4">💬</div>
-              <p className="text-white font-black uppercase">NO MESSAGES YET</p>
-              <p className="text-gray-400 text-sm font-bold uppercase mt-2">BE THE FIRST TO SAY HELLO!</p>
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">💬</div>
+              <p className="text-gray-400">No messages yet</p>
+              <p className="text-gray-500 text-sm">Be the first to say hello!</p>
             </div>
           ) : (
             messages.map((message) => (
@@ -312,26 +312,26 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                 className={`flex ${message.user_id === user?.id ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-3 border-2 ${
+                  className={`max-w-xs lg:max-w-md px-3 py-2 ${
                     message.user_id === user?.id
                       ? message.id.startsWith('temp-') 
-                        ? 'bg-blue-600 border-blue-400 text-white opacity-70' 
-                        : 'bg-blue-600 border-white text-white'
-                      : 'bg-green-600 border-white text-white'
+                        ? 'bg-blue-500 text-white opacity-70' 
+                        : 'bg-blue-600 text-white'
+                      : 'bg-gray-700 text-white'
                   }`}
                 >
                   {message.user_id !== user?.id && (
-                    <div className="text-xs mb-2">
-                      <span className="text-yellow-400 font-black uppercase">
+                    <div className="text-xs opacity-75 mb-1">
+                      <span className={getRoleColor(message.user_role || 'user')}>
                         {message.user_email.split('@')[0]}
                       </span>
                     </div>
                   )}
-                  <div className="text-sm font-medium">{message.message}</div>
-                  <div className="text-xs mt-2 flex items-center space-x-2 font-bold">
+                  <div className="text-sm">{message.message}</div>
+                  <div className="text-xs opacity-75 mt-1 flex items-center space-x-1">
                     <span>{formatTime(message.created_at)}</span>
                     {message.id.startsWith('temp-') && (
-                      <span className="text-yellow-400 font-black">SENDING</span>
+                      <span className="text-xs">⏳</span>
                     )}
                   </div>
                 </div>
@@ -342,27 +342,27 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
         </div>
 
         {/* Message Input */}
-        <form onSubmit={sendMessage} className="p-6 border-t-4 border-white bg-black">
-          <div className="flex space-x-3">
+        <form onSubmit={sendMessage} className="p-4 border-t border-gray-700">
+          <div className="flex space-x-2">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="TYPE MESSAGE..."
-              className="flex-1 px-4 py-3 bg-gray-900 border-2 border-white text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 font-medium uppercase"
+              placeholder="Type a message..."
+              className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={sending}
               maxLength={500}
             />
             <button
               type="submit"
               disabled={!newMessage.trim() || sending}
-              className="bg-green-600 text-white px-6 py-3 border-2 border-white hover:bg-green-500 hover:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-black uppercase"
+              className="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {sending ? 'SENDING' : 'SEND'}
+              {sending ? '...' : 'Send'}
             </button>
           </div>
-          <div className="text-xs text-gray-400 mt-2 font-bold uppercase">
-            {newMessage.length}/500 CHARACTERS
+          <div className="text-xs text-gray-500 mt-1">
+            {newMessage.length}/500 characters
           </div>
         </form>
       </div>

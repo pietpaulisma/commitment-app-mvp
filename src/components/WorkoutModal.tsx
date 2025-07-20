@@ -134,33 +134,33 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const recoveryExercises = exercises.filter(ex => ex.type === 'recovery').slice(0, 3)
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-      <div className="bg-black border-4 border-white w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-gray-600 w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b-4 border-white sticky top-0 bg-red-600">
-          <h3 className="text-xl font-black text-white uppercase tracking-wider">LOG WORKOUT</h3>
+        <div className="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-gray-900">
+          <h3 className="text-lg font-bold text-white">Log Workout</h3>
           <button
             onClick={onClose}
-            className="text-white hover:text-yellow-400 transition-colors p-2 border-2 border-white hover:border-yellow-400"
+            className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700"
           >
-            <XMarkIcon className="w-6 h-6" strokeWidth={3} />
+            <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6 bg-gray-900">
+        <div className="p-4 space-y-4">
           {/* Quick Add Buttons */}
           {popularExercises.length > 0 && (
             <div>
-              <h4 className="text-lg font-black text-white mb-4 uppercase tracking-wider">QUICK ADD</h4>
-              <div className="grid grid-cols-2 gap-3">
+              <h4 className="text-sm font-medium text-gray-300 mb-3">Quick Add</h4>
+              <div className="grid grid-cols-2 gap-2">
                 {popularExercises.map((exercise) => (
                   <button
                     key={exercise.id}
                     onClick={() => quickAddExercise(exercise)}
-                    className="bg-blue-600 hover:bg-blue-500 text-white p-4 text-sm font-bold transition-colors border-2 border-white hover:border-yellow-400 uppercase"
+                    className="bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 p-3 text-sm font-medium transition-colors border border-blue-700"
                   >
-                    <div className="font-black">{exercise.name}</div>
-                    <div className="text-xs font-bold">{exercise.points_per_unit} PTS/{exercise.unit.toUpperCase()}</div>
+                    <div className="font-semibold">{exercise.name}</div>
+                    <div className="text-xs opacity-75">{exercise.points_per_unit} pts/{exercise.unit}</div>
                   </button>
                 ))}
               </div>
@@ -170,17 +170,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           {/* Recovery Exercises */}
           {recoveryExercises.length > 0 && (
             <div>
-              <h4 className="text-lg font-black text-white mb-4 uppercase tracking-wider">RECOVERY</h4>
-              <div className="grid grid-cols-1 gap-3">
+              <h4 className="text-sm font-medium text-gray-300 mb-3">Recovery</h4>
+              <div className="grid grid-cols-1 gap-2">
                 {recoveryExercises.map((exercise) => (
                   <button
                     key={exercise.id}
                     onClick={() => quickAddExercise(exercise, 5)}
-                    className="bg-green-600 hover:bg-green-500 text-white p-4 text-sm font-bold transition-colors border-2 border-white hover:border-yellow-400 uppercase"
+                    className="bg-green-900/50 hover:bg-green-800/50 text-green-300 p-3 text-sm font-medium transition-colors border border-green-700"
                   >
                     <div className="flex justify-between items-center">
-                      <span className="font-black">{exercise.name}</span>
-                      <span className="text-xs font-bold">{exercise.points_per_unit} PTS/{exercise.unit.toUpperCase()}</span>
+                      <span className="font-semibold">{exercise.name}</span>
+                      <span className="text-xs opacity-75">{exercise.points_per_unit} pts/{exercise.unit}</span>
                     </div>
                   </button>
                 ))}
@@ -189,29 +189,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           )}
 
           {/* Manual Exercise Selection */}
-          <form onSubmit={handleSubmit} className="space-y-6 border-t-4 border-white pt-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-lg font-black text-white mb-3 uppercase tracking-wider">EXERCISE</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Exercise</label>
               <select 
                 value={selectedExercise?.id || ''} 
                 onChange={(e) => {
                   const exercise = exercises.find(ex => ex.id === e.target.value)
                   setSelectedExercise(exercise || null)
                 }}
-                className="w-full px-4 py-3 border-2 border-white focus:outline-none focus:border-yellow-400 text-sm bg-black text-white font-bold uppercase"
+                className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
               >
-                <option value="">SELECT AN EXERCISE...</option>
-                <optgroup label="REGULAR EXERCISES">
+                <option value="">Select an exercise...</option>
+                <optgroup label="Regular Exercises">
                   {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
                     <option key={exercise.id} value={exercise.id}>
-                      {exercise.name.toUpperCase()} ({exercise.points_per_unit} PTS/{exercise.unit.toUpperCase()})
+                      {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
                     </option>
                   ))}
                 </optgroup>
-                <optgroup label="RECOVERY EXERCISES">
+                <optgroup label="Recovery Exercises">
                   {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
                     <option key={exercise.id} value={exercise.id}>
-                      {exercise.name.toUpperCase()} ({exercise.points_per_unit} PTS/{exercise.unit.toUpperCase()})
+                      {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
                     </option>
                   ))}
                 </optgroup>
@@ -221,25 +221,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             {selectedExercise && (
               <>
                 {/* Exercise Info */}
-                <div className={`p-4 border-2 ${
-                  selectedExercise.type === 'recovery' ? 'bg-blue-600 border-white' : 'bg-purple-600 border-white'
+                <div className={`p-3 ${
+                  selectedExercise.type === 'recovery' ? 'bg-blue-900/30 border border-blue-700' : 'bg-gray-700 border border-gray-600'
                 }`}>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="font-black text-white uppercase">TYPE: {selectedExercise.type.toUpperCase()}</span>
-                    <span className="font-black text-yellow-400">{selectedExercise.points_per_unit} PTS/{selectedExercise.unit.toUpperCase()}</span>
+                    <span className="font-medium text-gray-200">Type: {selectedExercise.type}</span>
+                    <span className="font-bold text-green-400">{selectedExercise.points_per_unit} pts/{selectedExercise.unit}</span>
                   </div>
                   {selectedExercise.type === 'recovery' && (
-                    <div className="text-xs text-white font-bold uppercase mt-2">
-                      💡 RECOVERY HELPS WITH REST AND MOBILITY
+                    <div className="text-xs text-blue-400 mt-1">
+                      💡 Recovery exercises help with rest and mobility
                     </div>
                   )}
                 </div>
                 
                 {/* Quantity Input */}
                 <div>
-                  <label className="block text-lg font-black text-white mb-3 uppercase tracking-wider">
-                    {selectedExercise.is_time_based ? 'DURATION' : 'QUANTITY'} 
-                    <span className="text-gray-400 ml-2">({selectedExercise.unit.toUpperCase()})</span>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} 
+                    <span className="text-gray-400 ml-1">({selectedExercise.unit})</span>
                   </label>
                   <input 
                     type="number" 
@@ -247,8 +247,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     min="0" 
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-white focus:outline-none focus:border-yellow-400 text-lg bg-black text-white font-bold"
-                    placeholder={`ENTER ${selectedExercise.is_time_based ? 'DURATION' : 'QUANTITY'}`}
+                    className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
+                    placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
                     required
                   />
                 </div>
@@ -256,25 +256,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 {/* Weight Input */}
                 {selectedExercise.is_weighted && (
                   <div>
-                    <label className="block text-lg font-black text-white mb-3 uppercase tracking-wider">WEIGHT (KG)</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
                     <input 
                       type="number" 
                       step="any" 
                       min="0" 
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-white focus:outline-none focus:border-yellow-400 text-lg bg-black text-white font-bold"
-                      placeholder="ENTER WEIGHT (OPTIONAL)"
+                      className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
+                      placeholder="Enter weight (optional)"
                     />
                   </div>
                 )}
 
                 {/* Points Preview */}
                 {quantity && (
-                  <div className="bg-green-600 border-2 border-white p-4">
+                  <div className="bg-green-900/30 border border-green-700 p-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-black text-white uppercase tracking-wider">POINTS:</span>
-                      <span className="text-3xl font-black text-yellow-400">{calculatePoints()}</span>
+                      <span className="font-medium text-green-300">Points:</span>
+                      <span className="text-xl font-bold text-green-400">{calculatePoints()}</span>
                     </div>
                   </div>
                 )}
@@ -283,9 +283,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-green-600 text-white py-4 px-6 border-2 border-white hover:bg-green-500 hover:border-yellow-400 transition-colors font-black uppercase tracking-wider text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 text-white py-3 px-4 hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'LOGGING...' : 'LOG WORKOUT'}
+                  {loading ? 'Logging...' : 'Log Workout'}
                 </button>
               </>
             )}
