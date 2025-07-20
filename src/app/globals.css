@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
-/* Dark mode as default */
+/* Brutalist design theme */
 :root {
-  --background: #0f0f0f;
+  --background: #000000;
   --foreground: #ffffff;
-  --card-background: #1a1a1a;
-  --border-color: #2a2a2a;
-  --text-muted: #a3a3a3;
+  --card-background: #111111;
+  --border-color: #333333;
+  --text-muted: #888888;
+  --accent-red: #ff0000;
+  --accent-blue: #0066ff;
+  --accent-green: #00ff00;
+  --accent-yellow: #ffff00;
+  --accent-purple: #9900ff;
+  --accent-cyan: #00ffff;
 }
 
 @theme inline {
@@ -20,17 +26,52 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-weight: 600;
 }
 
-/* Custom dark mode classes */
-.bg-dark-card {
+/* Brutalist utility classes */
+.bg-brutalist-card {
   background-color: var(--card-background);
 }
 
-.border-dark {
+.border-brutalist {
   border-color: var(--border-color);
+  border-width: 2px;
+  border-style: solid;
 }
 
-.text-dark-muted {
+.text-brutalist-muted {
   color: var(--text-muted);
+}
+
+/* No rounded corners anywhere */
+* {
+  border-radius: 0 !important;
+}
+
+/* Bold headers */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Button reset for brutalist style */
+.btn-brutalist {
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 2px solid;
+  transition: all 0.1s ease;
+}
+
+.btn-brutalist:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 currentColor;
+}
+
+.btn-brutalist:active {
+  transform: translate(0, 0);
+  box-shadow: 2px 2px 0 currentColor;
 }

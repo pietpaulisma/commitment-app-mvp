@@ -153,10 +153,10 @@ export default function RectangularDashboard() {
 
   if (authLoading || profileLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
-          <p className="mt-2 text-gray-400">Loading...</p>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center border-4 border-white p-8">
+          <div className="animate-spin h-12 w-12 border-4 border-white border-t-red-600 mx-auto"></div>
+          <p className="mt-4 text-white font-black uppercase tracking-wider">LOADING...</p>
         </div>
       </div>
     )
@@ -167,55 +167,39 @@ export default function RectangularDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-24">
-      {/* Simple Header */}
-      <div className="bg-gray-900 border-b border-gray-700 px-4 py-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-white">Good to see you!</h1>
-            <p className="text-gray-400 text-sm">{groupName}</p>
-          </div>
-          <Link href="/profile" className="flex-shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-semibold">
-                {profile.email.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          </Link>
-        </div>
-      </div>
+    <div className="min-h-screen bg-black pb-20 pt-8">
 
-      <div className="p-4 space-y-6">
+      <div className="p-6 space-y-8">
         {/* Recent Chat Messages */}
-        <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 text-white">Recent Chats</h3>
+        <div className="bg-gray-900 border-4 border-white p-6">
+          <h3 className="text-xl font-black mb-6 text-white uppercase tracking-wider">RECENT CHATS</h3>
           {recentChats.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="text-3xl mb-2">💬</div>
-              <p className="text-gray-400 text-sm">No recent messages</p>
-              <p className="text-gray-500 text-xs">Start a conversation with your group!</p>
+            <div className="text-center py-8 border-2 border-gray-600">
+              <div className="text-5xl mb-4">💬</div>
+              <p className="text-gray-300 text-sm font-bold uppercase">NO MESSAGES</p>
+              <p className="text-gray-500 text-xs font-bold uppercase mt-1">START TALKING!</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {recentChats.map((chat) => (
-                <div key={chat.id} className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-medium text-gray-300">
+                <div key={chat.id} className="flex items-start space-x-4 border-l-4 border-cyan-400 pl-4 py-2">
+                  <div className="w-10 h-10 bg-red-600 border-2 border-white flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-black text-white">
                       {chat.user_email.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className={`text-sm font-medium ${
-                        chat.is_own_message ? 'text-blue-400' : 'text-white'
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className={`text-sm font-black uppercase ${
+                        chat.is_own_message ? 'text-yellow-400' : 'text-white'
                       }`}>
-                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
+                        {chat.is_own_message ? 'YOU' : chat.user_email.split('@')[0].toUpperCase()}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-400 font-bold uppercase">
                         {formatTimeAgo(chat.created_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300 truncate">{chat.message}</p>
+                    <p className="text-sm text-gray-200 font-medium">{chat.message}</p>
                   </div>
                 </div>
               ))}
@@ -224,39 +208,39 @@ export default function RectangularDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 text-white">Recent Activity</h3>
+        <div className="bg-gray-900 border-4 border-white p-6">
+          <h3 className="text-xl font-black mb-6 text-white uppercase tracking-wider">RECENT ACTIVITY</h3>
           {recentActivity.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="text-3xl mb-2">🏃‍♂️</div>
-              <p className="text-gray-400 text-sm">No recent activity</p>
-              <p className="text-gray-500 text-xs">Start logging workouts to see group activity!</p>
+            <div className="text-center py-8 border-2 border-gray-600">
+              <div className="text-5xl mb-4">🏃‍♂️</div>
+              <p className="text-gray-300 text-sm font-bold uppercase">NO ACTIVITY</p>
+              <p className="text-gray-500 text-xs font-bold uppercase mt-1">GET MOVING!</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between py-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-medium text-gray-300">
+                <div key={activity.id} className="flex items-center justify-between py-3 border-l-4 border-green-400 pl-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-blue-600 border-2 border-white flex items-center justify-center">
+                      <span className="text-sm font-black text-white">
                         {activity.user_email.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-medium ${
-                          activity.is_own_activity ? 'text-blue-400' : 'text-white'
+                      <div className="flex items-center space-x-3">
+                        <span className={`text-sm font-black uppercase ${
+                          activity.is_own_activity ? 'text-yellow-400' : 'text-white'
                         }`}>
-                          {activity.is_own_activity ? 'You' : activity.user_email.split('@')[0]}
+                          {activity.is_own_activity ? 'YOU' : activity.user_email.split('@')[0].toUpperCase()}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-400 font-bold uppercase">
                           {formatTimeAgo(activity.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400">{activity.exercise_name}</p>
+                      <p className="text-sm text-gray-200 font-bold uppercase mt-1">{activity.exercise_name}</p>
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-green-400">
+                  <div className="text-lg font-black text-green-400 border-2 border-green-400 px-3 py-1">
                     +{activity.points}
                   </div>
                 </div>

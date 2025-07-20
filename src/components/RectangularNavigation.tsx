@@ -72,44 +72,44 @@ export default function RectangularNavigation() {
 
   return (
     <>
-      {/* Bottom Navigation - Rectangular Design */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 shadow-lg p-4">
-        <div className="flex space-x-3">
+      {/* Bottom Navigation - Brutalist Design */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t-4 border-white">
+        <div className="flex">
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={() => setIsWorkoutOpen(true)}
-            className="flex-1 relative h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl overflow-hidden group hover:from-blue-700 hover:to-purple-700 transition-all duration-200 active:scale-98"
+            className="flex-1 relative h-16 bg-red-600 border-r-4 border-white overflow-hidden group hover:bg-red-500 transition-colors duration-100"
           >
             {/* Progress Background */}
             <div 
-              className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-500 ease-out"
+              className="absolute left-0 top-0 bottom-0 bg-green-400 transition-all duration-300 ease-out"
               style={{ width: `${progressPercentage}%` }}
             />
             
             {/* Button Content */}
-            <div className="relative h-full flex items-center justify-between px-4 text-white">
+            <div className="relative h-full flex items-center justify-between px-6 text-white">
               <div className="flex flex-col items-start">
-                <span className="text-sm font-medium opacity-90">
-                  {isComplete ? 'Target Complete!' : 'Log Workout'}
+                <span className="text-sm font-black uppercase tracking-wider">
+                  {isComplete ? 'COMPLETE!' : 'WORKOUT'}
                 </span>
-                <span className="text-xs opacity-75">
-                  {dailyProgress} / {dailyTarget} points
+                <span className="text-xs font-bold uppercase">
+                  {dailyProgress}/{dailyTarget} PTS
                 </span>
               </div>
               
               <div className="flex flex-col items-end">
-                <span className="text-lg font-bold">
+                <span className="text-2xl font-black">
                   {Math.round(progressPercentage)}%
                 </span>
-                <span className="text-xs opacity-75">
-                  {isComplete ? '🎉' : '💪'}
+                <span className="text-xs font-bold">
+                  {isComplete ? 'DONE' : 'GO'}
                 </span>
               </div>
             </div>
 
-            {/* Shimmer effect when complete */}
+            {/* Flash effect when complete */}
             {isComplete && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform skew-x-12 animate-pulse" />
+              <div className="absolute inset-0 bg-yellow-400 opacity-30 animate-pulse" />
             )}
           </button>
 
@@ -117,32 +117,32 @@ export default function RectangularNavigation() {
           <button
             onClick={() => setIsChatOpen(true)}
             disabled={!profile.group_id}
-            className={`w-16 h-14 rounded-xl flex items-center justify-center transition-all duration-200 ${
+            className={`w-20 h-16 flex items-center justify-center transition-colors duration-100 ${
               profile.group_id 
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white active:scale-95' 
-                : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                ? 'bg-blue-600 hover:bg-blue-500 text-white border-2 border-white' 
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed border-2 border-gray-400'
             }`}
           >
-            <ChatBubbleLeftRightIcon className="w-6 h-6" />
+            <ChatBubbleLeftRightIcon className="w-8 h-8" />
           </button>
         </div>
       </div>
 
-      {/* Desktop Navigation (Simplified) */}
-      <nav className="hidden lg:block bg-gray-900 shadow">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center py-4">
-            <div className="text-xl font-bold text-white">
-              Commitment App
+      {/* Desktop Navigation (Brutalist) */}
+      <nav className="hidden lg:block bg-black border-b-4 border-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center py-6">
+            <div className="text-2xl font-black text-white uppercase tracking-wider">
+              COMMITMENT APP
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <Link 
                 href="/profile" 
-                className="text-sm text-gray-300 hover:text-white flex items-center space-x-2"
+                className="text-sm text-white hover:text-yellow-400 flex items-center space-x-3 font-bold uppercase tracking-wide border-2 border-white hover:border-yellow-400 px-4 py-2 transition-colors duration-100"
               >
-                <span>Profile</span>
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span>PROFILE</span>
+                <div className="w-8 h-8 bg-purple-600 border-2 border-white flex items-center justify-center">
                   <UserIcon className="w-5 h-5 text-white" />
                 </div>
               </Link>
@@ -152,7 +152,7 @@ export default function RectangularNavigation() {
       </nav>
 
       {/* Spacer for mobile bottom nav */}
-      <div className="h-20"></div>
+      <div className="h-16"></div>
 
       {/* Group Chat Modal */}
       <GroupChat 
