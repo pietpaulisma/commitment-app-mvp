@@ -265,17 +265,6 @@ export default function RectangularDashboard() {
           )}
         </div>
 
-        {/* Simple Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 text-center">
-            <div className="text-2xl font-bold text-blue-400">{recentActivity.filter(a => a.is_own_activity).length}</div>
-            <div className="text-xs text-gray-400">Your Recent Workouts</div>
-          </div>
-          <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 text-center">
-            <div className="text-2xl font-bold text-purple-400">{recentActivity.length}</div>
-            <div className="text-xs text-gray-400">Group Activity</div>
-          </div>
-        </div>
       </div>
     </div>
   )

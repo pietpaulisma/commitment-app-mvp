@@ -132,29 +132,8 @@ export default function RectangularNavigation() {
       <nav className="hidden lg:block bg-gray-900 shadow">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-8">
-              <div className="text-xl font-bold text-white">
-                Commitment App
-              </div>
-              
-              <div className="flex space-x-6">
-                <button
-                  onClick={() => setIsWorkoutOpen(true)}
-                  className="text-gray-300 hover:text-white"
-                >
-                  Log Workout
-                </button>
-
-                {profile.group_id && (
-                  <button
-                    onClick={() => setIsChatOpen(true)}
-                    className="text-gray-300 hover:text-white flex items-center space-x-1"
-                  >
-                    <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                    <span>Group Chat</span>
-                  </button>
-                )}
-              </div>
+            <div className="text-xl font-bold text-white">
+              Commitment App
             </div>
 
             <div className="flex items-center space-x-4">
