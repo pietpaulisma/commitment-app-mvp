@@ -284,34 +284,27 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <RoleBasedNavigation />
-      
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white">USER MANAGEMENT</h1>
-            <p className="text-gray-400 mt-1">Manage all users, roles, and group assignments</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => router.push('/admin')}
-              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 font-semibold transition-colors border border-gray-600"
-            >
-              Back to Admin
-            </button>
-            <button
-              onClick={signOut}
-              className="bg-red-600 text-white px-6 py-3 hover:bg-red-700 font-semibold transition-colors border border-red-500"
-            >
-              Sign Out
-            </button>
-          </div>
+    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-black">
+        <div>
+          <h1 className="text-lg font-bold text-white">USER MANAGEMENT</h1>
+          <p className="text-sm text-gray-400">Manage users & roles</p>
         </div>
+        <button
+          onClick={() => router.push('/admin')}
+          className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700"
+        >
+          <span className="text-2xl">×</span>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-4">
 
         {/* Filters and Search */}
-        <div className="bg-gray-900 border border-gray-700 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="bg-gray-900 border border-gray-700 p-4 mb-4">
+          <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">SEARCH USERS</label>
               <input
@@ -335,10 +328,8 @@ export default function UserManagementPage() {
                 <option value="supreme_admin">Supreme Admin</option>
               </select>
             </div>
-            <div className="flex items-end">
-              <div className="text-sm text-gray-400">
-                Showing {filteredUsers.length} of {users.length} users
-              </div>
+            <div className="text-sm text-gray-400">
+              Showing {filteredUsers.length} of {users.length} users
             </div>
           </div>
 
@@ -409,10 +400,10 @@ export default function UserManagementPage() {
             <p className="mt-2 text-gray-400">Loading users...</p>
           </div>
         ) : (
-          <div className="bg-gray-900 border border-gray-700">
-            <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
-              <h3 className="text-xl font-semibold text-white">ALL USERS ({filteredUsers.length})</h3>
-              <div className="flex gap-3">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">ALL USERS ({filteredUsers.length})</h3>
+              <div className="flex gap-2">
                 <button
                   onClick={selectAllUsers}
                   className="bg-blue-600 text-white px-3 py-1 hover:bg-blue-500 text-sm font-semibold transition-colors border border-blue-500"
@@ -428,106 +419,91 @@ export default function UserManagementPage() {
               </div>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">
+            {filteredUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400">No users found matching your criteria</p>
+              </div>
+            ) : (
+              filteredUsers.map((userData) => (
+                <div key={userData.id} className={`bg-gray-900 border border-gray-700 p-4 ${selectedUsers.has(userData.id) ? 'border-blue-500 bg-blue-900/30' : ''}`}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
-                        checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
-                        onChange={selectedUsers.size === filteredUsers.length ? clearSelection : selectAllUsers}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-700"
+                        checked={selectedUsers.has(userData.id)}
+                        onChange={() => toggleUserSelection(userData.id)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-700 mt-1"
                       />
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Group</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Stats</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Last Active</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-300 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-gray-900 divide-y divide-gray-700">
-                  {filteredUsers.map((userData) => (
-                    <tr key={userData.id} className={`hover:bg-gray-800 transition-colors ${selectedUsers.has(userData.id) ? 'bg-blue-900/30' : ''}`}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.has(userData.id)}
-                          onChange={() => toggleUserSelection(userData.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 bg-gray-700"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-white">{userData.email}</div>
-                        <div className="text-sm text-gray-400">
-                          Joined {new Date(userData.created_at).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-gray-400">Weight: {userData.preferred_weight}kg</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={userData.role}
-                          onChange={(e) => updateUserRole(userData.id, e.target.value)}
-                          className={`text-xs font-bold px-3 py-1 border ${
-                            userData.role === 'supreme_admin' ? 'bg-purple-600 text-white border-purple-500' :
-                            userData.role === 'group_admin' ? 'bg-blue-600 text-white border-blue-500' :
-                            'bg-gray-600 text-white border-gray-500'
-                          }`}
-                        >
-                          <option value="user">User</option>
-                          <option value="group_admin">Group Admin</option>
-                          <option value="supreme_admin">Supreme Admin</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={userData.group_id || ''}
-                          onChange={(e) => updateUserGroup(userData.id, e.target.value || null)}
-                          className="text-sm border border-gray-600 bg-gray-700 text-white px-2 py-1"
-                        >
-                          <option value="">No Group</option>
-                          {groups.map(group => (
-                            <option key={group.id} value={group.id}>{group.name}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {userData.location}
-                        {userData.is_weekly_mode && (
-                          <div className="text-xs text-blue-400">Weekly Mode</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        <div className="font-bold text-green-400">{userData.total_points} pts</div>
-                        <div className="text-xs text-gray-400">{userData.total_workouts} workouts</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                      <div>
+                        <h4 className="text-white font-semibold">{userData.email}</h4>
+                        <p className="text-sm text-gray-400">
+                          Joined {new Date(userData.created_at).toLocaleDateString()} • Weight: {userData.preferred_weight}kg
+                        </p>
+                      </div>
+                    </div>
+                    <select
+                      value={userData.role}
+                      onChange={(e) => updateUserRole(userData.id, e.target.value)}
+                      className={`text-xs font-bold px-2 py-1 border ${
+                        userData.role === 'supreme_admin' ? 'bg-purple-600 text-white border-purple-500' :
+                        userData.role === 'group_admin' ? 'bg-blue-600 text-white border-blue-500' :
+                        'bg-gray-600 text-white border-gray-500'
+                      }`}
+                    >
+                      <option value="user">User</option>
+                      <option value="group_admin">Group Admin</option>
+                      <option value="supreme_admin">Supreme Admin</option>
+                    </select>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                    <div>
+                      <span className="text-gray-400">Group:</span>
+                      <select
+                        value={userData.group_id || ''}
+                        onChange={(e) => updateUserGroup(userData.id, e.target.value || null)}
+                        className="w-full mt-1 text-sm border border-gray-600 bg-gray-700 text-white px-2 py-1"
+                      >
+                        <option value="">No Group</option>
+                        {groups.map(group => (
+                          <option key={group.id} value={group.id}>{group.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Location:</span>
+                      <div className="text-gray-300 mt-1">{userData.location}</div>
+                      {userData.is_weekly_mode && (
+                        <div className="text-xs text-blue-400">Weekly Mode</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
+                    <div>
+                      <span className="text-gray-400">Stats:</span>
+                      <div className="text-green-400 font-bold">{userData.total_points} pts</div>
+                      <div className="text-xs text-gray-400">{userData.total_workouts} workouts</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Last Active:</span>
+                      <div className="text-gray-300">
                         {userData.last_workout 
                           ? new Date(userData.last_workout).toLocaleDateString()
                           : 'Never'
                         }
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => deleteUser(userData.id)}
-                          className="bg-red-600 text-white px-3 py-1 hover:bg-red-700 font-semibold transition-colors border border-red-500"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {filteredUsers.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-400">No users found matching your criteria</p>
-              </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => deleteUser(userData.id)}
+                    className="w-full bg-red-600 text-white py-2 hover:bg-red-700 font-semibold transition-colors border border-red-500"
+                  >
+                    Delete User
+                  </button>
+                </div>
+              ))
             )}
           </div>
         )}
