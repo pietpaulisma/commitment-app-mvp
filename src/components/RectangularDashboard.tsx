@@ -38,6 +38,7 @@ export default function RectangularDashboard() {
   const [challengeDay, setChallengeDay] = useState(1)
   const [dayType, setDayType] = useState<'rest' | 'recovery' | 'normal'>('normal')
   const [timeLeft, setTimeLeft] = useState('')
+  const [timeRemainingPercentage, setTimeRemainingPercentage] = useState(0)
   const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
   const [accentColor, setAccentColor] = useState('blue') // Default blue
@@ -64,6 +65,8 @@ export default function RectangularDashboard() {
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date()
+      const startOfDay = new Date(now)
+      startOfDay.setHours(0, 0, 0, 0)
       const endOfDay = new Date(now)
       endOfDay.setHours(23, 59, 59, 999)
       
@@ -71,7 +74,13 @@ export default function RectangularDashboard() {
       const hours = Math.floor(timeDiff / (1000 * 60 * 60))
       const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
       
+      // Calculate percentage of day elapsed (for progress bar)
+      const totalDayTime = endOfDay.getTime() - startOfDay.getTime()
+      const elapsedTime = now.getTime() - startOfDay.getTime()
+      const elapsedPercentage = (elapsedTime / totalDayTime) * 100
+      
       setTimeLeft(`${hours}h ${minutes}m`)
+      setTimeRemainingPercentage(Math.min(100, Math.max(0, elapsedPercentage)))
     }
 
     updateTimer() // Initial update
@@ -379,30 +388,36 @@ export default function RectangularDashboard() {
     <div className="min-h-screen bg-gray-950 pb-20">
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="bg-gray-950 border-b border-gray-800">
-          <div className="px-4 pt-2 pb-4">
+        <div className="bg-gray-950 border-b border-gray-800 relative overflow-hidden">
+          {/* Progress Background */}
+          <div 
+            className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-orange-600/20 to-orange-500/10 transition-all duration-1000 ease-out"
+            style={{ width: `${timeRemainingPercentage}%` }}
+          />
+          
+          {/* Content */}
+          <div className="relative px-4 pt-2 pb-4">
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-baseline space-x-2">
-                    <span className="text-sm font-medium text-gray-400 uppercase tracking-wide">DAY</span>
+                  <div className="flex items-baseline space-x-1">
+                    <span className="text-5xl font-thin text-white uppercase tracking-wide">DAY</span>
                     <span className="text-5xl font-black text-white">{challengeDay}</span>
                   </div>
-                  <p className="text-gray-400 text-sm font-medium mt-1">
+                  <p className="text-gray-400 text-sm font-medium -mt-1">
                     {getCurrentDayName()}
                   </p>
                 </div>
-                <div className="text-left">
-                  <div className="font-semibold text-lg text-white">
+                <div className="text-right">
+                  <div className="text-5xl font-black text-white">
                     {timeLeft}
                   </div>
-                  <div className="text-xs text-gray-400 font-medium">
+                  <div className="text-sm text-gray-400 font-medium -mt-1">
                     remaining
                   </div>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       )}
