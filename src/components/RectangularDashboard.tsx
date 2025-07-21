@@ -40,6 +40,7 @@ export default function RectangularDashboard() {
   const [timeLeft, setTimeLeft] = useState('')
   const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
+  const [accentColor, setAccentColor] = useState('blue') // Default blue
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -108,14 +109,57 @@ export default function RectangularDashboard() {
     }
   }
 
+  const getAccentColors = () => {
+    const colorMap = {
+      'blue': {
+        primary: 'text-blue-400',
+        bg: 'bg-blue-900/50',
+        border: 'border-blue-400',
+        borderL: 'border-l-blue-500'
+      },
+      'green': {
+        primary: 'text-green-400',
+        bg: 'bg-green-900/50',
+        border: 'border-green-400',
+        borderL: 'border-l-green-500'
+      },
+      'purple': {
+        primary: 'text-purple-400',
+        bg: 'bg-purple-900/50',
+        border: 'border-purple-400',
+        borderL: 'border-l-purple-500'
+      },
+      'orange': {
+        primary: 'text-orange-400',
+        bg: 'bg-orange-900/50',
+        border: 'border-orange-400',
+        borderL: 'border-l-orange-500'
+      },
+      'red': {
+        primary: 'text-red-400',
+        bg: 'bg-red-900/50',
+        border: 'border-red-400',
+        borderL: 'border-l-red-500'
+      },
+      'cyan': {
+        primary: 'text-cyan-400',
+        bg: 'bg-cyan-900/50',
+        border: 'border-cyan-400',
+        borderL: 'border-l-cyan-500'
+      }
+    }
+    return colorMap[accentColor as keyof typeof colorMap] || colorMap.blue
+  }
+
   const getDayTypeDisplay = () => {
+    const colors = getAccentColors()
     switch (dayType) {
       case 'rest':
-        return { title: 'Rest Day', subtitle: 'No exercises required', emoji: '😴', color: 'text-blue-400' }
+        return { title: 'Rest Day', subtitle: 'No exercises required', emoji: '😴', color: colors.primary }
       case 'recovery':
         return { title: 'Recovery Day', subtitle: '15 min recovery exercises', emoji: '🧘', color: 'text-green-400' }
       default:
-        return { title: 'Training Day', subtitle: 'Complete your daily target', emoji: '💪', color: 'text-orange-400' }
+        return { title: 'Training Day', subtitle: 'Complete your daily target', emoji: '💪', color: colors.primary }
     }
   }
 
@@ -142,13 +186,14 @@ export default function RectangularDashboard() {
         try {
           const { data: groupSettings } = await supabase
             .from('group_settings')
-            .select('rest_days, recovery_days')
+            .select('rest_days, recovery_days, accent_color')
             .eq('group_id', profile.group_id)
             .single()
 
           if (groupSettings) {
             setRestDays(groupSettings.rest_days || [1]) // Default Monday
             setRecoveryDays(groupSettings.recovery_days || [5]) // Default Friday
+            setAccentColor(groupSettings.accent_color || 'blue') // Default blue
           }
         } catch (error) {
           console.log('Group settings not available, using defaults')
@@ -265,12 +310,13 @@ export default function RectangularDashboard() {
   }
 
   const dayTypeInfo = getDayTypeDisplay()
+  const colors = getAccentColors()
 
   return (
     <div className="min-h-screen bg-black pb-20 pt-6">
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="bg-gray-900 border-b border-gray-700">
+        <div className="bg-black border-b border-gray-800">
           <div className="p-6">
             <div className="text-center mb-6">
               <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
@@ -306,8 +352,8 @@ export default function RectangularDashboard() {
             </div>
 
             {dayType === 'rest' && (
-              <div className="bg-blue-900/50 p-4 text-center border-l-4 border-blue-400">
-                <p className="text-blue-200 font-medium text-sm">
+              <div className={`${colors.bg} p-4 text-center border-l-4 ${colors.border}`}>
+                <p className={`${colors.primary.replace('400', '200')} font-medium text-sm`}>
                   🛌 Enjoy your rest day! No exercises required today.
                 </p>
               </div>
@@ -322,8 +368,8 @@ export default function RectangularDashboard() {
             )}
 
             {dayType === 'normal' && (
-              <div className="bg-orange-900/50 p-4 text-center border-l-4 border-orange-400">
-                <p className="text-orange-200 font-medium text-sm">
+              <div className={`${colors.bg} p-4 text-center border-l-4 ${colors.border}`}>
+                <p className={`${colors.primary.replace('400', '200')} font-medium text-sm`}>
                   💪 Training day: Complete your daily target to stay on track!
                 </p>
               </div>
@@ -334,7 +380,7 @@ export default function RectangularDashboard() {
 
       <div className="space-y-0">
         {/* Recent Chat Messages */}
-        <div className="bg-gray-900 border-b border-gray-700">
+        <div className="bg-black border-b border-gray-800">
           <div className="p-6">
             <h3 className="text-xl font-black text-white mb-6 tracking-tight uppercase">RECENT CHATS</h3>
             {recentChats.length === 0 ? (
@@ -346,7 +392,7 @@ export default function RectangularDashboard() {
           ) : (
             <div className="space-y-4">
               {recentChats.map((chat) => (
-                <div key={chat.id} className="flex items-start space-x-3 border-l-2 border-blue-500 pl-3 py-2">
+                <div key={chat.id} className={`flex items-start space-x-3 border-l-2 ${colors.borderL} pl-3 py-2`}>
                   <div className="w-8 h-8 bg-gray-700 flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-medium text-gray-300">
                       {chat.user_email.charAt(0).toUpperCase()}
@@ -355,7 +401,7 @@ export default function RectangularDashboard() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
                       <span className={`font-semibold text-xs ${
-                        chat.is_own_message ? 'text-blue-400' : 'text-white'
+                        chat.is_own_message ? colors.primary : 'text-white'
                       }`}>
                         {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
                       </span>
@@ -373,7 +419,7 @@ export default function RectangularDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-gray-900">
+        <div className="bg-black">
           <div className="p-6">
             <h3 className="text-xl font-black text-white mb-6 tracking-tight uppercase">RECENT ACTIVITY</h3>
             {recentActivity.length === 0 ? (
@@ -395,7 +441,7 @@ export default function RectangularDashboard() {
                     <div>
                       <div className="flex items-center space-x-2">
                         <span className={`font-semibold text-xs ${
-                          activity.is_own_activity ? 'text-blue-400' : 'text-white'
+                          activity.is_own_activity ? colors.primary : 'text-white'
                         }`}>
                           {activity.is_own_activity ? 'You' : activity.user_email.split('@')[0]}
                         </span>

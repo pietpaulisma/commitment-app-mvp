@@ -21,6 +21,7 @@ export default function RectangularNavigation() {
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(100)
+  const [accentColor, setAccentColor] = useState('blue')
 
   const isOnProfilePage = pathname === '/profile'
 
@@ -68,6 +69,7 @@ export default function RectangularNavigation() {
           if (groupSettings) {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
+            setAccentColor(groupSettings.accent_color || 'blue')
             
             const daysSinceStart = group?.start_date 
               ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
@@ -95,12 +97,25 @@ export default function RectangularNavigation() {
     }
   }
 
+  const getAccentColor = () => {
+    const colorMap = {
+      'blue': 'bg-blue-600',
+      'green': 'bg-green-600', 
+      'purple': 'bg-purple-600',
+      'orange': 'bg-orange-600',
+      'red': 'bg-red-600',
+      'cyan': 'bg-cyan-600'
+    }
+    return colorMap[accentColor as keyof typeof colorMap] || colorMap.blue
+  }
+
   if (loading || !profile) {
     return null
   }
 
   const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
   const isComplete = progressPercentage >= 100
+  const accentBg = getAccentColor()
 
   return (
     <>
@@ -110,7 +125,7 @@ export default function RectangularNavigation() {
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={() => setIsWorkoutOpen(true)}
-            className="flex-1 relative h-16 bg-blue-600 border-r border-gray-700 overflow-hidden group hover:bg-blue-500 transition-colors duration-200"
+            className={`flex-1 relative h-16 ${accentBg} border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-opacity duration-200`}
           >
             {/* Progress Background */}
             <div 
@@ -151,8 +166,8 @@ export default function RectangularNavigation() {
             disabled={!profile.group_id}
             className={`w-20 h-16 flex items-center justify-center transition-colors duration-200 ${
               profile.group_id 
-                ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white' 
-                : 'bg-gray-900 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
+                : 'bg-gray-950 text-gray-500 cursor-not-allowed'
             }`}
           >
             <ChatBubbleLeftRightIcon className="w-6 h-6" />
@@ -161,7 +176,7 @@ export default function RectangularNavigation() {
       </div>
 
       {/* Mobile Navigation Header */}
-      <nav className="lg:hidden sticky top-0 z-40 bg-black border-b border-gray-800">
+      <nav className="lg:hidden sticky top-0 z-40 bg-black border-b border-gray-900">
         <div className="px-4">
           <div className="flex justify-between items-center py-3">
             <div className="font-black text-lg text-white tracking-tight uppercase">
@@ -172,7 +187,7 @@ export default function RectangularNavigation() {
               href={isOnProfilePage ? "/dashboard" : "/profile"} 
               className="text-gray-300 hover:text-white transition-colors duration-200"
             >
-              <div className="w-8 h-8 bg-blue-600 flex items-center justify-center">
+              <div className={`w-8 h-8 ${accentBg} flex items-center justify-center`}>
                 {isOnProfilePage ? (
                   <span className="text-white text-lg font-bold">×</span>
                 ) : (
@@ -185,7 +200,7 @@ export default function RectangularNavigation() {
       </nav>
 
       {/* Desktop Navigation (Modern Clean) */}
-      <nav className="hidden lg:block sticky top-0 z-40 bg-black border-b border-gray-800">
+      <nav className="hidden lg:block sticky top-0 z-40 bg-black border-b border-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center py-4">
             <div className="font-black text-xl text-white tracking-tight uppercase">
@@ -198,7 +213,7 @@ export default function RectangularNavigation() {
                 className="text-sm text-gray-300 hover:text-white flex items-center space-x-2 font-medium border border-gray-700 hover:border-gray-600 px-3 py-2 transition-colors duration-200"
               >
                 <span>{isOnProfilePage ? "Back to Dashboard" : "Profile"}</span>
-                <div className="w-8 h-8 bg-blue-600 flex items-center justify-center">
+                <div className={`w-8 h-8 ${accentBg} flex items-center justify-center`}>
                   {isOnProfilePage ? (
                     <span className="text-white text-lg font-bold">×</span>
                   ) : (
