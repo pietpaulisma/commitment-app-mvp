@@ -384,9 +384,10 @@ export default function RectangularDashboard() {
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">
-                    Day {challengeDay}
-                  </h2>
+                  <div className="flex items-baseline space-x-2">
+                    <span className="text-sm font-medium text-gray-400 uppercase tracking-wide">DAY</span>
+                    <span className="text-5xl font-black text-white">{challengeDay}</span>
+                  </div>
                   <p className="text-gray-400 text-sm font-medium mt-1">
                     {getCurrentDayName()}
                   </p>
@@ -400,18 +401,6 @@ export default function RectangularDashboard() {
                   </div>
                 </div>
               </div>
-              
-              {/* Day Type - Only show if not normal training day */}
-              {dayType !== 'normal' && (
-                <div className="mt-4 p-3 border-l-2 border-gray-700">
-                  <div className={`text-sm font-medium ${dayTypeInfo.color} mb-1`}>
-                    {dayTypeInfo.title}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {dayTypeInfo.subtitle}
-                  </div>
-                </div>
-              )}
             </div>
 
           </div>
@@ -440,7 +429,7 @@ export default function RectangularDashboard() {
               <div className="-mx-4">
                 {groupMembers.map((member, index) => (
                   <div key={member.id} className={`px-4 py-6 ${
-                    member.isCurrentUser ? `bg-gradient-to-r ${colors.bg} border-l-4 ${colors.border}` : index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/10 border-l-4 border-yellow-500' : 'bg-gray-900/30 border-l-4 border-gray-600'
+                    member.isCurrentUser ? 'bg-gray-900/50 border-l-4 border-white' : index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/10 border-l-4 border-yellow-500' : 'bg-gray-900/30 border-l-4 border-gray-600'
                   } border-b border-gray-800/50`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
@@ -454,22 +443,22 @@ export default function RectangularDashboard() {
                         </div>
                         <div>
                           <div className={`text-lg font-bold ${
-                            member.isCurrentUser ? colors.primary : index === 0 ? 'text-yellow-400' : 'text-white'
+                            member.isCurrentUser ? 'text-white' : index === 0 ? 'text-yellow-400' : 'text-white'
                           }`}>
                             {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                           </div>
                           <div className="text-sm text-gray-400">
-                            {member.todayPoints} / {member.dailyTarget || dailyTarget} points
+                            {member.todayPoints} / {member.dailyTarget || 100} points
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className={`text-4xl font-black ${
-                          member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : index === 0 ? 'text-yellow-400' : 'text-white'
+                          member.todayPoints >= (member.dailyTarget || 100) ? 'text-emerald-400' : index === 0 ? 'text-yellow-400' : 'text-orange-400'
                         }`}>
-                          {Math.round((member.todayPoints / (member.dailyTarget || dailyTarget)) * 100)}%
+                          {Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)}%
                         </div>
-                        {member.todayPoints >= (member.dailyTarget || dailyTarget) && (
+                        {member.todayPoints >= (member.dailyTarget || 100) && (
                           <div className="text-sm text-green-400 font-medium">Complete</div>
                         )}
                       </div>
@@ -490,9 +479,9 @@ export default function RectangularDashboard() {
               <>
                 {/* Hero Stats - Full Width */}
                 <div className="-mx-4 mb-6">
-                  <div className={`px-6 py-8 bg-gradient-to-r ${colors.bg} border-b-4 ${colors.border}`}>
+                  <div className="px-6 py-8 bg-gray-900/50 border-b-4 border-gray-700">
                     <div className="text-center">
-                      <div className={`text-6xl font-black ${colors.primary} mb-2`}>
+                      <div className="text-6xl font-black text-emerald-400 mb-2">
                         ${groupStats.moneyInPot.toFixed(0)}
                       </div>
                       <div className="text-lg text-gray-300 font-medium uppercase tracking-wide">
@@ -518,19 +507,19 @@ export default function RectangularDashboard() {
                   <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-medium text-white">Active Members</span>
-                      <span className="text-2xl font-bold text-white">{groupStats.memberCount}</span>
+                      <span className="text-2xl font-bold text-orange-400">{groupStats.memberCount}</span>
                     </div>
                   </div>
                   <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-medium text-white">Avg Points/Day</span>
-                      <span className="text-2xl font-bold text-white">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
+                      <span className="text-2xl font-bold text-orange-400">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
                     </div>
                   </div>
                   <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-medium text-white">Challenge Day</span>
-                      <span className="text-2xl font-bold text-white">{challengeDay}</span>
+                      <span className="text-2xl font-bold text-orange-400">{challengeDay}</span>
                     </div>
                   </div>
                   <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-green-600">
