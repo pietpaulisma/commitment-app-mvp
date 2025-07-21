@@ -63,13 +63,13 @@ export default function RectangularNavigation() {
           
           setGroupName(group?.name || '')
 
-          const { data: groupSettings } = await supabase
+          const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
             .select('*')
             .eq('group_id', profile.group_id)
-            .single()
+            .maybeSingle()
 
-          if (groupSettings) {
+          if (!settingsError && groupSettings) {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
             setAccentColor(groupSettings.accent_color || 'blue')
