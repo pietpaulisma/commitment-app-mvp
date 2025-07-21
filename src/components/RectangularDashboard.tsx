@@ -437,7 +437,7 @@ export default function RectangularDashboard() {
                     <span className="text-5xl font-thin text-white uppercase tracking-wide">DAY</span>
                     <span className="text-5xl font-black text-white">{challengeDay}</span>
                   </div>
-                  <p className="text-gray-400 text-sm font-medium -mt-2">
+                  <p className="text-gray-400 text-sm font-medium -mt-1">
                     {getCurrentDayName()}
                   </p>
                 </div>
@@ -445,7 +445,7 @@ export default function RectangularDashboard() {
                   <div className="text-3xl font-black text-white">
                     {timeLeft}
                   </div>
-                  <div className="text-sm text-gray-400 font-medium -mt-2">
+                  <div className="text-sm text-gray-400 font-medium -mt-1">
                     remaining
                   </div>
                 </div>
