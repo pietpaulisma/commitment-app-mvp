@@ -121,16 +121,16 @@ export default function RectangularNavigation() {
             {/* Button Content */}
             <div className="relative h-full flex items-center justify-between px-6 text-white">
               <div className="flex flex-col items-start">
-                <span className="font-black text-sm tracking-wider font-mono uppercase">
-                  {isComplete ? 'COMPLETE!' : 'LOG WORKOUT'}
+                <span className="font-bold text-sm tracking-tight uppercase">
+                  {isComplete ? 'Complete!' : 'Log Workout'}
                 </span>
-                <span className="text-xs opacity-75 font-mono tracking-wide">
-                  {dailyProgress}/{dailyTarget} PTS
+                <span className="text-xs opacity-75 font-medium">
+                  {dailyProgress}/{dailyTarget} pts
                 </span>
               </div>
               
               <div className="flex flex-col items-end">
-                <span className="text-xl font-black font-mono tracking-wider">
+                <span className="text-xl font-black tracking-tight">
                   {Math.round(progressPercentage)}%
                 </span>
                 <span className="text-xs opacity-75">
@@ -164,7 +164,7 @@ export default function RectangularNavigation() {
       <nav className="lg:hidden sticky top-0 z-40 bg-black border-b border-gray-800">
         <div className="px-4">
           <div className="flex justify-between items-center py-3">
-            <div className="font-black text-lg text-white tracking-wider font-mono uppercase">
+            <div className="font-black text-lg text-white tracking-tight uppercase">
               COMMITMENT APP
             </div>
 
@@ -188,7 +188,7 @@ export default function RectangularNavigation() {
       <nav className="hidden lg:block sticky top-0 z-40 bg-black border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center py-4">
-            <div className="font-black text-xl text-white tracking-wider font-mono uppercase">
+            <div className="font-black text-xl text-white tracking-tight uppercase">
               COMMITMENT APP
             </div>
 

@@ -273,10 +273,10 @@ export default function RectangularDashboard() {
         <div className="bg-gray-900 border-b border-gray-700">
           <div className="p-6">
             <div className="text-center mb-6">
-              <h2 className="text-3xl font-black text-white mb-2 tracking-wider font-mono">
+              <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
                 DAY {challengeDay} CHALLENGE
               </h2>
-              <p className="text-gray-400 text-sm font-mono tracking-wide uppercase">
+              <p className="text-gray-400 text-sm font-medium tracking-wide">
                 {getCurrentDayName()} • {groupName}
               </p>
             </div>
@@ -285,10 +285,10 @@ export default function RectangularDashboard() {
               {/* Day Type */}
               <div className="text-center">
                 <div className="text-4xl mb-3">{dayTypeInfo.emoji}</div>
-                <div className={`font-black text-lg tracking-wider font-mono uppercase ${dayTypeInfo.color}`}>
+                <div className={`font-bold text-lg tracking-tight uppercase ${dayTypeInfo.color}`}>
                   {dayTypeInfo.title}
                 </div>
-                <div className="text-xs text-gray-400 mt-2 uppercase tracking-wide font-mono">
+                <div className="text-xs text-gray-400 mt-2 font-medium">
                   {dayTypeInfo.subtitle}
                 </div>
               </div>
@@ -296,10 +296,10 @@ export default function RectangularDashboard() {
               {/* Time Left */}
               <div className="text-center">
                 <ClockIcon className="w-10 h-10 text-red-400 mx-auto mb-3" />
-                <div className="font-black text-lg text-red-400 tracking-wider font-mono">
+                <div className="font-bold text-lg text-red-400 tracking-tight">
                   {timeLeft}
                 </div>
-                <div className="text-xs text-gray-400 mt-2 uppercase tracking-wide font-mono">
+                <div className="text-xs text-gray-400 mt-2 font-medium">
                   Time remaining
                 </div>
               </div>
@@ -307,24 +307,24 @@ export default function RectangularDashboard() {
 
             {dayType === 'rest' && (
               <div className="bg-blue-900/50 p-4 text-center border-l-4 border-blue-400">
-                <p className="text-blue-200 font-semibold font-mono tracking-wide uppercase text-sm">
-                  🛌 ENJOY YOUR REST DAY! NO EXERCISES REQUIRED TODAY.
+                <p className="text-blue-200 font-medium text-sm">
+                  🛌 Enjoy your rest day! No exercises required today.
                 </p>
               </div>
             )}
 
             {dayType === 'recovery' && (
               <div className="bg-green-900/50 p-4 text-center border-l-4 border-green-400">
-                <p className="text-green-200 font-semibold font-mono tracking-wide uppercase text-sm">
-                  🧘 RECOVERY DAY: FOCUS ON 15 MINUTES OF STRETCHING, YOGA, OR MEDITATION.
+                <p className="text-green-200 font-medium text-sm">
+                  🧘 Recovery day: Focus on 15 minutes of stretching, yoga, or meditation.
                 </p>
               </div>
             )}
 
             {dayType === 'normal' && (
               <div className="bg-orange-900/50 p-4 text-center border-l-4 border-orange-400">
-                <p className="text-orange-200 font-semibold font-mono tracking-wide uppercase text-sm">
-                  💪 TRAINING DAY: COMPLETE YOUR DAILY TARGET TO STAY ON TRACK!
+                <p className="text-orange-200 font-medium text-sm">
+                  💪 Training day: Complete your daily target to stay on track!
                 </p>
               </div>
             )}
@@ -336,12 +336,12 @@ export default function RectangularDashboard() {
         {/* Recent Chat Messages */}
         <div className="bg-gray-900 border-b border-gray-700">
           <div className="p-6">
-            <h3 className="text-xl font-black text-white mb-6 tracking-wider font-mono uppercase">RECENT CHATS</h3>
+            <h3 className="text-xl font-black text-white mb-6 tracking-tight uppercase">RECENT CHATS</h3>
             {recentChats.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">💬</div>
-                <p className="text-gray-400 font-mono uppercase tracking-wide text-sm">NO RECENT MESSAGES</p>
-                <p className="text-gray-500 font-mono text-xs mt-2">START A CONVERSATION WITH YOUR GROUP!</p>
+                <p className="text-gray-400 font-semibold text-sm">No recent messages</p>
+                <p className="text-gray-500 text-xs mt-2 font-medium">Start a conversation with your group!</p>
               </div>
           ) : (
             <div className="space-y-4">
@@ -354,12 +354,12 @@ export default function RectangularDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className={`font-mono uppercase tracking-wide text-xs font-bold ${
+                      <span className={`font-semibold text-xs ${
                         chat.is_own_message ? 'text-blue-400' : 'text-white'
                       }`}>
-                        {chat.is_own_message ? 'YOU' : chat.user_email.split('@')[0].toUpperCase()}
+                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
                       </span>
-                      <span className="text-xs text-gray-500 font-mono">
+                      <span className="text-xs text-gray-500 font-medium">
                         {formatTimeAgo(chat.created_at)}
                       </span>
                     </div>
@@ -375,12 +375,12 @@ export default function RectangularDashboard() {
         {/* Recent Activity */}
         <div className="bg-gray-900">
           <div className="p-6">
-            <h3 className="text-xl font-black text-white mb-6 tracking-wider font-mono uppercase">RECENT ACTIVITY</h3>
+            <h3 className="text-xl font-black text-white mb-6 tracking-tight uppercase">RECENT ACTIVITY</h3>
             {recentActivity.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">🏃‍♂️</div>
-                <p className="text-gray-400 font-mono uppercase tracking-wide text-sm">NO RECENT ACTIVITY</p>
-                <p className="text-gray-500 font-mono text-xs mt-2">START LOGGING WORKOUTS TO SEE GROUP ACTIVITY!</p>
+                <p className="text-gray-400 font-semibold text-sm">No recent activity</p>
+                <p className="text-gray-500 text-xs mt-2 font-medium">Start logging workouts to see group activity!</p>
               </div>
           ) : (
             <div className="space-y-4">
@@ -394,19 +394,19 @@ export default function RectangularDashboard() {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className={`font-mono uppercase tracking-wide text-xs font-bold ${
+                        <span className={`font-semibold text-xs ${
                           activity.is_own_activity ? 'text-blue-400' : 'text-white'
                         }`}>
-                          {activity.is_own_activity ? 'YOU' : activity.user_email.split('@')[0].toUpperCase()}
+                          {activity.is_own_activity ? 'You' : activity.user_email.split('@')[0]}
                         </span>
-                        <span className="text-xs text-gray-500 font-mono">
+                        <span className="text-xs text-gray-500 font-medium">
                           {formatTimeAgo(activity.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400 uppercase font-mono tracking-wide">{activity.exercise_name}</p>
+                      <p className="text-sm text-gray-400 font-medium">{activity.exercise_name}</p>
                     </div>
                   </div>
-                  <div className="font-mono font-black text-green-400 tracking-wider">
+                  <div className="font-bold text-green-400">
                     +{activity.points}
                   </div>
                 </div>
