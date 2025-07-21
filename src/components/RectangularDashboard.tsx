@@ -357,26 +357,26 @@ export default function RectangularDashboard() {
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-3xl font-thin text-white tracking-normal">
-                    Day {challengeDay}
+                  <h2 className="text-2xl font-light text-white tracking-wide lowercase">
+                    day {challengeDay}
                   </h2>
-                  <p className="text-gray-400 text-sm font-medium mt-1">
-                    {getCurrentDayName()}
+                  <p className="text-gray-400 text-sm font-light mt-1 lowercase">
+                    {getCurrentDayName().toLowerCase()}
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium text-sm text-gray-300 tracking-tight">
+                  <div className="font-light text-sm text-gray-300 tracking-wide lowercase">
                     {timeLeft} left
                   </div>
                 </div>
               </div>
               
-              {/* Day Type - Connected to day info */}
-              <div className={`mt-4 p-3 border-l-4 ${colors.border} ${colors.bg}`}>
-                <div className={`font-bold text-sm tracking-tight uppercase ${dayTypeInfo.color}`}>
+              {/* Day Type - Clean minimal style */}
+              <div className="mt-6">
+                <div className={`text-lg font-light ${dayTypeInfo.color} mb-1`}>
                   {dayTypeInfo.title}
                 </div>
-                <div className="text-xs text-gray-400 mt-1 font-medium">
+                <div className="text-sm text-gray-400 font-light">
                   {dayTypeInfo.subtitle}
                 </div>
               </div>
@@ -391,48 +391,37 @@ export default function RectangularDashboard() {
         {/* Group Status */}
         <div id="group-status" className="bg-black border-b border-gray-800">
           <div className="p-4">
-            <h3 className="text-2xl font-thin text-white mb-4 tracking-normal">Group Status</h3>
-            <p className="text-sm text-gray-400 mb-4 font-light">Today's progress</p>
+            <h3 className="text-lg font-light text-white mb-6 lowercase tracking-wide">group status</h3>
             
             {groupMembers.length === 0 ? (
               <div className="text-center py-6">
                 <p className="text-gray-400 font-medium text-sm">Loading group members...</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {groupMembers.map((member, index) => (
-                  <div key={member.id} className={`flex items-center justify-between p-3 border-l-2 ${
-                    member.isCurrentUser ? colors.borderL : 'border-l-gray-600'
-                  } ${member.isCurrentUser ? colors.bg : 'bg-gray-900/30'}`}>
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 flex items-center justify-center text-sm font-bold ${
-                        index === 0 ? 'bg-yellow-600 text-yellow-100' :
-                        index === 1 ? 'bg-gray-600 text-gray-100' :
-                        index === 2 ? 'bg-amber-600 text-amber-100' :
-                        'bg-gray-700 text-gray-300'
-                      }`}>
+                  <div key={member.id} className="flex items-center justify-between py-2">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-sm font-light text-gray-400">
                         {index + 1}
                       </div>
                       <div>
-                        <div className={`font-semibold text-sm ${
+                        <div className={`text-sm font-light ${
                           member.isCurrentUser ? colors.primary : 'text-white'
                         }`}>
-                          {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
+                          {member.isCurrentUser ? 'you' : member.email.split('@')[0]}
                         </div>
-                        <div className="text-xs text-gray-400">
-                          {member.todayPoints} / {member.dailyTarget || dailyTarget} points
+                        <div className="text-xs text-gray-500 font-light">
+                          {member.todayPoints} / {member.dailyTarget || dailyTarget}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-bold text-lg ${
-                        member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : 'text-gray-300'
+                      <div className={`text-sm font-light ${
+                        member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : 'text-gray-400'
                       }`}>
                         {Math.round((member.todayPoints / (member.dailyTarget || dailyTarget)) * 100)}%
                       </div>
-                      {member.todayPoints >= (member.dailyTarget || dailyTarget) && (
-                        <div className="text-xs text-green-400">Complete!</div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -444,25 +433,21 @@ export default function RectangularDashboard() {
         {/* Group Stats */}
         <div id="group-stats" className="bg-black">
           <div className="p-4">
-            <h3 className="text-3xl font-thin text-white mb-4 tracking-normal">Group Stats</h3>
+            <h3 className="text-lg font-light text-white mb-6 lowercase tracking-wide">group stats</h3>
             
             {groupStats ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div className={`p-4 ${colors.bg} border-l-4 ${colors.border}`}>
-                  <div className={`font-bold text-lg ${colors.primary}`}>
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-light text-gray-400 lowercase">money in pot</div>
+                  <div className={`text-lg font-light ${colors.primary}`}>
                     ${groupStats.moneyInPot.toFixed(2)}
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1 font-medium">
-                    Money in Pot
                   </div>
                 </div>
                 
-                <div className="p-4 bg-green-900/50 border-l-4 border-green-400">
-                  <div className="font-bold text-lg text-green-400">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-light text-gray-400 lowercase">total points</div>
+                  <div className="text-lg font-light text-green-400">
                     {groupStats.totalPoints.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1 font-medium">
-                    Total Points
                   </div>
                 </div>
               </div>
