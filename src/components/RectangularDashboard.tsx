@@ -379,11 +379,12 @@ export default function RectangularDashboard() {
 
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor(diffInHours * 60)
-      return `${diffInMinutes}m ago`
+      return `${diffInMinutes}m`
     } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`
+      return `${Math.floor(diffInHours)}h`
     } else {
-      return date.toLocaleDateString()
+      const diffInDays = Math.floor(diffInHours / 24)
+      return `${diffInDays}d`
     }
   }
 
@@ -523,20 +524,20 @@ export default function RectangularDashboard() {
                 <p className="text-gray-500 text-sm mt-2">Start a conversation with your group</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {recentChats.slice(0, 7).map((chat) => (
-                  <div key={chat.id} className={`p-3 rounded-lg ${
+                  <div key={chat.id} className={`px-3 py-2 rounded ${
                     chat.is_own_message ? 'bg-gray-900/50' : 'bg-gray-900/30'
                   }`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-sm font-bold text-white">
-                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
+                    <p className="text-sm text-gray-300">
+                      <span className="font-medium text-white mr-2">
+                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}:
                       </span>
-                      <span className="text-xs text-gray-400">
+                      {chat.message}
+                      <span className="text-xs text-gray-500 ml-2">
                         {formatTimeAgo(chat.created_at)}
                       </span>
-                    </div>
-                    <p className="text-sm text-gray-300 leading-relaxed">{chat.message}</p>
+                    </p>
                   </div>
                 ))}
               </div>
