@@ -473,55 +473,59 @@ export default function RectangularDashboard() {
             <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
             {groupStats ? (
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className={`p-4 bg-gradient-to-br ${colors.bg} backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
-                  <div className={`text-2xl font-bold ${colors.primary} mb-1`}>
-                    ${groupStats.moneyInPot.toFixed(2)}
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className={`p-4 bg-gradient-to-br ${colors.bg} backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
+                    <div className={`text-2xl font-bold ${colors.primary} mb-1`}>
+                      ${groupStats.moneyInPot.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-400 font-medium">
+                      Money in Pot
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-400 font-medium">
-                    Money in Pot
+                  
+                  <div className="p-4 bg-gradient-to-br from-green-900/40 to-green-800/20 backdrop-blur-sm border border-gray-800/30 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400 mb-1">
+                      {groupStats.totalPoints.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-400 font-medium">
+                      Total Points
+                    </div>
                   </div>
                 </div>
                 
-                <div className="p-4 bg-gradient-to-br from-green-900/40 to-green-800/20 backdrop-blur-sm border border-gray-800/30 rounded-lg">
-                  <div className="text-2xl font-bold text-green-400 mb-1">
-                    {groupStats.totalPoints.toLocaleString()}
+                {/* Additional Stats */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
+                    <span className="text-sm text-gray-400">Active Members</span>
+                    <span className="text-lg font-semibold text-white">{groupStats.memberCount}</span>
                   </div>
-                  <div className="text-sm text-gray-400 font-medium">
-                    Total Points
+                  <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
+                    <span className="text-sm text-gray-400">Avg Points/Day</span>
+                    <span className="text-lg font-semibold text-white">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
+                    <span className="text-sm text-gray-400">Challenge Day</span>
+                    <span className="text-lg font-semibold text-white">{challengeDay}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-gray-400">Points per $</span>
+                    <span className="text-lg font-semibold text-green-400">10</span>
                   </div>
                 </div>
-              </div>
-              
-              {/* Additional Stats */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
-                  <span className="text-sm text-gray-400">Active Members</span>
-                  <span className="text-lg font-semibold text-white">{groupStats.memberCount}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
-                  <span className="text-sm text-gray-400">Avg Points/Day</span>
-                  <span className="text-lg font-semibold text-white">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
-                  <span className="text-sm text-gray-400">Challenge Day</span>
-                  <span className="text-lg font-semibold text-white">{challengeDay}</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-400">Points per $</span>
-                  <span className="text-lg font-semibold text-green-400">10</span>
-                </div>
-              </div>
+              </>
             ) : (
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
-                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
-              </div>
-              <div className="space-y-4">
-                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
-                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
-                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
+                </div>
+              </>
             )}
           </div>
         </div>
