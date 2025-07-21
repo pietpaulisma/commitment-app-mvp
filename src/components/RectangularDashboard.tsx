@@ -318,62 +318,41 @@ export default function RectangularDashboard() {
       {groupStartDate && (
         <div className="bg-black border-b border-gray-800">
           <div className="px-4 pt-2 pb-4">
-            <div className="mb-3">
-              <h2 className="text-2xl font-black text-white tracking-tight">
-                DAY {challengeDay}
-              </h2>
-              <p className="text-gray-400 text-sm font-medium mt-1">
-                {getCurrentDayName()}
-              </p>
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-black text-white tracking-tight">
+                    DAY {challengeDay}
+                  </h2>
+                  <p className="text-gray-400 text-sm font-medium mt-1">
+                    {getCurrentDayName()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="font-medium text-sm text-gray-300 tracking-tight">
+                    {timeLeft} left
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 font-medium flex items-center justify-end">
+                    <ClockIcon className="w-3 h-3 mr-1" />
+                    Countdown
+                  </div>
+                </div>
+              </div>
+              
+              {/* Day Type - Connected to day info */}
+              <div className={`mt-4 p-3 border-l-4 ${colors.border} ${colors.bg} flex items-center`}>
+                <div className="text-2xl mr-3">{dayTypeInfo.emoji}</div>
+                <div>
+                  <div className={`font-bold text-sm tracking-tight uppercase ${dayTypeInfo.color}`}>
+                    {dayTypeInfo.title}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1 font-medium">
+                    {dayTypeInfo.subtitle}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {/* Day Type */}
-              <div className="text-center">
-                <div className="text-3xl mb-2">{dayTypeInfo.emoji}</div>
-                <div className={`font-bold text-base tracking-tight uppercase ${dayTypeInfo.color}`}>
-                  {dayTypeInfo.title}
-                </div>
-                <div className="text-xs text-gray-400 mt-1 font-medium">
-                  {dayTypeInfo.subtitle}
-                </div>
-              </div>
-
-              {/* Time Left */}
-              <div className="text-center">
-                <ClockIcon className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                <div className="font-medium text-sm text-gray-300 tracking-tight">
-                  {timeLeft} left
-                </div>
-                <div className="text-xs text-gray-500 mt-1 font-medium">
-                  Countdown
-                </div>
-              </div>
-            </div>
-
-            {dayType === 'rest' && (
-              <div className={`${colors.bg} p-4 text-center border-l-4 ${colors.border}`}>
-                <p className={`${colors.primary.replace('400', '200')} font-medium text-sm`}>
-                  🛌 Enjoy your rest day! No exercises required today.
-                </p>
-              </div>
-            )}
-
-            {dayType === 'recovery' && (
-              <div className="bg-green-900/50 p-4 text-center border-l-4 border-green-400">
-                <p className="text-green-200 font-medium text-sm">
-                  🧘 Recovery day: Focus on 15 minutes of stretching, yoga, or meditation.
-                </p>
-              </div>
-            )}
-
-            {dayType === 'normal' && (
-              <div className={`${colors.bg} p-4 text-center border-l-4 ${colors.border}`}>
-                <p className={`${colors.primary.replace('400', '200')} font-medium text-sm`}>
-                  💪 Training day: Complete your daily target to stay on track!
-                </p>
-              </div>
-            )}
           </div>
         </div>
       )}
