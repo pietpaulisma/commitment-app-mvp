@@ -199,6 +199,7 @@ export default function RectangularDashboard() {
           return {
             ...member,
             todayPoints,
+            dailyTarget: 100, // Default target for now
             isCurrentUser: member.id === user?.id
           }
         })
@@ -216,11 +217,21 @@ export default function RectangularDashboard() {
     if (!profile?.group_id) return
 
     try {
-      // Get total group points
+      // Get all group members first
+      const { data: members } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('group_id', profile.group_id)
+
+      if (!members || members.length === 0) return
+
+      const memberIds = members.map(m => m.id)
+
+      // Get total group points from all members
       const { data: allLogs } = await supabase
         .from('logs')
-        .select('points, profiles!inner(group_id)')
-        .eq('profiles.group_id', profile.group_id)
+        .select('points')
+        .in('user_id', memberIds)
 
       const totalPoints = allLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
@@ -230,10 +241,16 @@ export default function RectangularDashboard() {
       setGroupStats({
         totalPoints,
         moneyInPot,
-        memberCount: groupMembers.length
+        memberCount: members.length
       })
     } catch (error) {
       console.error('Error loading group stats:', error)
+      // Set default stats if error
+      setGroupStats({
+        totalPoints: 0,
+        moneyInPot: 0,
+        memberCount: 0
+      })
     }
   }
 
@@ -262,13 +279,13 @@ export default function RectangularDashboard() {
 
         // Try to load group settings for rest/recovery days
         try {
-          const { data: groupSettings } = await supabase
+          const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
             .select('rest_days, recovery_days, accent_color')
             .eq('group_id', profile.group_id)
-            .single()
+            .maybeSingle()
 
-          if (groupSettings) {
+          if (!settingsError && groupSettings) {
             setRestDays(groupSettings.rest_days || [1]) // Default Monday
             setRecoveryDays(groupSettings.recovery_days || [5]) // Default Friday
             setAccentColor(groupSettings.accent_color || 'blue') // Default blue
@@ -278,66 +295,7 @@ export default function RectangularDashboard() {
         }
       }
 
-      // Get recent chat messages
-      if (profile.group_id) {
-        const { data: chatData } = await supabase
-          .from('chat_messages')
-          .select(`
-            id,
-            message,
-            created_at,
-            user_id,
-            profiles (email, role)
-          `)
-          .eq('group_id', profile.group_id)
-          .order('created_at', { ascending: false })
-          .limit(5)
-
-        const formattedChats = chatData?.map(chat => ({
-          id: chat.id,
-          message: chat.message,
-          created_at: chat.created_at,
-          user_email: chat.profiles?.email || 'Unknown',
-          user_role: chat.profiles?.role || 'user',
-          is_own_message: chat.user_id === user.id
-        })) || []
-
-        setRecentChats(formattedChats)
-      }
-
-      // Get recent group activity (workouts from all members)
-      let formattedActivity = []
-      try {
-        if (profile.group_id) {
-          const { data: activityData } = await supabase
-            .from('logs')
-            .select(`
-              id,
-              user_id,
-              points,
-              created_at,
-              exercises (name),
-              profiles!inner (email, group_id)
-            `)
-            .eq('profiles.group_id', profile.group_id)
-            .order('created_at', { ascending: false })
-            .limit(8)
-
-          formattedActivity = activityData?.map(activity => ({
-          id: activity.id,
-          user_email: activity.profiles?.email || 'Unknown',
-          exercise_name: activity.exercises?.name || 'Unknown Exercise',
-          points: activity.points,
-          created_at: activity.created_at,
-          is_own_activity: activity.user_id === user.id
-        })) || []
-
-          setRecentActivity(formattedActivity)
-        }
-      } catch (error) {
-        console.log('Logs table not accessible, skipping activity data')
-        setRecentActivity([])
-      }
+      // Chat and activity data no longer needed - using group status instead
 
     } catch (error) {
       console.error('Error loading dashboard data:', error)
@@ -487,17 +445,17 @@ export default function RectangularDashboard() {
                           {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                         </div>
                         <div className="text-xs text-gray-400">
-                          {member.todayPoints} / {dailyTarget} points
+                          {member.todayPoints} / {member.dailyTarget || dailyTarget} points
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className={`font-bold text-lg ${
-                        member.todayPoints >= dailyTarget ? 'text-green-400' : 'text-gray-300'
+                        member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : 'text-gray-300'
                       }`}>
-                        {Math.round((member.todayPoints / dailyTarget) * 100)}%
+                        {Math.round((member.todayPoints / (member.dailyTarget || dailyTarget)) * 100)}%
                       </div>
-                      {member.todayPoints >= dailyTarget && (
+                      {member.todayPoints >= (member.dailyTarget || dailyTarget) && (
                         <div className="text-xs text-green-400">Complete!</div>
                       )}
                     </div>
