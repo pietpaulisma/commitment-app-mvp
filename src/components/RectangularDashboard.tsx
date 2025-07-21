@@ -357,26 +357,29 @@ export default function RectangularDashboard() {
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-light text-white tracking-wide lowercase">
-                    day {challengeDay}
+                  <h2 className="text-3xl font-bold text-white">
+                    Day {challengeDay}
                   </h2>
-                  <p className="text-gray-400 text-sm font-light mt-1 lowercase">
-                    {getCurrentDayName().toLowerCase()}
+                  <p className="text-gray-400 text-sm font-medium mt-1">
+                    {getCurrentDayName()}
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="font-light text-sm text-gray-300 tracking-wide lowercase">
-                    {timeLeft} left
+                  <div className="font-semibold text-lg text-white">
+                    {timeLeft}
+                  </div>
+                  <div className="text-xs text-gray-400 font-medium">
+                    remaining
                   </div>
                 </div>
               </div>
               
-              {/* Day Type - Clean minimal style */}
-              <div className="mt-6">
-                <div className={`text-lg font-light ${dayTypeInfo.color} mb-1`}>
+              {/* Day Type - Card style */}
+              <div className={`mt-4 p-4 bg-gradient-to-br ${colors.bg} backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
+                <div className={`text-lg font-semibold ${dayTypeInfo.color} mb-1`}>
                   {dayTypeInfo.title}
                 </div>
-                <div className="text-sm text-gray-400 font-light">
+                <div className="text-sm text-gray-400">
                   {dayTypeInfo.subtitle}
                 </div>
               </div>
@@ -391,36 +394,50 @@ export default function RectangularDashboard() {
         {/* Group Status */}
         <div id="group-status" className="bg-black border-b border-gray-800">
           <div className="p-4">
-            <h3 className="text-lg font-light text-white mb-6 lowercase tracking-wide">group status</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Group Status</h3>
+            <p className="text-sm text-gray-400 mb-6">Today's progress</p>
             
             {groupMembers.length === 0 ? (
-              <div className="text-center py-6">
+              <div className="text-center py-8">
+                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-16 mb-4"></div>
                 <p className="text-gray-400 font-medium text-sm">Loading group members...</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {groupMembers.map((member, index) => (
-                  <div key={member.id} className="flex items-center justify-between py-2">
-                    <div className="flex items-center space-x-4">
-                      <div className="text-sm font-light text-gray-400">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className={`text-sm font-light ${
-                          member.isCurrentUser ? colors.primary : 'text-white'
+                  <div key={member.id} className={`p-4 bg-gradient-to-r ${
+                    member.isCurrentUser ? `${colors.bg} border-l-4 ${colors.border}` : 'from-gray-900/50 to-gray-800/30 border-l-4 border-gray-600'
+                  } backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                          index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black' :
+                          index === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white' :
+                          index === 2 ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black' :
+                          'bg-gradient-to-br from-gray-600 to-gray-800 text-white'
                         }`}>
-                          {member.isCurrentUser ? 'you' : member.email.split('@')[0]}
+                          {index + 1}
                         </div>
-                        <div className="text-xs text-gray-500 font-light">
-                          {member.todayPoints} / {member.dailyTarget || dailyTarget}
+                        <div>
+                          <div className={`font-semibold ${
+                            member.isCurrentUser ? colors.primary : 'text-white'
+                          }`}>
+                            {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {member.todayPoints} / {member.dailyTarget || dailyTarget} points
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-sm font-light ${
-                        member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : 'text-gray-400'
-                      }`}>
-                        {Math.round((member.todayPoints / (member.dailyTarget || dailyTarget)) * 100)}%
+                      <div className="text-right">
+                        <div className={`text-2xl font-bold ${
+                          member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : 'text-white'
+                        }`}>
+                          {Math.round((member.todayPoints / (member.dailyTarget || dailyTarget)) * 100)}%
+                        </div>
+                        {member.todayPoints >= (member.dailyTarget || dailyTarget) && (
+                          <div className="text-xs text-green-400 font-medium">Complete</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -433,27 +450,32 @@ export default function RectangularDashboard() {
         {/* Group Stats */}
         <div id="group-stats" className="bg-black">
           <div className="p-4">
-            <h3 className="text-lg font-light text-white mb-6 lowercase tracking-wide">group stats</h3>
+            <h3 className="text-2xl font-bold text-white mb-4">Group Stats</h3>
             
             {groupStats ? (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm font-light text-gray-400 lowercase">money in pot</div>
-                  <div className={`text-lg font-light ${colors.primary}`}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 bg-gradient-to-br ${colors.bg} backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
+                  <div className={`text-2xl font-bold ${colors.primary} mb-1`}>
                     ${groupStats.moneyInPot.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-400 font-medium">
+                    Money in Pot
                   </div>
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <div className="text-sm font-light text-gray-400 lowercase">total points</div>
-                  <div className="text-lg font-light text-green-400">
+                <div className="p-4 bg-gradient-to-br from-green-900/40 to-green-800/20 backdrop-blur-sm border border-gray-800/30 rounded-lg">
+                  <div className="text-2xl font-bold text-green-400 mb-1">
                     {groupStats.totalPoints.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-400 font-medium">
+                    Total Points
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-6">
-                <p className="text-gray-400 font-medium text-sm">Loading group stats...</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
+                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
               </div>
             )}
           </div>
