@@ -299,15 +299,23 @@ export default function RectangularDashboard() {
       if (profile.group_id) {
         try {
           const { data: chats } = await supabase
-            .from('chats')
-            .select('id, message, created_at, user_email, user_role')
+            .from('chat_messages')
+            .select(`
+              id, 
+              message, 
+              created_at, 
+              user_id,
+              profiles!inner(email, role)
+            `)
             .eq('group_id', profile.group_id)
             .order('created_at', { ascending: false })
             .limit(10)
 
           const chatsWithOwnership = chats?.map(chat => ({
             ...chat,
-            is_own_message: chat.user_email === user.email
+            user_email: chat.profiles.email,
+            user_role: chat.profiles.role,
+            is_own_message: chat.user_id === user.id
           })) || []
 
           setRecentChats(chatsWithOwnership)
