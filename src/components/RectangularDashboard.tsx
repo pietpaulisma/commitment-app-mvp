@@ -580,11 +580,11 @@ export default function RectangularDashboard() {
               <div className="-mx-4">
                 {recentChats.slice(0, 3).map((chat) => (
                   <div key={chat.id} className={`px-6 py-4 ${
-                    chat.is_own_message ? `bg-gradient-to-r ${colors.bg} border-l-4 ${colors.border}` : 'bg-gray-900/30 border-l-4 border-gray-600'
+                    chat.is_own_message ? 'bg-gray-900/50 border-l-4 border-white' : 'bg-gray-900/30 border-l-4 border-gray-600'
                   } border-b border-gray-800/50`}>
                     <div className="flex justify-between items-start mb-3">
                       <span className={`text-lg font-bold ${
-                        chat.is_own_message ? colors.primary : 'text-white'
+                        chat.is_own_message ? 'text-white' : 'text-white'
                       }`}>
                         {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
                       </span>

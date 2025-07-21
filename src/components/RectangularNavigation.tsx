@@ -167,7 +167,7 @@ export default function RectangularNavigation() {
           <button
             onClick={() => setIsChatOpen(true)}
             disabled={!profile.group_id}
-            className={`w-20 h-16 flex items-center justify-center transition-colors duration-200 rounded-none ${
+            className={`w-16 h-16 flex items-center justify-center transition-colors duration-200 rounded-none ${
               profile.group_id 
                 ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
                 : 'bg-gray-950 text-gray-500 cursor-not-allowed'
