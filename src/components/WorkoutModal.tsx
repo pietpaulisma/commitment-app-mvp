@@ -460,7 +460,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             {/* X Button (20% width) */}
             <button
               onClick={onClose}
-              className="w-20 h-16 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors duration-200"
+              className="w-20 h-16 flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors duration-200 rounded-none"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>

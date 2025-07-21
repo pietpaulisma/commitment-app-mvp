@@ -167,7 +167,7 @@ export default function RectangularNavigation() {
           <button
             onClick={() => setIsChatOpen(true)}
             disabled={!profile.group_id}
-            className={`w-20 h-16 flex items-center justify-center transition-colors duration-200 ${
+            className={`w-20 h-16 flex items-center justify-center transition-colors duration-200 rounded-none ${
               profile.group_id 
                 ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
                 : 'bg-gray-950 text-gray-500 cursor-not-allowed'
@@ -191,7 +191,7 @@ export default function RectangularNavigation() {
               href={isOnProfilePage ? "/dashboard" : "/profile"} 
               className="text-gray-300 hover:text-white transition-colors duration-200"
             >
-              <div className={`w-8 h-8 ${accentBg} flex items-center justify-center`}>
+              <div className={`w-8 h-8 ${accentBg} flex items-center justify-center rounded-none`}>
                 {isOnProfilePage ? (
                   <span className="text-white text-lg font-bold">×</span>
                 ) : (
