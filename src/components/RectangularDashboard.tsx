@@ -158,11 +158,11 @@ export default function RectangularDashboard() {
     const colors = getAccentColors()
     switch (dayType) {
       case 'rest':
-        return { title: 'Rest Day', subtitle: 'No exercises required', emoji: '😴', color: colors.primary }
+        return { title: 'Rest Day', subtitle: 'No exercises required', color: colors.primary }
       case 'recovery':
-        return { title: 'Recovery Day', subtitle: '15 min recovery exercises', emoji: '🧘', color: 'text-green-400' }
+        return { title: 'Recovery Day', subtitle: '15 min recovery exercises', color: 'text-green-400' }
       default:
-        return { title: 'Training Day', subtitle: 'Complete your daily target', emoji: '💪', color: colors.primary }
+        return { title: 'Training Day', subtitle: 'Complete your daily target', color: colors.primary }
     }
   }
 
@@ -357,8 +357,8 @@ export default function RectangularDashboard() {
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black text-white tracking-tight">
-                    DAY {challengeDay}
+                  <h2 className="text-3xl font-thin text-white tracking-normal">
+                    Day {challengeDay}
                   </h2>
                   <p className="text-gray-400 text-sm font-medium mt-1">
                     {getCurrentDayName()}
@@ -368,23 +368,16 @@ export default function RectangularDashboard() {
                   <div className="font-medium text-sm text-gray-300 tracking-tight">
                     {timeLeft} left
                   </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium flex items-center justify-end">
-                    <ClockIcon className="w-3 h-3 mr-1" />
-                    Countdown
-                  </div>
                 </div>
               </div>
               
               {/* Day Type - Connected to day info */}
-              <div className={`mt-4 p-3 border-l-4 ${colors.border} ${colors.bg} flex items-center`}>
-                <div className="text-2xl mr-3">{dayTypeInfo.emoji}</div>
-                <div>
-                  <div className={`font-bold text-sm tracking-tight uppercase ${dayTypeInfo.color}`}>
-                    {dayTypeInfo.title}
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1 font-medium">
-                    {dayTypeInfo.subtitle}
-                  </div>
+              <div className={`mt-4 p-3 border-l-4 ${colors.border} ${colors.bg}`}>
+                <div className={`font-bold text-sm tracking-tight uppercase ${dayTypeInfo.color}`}>
+                  {dayTypeInfo.title}
+                </div>
+                <div className="text-xs text-gray-400 mt-1 font-medium">
+                  {dayTypeInfo.subtitle}
                 </div>
               </div>
             </div>
@@ -393,34 +386,16 @@ export default function RectangularDashboard() {
         </div>
       )}
 
-      {/* Collapsible Section Headers */}
-      <div className="sticky top-0 bg-black/95 backdrop-blur border-b border-gray-800 z-10">
-        <div className="flex">
-          <button
-            onClick={() => scrollToSection('group-status')}
-            className="flex-1 p-3 text-left border-r border-gray-800 hover:bg-gray-900 transition-colors"
-          >
-            <span className="text-sm font-bold text-white uppercase tracking-tight">GROUP STATUS</span>
-          </button>
-          <button
-            onClick={() => scrollToSection('group-stats')}
-            className="flex-1 p-3 text-left hover:bg-gray-900 transition-colors"
-          >
-            <span className="text-sm font-bold text-white uppercase tracking-tight">GROUP STATS</span>
-          </button>
-        </div>
-      </div>
 
       <div className="space-y-0">
         {/* Group Status */}
         <div id="group-status" className="bg-black border-b border-gray-800">
           <div className="p-4">
-            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">GROUP STATUS</h3>
-            <p className="text-xs text-gray-400 mb-4 uppercase tracking-wide">TODAY'S PROGRESS</p>
+            <h3 className="text-2xl font-thin text-white mb-4 tracking-normal">Group Status</h3>
+            <p className="text-sm text-gray-400 mb-4 font-light">Today's progress</p>
             
             {groupMembers.length === 0 ? (
               <div className="text-center py-6">
-                <div className="text-3xl mb-3">👥</div>
                 <p className="text-gray-400 font-medium text-sm">Loading group members...</p>
               </div>
             ) : (
@@ -469,33 +444,30 @@ export default function RectangularDashboard() {
         {/* Group Stats */}
         <div id="group-stats" className="bg-black">
           <div className="p-4">
-            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">GROUP STATS</h3>
+            <h3 className="text-3xl font-thin text-white mb-4 tracking-normal">Group Stats</h3>
             
             {groupStats ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className={`p-4 ${colors.bg} border-l-4 ${colors.border}`}>
-                  <div className="text-2xl mb-2">💰</div>
                   <div className={`font-bold text-lg ${colors.primary}`}>
                     ${groupStats.moneyInPot.toFixed(2)}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1 font-medium uppercase">
+                  <div className="text-xs text-gray-400 mt-1 font-medium">
                     Money in Pot
                   </div>
                 </div>
                 
                 <div className="p-4 bg-green-900/50 border-l-4 border-green-400">
-                  <div className="text-2xl mb-2">⚡</div>
                   <div className="font-bold text-lg text-green-400">
                     {groupStats.totalPoints.toLocaleString()}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1 font-medium uppercase">
+                  <div className="text-xs text-gray-400 mt-1 font-medium">
                     Total Points
                   </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-6">
-                <div className="text-3xl mb-3">📊</div>
                 <p className="text-gray-400 font-medium text-sm">Loading group stats...</p>
               </div>
             )}
