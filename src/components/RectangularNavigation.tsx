@@ -22,6 +22,7 @@ export default function RectangularNavigation() {
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(100)
   const [accentColor, setAccentColor] = useState('blue')
+  const [groupName, setGroupName] = useState('')
 
   const isOnProfilePage = pathname === '/profile'
 
@@ -56,9 +57,11 @@ export default function RectangularNavigation() {
           // Load group and group settings
           const { data: group } = await supabase
             .from('groups')
-            .select('start_date')
+            .select('start_date, name')
             .eq('id', profile.group_id)
             .single()
+          
+          setGroupName(group?.name || '')
 
           const { data: groupSettings } = await supabase
             .from('group_settings')
@@ -179,8 +182,9 @@ export default function RectangularNavigation() {
       <nav className="lg:hidden sticky top-0 z-40 bg-black border-b border-gray-900">
         <div className="px-4">
           <div className="flex justify-between items-center py-3">
-            <div className="font-black text-lg text-white tracking-tight uppercase">
-              COMMITMENT APP
+            <div className="text-lg text-white">
+              <span className="font-black tracking-tight uppercase">THE COMMITMENT</span>
+              <span className="font-normal text-gray-400 ml-2">{groupName}</span>
             </div>
 
             <Link 
@@ -203,8 +207,9 @@ export default function RectangularNavigation() {
       <nav className="hidden lg:block sticky top-0 z-40 bg-black border-b border-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center py-4">
-            <div className="font-black text-xl text-white tracking-tight uppercase">
-              COMMITMENT APP
+            <div className="text-xl text-white">
+              <span className="font-black tracking-tight uppercase">THE COMMITMENT</span>
+              <span className="font-normal text-gray-400 ml-3">{groupName}</span>
             </div>
 
             <div className="flex items-center space-x-4">

@@ -313,40 +313,40 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen bg-black pb-20 pt-6">
+    <div className="min-h-screen bg-black pb-20 pt-2">
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div className="bg-black border-b border-gray-800">
-          <div className="p-6">
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
-                DAY {challengeDay} CHALLENGE
+          <div className="p-4">
+            <div className="mb-4">
+              <h2 className="text-2xl font-black text-white tracking-tight">
+                DAY {challengeDay}
               </h2>
-              <p className="text-gray-400 text-sm font-medium tracking-wide">
-                {getCurrentDayName()} • {groupName}
+              <p className="text-gray-400 text-sm font-medium mt-1">
+                {getCurrentDayName()}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               {/* Day Type */}
               <div className="text-center">
-                <div className="text-4xl mb-3">{dayTypeInfo.emoji}</div>
-                <div className={`font-bold text-lg tracking-tight uppercase ${dayTypeInfo.color}`}>
+                <div className="text-3xl mb-2">{dayTypeInfo.emoji}</div>
+                <div className={`font-bold text-base tracking-tight uppercase ${dayTypeInfo.color}`}>
                   {dayTypeInfo.title}
                 </div>
-                <div className="text-xs text-gray-400 mt-2 font-medium">
+                <div className="text-xs text-gray-400 mt-1 font-medium">
                   {dayTypeInfo.subtitle}
                 </div>
               </div>
 
               {/* Time Left */}
               <div className="text-center">
-                <ClockIcon className="w-10 h-10 text-red-400 mx-auto mb-3" />
-                <div className="font-bold text-lg text-red-400 tracking-tight">
-                  {timeLeft}
+                <ClockIcon className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                <div className="font-medium text-sm text-gray-300 tracking-tight">
+                  {timeLeft} left
                 </div>
-                <div className="text-xs text-gray-400 mt-2 font-medium">
-                  Time remaining
+                <div className="text-xs text-gray-500 mt-1 font-medium">
+                  Countdown
                 </div>
               </div>
             </div>
@@ -381,19 +381,19 @@ export default function RectangularDashboard() {
       <div className="space-y-0">
         {/* Recent Chat Messages */}
         <div className="bg-black border-b border-gray-800">
-          <div className="p-6">
-            <h3 className="text-xl font-black text-white mb-6 tracking-tight uppercase">RECENT CHATS</h3>
+          <div className="p-4">
+            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">RECENT CHATS</h3>
             {recentChats.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">💬</div>
-                <p className="text-gray-400 font-semibold text-sm">No recent messages</p>
-                <p className="text-gray-500 text-xs mt-2 font-medium">Start a conversation with your group!</p>
+              <div className="text-center py-6">
+                <div className="text-3xl mb-3">💬</div>
+                <p className="text-gray-400 font-medium text-sm">No recent messages</p>
+                <p className="text-gray-500 text-xs mt-1 font-medium">Start a conversation with your group!</p>
               </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {recentChats.map((chat) => (
-                <div key={chat.id} className={`flex items-start space-x-3 border-l-2 ${colors.borderL} pl-3 py-2`}>
-                  <div className="w-8 h-8 bg-gray-700 flex items-center justify-center flex-shrink-0">
+                <div key={chat.id} className={`flex items-start space-x-3 border-l-2 ${colors.borderL} pl-3 py-1`}>
+                  <div className="w-6 h-6 bg-gray-700 flex items-center justify-center flex-shrink-0 text-xs">
                     <span className="text-xs font-medium text-gray-300">
                       {chat.user_email.charAt(0).toUpperCase()}
                     </span>
@@ -420,20 +420,20 @@ export default function RectangularDashboard() {
 
         {/* Recent Activity */}
         <div className="bg-black">
-          <div className="p-6">
-            <h3 className="text-xl font-black text-white mb-6 tracking-tight uppercase">RECENT ACTIVITY</h3>
+          <div className="p-4">
+            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">RECENT ACTIVITY</h3>
             {recentActivity.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-4">🏃‍♂️</div>
-                <p className="text-gray-400 font-semibold text-sm">No recent activity</p>
-                <p className="text-gray-500 text-xs mt-2 font-medium">Start logging workouts to see group activity!</p>
+              <div className="text-center py-6">
+                <div className="text-3xl mb-3">🏃‍♂️</div>
+                <p className="text-gray-400 font-medium text-sm">No recent activity</p>
+                <p className="text-gray-500 text-xs mt-1 font-medium">Start logging workouts to see group activity!</p>
               </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between py-2 border-l-2 border-green-500 pl-3">
+                <div key={activity.id} className="flex items-center justify-between py-1 border-l-2 border-green-500 pl-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gray-700 flex items-center justify-center">
+                    <div className="w-6 h-6 bg-gray-700 flex items-center justify-center text-xs">
                       <span className="text-xs font-medium text-gray-300">
                         {activity.user_email.charAt(0).toUpperCase()}
                       </span>
