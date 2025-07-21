@@ -313,12 +313,12 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen bg-black pb-20 pt-2">
+    <div className="min-h-screen bg-black pb-20">
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div className="bg-black border-b border-gray-800">
-          <div className="p-4">
-            <div className="mb-4">
+          <div className="px-4 pt-2 pb-4">
+            <div className="mb-3">
               <h2 className="text-2xl font-black text-white tracking-tight">
                 DAY {challengeDay}
               </h2>
