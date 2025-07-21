@@ -184,7 +184,6 @@ export default function RectangularNavigation() {
           <div className="flex justify-between items-center py-3">
             <div className="text-lg text-white">
               <div className="text-2xl font-bold">The Commitment</div>
-              <div className="text-sm text-gray-400 font-medium">{groupName}</div>
             </div>
 
             <Link 
@@ -209,7 +208,6 @@ export default function RectangularNavigation() {
           <div className="flex justify-between items-center py-4">
             <div className="text-xl text-white">
               <div className="text-2xl font-bold">The Commitment</div>
-              <div className="text-sm text-gray-400 font-medium mt-1">{groupName}</div>
             </div>
 
             <div className="flex items-center space-x-4">

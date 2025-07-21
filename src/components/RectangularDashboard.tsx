@@ -180,6 +180,38 @@ export default function RectangularDashboard() {
     return days[new Date().getDay()]
   }
 
+  const getTimeBasedGradient = () => {
+    const now = new Date()
+    const hour = now.getHours()
+    
+    // Early morning (5-7): Soft sunrise colors
+    if (hour >= 5 && hour < 7) {
+      return 'from-orange-300/20 to-yellow-300/10'
+    }
+    // Morning (7-10): Bright sunrise
+    else if (hour >= 7 && hour < 10) {
+      return 'from-orange-400/25 to-yellow-400/15'
+    }
+    // Mid-morning to afternoon (10-16): Bright day
+    else if (hour >= 10 && hour < 16) {
+      return 'from-yellow-400/20 to-orange-300/10'
+    }
+    // Late afternoon (16-18): Golden hour
+    else if (hour >= 16 && hour < 18) {
+      return 'from-orange-500/25 to-red-400/15'
+    }
+    // Evening (18-20): Sunset
+    else if (hour >= 18 && hour < 20) {
+      return 'from-red-500/20 to-purple-500/10'
+    }
+    // Night (20-24): Deep evening
+    else if (hour >= 20 || hour < 5) {
+      return 'from-blue-800/20 to-indigo-900/10'
+    }
+    // Default fallback
+    return 'from-orange-600/20 to-orange-500/10'
+  }
+
   const loadGroupMembers = async () => {
     if (!profile?.group_id) return
 
@@ -391,7 +423,7 @@ export default function RectangularDashboard() {
         <div className="bg-gray-950 border-b border-gray-800 relative overflow-hidden">
           {/* Progress Background */}
           <div 
-            className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-orange-600/20 to-orange-500/10 transition-all duration-1000 ease-out"
+            className={`absolute left-0 top-0 bottom-0 bg-gradient-to-r ${getTimeBasedGradient()} transition-all duration-1000 ease-out`}
             style={{ width: `${timeRemainingPercentage}%` }}
           />
           
@@ -409,7 +441,7 @@ export default function RectangularDashboard() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <div className="text-5xl font-black text-white">
+                  <div className="text-3xl font-black text-white">
                     {timeLeft}
                   </div>
                   <div className="text-sm text-gray-400 font-medium -mt-1">
