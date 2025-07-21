@@ -270,61 +270,61 @@ export default function RectangularDashboard() {
     <div className="min-h-screen bg-black pb-20 pt-6">
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="p-4 pb-0">
-          <div className="bg-gray-900 border border-gray-700 p-6 mb-6">
-            <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-white mb-2">
-                Day {challengeDay} Challenge
+        <div className="bg-gray-900 border-b border-gray-700">
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-black text-white mb-2 tracking-wider font-mono">
+                DAY {challengeDay} CHALLENGE
               </h2>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-sm font-mono tracking-wide uppercase">
                 {getCurrentDayName()} • {groupName}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-6 mb-6">
               {/* Day Type */}
-              <div className="bg-gray-800 border border-gray-600 p-4 text-center">
-                <div className="text-2xl mb-2">{dayTypeInfo.emoji}</div>
-                <div className={`font-semibold ${dayTypeInfo.color}`}>
+              <div className="text-center">
+                <div className="text-4xl mb-3">{dayTypeInfo.emoji}</div>
+                <div className={`font-black text-lg tracking-wider font-mono uppercase ${dayTypeInfo.color}`}>
                   {dayTypeInfo.title}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-gray-400 mt-2 uppercase tracking-wide font-mono">
                   {dayTypeInfo.subtitle}
                 </div>
               </div>
 
               {/* Time Left */}
-              <div className="bg-gray-800 border border-gray-600 p-4 text-center">
-                <ClockIcon className="w-8 h-8 text-red-400 mx-auto mb-2" />
-                <div className="font-semibold text-red-400">
+              <div className="text-center">
+                <ClockIcon className="w-10 h-10 text-red-400 mx-auto mb-3" />
+                <div className="font-black text-lg text-red-400 tracking-wider font-mono">
                   {timeLeft}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
+                <div className="text-xs text-gray-400 mt-2 uppercase tracking-wide font-mono">
                   Time remaining
                 </div>
               </div>
             </div>
 
             {dayType === 'rest' && (
-              <div className="bg-blue-900/30 border border-blue-700 p-3 text-center">
-                <p className="text-blue-300 text-sm font-medium">
-                  🛌 Enjoy your rest day! No exercises required today.
+              <div className="bg-blue-900/50 p-4 text-center border-l-4 border-blue-400">
+                <p className="text-blue-200 font-semibold font-mono tracking-wide uppercase text-sm">
+                  🛌 ENJOY YOUR REST DAY! NO EXERCISES REQUIRED TODAY.
                 </p>
               </div>
             )}
 
             {dayType === 'recovery' && (
-              <div className="bg-green-900/30 border border-green-700 p-3 text-center">
-                <p className="text-green-300 text-sm font-medium">
-                  🧘 Recovery day: Focus on 15 minutes of stretching, yoga, or meditation.
+              <div className="bg-green-900/50 p-4 text-center border-l-4 border-green-400">
+                <p className="text-green-200 font-semibold font-mono tracking-wide uppercase text-sm">
+                  🧘 RECOVERY DAY: FOCUS ON 15 MINUTES OF STRETCHING, YOGA, OR MEDITATION.
                 </p>
               </div>
             )}
 
             {dayType === 'normal' && (
-              <div className="bg-orange-900/30 border border-orange-700 p-3 text-center">
-                <p className="text-orange-300 text-sm font-medium">
-                  💪 Training day: Complete your daily target to stay on track!
+              <div className="bg-orange-900/50 p-4 text-center border-l-4 border-orange-400">
+                <p className="text-orange-200 font-semibold font-mono tracking-wide uppercase text-sm">
+                  💪 TRAINING DAY: COMPLETE YOUR DAILY TARGET TO STAY ON TRACK!
                 </p>
               </div>
             )}
@@ -332,16 +332,17 @@ export default function RectangularDashboard() {
         </div>
       )}
 
-      <div className="p-4 space-y-6">
+      <div className="space-y-0">
         {/* Recent Chat Messages */}
-        <div className="bg-gray-900 border border-gray-700 p-6">
-          <h3 className="text-lg font-semibold mb-4 text-white">Recent Chats</h3>
-          {recentChats.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="text-3xl mb-2">💬</div>
-              <p className="text-gray-400 text-sm">No recent messages</p>
-              <p className="text-gray-500 text-xs">Start a conversation with your group!</p>
-            </div>
+        <div className="bg-gray-900 border-b border-gray-700">
+          <div className="p-6">
+            <h3 className="text-xl font-black text-white mb-6 tracking-wider font-mono uppercase">RECENT CHATS</h3>
+            {recentChats.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">💬</div>
+                <p className="text-gray-400 font-mono uppercase tracking-wide text-sm">NO RECENT MESSAGES</p>
+                <p className="text-gray-500 font-mono text-xs mt-2">START A CONVERSATION WITH YOUR GROUP!</p>
+              </div>
           ) : (
             <div className="space-y-4">
               {recentChats.map((chat) => (
@@ -353,32 +354,34 @@ export default function RectangularDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className={`text-sm font-medium ${
+                      <span className={`font-mono uppercase tracking-wide text-xs font-bold ${
                         chat.is_own_message ? 'text-blue-400' : 'text-white'
                       }`}>
-                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
+                        {chat.is_own_message ? 'YOU' : chat.user_email.split('@')[0].toUpperCase()}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 font-mono">
                         {formatTimeAgo(chat.created_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300 truncate">{chat.message}</p>
+                    <p className="text-sm text-gray-300">{chat.message}</p>
                   </div>
                 </div>
               ))}
             </div>
           )}
+          </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-gray-900 border border-gray-700 p-6">
-          <h3 className="text-lg font-semibold mb-4 text-white">Recent Activity</h3>
-          {recentActivity.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="text-3xl mb-2">🏃‍♂️</div>
-              <p className="text-gray-400 text-sm">No recent activity</p>
-              <p className="text-gray-500 text-xs">Start logging workouts to see group activity!</p>
-            </div>
+        <div className="bg-gray-900">
+          <div className="p-6">
+            <h3 className="text-xl font-black text-white mb-6 tracking-wider font-mono uppercase">RECENT ACTIVITY</h3>
+            {recentActivity.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-4">🏃‍♂️</div>
+                <p className="text-gray-400 font-mono uppercase tracking-wide text-sm">NO RECENT ACTIVITY</p>
+                <p className="text-gray-500 font-mono text-xs mt-2">START LOGGING WORKOUTS TO SEE GROUP ACTIVITY!</p>
+              </div>
           ) : (
             <div className="space-y-4">
               {recentActivity.map((activity) => (
@@ -391,27 +394,27 @@ export default function RectangularDashboard() {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-medium ${
+                        <span className={`font-mono uppercase tracking-wide text-xs font-bold ${
                           activity.is_own_activity ? 'text-blue-400' : 'text-white'
                         }`}>
-                          {activity.is_own_activity ? 'You' : activity.user_email.split('@')[0]}
+                          {activity.is_own_activity ? 'YOU' : activity.user_email.split('@')[0].toUpperCase()}
                         </span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 font-mono">
                           {formatTimeAgo(activity.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400">{activity.exercise_name}</p>
+                      <p className="text-sm text-gray-400 uppercase font-mono tracking-wide">{activity.exercise_name}</p>
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-green-400">
+                  <div className="font-mono font-black text-green-400 tracking-wider">
                     +{activity.points}
                   </div>
                 </div>
               ))}
             </div>
           )}
+          </div>
         </div>
-
       </div>
     </div>
   )
