@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 
 type RecentChat = {
   id: string
@@ -33,6 +34,12 @@ export default function RectangularDashboard() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [groupName, setGroupName] = useState('')
+  const [groupStartDate, setGroupStartDate] = useState<string | null>(null)
+  const [challengeDay, setChallengeDay] = useState(1)
+  const [dayType, setDayType] = useState<'rest' | 'recovery' | 'normal'>('normal')
+  const [timeLeft, setTimeLeft] = useState('')
+  const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
+  const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -49,18 +56,103 @@ export default function RectangularDashboard() {
     }
   }, [user, profile])
 
+  // Countdown timer effect
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date()
+      const endOfDay = new Date(now)
+      endOfDay.setHours(23, 59, 59, 999)
+      
+      const timeDiff = endOfDay.getTime() - now.getTime()
+      const hours = Math.floor(timeDiff / (1000 * 60 * 60))
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
+      
+      setTimeLeft(`${hours}h ${minutes}m`)
+    }
+
+    updateTimer() // Initial update
+    const timer = setInterval(updateTimer, 60000) // Update every minute
+    
+    return () => clearInterval(timer)
+  }, [])
+
+  // Calculate challenge day and day type when group data loads
+  useEffect(() => {
+    if (groupStartDate) {
+      calculateChallengeInfo()
+    }
+  }, [groupStartDate, restDays, recoveryDays])
+
+  const calculateChallengeInfo = () => {
+    if (!groupStartDate) return
+
+    const startDate = new Date(groupStartDate)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time for accurate day calculation
+    
+    const timeDiff = today.getTime() - startDate.getTime()
+    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1 // +1 because day 1 is the start date
+    
+    setChallengeDay(Math.max(1, daysDiff))
+    
+    // Get current day of week (0 = Sunday, 1 = Monday, etc.)
+    const currentDayOfWeek = today.getDay()
+    
+    // Determine day type
+    if (restDays.includes(currentDayOfWeek)) {
+      setDayType('rest')
+    } else if (recoveryDays.includes(currentDayOfWeek)) {
+      setDayType('recovery')
+    } else {
+      setDayType('normal')
+    }
+  }
+
+  const getDayTypeDisplay = () => {
+    switch (dayType) {
+      case 'rest':
+        return { title: 'Rest Day', subtitle: 'No exercises required', emoji: '😴', color: 'text-blue-400' }
+      case 'recovery':
+        return { title: 'Recovery Day', subtitle: '15 min recovery exercises', emoji: '🧘', color: 'text-green-400' }
+      default:
+        return { title: 'Training Day', subtitle: 'Complete your daily target', emoji: '💪', color: 'text-orange-400' }
+    }
+  }
+
+  const getCurrentDayName = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    return days[new Date().getDay()]
+  }
+
   const loadDashboardData = async () => {
     if (!user || !profile) return
 
     try {
-      // Get group name
+      // Get group name and start date
       if (profile.group_id) {
         const { data: group } = await supabase
           .from('groups')
-          .select('name')
+          .select('name, start_date')
           .eq('id', profile.group_id)
           .single()
         setGroupName(group?.name || 'Your Group')
+        setGroupStartDate(group?.start_date || null)
+
+        // Try to load group settings for rest/recovery days
+        try {
+          const { data: groupSettings } = await supabase
+            .from('group_settings')
+            .select('rest_days, recovery_days')
+            .eq('group_id', profile.group_id)
+            .single()
+
+          if (groupSettings) {
+            setRestDays(groupSettings.rest_days || [1]) // Default Monday
+            setRecoveryDays(groupSettings.recovery_days || [5]) // Default Friday
+          }
+        } catch (error) {
+          console.log('Group settings not available, using defaults')
+        }
       }
 
       // Get recent chat messages
@@ -172,8 +264,73 @@ export default function RectangularDashboard() {
     return null
   }
 
+  const dayTypeInfo = getDayTypeDisplay()
+
   return (
     <div className="min-h-screen bg-black pb-20 pt-6">
+      {/* Time-Based Challenge Header */}
+      {groupStartDate && (
+        <div className="p-4 pb-0">
+          <div className="bg-gray-900 border border-gray-700 p-6 mb-6">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Day {challengeDay} Challenge
+              </h2>
+              <p className="text-gray-400 text-sm">
+                {getCurrentDayName()} • {groupName}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {/* Day Type */}
+              <div className="bg-gray-800 border border-gray-600 p-4 text-center">
+                <div className="text-2xl mb-2">{dayTypeInfo.emoji}</div>
+                <div className={`font-semibold ${dayTypeInfo.color}`}>
+                  {dayTypeInfo.title}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {dayTypeInfo.subtitle}
+                </div>
+              </div>
+
+              {/* Time Left */}
+              <div className="bg-gray-800 border border-gray-600 p-4 text-center">
+                <ClockIcon className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                <div className="font-semibold text-red-400">
+                  {timeLeft}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Time remaining
+                </div>
+              </div>
+            </div>
+
+            {dayType === 'rest' && (
+              <div className="bg-blue-900/30 border border-blue-700 p-3 text-center">
+                <p className="text-blue-300 text-sm font-medium">
+                  🛌 Enjoy your rest day! No exercises required today.
+                </p>
+              </div>
+            )}
+
+            {dayType === 'recovery' && (
+              <div className="bg-green-900/30 border border-green-700 p-3 text-center">
+                <p className="text-green-300 text-sm font-medium">
+                  🧘 Recovery day: Focus on 15 minutes of stretching, yoga, or meditation.
+                </p>
+              </div>
+            )}
+
+            {dayType === 'normal' && (
+              <div className="bg-orange-900/30 border border-orange-700 p-3 text-center">
+                <p className="text-orange-300 text-sm font-medium">
+                  💪 Training day: Complete your daily target to stay on track!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="p-4 space-y-6">
         {/* Recent Chat Messages */}

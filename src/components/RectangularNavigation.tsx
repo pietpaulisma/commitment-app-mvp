@@ -45,10 +45,20 @@ export default function RectangularNavigation() {
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target (fallback to 100 if group_settings table doesn't exist)
+      // Get today's target based on day type
       let target = 100
+      let restDays = [1] // Default Monday
+      let recoveryDays = [5] // Default Friday
+      
       try {
         if (profile.group_id) {
+          // Load group and group settings
+          const { data: group } = await supabase
+            .from('groups')
+            .select('start_date')
+            .eq('id', profile.group_id)
+            .single()
+
           const { data: groupSettings } = await supabase
             .from('group_settings')
             .select('*')
@@ -56,12 +66,26 @@ export default function RectangularNavigation() {
             .single()
 
           if (groupSettings) {
-            const daysSinceStart = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+            restDays = groupSettings.rest_days || [1]
+            recoveryDays = groupSettings.recovery_days || [5]
+            
+            const daysSinceStart = group?.start_date 
+              ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+              : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+            
             target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
           }
         }
       } catch (error) {
-        console.log('Group settings not available, using default target of 100')
+        console.log('Group settings not available, using defaults')
+      }
+
+      // Adjust target based on day type
+      const currentDayOfWeek = new Date().getDay()
+      if (restDays.includes(currentDayOfWeek)) {
+        target = 0 // Rest day - no points required
+      } else if (recoveryDays.includes(currentDayOfWeek)) {
+        target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
       }
 
       setDailyProgress(todayPoints)
