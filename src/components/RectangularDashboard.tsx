@@ -413,50 +413,56 @@ export default function RectangularDashboard() {
 
       <div className="space-y-0">
         {/* Group Status */}
-        <div id="group-status" className="bg-gray-950 border-b border-gray-800">
-          <div className="p-4">
+        <div id="group-status" className="bg-gray-950">
+          <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Status</h3>
             
             {groupMembers.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-16 mb-4"></div>
-                <p className="text-gray-400 font-medium text-sm">Loading group members...</p>
+              <div className="-mx-4">
+                <div className="px-6 py-8 bg-gray-900/30 border-l-4 border-gray-600 border-b border-gray-800/50">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-12 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
+                </div>
+                <div className="px-6 py-8 bg-gray-900/30 border-l-4 border-gray-600 border-b border-gray-800/50">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-12 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
+                </div>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="-mx-4">
                 {groupMembers.map((member, index) => (
-                  <div key={member.id} className={`p-4 bg-gradient-to-r ${
-                    member.isCurrentUser ? `${colors.bg} border-l-4 ${colors.border}` : 'from-gray-900/50 to-gray-800/30 border-l-4 border-gray-600'
-                  } backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
+                  <div key={member.id} className={`px-4 py-6 ${
+                    member.isCurrentUser ? `bg-gradient-to-r ${colors.bg} border-l-4 ${colors.border}` : index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/10 border-l-4 border-yellow-500' : 'bg-gray-900/30 border-l-4 border-gray-600'
+                  } border-b border-gray-800/50`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                          index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-black' :
-                          index === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white' :
-                          index === 2 ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black' :
-                          'bg-gradient-to-br from-gray-600 to-gray-800 text-white'
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                          index === 0 ? 'bg-yellow-500 text-black' :
+                          index === 1 ? 'bg-gray-500 text-white' :
+                          index === 2 ? 'bg-amber-600 text-black' :
+                          'bg-gray-600 text-white'
                         }`}>
                           {index + 1}
                         </div>
                         <div>
-                          <div className={`font-semibold ${
-                            member.isCurrentUser ? colors.primary : 'text-white'
+                          <div className={`text-lg font-bold ${
+                            member.isCurrentUser ? colors.primary : index === 0 ? 'text-yellow-400' : 'text-white'
                           }`}>
                             {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                           </div>
-                          <div className="text-xs text-gray-400">
+                          <div className="text-sm text-gray-400">
                             {member.todayPoints} / {member.dailyTarget || dailyTarget} points
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`text-2xl font-bold ${
-                          member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : 'text-white'
+                        <div className={`text-4xl font-black ${
+                          member.todayPoints >= (member.dailyTarget || dailyTarget) ? 'text-green-400' : index === 0 ? 'text-yellow-400' : 'text-white'
                         }`}>
                           {Math.round((member.todayPoints / (member.dailyTarget || dailyTarget)) * 100)}%
                         </div>
                         {member.todayPoints >= (member.dailyTarget || dailyTarget) && (
-                          <div className="text-xs text-green-400 font-medium">Complete</div>
+                          <div className="text-sm text-green-400 font-medium">Complete</div>
                         )}
                       </div>
                     </div>
@@ -468,62 +474,84 @@ export default function RectangularDashboard() {
         </div>
 
         {/* Group Stats */}
-        <div id="group-stats" className="bg-gray-950 border-b border-gray-800">
-          <div className="p-4">
+        <div id="group-stats" className="bg-gray-950">
+          <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
             {groupStats ? (
               <>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className={`p-4 bg-gradient-to-br ${colors.bg} backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
-                    <div className={`text-2xl font-bold ${colors.primary} mb-1`}>
-                      ${groupStats.moneyInPot.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-400 font-medium">
-                      Money in Pot
+                {/* Hero Stats - Full Width */}
+                <div className="-mx-4 mb-6">
+                  <div className={`px-6 py-8 bg-gradient-to-r ${colors.bg} border-b-4 ${colors.border}`}>
+                    <div className="text-center">
+                      <div className={`text-6xl font-black ${colors.primary} mb-2`}>
+                        ${groupStats.moneyInPot.toFixed(0)}
+                      </div>
+                      <div className="text-lg text-gray-300 font-medium uppercase tracking-wide">
+                        Money in Pot
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="p-4 bg-gradient-to-br from-green-900/40 to-green-800/20 backdrop-blur-sm border border-gray-800/30 rounded-lg">
-                    <div className="text-2xl font-bold text-green-400 mb-1">
-                      {groupStats.totalPoints.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-400 font-medium">
-                      Total Points
+                  <div className="px-6 py-8 bg-gradient-to-r from-green-900/40 to-green-800/20 border-b-4 border-green-500">
+                    <div className="text-center">
+                      <div className="text-6xl font-black text-green-400 mb-2">
+                        {(groupStats.totalPoints / 1000).toFixed(1)}k
+                      </div>
+                      <div className="text-lg text-gray-300 font-medium uppercase tracking-wide">
+                        Total Points
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Additional Stats */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
-                    <span className="text-sm text-gray-400">Active Members</span>
-                    <span className="text-lg font-semibold text-white">{groupStats.memberCount}</span>
+                {/* Detailed Stats - Full Width Bars */}
+                <div className="-mx-4 space-y-1">
+                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium text-white">Active Members</span>
+                      <span className="text-2xl font-bold text-white">{groupStats.memberCount}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
-                    <span className="text-sm text-gray-400">Avg Points/Day</span>
-                    <span className="text-lg font-semibold text-white">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
+                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium text-white">Avg Points/Day</span>
+                      <span className="text-2xl font-bold text-white">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
-                    <span className="text-sm text-gray-400">Challenge Day</span>
-                    <span className="text-lg font-semibold text-white">{challengeDay}</span>
+                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium text-white">Challenge Day</span>
+                      <span className="text-2xl font-bold text-white">{challengeDay}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-gray-400">Points per $</span>
-                    <span className="text-lg font-semibold text-green-400">10</span>
+                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-green-600">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium text-white">Points per $</span>
+                      <span className="text-2xl font-bold text-green-400">10</span>
+                    </div>
                   </div>
                 </div>
               </>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
+                <div className="-mx-4 mb-6">
+                  <div className="px-6 py-12 bg-gray-900/30 border-b-4 border-gray-600">
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-16 mb-4"></div>
+                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
+                  </div>
+                  <div className="px-6 py-12 bg-gray-900/30 border-b-4 border-gray-600">
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-16 mb-4"></div>
+                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
+                  </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
+                <div className="-mx-4 space-y-1">
+                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8"></div>
+                  </div>
+                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8"></div>
+                  </div>
                 </div>
               </>
             )}
@@ -532,31 +560,31 @@ export default function RectangularDashboard() {
 
         {/* Chats Section */}
         <div id="chats" className="bg-gray-950">
-          <div className="p-4">
+          <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Chats</h3>
             
             {recentChats.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-400 font-medium text-sm">No recent messages</p>
-                <p className="text-gray-500 text-xs mt-1">Start a conversation with your group</p>
+                <p className="text-gray-400 font-medium text-lg">No recent messages</p>
+                <p className="text-gray-500 text-sm mt-2">Start a conversation with your group</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="-mx-4">
                 {recentChats.slice(0, 3).map((chat) => (
-                  <div key={chat.id} className={`p-3 bg-gradient-to-r ${
-                    chat.is_own_message ? `${colors.bg} border-l-4 ${colors.border}` : 'from-gray-900/50 to-gray-800/30 border-l-4 border-gray-600'
-                  } backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className={`text-sm font-medium ${
+                  <div key={chat.id} className={`px-6 py-4 ${
+                    chat.is_own_message ? `bg-gradient-to-r ${colors.bg} border-l-4 ${colors.border}` : 'bg-gray-900/30 border-l-4 border-gray-600'
+                  } border-b border-gray-800/50`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <span className={`text-lg font-bold ${
                         chat.is_own_message ? colors.primary : 'text-white'
                       }`}>
                         {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-sm text-gray-400">
                         {formatTimeAgo(chat.created_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300">{chat.message}</p>
+                    <p className="text-base text-gray-300 leading-relaxed">{chat.message}</p>
                   </div>
                 ))}
               </div>
