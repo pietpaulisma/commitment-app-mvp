@@ -417,10 +417,10 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-20">
+    <div className="min-h-screen bg-black pb-20">
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="bg-gray-950 border-b border-gray-800 relative overflow-hidden">
+        <div className="bg-black border-b border-gray-800 relative overflow-hidden">
           {/* Progress Background */}
           <div 
             className={`absolute left-0 top-0 bottom-0 bg-gradient-to-r ${getTimeBasedGradient()} transition-all duration-1000 ease-out`}
@@ -457,7 +457,7 @@ export default function RectangularDashboard() {
 
       <div className="space-y-0">
         {/* Group Status */}
-        <div id="group-status" className="bg-gray-950">
+        <div id="group-status" className="bg-black">
           <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Status</h3>
             
@@ -512,8 +512,40 @@ export default function RectangularDashboard() {
           </div>
         </div>
 
+        {/* Chats Section */}
+        <div id="chats" className="bg-black">
+          <div className="px-4 py-6">
+            <h3 className="text-2xl font-bold text-white mb-6">Chats</h3>
+            
+            {recentChats.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 font-medium text-lg">No recent messages</p>
+                <p className="text-gray-500 text-sm mt-2">Start a conversation with your group</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recentChats.slice(0, 7).map((chat) => (
+                  <div key={chat.id} className={`p-3 rounded-lg ${
+                    chat.is_own_message ? 'bg-gray-900/50' : 'bg-gray-900/30'
+                  }`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-sm font-bold text-white">
+                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {formatTimeAgo(chat.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-300 leading-relaxed">{chat.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Group Stats */}
-        <div id="group-stats" className="bg-gray-950">
+        <div id="group-stats" className="bg-black">
           <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
@@ -597,39 +629,6 @@ export default function RectangularDashboard() {
           </div>
         </div>
 
-        {/* Chats Section */}
-        <div id="chats" className="bg-gray-950">
-          <div className="px-4 py-6">
-            <h3 className="text-2xl font-bold text-white mb-6">Chats</h3>
-            
-            {recentChats.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-400 font-medium text-lg">No recent messages</p>
-                <p className="text-gray-500 text-sm mt-2">Start a conversation with your group</p>
-              </div>
-            ) : (
-              <div className="-mx-4">
-                {recentChats.slice(0, 3).map((chat) => (
-                  <div key={chat.id} className={`px-6 py-4 ${
-                    chat.is_own_message ? 'bg-gray-900/50 border-l-4 border-white' : 'bg-gray-900/30 border-l-4 border-gray-600'
-                  } border-b border-gray-800/50`}>
-                    <div className="flex justify-between items-start mb-3">
-                      <span className={`text-lg font-bold ${
-                        chat.is_own_message ? 'text-white' : 'text-white'
-                      }`}>
-                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        {formatTimeAgo(chat.created_at)}
-                      </span>
-                    </div>
-                    <p className="text-base text-gray-300 leading-relaxed">{chat.message}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   )
