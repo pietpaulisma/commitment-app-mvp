@@ -231,8 +231,6 @@ export default function RectangularNavigation() {
         </div>
       </nav>
 
-      {/* Spacer for mobile bottom nav */}
-      <div className="h-16"></div>
 
       {/* Group Chat Modal */}
       <GroupChat 
