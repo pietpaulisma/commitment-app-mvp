@@ -295,7 +295,26 @@ export default function RectangularDashboard() {
         }
       }
 
-      // Chat and activity data no longer needed - using group status instead
+      // Load recent chats
+      if (profile.group_id) {
+        try {
+          const { data: chats } = await supabase
+            .from('chats')
+            .select('id, message, created_at, user_email, user_role')
+            .eq('group_id', profile.group_id)
+            .order('created_at', { ascending: false })
+            .limit(10)
+
+          const chatsWithOwnership = chats?.map(chat => ({
+            ...chat,
+            is_own_message: chat.user_email === user.email
+          })) || []
+
+          setRecentChats(chatsWithOwnership)
+        } catch (error) {
+          console.log('Could not load chats:', error)
+        }
+      }
 
     } catch (error) {
       console.error('Error loading dashboard data:', error)
@@ -349,22 +368,22 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen bg-black pb-20">
+    <div className="min-h-screen bg-gray-950 pb-20">
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="bg-black border-b border-gray-800">
+        <div className="bg-gray-950 border-b border-gray-800">
           <div className="px-4 pt-2 pb-4">
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-3xl font-bold text-white">
+                  <h2 className="text-2xl font-bold text-white">
                     Day {challengeDay}
                   </h2>
                   <p className="text-gray-400 text-sm font-medium mt-1">
                     {getCurrentDayName()}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-left">
                   <div className="font-semibold text-lg text-white">
                     {timeLeft}
                   </div>
@@ -374,15 +393,17 @@ export default function RectangularDashboard() {
                 </div>
               </div>
               
-              {/* Day Type - Card style */}
-              <div className={`mt-4 p-4 bg-gradient-to-br ${colors.bg} backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
-                <div className={`text-lg font-semibold ${dayTypeInfo.color} mb-1`}>
-                  {dayTypeInfo.title}
+              {/* Day Type - Only show if not normal training day */}
+              {dayType !== 'normal' && (
+                <div className="mt-4 p-3 border-l-2 border-gray-700">
+                  <div className={`text-sm font-medium ${dayTypeInfo.color} mb-1`}>
+                    {dayTypeInfo.title}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {dayTypeInfo.subtitle}
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">
-                  {dayTypeInfo.subtitle}
-                </div>
-              </div>
+              )}
             </div>
 
           </div>
@@ -392,10 +413,9 @@ export default function RectangularDashboard() {
 
       <div className="space-y-0">
         {/* Group Status */}
-        <div id="group-status" className="bg-black border-b border-gray-800">
+        <div id="group-status" className="bg-gray-950 border-b border-gray-800">
           <div className="p-4">
-            <h3 className="text-2xl font-bold text-white mb-4">Group Status</h3>
-            <p className="text-sm text-gray-400 mb-6">Today's progress</p>
+            <h3 className="text-2xl font-bold text-white mb-6">Status</h3>
             
             {groupMembers.length === 0 ? (
               <div className="text-center py-8">
@@ -448,12 +468,12 @@ export default function RectangularDashboard() {
         </div>
 
         {/* Group Stats */}
-        <div id="group-stats" className="bg-black">
+        <div id="group-stats" className="bg-gray-950 border-b border-gray-800">
           <div className="p-4">
-            <h3 className="text-2xl font-bold text-white mb-4">Group Stats</h3>
+            <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
             {groupStats ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className={`p-4 bg-gradient-to-br ${colors.bg} backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
                   <div className={`text-2xl font-bold ${colors.primary} mb-1`}>
                     ${groupStats.moneyInPot.toFixed(2)}
@@ -472,10 +492,69 @@ export default function RectangularDashboard() {
                   </div>
                 </div>
               </div>
+              
+              {/* Additional Stats */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
+                  <span className="text-sm text-gray-400">Active Members</span>
+                  <span className="text-lg font-semibold text-white">{groupStats.memberCount}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
+                  <span className="text-sm text-gray-400">Avg Points/Day</span>
+                  <span className="text-lg font-semibold text-white">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-800/50">
+                  <span className="text-sm text-gray-400">Challenge Day</span>
+                  <span className="text-lg font-semibold text-white">{challengeDay}</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm text-gray-400">Points per $</span>
+                  <span className="text-lg font-semibold text-green-400">10</span>
+                </div>
+              </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
                 <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg h-20"></div>
+              </div>
+              <div className="space-y-4">
+                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
+                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
+                <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6"></div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Chats Section */}
+        <div id="chats" className="bg-gray-950">
+          <div className="p-4">
+            <h3 className="text-2xl font-bold text-white mb-6">Chats</h3>
+            
+            {recentChats.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 font-medium text-sm">No recent messages</p>
+                <p className="text-gray-500 text-xs mt-1">Start a conversation with your group</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentChats.slice(0, 3).map((chat) => (
+                  <div key={chat.id} className={`p-3 bg-gradient-to-r ${
+                    chat.is_own_message ? `${colors.bg} border-l-4 ${colors.border}` : 'from-gray-900/50 to-gray-800/30 border-l-4 border-gray-600'
+                  } backdrop-blur-sm border border-gray-800/30 rounded-lg`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`text-sm font-medium ${
+                        chat.is_own_message ? colors.primary : 'text-white'
+                      }`}>
+                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {formatTimeAgo(chat.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-300">{chat.message}</p>
+                  </div>
+                ))}
               </div>
             )}
           </div>

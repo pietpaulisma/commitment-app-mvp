@@ -123,7 +123,7 @@ export default function RectangularNavigation() {
   return (
     <>
       {/* Bottom Navigation - Modern Clean Design */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-700">
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-700">
         <div className="flex">
           {/* Progress Bar Button (80% width) */}
           <button
@@ -179,12 +179,12 @@ export default function RectangularNavigation() {
       </div>
 
       {/* Mobile Navigation Header */}
-      <nav className="lg:hidden sticky top-0 z-40 bg-black border-b border-gray-900">
+      <nav className="lg:hidden sticky top-0 z-40 bg-gray-950 border-b border-gray-900">
         <div className="px-4">
           <div className="flex justify-between items-center py-3">
             <div className="text-lg text-white">
-              <span className="font-black tracking-tight uppercase">THE COMMITMENT</span>
-              <span className="font-normal text-gray-400 ml-2">{groupName}</span>
+              <div className="text-2xl font-bold">The Commitment</div>
+              <div className="text-sm text-gray-400 font-medium">{groupName}</div>
             </div>
 
             <Link 
@@ -204,12 +204,12 @@ export default function RectangularNavigation() {
       </nav>
 
       {/* Desktop Navigation (Modern Clean) */}
-      <nav className="hidden lg:block sticky top-0 z-40 bg-black border-b border-gray-900">
+      <nav className="hidden lg:block sticky top-0 z-40 bg-gray-950 border-b border-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center py-4">
             <div className="text-xl text-white">
-              <span className="font-black tracking-tight uppercase">THE COMMITMENT</span>
-              <span className="font-normal text-gray-400 ml-3">{groupName}</span>
+              <div className="text-2xl font-bold">The Commitment</div>
+              <div className="text-sm text-gray-400 font-medium mt-1">{groupName}</div>
             </div>
 
             <div className="flex items-center space-x-4">
