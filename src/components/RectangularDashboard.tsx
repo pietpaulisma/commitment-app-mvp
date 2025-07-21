@@ -436,7 +436,7 @@ export default function RectangularDashboard() {
                     <span className="text-5xl font-thin text-white uppercase tracking-wide">DAY</span>
                     <span className="text-5xl font-black text-white">{challengeDay}</span>
                   </div>
-                  <p className="text-gray-400 text-sm font-medium">
+                  <p className="text-gray-400 text-sm font-medium -mt-2">
                     {getCurrentDayName()}
                   </p>
                 </div>
@@ -444,7 +444,7 @@ export default function RectangularDashboard() {
                   <div className="text-3xl font-black text-white">
                     {timeLeft}
                   </div>
-                  <div className="text-sm text-gray-400 font-medium">
+                  <div className="text-sm text-gray-400 font-medium -mt-2">
                     remaining
                   </div>
                 </div>
@@ -462,51 +462,46 @@ export default function RectangularDashboard() {
             <h3 className="text-2xl font-bold text-white mb-6">Status</h3>
             
             {groupMembers.length === 0 ? (
-              <div className="-mx-4">
-                <div className="px-6 py-8 bg-gray-900/30 border-l-4 border-gray-600 border-b border-gray-800/50">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-12 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-gray-900/30">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
                 </div>
-                <div className="px-6 py-8 bg-gray-900/30 border-l-4 border-gray-600 border-b border-gray-800/50">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-12 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
+                <div className="p-3 rounded-lg bg-gray-900/30">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
                 </div>
               </div>
             ) : (
-              <div className="-mx-4">
+              <div className="grid grid-cols-2 gap-3">
                 {groupMembers.map((member, index) => (
-                  <div key={member.id} className={`px-4 py-6 ${
-                    member.isCurrentUser ? 'bg-gray-900/50 border-l-4 border-white' : index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/10 border-l-4 border-yellow-500' : 'bg-gray-900/30 border-l-4 border-gray-600'
-                  } border-b border-gray-800/50`}>
+                  <div key={member.id} className={`p-3 rounded-lg ${
+                    member.isCurrentUser ? 'bg-gray-900/50' : index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/10' : 'bg-gray-900/30'
+                  }`}>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
                           index === 0 ? 'bg-yellow-500 text-black' :
                           index === 1 ? 'bg-gray-500 text-white' :
                           index === 2 ? 'bg-amber-600 text-black' :
                           'bg-gray-600 text-white'
                         }`}>
-                          {index + 1}
+                          {member.isCurrentUser ? 'YOU'.slice(0, 2) : member.email.split('@')[0].slice(0, 2).toUpperCase()}
                         </div>
-                        <div>
-                          <div className={`text-lg font-bold ${
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-sm font-bold truncate ${
                             member.isCurrentUser ? 'text-white' : index === 0 ? 'text-yellow-400' : 'text-white'
                           }`}>
                             {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                           </div>
-                          <div className="text-sm text-gray-400">
-                            {member.todayPoints} / {member.dailyTarget || 100} points
-                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className={`text-4xl font-black ${
-                          member.todayPoints >= (member.dailyTarget || 100) ? 'text-emerald-400' : index === 0 ? 'text-yellow-400' : 'text-orange-400'
-                        }`}>
+                      <div className="text-right ml-2">
+                        <div className="text-2xl font-black text-white">
                           {Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)}%
                         </div>
                         {member.todayPoints >= (member.dailyTarget || 100) && (
-                          <div className="text-sm text-green-400 font-medium">Complete</div>
+                          <div className="text-xs text-emerald-400 font-medium">✓</div>
                         )}
                       </div>
                     </div>
