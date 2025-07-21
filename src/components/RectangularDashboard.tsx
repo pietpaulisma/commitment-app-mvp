@@ -41,6 +41,9 @@ export default function RectangularDashboard() {
   const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
   const [accentColor, setAccentColor] = useState('blue') // Default blue
+  const [groupMembers, setGroupMembers] = useState<any[]>([])
+  const [groupStats, setGroupStats] = useState<any>(null)
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -168,6 +171,77 @@ export default function RectangularDashboard() {
     return days[new Date().getDay()]
   }
 
+  const loadGroupMembers = async () => {
+    if (!profile?.group_id) return
+
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Get all group members
+      const { data: members } = await supabase
+        .from('profiles')
+        .select('id, email, created_at')
+        .eq('group_id', profile.group_id)
+
+      if (!members) return
+
+      // Get today's progress for each member
+      const membersWithProgress = await Promise.all(
+        members.map(async (member) => {
+          const { data: todayLogs } = await supabase
+            .from('logs')
+            .select('points')
+            .eq('user_id', member.id)
+            .eq('date', today)
+
+          const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+          
+          return {
+            ...member,
+            todayPoints,
+            isCurrentUser: member.id === user?.id
+          }
+        })
+      )
+
+      // Sort by points descending, with current user highlighted
+      membersWithProgress.sort((a, b) => b.todayPoints - a.todayPoints)
+      setGroupMembers(membersWithProgress)
+    } catch (error) {
+      console.error('Error loading group members:', error)
+    }
+  }
+
+  const loadGroupStats = async () => {
+    if (!profile?.group_id) return
+
+    try {
+      // Get total group points
+      const { data: allLogs } = await supabase
+        .from('logs')
+        .select('points, profiles!inner(group_id)')
+        .eq('profiles.group_id', profile.group_id)
+
+      const totalPoints = allLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+
+      // Calculate money in pot (example: 1 point = $0.10)
+      const moneyInPot = totalPoints * 0.10
+
+      setGroupStats({
+        totalPoints,
+        moneyInPot,
+        memberCount: groupMembers.length
+      })
+    } catch (error) {
+      console.error('Error loading group stats:', error)
+    }
+  }
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    element?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   const loadDashboardData = async () => {
     if (!user || !profile) return
 
@@ -181,6 +255,10 @@ export default function RectangularDashboard() {
           .single()
         setGroupName(group?.name || 'Your Group')
         setGroupStartDate(group?.start_date || null)
+
+        // Load group members and their daily progress
+        await loadGroupMembers()
+        await loadGroupStats()
 
         // Try to load group settings for rest/recovery days
         try {
@@ -357,87 +435,112 @@ export default function RectangularDashboard() {
         </div>
       )}
 
+      {/* Collapsible Section Headers */}
+      <div className="sticky top-0 bg-black/95 backdrop-blur border-b border-gray-800 z-10">
+        <div className="flex">
+          <button
+            onClick={() => scrollToSection('group-status')}
+            className="flex-1 p-3 text-left border-r border-gray-800 hover:bg-gray-900 transition-colors"
+          >
+            <span className="text-sm font-bold text-white uppercase tracking-tight">GROUP STATUS</span>
+          </button>
+          <button
+            onClick={() => scrollToSection('group-stats')}
+            className="flex-1 p-3 text-left hover:bg-gray-900 transition-colors"
+          >
+            <span className="text-sm font-bold text-white uppercase tracking-tight">GROUP STATS</span>
+          </button>
+        </div>
+      </div>
+
       <div className="space-y-0">
-        {/* Recent Chat Messages */}
-        <div className="bg-black border-b border-gray-800">
+        {/* Group Status */}
+        <div id="group-status" className="bg-black border-b border-gray-800">
           <div className="p-4">
-            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">RECENT CHATS</h3>
-            {recentChats.length === 0 ? (
+            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">GROUP STATUS</h3>
+            <p className="text-xs text-gray-400 mb-4 uppercase tracking-wide">TODAY'S PROGRESS</p>
+            
+            {groupMembers.length === 0 ? (
               <div className="text-center py-6">
-                <div className="text-3xl mb-3">💬</div>
-                <p className="text-gray-400 font-medium text-sm">No recent messages</p>
-                <p className="text-gray-500 text-xs mt-1 font-medium">Start a conversation with your group!</p>
+                <div className="text-3xl mb-3">👥</div>
+                <p className="text-gray-400 font-medium text-sm">Loading group members...</p>
               </div>
-          ) : (
-            <div className="space-y-3">
-              {recentChats.map((chat) => (
-                <div key={chat.id} className={`flex items-start space-x-3 border-l-2 ${colors.borderL} pl-3 py-1`}>
-                  <div className="w-6 h-6 bg-gray-700 flex items-center justify-center flex-shrink-0 text-xs">
-                    <span className="text-xs font-medium text-gray-300">
-                      {chat.user_email.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className={`font-semibold text-xs ${
-                        chat.is_own_message ? colors.primary : 'text-white'
+            ) : (
+              <div className="space-y-3">
+                {groupMembers.map((member, index) => (
+                  <div key={member.id} className={`flex items-center justify-between p-3 border-l-2 ${
+                    member.isCurrentUser ? colors.borderL : 'border-l-gray-600'
+                  } ${member.isCurrentUser ? colors.bg : 'bg-gray-900/30'}`}>
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-8 h-8 flex items-center justify-center text-sm font-bold ${
+                        index === 0 ? 'bg-yellow-600 text-yellow-100' :
+                        index === 1 ? 'bg-gray-600 text-gray-100' :
+                        index === 2 ? 'bg-amber-600 text-amber-100' :
+                        'bg-gray-700 text-gray-300'
                       }`}>
-                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}
-                      </span>
-                      <span className="text-xs text-gray-500 font-medium">
-                        {formatTimeAgo(chat.created_at)}
-                      </span>
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className={`font-semibold text-sm ${
+                          member.isCurrentUser ? colors.primary : 'text-white'
+                        }`}>
+                          {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {member.todayPoints} / {dailyTarget} points
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-300">{chat.message}</p>
+                    <div className="text-right">
+                      <div className={`font-bold text-lg ${
+                        member.todayPoints >= dailyTarget ? 'text-green-400' : 'text-gray-300'
+                      }`}>
+                        {Math.round((member.todayPoints / dailyTarget) * 100)}%
+                      </div>
+                      {member.todayPoints >= dailyTarget && (
+                        <div className="text-xs text-green-400">Complete!</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-black">
+        {/* Group Stats */}
+        <div id="group-stats" className="bg-black">
           <div className="p-4">
-            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">RECENT ACTIVITY</h3>
-            {recentActivity.length === 0 ? (
-              <div className="text-center py-6">
-                <div className="text-3xl mb-3">🏃‍♂️</div>
-                <p className="text-gray-400 font-medium text-sm">No recent activity</p>
-                <p className="text-gray-500 text-xs mt-1 font-medium">Start logging workouts to see group activity!</p>
-              </div>
-          ) : (
-            <div className="space-y-3">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between py-1 border-l-2 border-green-500 pl-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 bg-gray-700 flex items-center justify-center text-xs">
-                      <span className="text-xs font-medium text-gray-300">
-                        {activity.user_email.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`font-semibold text-xs ${
-                          activity.is_own_activity ? colors.primary : 'text-white'
-                        }`}>
-                          {activity.is_own_activity ? 'You' : activity.user_email.split('@')[0]}
-                        </span>
-                        <span className="text-xs text-gray-500 font-medium">
-                          {formatTimeAgo(activity.created_at)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-400 font-medium">{activity.exercise_name}</p>
-                    </div>
+            <h3 className="text-lg font-bold text-white mb-4 tracking-tight uppercase">GROUP STATS</h3>
+            
+            {groupStats ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 ${colors.bg} border-l-4 ${colors.border}`}>
+                  <div className="text-2xl mb-2">💰</div>
+                  <div className={`font-bold text-lg ${colors.primary}`}>
+                    ${groupStats.moneyInPot.toFixed(2)}
                   </div>
-                  <div className="font-bold text-green-400">
-                    +{activity.points}
+                  <div className="text-xs text-gray-400 mt-1 font-medium uppercase">
+                    Money in Pot
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                
+                <div className="p-4 bg-green-900/50 border-l-4 border-green-400">
+                  <div className="text-2xl mb-2">⚡</div>
+                  <div className="font-bold text-lg text-green-400">
+                    {groupStats.totalPoints.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1 font-medium uppercase">
+                    Total Points
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <div className="text-3xl mb-3">📊</div>
+                <p className="text-gray-400 font-medium text-sm">Loading group stats...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
