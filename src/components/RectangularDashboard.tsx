@@ -430,13 +430,13 @@ export default function RectangularDashboard() {
           {/* Content */}
           <div className="relative px-4 pt-2 pb-4">
             <div className="mb-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-end justify-between">
                 <div>
                   <div className="flex items-baseline space-x-1">
                     <span className="text-5xl font-thin text-white uppercase tracking-wide">DAY</span>
                     <span className="text-5xl font-black text-white">{challengeDay}</span>
                   </div>
-                  <p className="text-gray-400 text-sm font-medium -mt-1">
+                  <p className="text-gray-400 text-sm font-medium">
                     {getCurrentDayName()}
                   </p>
                 </div>
@@ -444,7 +444,7 @@ export default function RectangularDashboard() {
                   <div className="text-3xl font-black text-white">
                     {timeLeft}
                   </div>
-                  <div className="text-sm text-gray-400 font-medium -mt-1">
+                  <div className="text-sm text-gray-400 font-medium">
                     remaining
                   </div>
                 </div>
