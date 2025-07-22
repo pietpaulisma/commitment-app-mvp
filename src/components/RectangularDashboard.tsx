@@ -56,6 +56,61 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     )
   }
 
+  // Horizontal bar chart - Vertical rectangle with horizontal bars
+  if (stat.type === 'horizontal_bar_chart') {
+    const data = stat.data || []
+    const maxCount = Math.max(...data.map((d: any) => d.count), 1)
+    
+    return (
+      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col">
+          {/* Header */}
+          <div className="mb-4">
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-xs text-gray-500">{stat.subtitle}</div>
+          </div>
+          
+          {/* Horizontal Bars */}
+          <div className="flex-1 flex flex-col justify-center gap-2">
+            {data.map((workout: any, i: number) => {
+              const percentage = (workout.count / maxCount) * 100
+              const isTop = i === 0
+              
+              return (
+                <div key={i} className="relative">
+                  {/* Background bar */}
+                  <div className="w-full bg-gray-700 rounded h-6 relative overflow-hidden">
+                    {/* Filled bar */}
+                    <div 
+                      className={`h-full rounded transition-all duration-700 ${
+                        isTop ? 'bg-orange-400' : 'bg-gray-500'
+                      }`}
+                      style={{ 
+                        width: `${Math.max(20, percentage)}%`,
+                        animationDelay: `${i * 100}ms`,
+                        animation: 'slideInLeft 0.8s ease-out forwards'
+                      }}
+                    />
+                    
+                    {/* Workout name inside bar */}
+                    <div className="absolute inset-0 flex items-center px-3">
+                      <span className="text-xs font-medium text-white truncate">
+                        {workout.name}
+                      </span>
+                      <span className="ml-auto text-xs font-bold text-white">
+                        {workout.count}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Countdown bar chart - Square typography-focused birthday countdown
   if (stat.type === 'countdown_bar') {
     const daysUntil = stat.daysUntil || 0
@@ -570,17 +625,40 @@ export default function RectangularDashboard() {
         }
         
         case 'top_workouts_frequency': {
-          const workouts = ['Push-ups', 'Running', 'Squats', 'Planks', 'Cycling']
-          const workoutData = workouts.slice(0, 3).map(workout => ({
-            name: workout,
-            count: Math.floor(Math.random() * 25) + 5,
-            percentage: Math.floor(Math.random() * 40) + 20
-          })).sort((a, b) => b.count - a.count)
+          // Get actual workout frequency data from logs
+          const { data: workoutLogs } = await supabase
+            .from('logs')
+            .select('exercise_name')
+            .in('user_id', memberIds)
+            .not('exercise_name', 'is', null)
+
+          // Count frequency of each exercise
+          const exerciseCounts = new Map()
+          workoutLogs?.forEach(log => {
+            const exercise = log.exercise_name.trim()
+            exerciseCounts.set(exercise, (exerciseCounts.get(exercise) || 0) + 1)
+          })
+
+          // Convert to array and get top 6
+          const workoutData = Array.from(exerciseCounts.entries())
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 6)
+
+          // Fallback if no data
+          if (workoutData.length === 0) {
+            const fallbackWorkouts = ['Push-ups', 'Running', 'Squats', 'Planks', 'Cycling', 'Burpees']
+            workoutData.push(...fallbackWorkouts.map(name => ({ 
+              name, 
+              count: Math.floor(Math.random() * 25) + 5 
+            })))
+          }
           
           return {
-            type: 'list_chart',
+            type: 'horizontal_bar_chart',
             title: 'Top Workouts',
-            subtitle: 'this week',
+            subtitle: 'most logged exercises',
+            layout: 'vertical',
             data: workoutData
           }
         }
@@ -880,6 +958,7 @@ export default function RectangularDashboard() {
       case 'C2': return 'hidden' // 2×1 wide (right part - handled by C1)
       case 'square': return 'col-span-1 row-span-1 h-32' // 1×1 square (alias)
       case 'col-span-2': return 'col-span-2 row-span-1 h-32' // 2×1 wide
+      case 'vertical': return 'col-span-1 row-span-2 h-64' // 1×2 vertical rectangle
       default: return 'col-span-1 row-span-1 h-32'
     }
   }
