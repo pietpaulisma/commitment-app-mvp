@@ -367,7 +367,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     )
   }
 
-  // Default simple stat display - some get accent backgrounds
+  // Default simple stat display - some get accent backgrounds for visual variety
   const shouldHaveAccentBg = (index % 4 === 1 || index % 4 === 3) // Every 2nd and 4th item
   const bgColor = shouldHaveAccentBg ? 
     accentColor.replace('text-', 'bg-').replace('-400', '') : 
