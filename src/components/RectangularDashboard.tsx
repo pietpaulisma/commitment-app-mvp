@@ -376,8 +376,9 @@ export default function RectangularDashboard() {
             type: 'progress_ring',
             title: 'Penalty Pot',
             value: `$${currentAmount}`,
-            subtitle: `${Math.round(percentage)}% of $${target} goal`,
+            subtitle: `Goal: $${target}`,
             percentage: percentage,
+            target: target,
             color: 'red'
           }
         }
@@ -549,25 +550,14 @@ export default function RectangularDashboard() {
   }
 
   const getStatLayout = (stats: any[]) => {
-    // Ensure we always have some non-1:1 ratios for visual interest
+    // Create a balanced mix of layouts
     const layouts = []
+    const layoutPattern = ['wide', 'square', 'tall', 'square', 'square', 'tall']
     
-    // First stat - always wide (2:1) to create a highlight
-    if (stats[0]) {
-      layouts.push({ ...stats[0], layout: 'wide' }) // 2:1
-    }
-    
-    // Second stat - tall (1:2) for variety
-    if (stats[1]) {
-      layouts.push({ ...stats[1], layout: 'tall' }) // 1:2
-    }
-    
-    // Fill remaining with mix of square and one more interesting ratio
-    for (let i = 2; i < stats.length; i++) {
-      if (i === 2 && stats.length > 4) {
-        layouts.push({ ...stats[i], layout: 'tall' }) // Another 1:2
-      } else {
-        layouts.push({ ...stats[i], layout: 'square' }) // 1:1
+    for (let i = 0; i < stats.length; i++) {
+      if (stats[i]) {
+        const layoutType = layoutPattern[i % layoutPattern.length] || 'square'
+        layouts.push({ ...stats[i], layout: layoutType })
       }
     }
     
@@ -912,7 +902,7 @@ export default function RectangularDashboard() {
                       const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30 mb-0" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative overflow-hidden bg-gray-900/30 ${getLayoutClasses()}`}>
                           {/* Background progress bars */}
                           <div className="absolute inset-0 flex items-end">
@@ -955,7 +945,7 @@ export default function RectangularDashboard() {
                       
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="p-4 h-full flex flex-col justify-center items-center">
                             <div className="relative mb-4">
@@ -993,7 +983,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'list_chart') {
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="p-4 h-full flex flex-col">
                             <div className="mb-3">
@@ -1021,7 +1011,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'heatmap') {
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="text-center mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
@@ -1049,7 +1039,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'streak_grid') {
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
@@ -1075,7 +1065,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'member_progress') {
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
@@ -1105,7 +1095,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'weekly_pattern') {
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="text-center mb-2">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
@@ -1131,7 +1121,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'variety_chart') {
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
@@ -1156,7 +1146,7 @@ export default function RectangularDashboard() {
                       const fontSize = stat.layout === 'tall' ? 'text-6xl' : 'text-4xl'
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="p-4 h-full flex flex-col justify-center items-center text-center">
                             <div className={`${fontSize} font-black ${getAccentColor()} leading-none mb-2`}>
@@ -1176,7 +1166,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'percentage_list') {
                       return (
                         <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-900/30" />}
+                          {index > 0 && <div className="h-px bg-gray-700/50" />}
                           <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
@@ -1197,15 +1187,18 @@ export default function RectangularDashboard() {
 
                     // Default simple stat - Large typography focus
                     return (
-                      <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
-                        <div className="p-4 h-full flex flex-col justify-center items-center text-center">
-                          <div className={`${stat.layout === 'tall' ? 'text-6xl' : 'text-4xl'} font-black ${getAccentColor()} leading-none mb-2`}>
-                            {stat.value}
+                      <div key={index}>
+                        {index > 0 && <div className="h-px bg-gray-700/50" />}
+                        <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                          <div className="p-4 h-full flex flex-col justify-center items-center text-center">
+                            <div className={`${stat.layout === 'tall' ? 'text-5xl' : stat.layout === 'wide' ? 'text-3xl' : 'text-4xl'} font-black ${getAccentColor()} leading-none mb-2`}>
+                              {stat.value}
+                            </div>
+                            <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
+                              {stat.title}
+                            </div>
+                            <div className="text-xs text-gray-400">{stat.subtitle}</div>
                           </div>
-                          <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
-                            {stat.title}
-                          </div>
-                          <div className="text-xs text-gray-500">{stat.subtitle}</div>
                         </div>
                       </div>
                     )
@@ -1214,7 +1207,7 @@ export default function RectangularDashboard() {
 
                 {/* View All Button */}
                 <div className="mt-0">
-                  <div className="h-px bg-gray-900/30" />
+                  <div className="h-px bg-gray-700/50" />
                   <button 
                     onClick={() => setShowAllStats(!showAllStats)}
                     className="w-full p-4 bg-gray-900/30 hover:bg-gray-900/50 transition-colors duration-200 text-center"
@@ -1238,7 +1231,7 @@ export default function RectangularDashboard() {
                 {/* Loading state with varied layouts */}
                 {[...Array(6)].map((_, index) => (
                   <div key={index}>
-                    {index > 0 && <div className="h-px bg-gray-900/30" />}
+                    {index > 0 && <div className="h-px bg-gray-700/50" />}
                     <div className={`p-4 bg-gray-900/30 ${
                       index === 0 ? 'h-24' : // wide
                       index === 1 ? 'h-48' : // tall
@@ -1251,7 +1244,7 @@ export default function RectangularDashboard() {
                   </div>
                 ))}
                 {/* Loading View All Button */}
-                <div className="h-px bg-gray-900/30" />
+                <div className="h-px bg-gray-700/50" />
                 <div className="p-4 bg-gray-900/30">
                   <div className="animate-pulse bg-gray-700 h-6 w-32 mx-auto"></div>
                 </div>
