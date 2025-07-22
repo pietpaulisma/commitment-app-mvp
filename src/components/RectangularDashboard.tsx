@@ -577,6 +577,27 @@ export default function RectangularDashboard() {
     return days[new Date().getDay()]
   }
 
+  const getTimeBasedBarColor = () => {
+    // Use time remaining percentage to determine color progression
+    // Early day (lots of time left): happy green
+    // Mid day (some time left): neutral blue/purple  
+    // Late day (little time left): warning yellow then orange
+    
+    if (timeRemainingPercentage <= 20) {
+      // Less than 20% of day left: urgent orange
+      return 'bg-orange-400'
+    } else if (timeRemainingPercentage <= 40) {
+      // Less than 40% of day left: warning yellow
+      return 'bg-yellow-400'
+    } else if (timeRemainingPercentage <= 70) {
+      // Mid-day: neutral purple
+      return 'bg-purple-400'
+    } else {
+      // Early day: happy green
+      return 'bg-green-400'
+    }
+  }
+
   const getAllAvailableStats = () => [
     'total_points_trend',
     'top_workouts_frequency', 
@@ -1373,15 +1394,9 @@ export default function RectangularDashboard() {
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div className="bg-black border-b border-gray-800 relative overflow-hidden">
-          {/* Progress Background */}
-          <div 
-            className={`absolute left-0 top-0 bottom-0 bg-gradient-to-r ${getTimeBasedGradient()} transition-all duration-1000 ease-out`}
-            style={{ width: `${timeRemainingPercentage}%` }}
-          />
-          
-          {/* Content */}
-          <div className="relative px-4 pt-2 pb-4">
-            <div className="mb-4">
+          {/* Content with more vertical padding */}
+          <div className="relative px-4 py-6">
+            <div className="mb-6">
               <div className="flex items-end justify-between">
                 <div>
                   <div className="flex items-baseline space-x-1">
@@ -1401,6 +1416,17 @@ export default function RectangularDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Horizontal Bar Chart */}
+            <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${getTimeBasedBarColor()}`}
+                style={{ 
+                  width: `${Math.max(0, 100 - timeRemainingPercentage)}%`,
+                  marginLeft: 'auto'
+                }}
+              />
             </div>
           </div>
         </div>
