@@ -1394,39 +1394,34 @@ export default function RectangularDashboard() {
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div className="bg-black border-b border-gray-800 relative overflow-hidden">
+          {/* Full-width Bar Chart Background */}
+          <div 
+            className={`absolute right-0 top-0 bottom-0 transition-all duration-1000 ease-out ${getTimeBasedBarColor()}`}
+            style={{ 
+              width: `${Math.max(0, 100 - timeRemainingPercentage)}%`
+            }}
+          />
+          
           {/* Content with more vertical padding */}
           <div className="relative px-4 py-6">
-            <div className="mb-6">
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="flex items-baseline space-x-1">
-                    <span className="text-5xl font-thin text-white uppercase tracking-wide">DAY</span>
-                    <span className="text-5xl font-black text-white">{challengeDay}</span>
-                  </div>
-                  <p className="text-gray-400 text-sm font-medium -mt-1">
-                    {getCurrentDayName()}
-                  </p>
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="flex items-baseline space-x-1">
+                  <span className="text-5xl font-thin text-white uppercase tracking-wide">DAY</span>
+                  <span className="text-5xl font-black text-white">{challengeDay}</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-black text-white">
-                    {timeLeft}
-                  </div>
-                  <div className="text-sm text-gray-400 font-medium -mt-1">
-                    remaining
-                  </div>
+                <p className="text-gray-400 text-sm font-medium -mt-1">
+                  {getCurrentDayName()}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-black text-white">
+                  {timeLeft}
+                </div>
+                <div className="text-sm text-gray-400 font-medium -mt-1">
+                  remaining
                 </div>
               </div>
-            </div>
-
-            {/* Horizontal Bar Chart */}
-            <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
-              <div 
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${getTimeBasedBarColor()}`}
-                style={{ 
-                  width: `${Math.max(0, 100 - timeRemainingPercentage)}%`,
-                  marginLeft: 'auto'
-                }}
-              />
             </div>
           </div>
         </div>
