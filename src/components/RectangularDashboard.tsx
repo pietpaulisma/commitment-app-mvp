@@ -56,6 +56,102 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     )
   }
 
+  // Line chart - Horizontal rectangular line chart for trends
+  if (stat.type === 'line_chart') {
+    const data = stat.data || []
+    const maxValue = Math.max(...data.map((d: any) => d.points), 1)
+    const recordIndex = data.findIndex((d: any) => d.points === maxValue)
+    const recordDay = recordIndex >= 0 ? data[recordIndex] : null
+    
+    return (
+      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col">
+          {/* Header */}
+          <div className="mb-3">
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            {recordDay && (
+              <div className="flex items-baseline gap-2">
+                <span className={`text-2xl font-bold ${accentColor}`}>
+                  {recordDay.points} PT
+                </span>
+                <span className="text-xs text-gray-500">MAX {recordDay.day}</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Line Chart */}
+          <div className="flex-1 relative">
+            <svg className="w-full h-full" style={{ height: '70px' }}>
+              {/* Grid lines */}
+              <defs>
+                <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(75, 85, 99, 0.3)" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" opacity="0.3" />
+              
+              {/* Data points and lines */}
+              {data.map((point: any, i: number) => {
+                const x = (i / (data.length - 1)) * 100
+                const y = 100 - Math.max(10, (point.points / maxValue) * 80)
+                const isRecord = i === recordIndex
+                const nextPoint = data[i + 1]
+                
+                return (
+                  <g key={i}>
+                    {/* Line to next point */}
+                    {nextPoint && (
+                      <line
+                        x1={`${x}%`}
+                        y1={`${y}%`}
+                        x2={`${((i + 1) / (data.length - 1)) * 100}%`}
+                        y2={`${100 - Math.max(10, (nextPoint.points / maxValue) * 80)}%`}
+                        stroke="rgb(156, 163, 175)"
+                        strokeWidth="2"
+                        className="opacity-70"
+                        style={{
+                          animationDelay: `${i * 30}ms`,
+                          animation: 'fadeInUp 0.6s ease-out forwards'
+                        }}
+                      />
+                    )}
+                    
+                    {/* Data point */}
+                    <circle
+                      cx={`${x}%`}
+                      cy={`${y}%`}
+                      r={isRecord ? "4" : "2"}
+                      fill={isRecord ? "rgb(251, 146, 60)" : "rgb(156, 163, 175)"}
+                      className={isRecord ? "animate-pulse" : ""}
+                      style={{
+                        animationDelay: `${i * 30}ms`,
+                        animation: 'fadeInScale 0.8s ease-out forwards'
+                      }}
+                    />
+                    
+                    {/* Record highlight */}
+                    {isRecord && (
+                      <circle
+                        cx={`${x}%`}
+                        cy={`${y}%`}
+                        r="8"
+                        fill="none"
+                        stroke="rgb(251, 146, 60)"
+                        strokeWidth="1"
+                        opacity="0.5"
+                        className="animate-pulse"
+                      />
+                    )}
+                  </g>
+                )
+              })}
+            </svg>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Wide chart - Full width bar chart with enhanced animations and hover
   if (stat.type === 'wide_chart') {
     const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
@@ -412,20 +508,45 @@ export default function RectangularDashboard() {
       const today = new Date().toISOString().split('T')[0]
 
       switch (statType) {
-        case 'total_points_trend':
-          // Generate 7 days of mock data
-          const weekData = Array.from({length: 7}, (_, i) => ({
-            day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
-            points: Math.floor(Math.random() * 500) + 200
-          }))
+        case 'total_points_trend': {
+          // Get past 30 days of actual group data
+          const past30Days = Array.from({length: 30}, (_, i) => {
+            const date = new Date()
+            date.setDate(date.getDate() - (29 - i))
+            return date.toISOString().split('T')[0]
+          })
+          
+          const { data: groupLogs } = await supabase
+            .from('logs')
+            .select('points, date')
+            .in('user_id', memberIds)
+            .in('date', past30Days)
+            .order('date', { ascending: true })
+
+          // Aggregate points by day
+          const dailyTotals = past30Days.map(date => {
+            const dayLogs = groupLogs?.filter(log => log.date === date) || []
+            const totalPoints = dayLogs.reduce((sum, log) => sum + (log.points || 0), 0)
+            const dayName = new Date(date).toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric' 
+            })
+            
+            return {
+              day: dayName,
+              points: totalPoints,
+              date: date
+            }
+          })
+
           return {
-            type: 'wide_chart',
-            title: 'Points This Week',
-            subtitle: `${weekData.reduce((sum, d) => sum + d.points, 0)} total points`,
-            chartType: 'bar',
-            data: weekData,
-            trendUp: true
+            type: 'line_chart',
+            title: 'Group Logs of past 30 days',
+            subtitle: '30-day trend',
+            layout: 'col-span-2',
+            data: dailyTotals
           }
+        }
         
         case 'top_workouts_frequency': {
           const workouts = ['Push-ups', 'Running', 'Squats', 'Planks', 'Cycling']
