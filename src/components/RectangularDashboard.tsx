@@ -942,7 +942,6 @@ export default function RectangularDashboard() {
                           </div>
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
