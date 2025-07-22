@@ -80,9 +80,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           
           {/* Countdown Progress Bar */}
           <div className="mb-3">
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-gray-700 rounded-full h-1">
               <div 
-                className={`h-2 rounded-full transition-all duration-1000 ${
+                className={`h-1 rounded-full transition-all duration-1000 ${
                   daysUntil <= 7 ? 'bg-orange-400' : 'bg-gray-500'
                 }`}
                 style={{ 
@@ -133,7 +133,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* Vertical Bar Chart */}
-          <div className="flex-1 flex items-end justify-between gap-px">
+          <div className="flex-1 flex items-end justify-center gap-1 px-2">
             {data.map((point: any, i: number) => {
               const height = Math.max(2, (point.points / maxValue) * 70)
               const isRecord = i === recordIndex
@@ -141,11 +141,11 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
               return (
                 <div
                   key={i}
-                  className="flex-1 flex flex-col items-center"
+                  className="flex flex-col items-center"
                 >
                   {/* Vertical bar */}
                   <div
-                    className={`w-full transition-all duration-700 ${
+                    className={`w-1 transition-all duration-700 ${
                       isRecord ? 'bg-orange-400' : 'bg-gray-500'
                     }`}
                     style={{ 
