@@ -433,6 +433,7 @@ export default function RectangularDashboard() {
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
   const [accentColor, setAccentColor] = useState('blue') // Default blue
   const [groupMembers, setGroupMembers] = useState<any[]>([])
+  const [groupStats, setGroupStats] = useState<any>(null)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -672,6 +673,131 @@ export default function RectangularDashboard() {
     }
   }
 
+  const calculateEssentialStats = async () => {
+    if (!profile?.group_id) return null
+
+    try {
+      // Get all group members first
+      const { data: members } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('group_id', profile.group_id)
+
+      if (!members || members.length === 0) return null
+
+      const memberIds = members.map(m => m.id)
+      const today = new Date().toISOString().split('T')[0]
+
+      // 1. Group Points (30 days)
+      const past30Days = Array.from({length: 30}, (_, i) => {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        return date.toISOString().split('T')[0]
+      }).reverse()
+
+      const { data: logs } = await supabase
+        .from('logs')
+        .select('date, points')
+        .in('user_id', memberIds)
+        .in('date', past30Days)
+
+      const dailyTotals = past30Days.map(date => {
+        const dayLogs = logs?.filter(log => log.date === date) || []
+        const totalPoints = dayLogs.reduce((sum, log) => sum + log.points, 0)
+        return { date, totalPoints }
+      })
+
+      const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
+
+      // 2. Money Pot
+      const moneyInPot = totalGroupPoints * 0.10
+
+      // 3. Birthday (fake data for now)
+      const nextBirthdayDays = Math.floor(Math.random() * 365) + 1
+      const nextBirthdayDate = new Date()
+      nextBirthdayDate.setDate(nextBirthdayDate.getDate() + nextBirthdayDays)
+      const monthName = nextBirthdayDate.toLocaleString('default', { month: 'long' })
+      const dayNum = nextBirthdayDate.getDate()
+
+      // 4. Workout Times
+      const { data: timeLogs } = await supabase
+        .from('logs')
+        .select('created_at')
+        .in('user_id', memberIds)
+
+      const hourCounts = new Array(24).fill(0)
+      timeLogs?.forEach(log => {
+        const hour = new Date(log.created_at).getHours()
+        hourCounts[hour]++
+      })
+
+      const mostPopularHour = hourCounts.indexOf(Math.max(...hourCounts))
+      const peakTime = `${mostPopularHour}:00`
+
+      return {
+        groupPoints: {
+          title: 'Group Points',
+          subtitle: '30-day total',
+          value: `${totalGroupPoints} PT`,
+          data: dailyTotals.map((day, i) => ({ 
+            day: `D${i+1}`, 
+            points: day.totalPoints 
+          })),
+          type: 'line_chart'
+        },
+        moneyPot: {
+          title: 'Money Pot',
+          subtitle: 'total raised',
+          value: `$${Math.round(moneyInPot * 100) / 100}`,
+          type: 'typography_stat'
+        },
+        birthday: {
+          title: 'Next Birthday',
+          subtitle: `${nextBirthdayDays} days to go`,
+          value: `${monthName} ${dayNum}`,
+          daysUntil: nextBirthdayDays,
+          name: `${monthName} ${dayNum}`,
+          type: 'countdown_bar'
+        },
+        workoutTimes: {
+          title: 'Peak Workout Time',
+          subtitle: 'most active hour',
+          value: peakTime,
+          data: hourCounts.map((count, hour) => ({
+            hour: `${hour}:00`,
+            count,
+            activity: count
+          })),
+          type: 'heatmap_grid'
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating essential stats:', error)
+      return null
+    }
+  }
+
+  const loadGroupStats = async () => {
+    if (!profile?.group_id) return
+
+    try {
+      const stats = await calculateEssentialStats()
+      if (stats) {
+        setGroupStats({
+          interestingStats: [
+            { ...stats.groupPoints, layout: 'C1' },
+            { ...stats.moneyPot, layout: 'A' }, 
+            { ...stats.birthday, layout: 'C1' },
+            { ...stats.workoutTimes, layout: 'A' }
+          ]
+        })
+      }
+    } catch (error) {
+      console.error('Error loading group stats:', error)
+      setGroupStats({ interestingStats: [] })
+    }
+  }
+
   // Predefined 2×4 grid layouts with 8 cells each
   // A = 1×1 (square), B = 1×2 (tall), C = 2×1 (wide)
   const PREDEFINED_LAYOUTS = [
@@ -807,8 +933,8 @@ export default function RectangularDashboard() {
         setGroupName(group?.name || 'Your Group')
         setGroupStartDate(group?.start_date || null)
 
-        // Load group members
-        await loadGroupMembers()
+        // Load group members and stats
+        await Promise.all([loadGroupMembers(), loadGroupStats()])
 
         // Try to load group settings for rest/recovery days
         try {
@@ -1053,6 +1179,35 @@ export default function RectangularDashboard() {
           </div>
         </div>
 
+        {/* Essential Stats */}
+        <div id="group-stats" className="bg-black">
+          <div className="px-4 py-3">
+            <h3 className="text-xl font-bold text-white mb-3">Stats</h3>
+            
+            {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
+              <div className="grid gap-2 grid-cols-2 grid-rows-2">
+                {groupStats.interestingStats.map((stat: any, index: number) => (
+                  <MemoizedChartComponent 
+                    key={`${stat.type}-${index}`}
+                    stat={stat} 
+                    index={index} 
+                    getLayoutClasses={getLayoutClasses}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 grid-rows-2 gap-2">
+                {[0, 1, 2, 3].map((index) => (
+                  <div key={index} className="p-4 bg-gray-900/30 rounded-lg h-32">
+                    <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                    <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                    <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
       </div>
     </div>
