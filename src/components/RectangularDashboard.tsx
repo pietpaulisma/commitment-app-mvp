@@ -948,7 +948,7 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen bg-black pb-24">
+    <div className="min-h-screen bg-black pb-32">
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
@@ -1034,7 +1034,7 @@ export default function RectangularDashboard() {
                           {Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)}%
                         </div>
                         {member.todayPoints >= (member.dailyTarget || 100) && (
-                          <div className="text-xs text-emerald-400 font-medium">✓</div>
+                          <div className="text-xs text-green-400 font-medium">✓</div>
                         )}
                       </div>
                     </div>

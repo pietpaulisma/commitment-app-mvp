@@ -254,7 +254,7 @@ export default function MobileTargets() {
               <div className="text-sm text-gray-600">Completion Rate</div>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-red-600">${totalPenalties.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-orange-400">${totalPenalties.toFixed(2)}</div>
               <div className="text-sm text-gray-600">Total Penalties</div>
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function MobileTargets() {
                           {progress.earned} / {progress.target}
                         </div>
                         {progress.penaltyAmount > 0 && (
-                          <div className="text-red-600 text-xs">-${progress.penaltyAmount}</div>
+                          <div className="text-orange-400 text-xs">-${progress.penaltyAmount}</div>
                         )}
                       </div>
                     </div>

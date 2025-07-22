@@ -129,7 +129,7 @@ export default function DevTestingPanel() {
         {previewRole && (
           <button
             onClick={() => toggleRolePreview(previewRole)}
-            className="w-full text-center px-3 py-2 text-sm bg-red-100 text-red-800 hover:bg-red-200 rounded"
+            className="w-full text-center px-3 py-2 text-sm bg-orange-100 text-orange-800 hover:bg-orange-200 rounded"
           >
             🔄 Reset to Original Role
           </button>
