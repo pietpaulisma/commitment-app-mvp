@@ -546,6 +546,32 @@ export default function RectangularDashboard() {
     }
   }
 
+  const getStatLayout = (stats: any[]) => {
+    // Ensure we always have some non-1:1 ratios for visual interest
+    const layouts = []
+    
+    // First stat - always wide (2:1) to create a highlight
+    if (stats[0]) {
+      layouts.push({ ...stats[0], layout: 'wide' }) // 2:1
+    }
+    
+    // Second stat - tall (1:2) for variety
+    if (stats[1]) {
+      layouts.push({ ...stats[1], layout: 'tall' }) // 1:2
+    }
+    
+    // Fill remaining with mix of square and one more interesting ratio
+    for (let i = 2; i < stats.length; i++) {
+      if (i === 2 && stats.length > 4) {
+        layouts.push({ ...stats[i], layout: 'tall' }) // Another 1:2
+      } else {
+        layouts.push({ ...stats[i], layout: 'square' }) // 1:1
+      }
+    }
+    
+    return layouts
+  }
+
   const loadGroupStats = async () => {
     if (!profile?.group_id || selectedStats.length === 0) return
 
@@ -574,11 +600,13 @@ export default function RectangularDashboard() {
         selectedStats.map(statType => calculateInterestingStat(statType))
       )
 
+      const statsWithLayout = getStatLayout(interestingStats.filter(stat => stat !== null))
+
       setGroupStats({
         totalPoints,
         moneyInPot,
         memberCount: members.length,
-        interestingStats: interestingStats.filter(stat => stat !== null)
+        interestingStats: statsWithLayout
       })
     } catch (error) {
       console.error('Error loading group stats:', error)
@@ -848,87 +876,100 @@ export default function RectangularDashboard() {
             {groupStats ? (
               <>
                 {/* Rotating Interesting Stats with Dynamic Layout */}
-                <div className="grid grid-cols-2 gap-0">
+                <div className="grid grid-cols-4 gap-0 auto-rows-fr">
                   {groupStats.interestingStats?.map((stat: any, index: number) => {
-                    const getCardStyle = () => {
+                    const getAccentColor = () => {
                       const colors = [
-                        'bg-emerald-800',
-                        'bg-blue-800', 
-                        'bg-purple-800',
-                        'bg-orange-800',
-                        'bg-pink-800',
-                        'bg-yellow-800'
+                        'text-emerald-400',
+                        'text-blue-400', 
+                        'text-purple-400',
+                        'text-orange-400',
+                        'text-pink-400',
+                        'text-yellow-400'
                       ]
                       return colors[index % colors.length]
                     }
 
-                    // Wide chart (spans 2 columns) - Only use this for first slot to avoid grid issues
-                    if (stat.type === 'wide_chart' && index === 0) {
+                    const getLayoutClasses = () => {
+                      switch (stat.layout) {
+                        case 'wide': return 'col-span-4 row-span-1' // 2:1 ratio
+                        case 'tall': return 'col-span-2 row-span-2' // 1:2 ratio
+                        case 'square': 
+                        default: return 'col-span-2 row-span-1' // 1:1 ratio
+                      }
+                    }
+
+                    // Wide chart - Full width bar chart like workout button
+                    if (stat.type === 'wide_chart') {
+                      const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()} col-span-2`}>
-                          <div className="mb-3">
-                            <h4 className="text-lg font-bold text-white">{stat.title}</h4>
-                            <p className="text-sm text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="flex items-end space-x-1 h-24">
+                        <div key={index} className={`relative overflow-hidden bg-gray-900 ${getLayoutClasses()}`}>
+                          {/* Background progress bars */}
+                          <div className="absolute inset-0 flex items-end">
                             {stat.data?.map((item: any, i: number) => (
-                              <div key={i} className="flex-1 flex flex-col items-center">
+                              <div key={i} className="flex-1 flex items-end h-full">
                                 <div 
-                                  className="w-full bg-white/30 rounded-sm transition-all duration-300"
-                                  style={{ height: `${(item.points / Math.max(...stat.data.map((d: any) => d.points))) * 80}px` }}
+                                  className={`w-full transition-all duration-1000 ${getAccentColor().replace('text-', 'bg-').replace('-400', '-600')}`}
+                                  style={{ height: `${(item.points / maxValue) * 100}%` }}
                                 />
-                                <span className="text-xs text-gray-300 mt-1">{item.day}</span>
                               </div>
                             )) || []}
                           </div>
+                          {/* Content overlay */}
+                          <div className="relative p-4 h-full flex flex-col justify-between">
+                            <div>
+                              <h4 className={`text-lg font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <p className="text-sm text-gray-400">{stat.subtitle}</p>
+                            </div>
+                            <div className="flex justify-between items-end">
+                              {stat.data?.map((item: any, i: number) => (
+                                <div key={i} className="text-center">
+                                  <div className="text-xs text-white font-bold">{item.points}</div>
+                                  <div className="text-xs text-gray-400">{item.day}</div>
+                                </div>
+                              )) || []}
+                            </div>
+                          </div>
                         </div>
                       )
                     }
 
-                    // Convert wide chart to regular chart if not in first position
-                    if (stat.type === 'wide_chart' && index !== 0) {
-                      // Convert to simple bar display
-                      const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
-                      const avgValue = Math.round((stat.data?.reduce((sum: number, d: any) => sum + d.points, 0) || 0) / (stat.data?.length || 1))
+                    // Progress ring - Large typography focus
+                    if (stat.type === 'progress_ring') {
+                      const ringSize = stat.layout === 'tall' ? 80 : 60
+                      const strokeWidth = 6
+                      const radius = (ringSize - strokeWidth) / 2
+                      const circumference = 2 * Math.PI * radius
+                      const strokeOffset = circumference - (stat.percentage || 0) / 100 * circumference
                       
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
-                          <div className="text-center">
-                            <h4 className="text-sm font-bold text-white mb-2">{stat.title}</h4>
-                            <div className="text-2xl font-black text-white mb-1">{avgValue}</div>
-                            <div className="text-xs text-gray-300">avg daily points</div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Progress ring
-                    if (stat.type === 'progress_ring') {
-                      return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                          </div>
-                          <div className="flex items-center justify-center mb-2">
-                            <div className="relative w-16 h-16">
-                              <svg className="w-16 h-16 transform -rotate-90">
-                                <circle cx="32" cy="32" r="28" stroke="white" strokeOpacity="0.3" strokeWidth="4" fill="none" />
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
+                          <div className="p-4 h-full flex flex-col justify-center items-center">
+                            <div className="relative mb-4">
+                              <svg width={ringSize} height={ringSize} className="transform -rotate-90">
                                 <circle 
-                                  cx="32" cy="32" r="28" 
-                                  stroke="white" strokeWidth="4" fill="none"
-                                  strokeDasharray={`${2 * Math.PI * 28}`}
-                                  strokeDashoffset={`${2 * Math.PI * 28 * (1 - (stat.percentage || 0) / 100)}`}
-                                  className="transition-all duration-500"
+                                  cx={ringSize/2} cy={ringSize/2} r={radius}
+                                  stroke="rgb(55, 65, 81)" strokeWidth={strokeWidth} fill="none"
+                                />
+                                <circle 
+                                  cx={ringSize/2} cy={ringSize/2} r={radius}
+                                  className={getAccentColor().replace('text-', 'stroke-')}
+                                  strokeWidth={strokeWidth} fill="none"
+                                  strokeDasharray={circumference}
+                                  strokeDashoffset={strokeOffset}
+                                  strokeLinecap="round"
+                                  style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
                                 />
                               </svg>
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-lg font-bold text-white">{Math.round(stat.percentage || 0)}%</span>
+                                <span className={`text-2xl font-black ${getAccentColor()}`}>{Math.round(stat.percentage || 0)}%</span>
                               </div>
                             </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xl font-black text-white">{stat.value}</div>
-                            <div className="text-xs text-gray-300">{stat.subtitle}</div>
+                            <div className="text-center">
+                              <div className="text-xl font-black text-white mb-1">{stat.value}</div>
+                              <div className="text-xs text-gray-400 uppercase tracking-wide">{stat.title}</div>
+                              <div className="text-xs text-gray-500">{stat.subtitle}</div>
+                            </div>
                           </div>
                         </div>
                       )
@@ -937,21 +978,23 @@ export default function RectangularDashboard() {
                     // List chart
                     if (stat.type === 'list_chart') {
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
-                          <div className="mb-3">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="space-y-2">
-                            {stat.data?.map((item: any, i: number) => (
-                              <div key={i} className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 bg-white rounded-full" />
-                                  <span className="text-sm text-white font-medium">{item.name}</span>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
+                          <div className="p-4 h-full flex flex-col">
+                            <div className="mb-3">
+                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <p className="text-xs text-gray-500">{stat.subtitle}</p>
+                            </div>
+                            <div className="flex-1 space-y-3">
+                              {stat.data?.slice(0, stat.layout === 'tall' ? 4 : 3).map((item: any, i: number) => (
+                                <div key={i} className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    <div className={`w-1 h-6 ${getAccentColor().replace('text-', 'bg-')}`} />
+                                    <span className="text-sm text-white font-medium">{item.name}</span>
+                                  </div>
+                                  <span className={`text-lg font-black ${getAccentColor()}`}>{item.count}</span>
                                 </div>
-                                <span className="text-sm font-bold text-white">{item.count}</span>
-                              </div>
-                            )) || []}
+                              )) || []}
+                            </div>
                           </div>
                         </div>
                       )
@@ -960,7 +1003,7 @@ export default function RectangularDashboard() {
                     // Heatmap
                     if (stat.type === 'heatmap') {
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
                           <div className="text-center mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-2xl font-black text-white">{stat.value}</div>
@@ -985,7 +1028,7 @@ export default function RectangularDashboard() {
                     // Streak grid
                     if (stat.type === 'streak_grid') {
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-xl font-black text-white">{stat.value}</div>
@@ -1008,7 +1051,7 @@ export default function RectangularDashboard() {
                     // Member progress
                     if (stat.type === 'member_progress') {
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
@@ -1035,7 +1078,7 @@ export default function RectangularDashboard() {
                     // Weekly pattern (rest days)
                     if (stat.type === 'weekly_pattern') {
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
                           <div className="text-center mb-2">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-2xl font-black text-white">{stat.value}</div>
@@ -1058,7 +1101,7 @@ export default function RectangularDashboard() {
                     // Variety chart
                     if (stat.type === 'variety_chart') {
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-xl font-black text-white">{stat.value}</div>
@@ -1076,14 +1119,19 @@ export default function RectangularDashboard() {
                       )
                     }
 
-                    // Simple time/countdown stats  
+                    // Simple time/countdown stats - Large typography focus
                     if (stat.type === 'time_stat' || stat.type === 'countdown_stat' || stat.type === 'recovery_stat') {
+                      const fontSize = stat.layout === 'tall' ? 'text-6xl' : 'text-4xl'
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
-                          <div className="text-center">
-                            <h4 className="text-sm font-bold text-white mb-2">{stat.title}</h4>
-                            <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
-                            <div className="text-xs text-gray-300">{stat.subtitle}</div>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
+                          <div className="p-4 h-full flex flex-col justify-center items-center text-center">
+                            <div className={`${fontSize} font-black ${getAccentColor()} leading-none mb-2`}>
+                              {stat.value}
+                            </div>
+                            <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
+                              {stat.title}
+                            </div>
+                            <div className="text-xs text-gray-500">{stat.subtitle}</div>
                           </div>
                         </div>
                       )
@@ -1092,7 +1140,7 @@ export default function RectangularDashboard() {
                     // Percentage list (overachievers)
                     if (stat.type === 'percentage_list') {
                       return (
-                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                        <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
@@ -1109,13 +1157,17 @@ export default function RectangularDashboard() {
                       )
                     }
 
-                    // Default simple stat (should rarely be used now)
+                    // Default simple stat - Large typography focus
                     return (
-                      <div key={index} className={`p-4 ${getCardStyle()}`}>
-                        <div className="text-center">
-                          <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
-                          <div className="text-xs font-medium text-gray-300 uppercase tracking-wide">{stat.title}</div>
-                          <div className="text-xs text-gray-400 mt-1">{stat.subtitle}</div>
+                      <div key={index} className={`relative bg-gray-900 ${getLayoutClasses()}`}>
+                        <div className="p-4 h-full flex flex-col justify-center items-center text-center">
+                          <div className={`${stat.layout === 'tall' ? 'text-6xl' : 'text-4xl'} font-black ${getAccentColor()} leading-none mb-2`}>
+                            {stat.value}
+                          </div>
+                          <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
+                            {stat.title}
+                          </div>
+                          <div className="text-xs text-gray-500">{stat.subtitle}</div>
                         </div>
                       </div>
                     )
@@ -1128,17 +1180,22 @@ export default function RectangularDashboard() {
                 </div>
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-0">
+              <div className="grid grid-cols-4 gap-0 auto-rows-fr" style={{ minHeight: '400px' }}>
                 {/* Loading state with varied layouts */}
-                <div className="p-4 bg-gray-900/30 col-span-2">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 h-6 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 h-16"></div>
+                <div className="p-4 bg-gray-900 col-span-4 row-span-1">
+                  <div className="animate-pulse bg-gray-800 h-6 mb-2"></div>
+                  <div className="animate-pulse bg-gray-700 h-16"></div>
                 </div>
-                {[...Array(4)].map((_, index) => (
-                  <div key={index} className="p-4 bg-gray-900/30">
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 h-6 mb-2"></div>
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 h-8 mb-1"></div>
-                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 h-4"></div>
+                <div className="p-4 bg-gray-900 col-span-2 row-span-2">
+                  <div className="animate-pulse bg-gray-800 h-6 mb-2"></div>
+                  <div className="animate-pulse bg-gray-700 h-8 mb-1"></div>
+                  <div className="animate-pulse bg-gray-600 h-4"></div>
+                </div>
+                {[...Array(3)].map((_, index) => (
+                  <div key={index} className="p-4 bg-gray-900 col-span-2 row-span-1">
+                    <div className="animate-pulse bg-gray-800 h-6 mb-2"></div>
+                    <div className="animate-pulse bg-gray-700 h-8 mb-1"></div>
+                    <div className="animate-pulse bg-gray-600 h-4"></div>
                   </div>
                 ))}
               </div>
