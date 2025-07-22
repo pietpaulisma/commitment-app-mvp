@@ -423,7 +423,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         <div className="sticky top-0 bg-black border-b border-gray-700">
           <div className="flex">
             {/* Progress Bar (80% width) */}
-            <div className="flex-1 relative h-16 bg-blue-600 border-r border-gray-700 overflow-hidden">
+            <div className="flex-1 relative h-16 bg-purple-600 border-r border-gray-700 overflow-hidden">
               {/* Progress Background */}
               <div 
                 className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out"
@@ -470,7 +470,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         <div className="flex-1 overflow-y-auto">
           {exercisesLoading && (
             <div className="text-center py-8">
-              <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
+              <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-purple-500 mx-auto"></div>
               <p className="mt-2 text-gray-400 text-sm">Loading exercises...</p>
             </div>
           )}
@@ -497,7 +497,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   onClick={() => quickAddExercise(rec.exercise)}
                   className={`w-full p-3 text-left transition-colors border-b border-gray-700 ${
                     rec.priority === 'high' 
-                      ? 'bg-blue-900/30 hover:bg-blue-900/50' 
+                      ? 'bg-purple-900/30 hover:bg-purple-900/50' 
                       : 'bg-green-900/30 hover:bg-green-900/50'
                   }`}
                 >
@@ -563,7 +563,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       onClick={() => quickAddExercise(exercise)}
                       className={`w-full p-3 text-left transition-colors border-b border-gray-700 ${
                         exercise.todayCount > 0
-                          ? 'bg-blue-900/30 hover:bg-blue-900/50'
+                          ? 'bg-purple-900/30 hover:bg-purple-900/50'
                           : 'bg-gray-800 hover:bg-gray-700'
                       }`}
                     >
@@ -625,7 +625,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                             }}
                             className={`w-full p-3 text-left transition-colors border ${
                               selectedIntensity === intensity.id
-                                ? 'bg-blue-900/50 border-blue-500 text-blue-300'
+                                ? 'bg-purple-900/50 border-blue-500 text-blue-300'
                                 : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                             }`}
                           >
@@ -656,7 +656,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       min="0" 
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
+                      className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm bg-gray-700 text-white"
                       placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
                       required
                     />
@@ -672,7 +672,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         min="0" 
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-700 text-white"
+                        className="w-full px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm bg-gray-700 text-white"
                         placeholder="Enter weight (optional)"
                       />
                     </div>
@@ -692,7 +692,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   <button 
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-600 text-white py-3 px-4 hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-purple-600 text-white py-3 px-4 hover:bg-purple-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Logging...' : 'Log Workout'}
                   </button>
@@ -744,7 +744,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       onClick={() => setSelectedIntensity(intensity.id)}
                       className={`w-full p-3 text-left transition-colors border ${
                         selectedIntensity === intensity.id
-                          ? 'bg-blue-900/50 border-blue-500 text-blue-300'
+                          ? 'bg-purple-900/50 border-blue-500 text-blue-300'
                           : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                       }`}
                     >

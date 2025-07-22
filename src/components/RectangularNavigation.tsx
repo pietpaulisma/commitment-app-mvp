@@ -102,12 +102,12 @@ export default function RectangularNavigation() {
 
   const getAccentColor = () => {
     const colorMap = {
-      'blue': 'bg-blue-600',
-      'green': 'bg-green-600', 
+      'blue': 'bg-purple-600',
+      'green': 'bg-yellow-600', 
       'purple': 'bg-purple-600',
-      'orange': 'bg-orange-600',
-      'red': 'bg-red-600',
-      'cyan': 'bg-cyan-600'
+      'orange': 'bg-yellow-600',
+      'red': 'bg-purple-600',
+      'cyan': 'bg-yellow-600'
     }
     return colorMap[accentColor as keyof typeof colorMap] || colorMap.blue
   }

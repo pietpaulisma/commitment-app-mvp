@@ -598,14 +598,17 @@ export default function RectangularDashboard() {
         selectedStats.map(statType => allStatsData[allStatTypes.indexOf(statType)]).filter(stat => stat !== null)
       )
 
-      // Set all stats at once to avoid glitchy loading
-      setAllStats(allStatsWithLayout)
-      setGroupStats({
+      // Set all stats at once to avoid glitchy loading - batch state updates
+      const newGroupStats = {
         totalPoints,
         moneyInPot,
         memberCount: members.length,
         interestingStats: selectedStatsData
-      })
+      }
+      
+      // Use a single state update to prevent glitchy loading
+      setAllStats(allStatsWithLayout)
+      setGroupStats(newGroupStats)
     } catch (error) {
       console.error('Error loading group stats:', error)
       setGroupStats({
@@ -714,7 +717,7 @@ export default function RectangularDashboard() {
       case 'supreme_admin':
         return 'text-purple-400'
       case 'group_admin':
-        return 'text-blue-400'
+        return 'text-yellow-400'
       default:
         return 'text-gray-400'
     }
@@ -724,7 +727,7 @@ export default function RectangularDashboard() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-blue-500 mx-auto"></div>
+          <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-purple-500 mx-auto"></div>
           <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
@@ -928,6 +931,7 @@ export default function RectangularDashboard() {
                               )) || []}
                             </div>
                           </div>
+                        </div>
                       )
                     }
 
