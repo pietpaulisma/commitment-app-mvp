@@ -56,6 +56,59 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     )
   }
 
+  // Countdown bar chart - Square typography-focused birthday countdown
+  if (stat.type === 'countdown_bar') {
+    const daysUntil = stat.daysUntil || 0
+    const maxDays = 365
+    const progressPercentage = Math.max(0, ((maxDays - daysUntil) / maxDays) * 100)
+    
+    return (
+      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col justify-between">
+          {/* Header */}
+          <div className="text-left">
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className={`text-2xl font-bold ${accentColor} leading-tight mb-1`}>
+              {stat.name}
+            </div>
+            <div className="text-sm text-gray-300 mb-3">
+              {daysUntil === 0 ? 'Today!' : 
+               daysUntil === 1 ? 'Tomorrow' : 
+               `${daysUntil} days`}
+            </div>
+          </div>
+          
+          {/* Countdown Progress Bar */}
+          <div className="mb-3">
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-1000 ${
+                  daysUntil <= 7 ? 'bg-orange-400' : 'bg-gray-500'
+                }`}
+                style={{ 
+                  width: `${progressPercentage}%`,
+                  animation: 'slideInLeft 1.2s ease-out forwards'
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Double Points Notice */}
+          {stat.doublePoints && (
+            <div className="text-left">
+              <div className={`text-xs ${accentColor} font-semibold uppercase tracking-wide`}>
+                🎉 Double Point Target
+              </div>
+              <div className="text-xs text-gray-500">
+                Birthday workouts count 2x
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   // Line chart - Horizontal rectangular line chart for trends
   if (stat.type === 'line_chart') {
     const data = stat.data || []
@@ -585,18 +638,55 @@ export default function RectangularDashboard() {
           }
         }
         
-        case 'group_progress': {
-          const members_progress = members.slice(0, 4).map(member => ({
+        case 'next_birthday': {
+          // Find the next birthday among group members
+          const today = new Date()
+          const currentYear = today.getFullYear()
+          
+          // Mock birthday data - in real app, get from profiles table
+          const memberBirthdays = members.map(member => ({
             name: member.email.split('@')[0],
-            progress: Math.floor(Math.random() * 100),
-            trend: Math.random() > 0.5 ? 'up' : 'down'
-          })).sort((a, b) => b.progress - a.progress)
+            email: member.email,
+            // Mock birthday (month-day format)
+            birthday: new Date(currentYear, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1)
+          }))
+          
+          // Find next upcoming birthday
+          let nextBirthday = null
+          let minDaysUntil = 366
+          
+          memberBirthdays.forEach(member => {
+            const birthdayThisYear = new Date(member.birthday)
+            birthdayThisYear.setFullYear(currentYear)
+            
+            let daysUntil = Math.ceil((birthdayThisYear.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+            
+            // If birthday passed this year, check next year
+            if (daysUntil < 0) {
+              birthdayThisYear.setFullYear(currentYear + 1)
+              daysUntil = Math.ceil((birthdayThisYear.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+            }
+            
+            if (daysUntil < minDaysUntil && daysUntil >= 0) {
+              minDaysUntil = daysUntil
+              nextBirthday = {
+                ...member,
+                daysUntil,
+                birthdayDate: birthdayThisYear
+              }
+            }
+          })
+          
+          if (!nextBirthday) return null
           
           return {
-            type: 'member_progress',
-            title: 'Group Progress',
-            subtitle: 'daily targets',
-            data: members_progress
+            type: 'countdown_bar',
+            title: 'Next Birthday',
+            name: nextBirthday.name,
+            daysUntil: nextBirthday.daysUntil,
+            doublePoints: true,
+            layout: 'square',
+            data: nextBirthday
           }
         }
         
@@ -788,6 +878,8 @@ export default function RectangularDashboard() {
       case 'B2': return 'hidden' // 1×2 tall (bottom part - handled by B1)
       case 'C1': return 'col-span-2 row-span-1 h-32' // 2×1 wide (left part)  
       case 'C2': return 'hidden' // 2×1 wide (right part - handled by C1)
+      case 'square': return 'col-span-1 row-span-1 h-32' // 1×1 square (alias)
+      case 'col-span-2': return 'col-span-2 row-span-1 h-32' // 2×1 wide
       default: return 'col-span-1 row-span-1 h-32'
     }
   }
