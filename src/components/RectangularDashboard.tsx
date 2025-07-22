@@ -219,34 +219,39 @@ export default function RectangularDashboard() {
       const today = new Date().toISOString().split('T')[0]
       
       // Get all group members
-      const { data: members } = await supabase
+      const { data: allMembers } = await supabase
         .from('profiles')
         .select('id, email, created_at')
         .eq('group_id', profile.group_id)
 
-      if (!members) return
+      if (!allMembers) return
 
-      // Get today's progress for each member
-      const membersWithProgress = await Promise.all(
-        members.map(async (member) => {
-          const { data: todayLogs } = await supabase
-            .from('logs')
-            .select('points')
-            .eq('user_id', member.id)
-            .eq('date', today)
+      // Get today's logs for all members in one query
+      const memberIds = allMembers.map(m => m.id)
+      const { data: todayLogs } = await supabase
+        .from('logs')
+        .select('user_id, points')
+        .in('user_id', memberIds)
+        .eq('date', today)
 
-          const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
-          
-          return {
-            ...member,
-            todayPoints,
-            dailyTarget: 100, // Default target for now
-            isCurrentUser: member.id === user?.id
-          }
-        })
-      )
+      // Process members with their points
+      const memberPointsMap = new Map()
+      todayLogs?.forEach(log => {
+        if (!memberPointsMap.has(log.user_id)) {
+          memberPointsMap.set(log.user_id, 0)
+        }
+        memberPointsMap.set(log.user_id, memberPointsMap.get(log.user_id) + log.points)
+      })
 
-      // Sort by points descending, with current user highlighted
+      // Create final member objects with their points
+      const membersWithProgress = allMembers.map(member => ({
+        ...member,
+        todayPoints: memberPointsMap.get(member.id) || 0,
+        dailyTarget: 100,
+        isCurrentUser: member.id === user?.id
+      }))
+      
+      // Sort by points descending
       membersWithProgress.sort((a, b) => b.todayPoints - a.todayPoints)
       setGroupMembers(membersWithProgress)
     } catch (error) {
@@ -314,9 +319,8 @@ export default function RectangularDashboard() {
         setGroupName(group?.name || 'Your Group')
         setGroupStartDate(group?.start_date || null)
 
-        // Load group members and their daily progress
-        await loadGroupMembers()
-        await loadGroupStats()
+        // Load group members and stats in parallel
+        await Promise.all([loadGroupMembers(), loadGroupStats()])
 
         // Try to load group settings for rest/recovery days
         try {
