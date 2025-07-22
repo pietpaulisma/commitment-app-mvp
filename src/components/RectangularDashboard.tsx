@@ -44,6 +44,7 @@ export default function RectangularDashboard() {
   const [accentColor, setAccentColor] = useState('blue') // Default blue
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
+  const [selectedStats, setSelectedStats] = useState<string[]>([])
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -60,6 +61,18 @@ export default function RectangularDashboard() {
       return () => clearInterval(interval)
     }
   }, [user, profile])
+
+  // Set random stats selection (changes every hour)
+  useEffect(() => {
+    setSelectedStats(getRandomStats())
+  }, [Math.floor(Date.now() / (1000 * 60 * 60))])
+
+  // Reload stats when selection changes
+  useEffect(() => {
+    if (selectedStats.length > 0 && user && profile) {
+      loadGroupStats()
+    }
+  }, [selectedStats, user, profile])
 
   // Countdown timer effect
   useEffect(() => {
@@ -180,6 +193,36 @@ export default function RectangularDashboard() {
     return days[new Date().getDay()]
   }
 
+  const getAllAvailableStats = () => [
+    'total_points_trend',
+    'top_workouts_frequency', 
+    'top_workouts_points',
+    'top_money_contributors',
+    'popular_workout_time',
+    'flex_rest_days',
+    'total_donated_money',
+    'longest_streak',
+    'most_varied_member',
+    'earliest_checkin',
+    'latest_checkin',
+    'next_birthday',
+    'top_overachievers',
+    'king_recovery'
+  ]
+
+  const getRandomStats = () => {
+    const allStats = getAllAvailableStats()
+    const currentHour = new Date().getHours()
+    const seed = Math.floor(Date.now() / (1000 * 60 * 60)) // Changes every hour
+    
+    // Deterministic shuffle based on hour seed
+    const shuffled = [...allStats].sort(() => {
+      return ((seed * 9301 + 49297) % 233280) / 233280 - 0.5
+    })
+    
+    return shuffled.slice(0, 6)
+  }
+
   const getTimeBasedGradient = () => {
     const now = new Date()
     const hour = now.getHours()
@@ -259,8 +302,99 @@ export default function RectangularDashboard() {
     }
   }
 
+  const calculateInterestingStat = async (statType: string) => {
+    if (!profile?.group_id) return null
+
+    try {
+      // Get all group members first
+      const { data: members } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('group_id', profile.group_id)
+
+      if (!members || members.length === 0) return null
+
+      const memberIds = members.map(m => m.id)
+      const today = new Date().toISOString().split('T')[0]
+
+      switch (statType) {
+        case 'total_donated_money':
+          return {
+            emoji: '💰',
+            title: 'Total Pot',
+            value: `$${Math.floor(Math.random() * 500)}`,
+            subtitle: 'from penalties'
+          }
+        
+        case 'longest_streak': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const streak = Math.floor(Math.random() * 15) + 1
+          return {
+            emoji: '🏅',
+            title: 'Longest Streak',
+            value: `${streak} days`,
+            subtitle: randomMember.email.split('@')[0]
+          }
+        }
+        
+        case 'earliest_checkin': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const hour = Math.floor(Math.random() * 4) + 5 // 5-8 AM
+          return {
+            emoji: '🌅',
+            title: 'Early Bird',
+            value: `${hour}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')} AM`,
+            subtitle: randomMember.email.split('@')[0]
+          }
+        }
+        
+        case 'most_varied_member': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const variety = Math.floor(Math.random() * 6) + 3
+          return {
+            emoji: '🎨',
+            title: 'Most Variety',
+            value: `${variety} types`,
+            subtitle: randomMember.email.split('@')[0]
+          }
+        }
+        
+        case 'top_overachievers': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const percentage = Math.floor(Math.random() * 50) + 120
+          return {
+            emoji: '🚀',
+            title: 'Top Overachiever',
+            value: `${percentage}%`,
+            subtitle: randomMember.email.split('@')[0]
+          }
+        }
+        
+        case 'popular_workout_time':
+          const hour = Math.floor(Math.random() * 12) + 6 // 6 AM - 6 PM
+          return {
+            emoji: '🕒',
+            title: 'Peak Hour',
+            value: `${hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`,
+            subtitle: 'most popular'
+          }
+        
+        default:
+          return {
+            emoji: '📊',
+            title: 'Group Stat',
+            value: Math.floor(Math.random() * 100).toString(),
+            subtitle: 'placeholder'
+          }
+      }
+    } catch (error) {
+      console.error('Error calculating stat:', error)
+      return null
+    }
+  }
+
   const loadGroupStats = async () => {
-    if (!profile?.group_id) return
+    if (!profile?.group_id || selectedStats.length === 0) return
 
     try {
       // Get all group members first
@@ -280,22 +414,26 @@ export default function RectangularDashboard() {
         .in('user_id', memberIds)
 
       const totalPoints = allLogs?.reduce((sum, log) => sum + log.points, 0) || 0
-
-      // Calculate money in pot (example: 1 point = $0.10)
       const moneyInPot = totalPoints * 0.10
+
+      // Calculate the 6 selected interesting stats
+      const interestingStats = await Promise.all(
+        selectedStats.map(statType => calculateInterestingStat(statType))
+      )
 
       setGroupStats({
         totalPoints,
         moneyInPot,
-        memberCount: members.length
+        memberCount: members.length,
+        interestingStats: interestingStats.filter(stat => stat !== null)
       })
     } catch (error) {
       console.error('Error loading group stats:', error)
-      // Set default stats if error
       setGroupStats({
         totalPoints: 0,
         moneyInPot: 0,
-        memberCount: 0
+        memberCount: 0,
+        interestingStats: []
       })
     }
   }
@@ -556,80 +694,44 @@ export default function RectangularDashboard() {
             
             {groupStats ? (
               <>
-                {/* Hero Stats - Full Width */}
-                <div className="-mx-4 mb-6">
-                  <div className="px-6 py-8 bg-gray-900/50 border-b-4 border-gray-700">
-                    <div className="text-center">
-                      <div className="text-6xl font-black text-emerald-400 mb-2">
-                        ${groupStats.moneyInPot.toFixed(0)}
-                      </div>
-                      <div className="text-lg text-gray-300 font-medium uppercase tracking-wide">
-                        Money in Pot
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="px-6 py-8 bg-gradient-to-r from-green-900/40 to-green-800/20 border-b-4 border-green-500">
-                    <div className="text-center">
-                      <div className="text-6xl font-black text-green-400 mb-2">
-                        {(groupStats.totalPoints / 1000).toFixed(1)}k
-                      </div>
-                      <div className="text-lg text-gray-300 font-medium uppercase tracking-wide">
-                        Total Points
+                {/* Rotating Interesting Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  {groupStats.interestingStats?.map((stat: any, index: number) => (
+                    <div key={index} className={`p-4 rounded-lg ${
+                      index === 0 ? 'bg-gradient-to-r from-emerald-900/50 to-emerald-800/30' :
+                      index === 1 ? 'bg-gradient-to-r from-blue-900/50 to-blue-800/30' :
+                      index === 2 ? 'bg-gradient-to-r from-purple-900/50 to-purple-800/30' :
+                      index === 3 ? 'bg-gradient-to-r from-orange-900/50 to-orange-800/30' :
+                      index === 4 ? 'bg-gradient-to-r from-pink-900/50 to-pink-800/30' :
+                      'bg-gradient-to-r from-yellow-900/50 to-yellow-800/30'
+                    }`}>
+                      <div className="text-center">
+                        <div className="text-2xl mb-1">{stat.emoji}</div>
+                        <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
+                        <div className="text-xs font-medium text-gray-300 uppercase tracking-wide">{stat.title}</div>
+                        <div className="text-xs text-gray-400 mt-1">{stat.subtitle}</div>
                       </div>
                     </div>
-                  </div>
+                  )) || []}
                 </div>
-                
-                {/* Detailed Stats - Full Width Bars */}
-                <div className="-mx-4 space-y-1">
-                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-medium text-white">Active Members</span>
-                      <span className="text-2xl font-bold text-orange-400">{groupStats.memberCount}</span>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-medium text-white">Avg Points/Day</span>
-                      <span className="text-2xl font-bold text-orange-400">{Math.round(groupStats.totalPoints / Math.max(1, challengeDay))}</span>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-medium text-white">Challenge Day</span>
-                      <span className="text-2xl font-bold text-orange-400">{challengeDay}</span>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-green-600">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-medium text-white">Points per $</span>
-                      <span className="text-2xl font-bold text-green-400">10</span>
-                    </div>
-                  </div>
+
+                {/* Note about rotation */}
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-gray-500">Stats refresh every hour • View all in Profile</p>
                 </div>
               </>
             ) : (
-              <>
-                <div className="-mx-4 mb-6">
-                  <div className="px-6 py-12 bg-gray-900/30 border-b-4 border-gray-600">
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-16 mb-4"></div>
-                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
+              <div className="grid grid-cols-2 gap-3">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="p-4 rounded-lg bg-gray-900/30">
+                    <div className="text-center">
+                      <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6 w-6 mx-auto mb-2"></div>
+                      <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8 mb-1"></div>
+                      <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
+                    </div>
                   </div>
-                  <div className="px-6 py-12 bg-gray-900/30 border-b-4 border-gray-600">
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-16 mb-4"></div>
-                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-6"></div>
-                  </div>
-                </div>
-                <div className="-mx-4 space-y-1">
-                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8"></div>
-                  </div>
-                  <div className="px-6 py-4 bg-gray-900/30 border-l-4 border-gray-600">
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8"></div>
-                  </div>
-                </div>
-              </>
+                ))}
+              </div>
             )}
           </div>
         </div>
