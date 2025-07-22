@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useMemo, useCallback, memo, useRef } from 'react'
+import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
@@ -26,20 +26,20 @@ type RecentActivity = {
   is_own_activity: boolean
 }
 
+// Constant colors array to avoid useMemo issues
+const CHART_COLORS = [
+  'text-orange-400',
+  'text-green-400', 
+  'text-purple-400',
+  'text-blue-400',
+  'text-yellow-400',
+  'text-pink-400'
+]
+
 // Memoized chart component for performance
 const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string }) => {
-  // Memoize color selection to avoid repeated array operations
-  const accentColor = useMemo(() => {
-    const colors = [
-      'text-orange-400',
-      'text-green-400', 
-      'text-purple-400',
-      'text-blue-400',
-      'text-yellow-400',
-      'text-pink-400'
-    ]
-    return colors[index % colors.length]
-  }, [index])
+  // Simple color selection without useMemo to avoid circular dependencies
+  const accentColor = CHART_COLORS[index % CHART_COLORS.length] || 'text-blue-400'
 
   const layoutClasses = getLayoutClasses(stat.layout)
 
@@ -297,8 +297,8 @@ export default function RectangularDashboard() {
     'king_recovery'
   ]
 
-  // Memoize stats selection for performance
-  const getRandomStats = useCallback(() => {
+  // Simple stats selection without useCallback to avoid circular dependencies
+  const getRandomStats = () => {
     const allStats = getAllAvailableStats()
     
     // Use current hour as seed for stable shuffling - changes hourly instead of every refresh
@@ -314,10 +314,10 @@ export default function RectangularDashboard() {
     }
     
     return selected
-  }, []) // Stable across renders
+  }
 
-  // Memoize time-based gradient calculation
-  const getTimeBasedGradient = useCallback(() => {
+  // Simple time-based gradient calculation without useCallback
+  const getTimeBasedGradient = () => {
     const now = new Date()
     const hour = now.getHours()
     
@@ -347,7 +347,7 @@ export default function RectangularDashboard() {
     }
     // Default fallback
     return 'from-orange-600/20 to-orange-500/10'
-  }, []) // Will be stable during a session
+  }
 
   const loadGroupMembers = async () => {
     if (!profile?.group_id) return
@@ -691,8 +691,8 @@ export default function RectangularDashboard() {
     ]
   ]
 
-  // Memoize layout classes to avoid recalculation
-  const getLayoutClasses = useCallback((blockType: string) => {
+  // Simple layout classes without useCallback to avoid circular dependencies
+  const getLayoutClasses = (blockType: string) => {
     switch (blockType) {
       case 'A': return 'col-span-1 row-span-1 h-32' // 1×1 square
       case 'B1': return 'col-span-1 row-span-2 h-64' // 1×2 tall (top part)
@@ -701,17 +701,25 @@ export default function RectangularDashboard() {
       case 'C2': return 'hidden' // 2×1 wide (right part - handled by C1)
       default: return 'col-span-1 row-span-1 h-32'
     }
-  }, [])
+  }
 
-  const getStatLayout = (stats: any[], isShowingAll = false) => {
-    // Memoize layout selection based on current hour
-    const selectedLayout = useMemo(() => {
+  // Simple layout selection without useMemo to avoid circular dependencies
+  const getSelectedLayout = () => {
+    try {
       const currentHour = new Date().getHours()
       const layoutIndex = currentHour % PREDEFINED_LAYOUTS.length
       return PREDEFINED_LAYOUTS[layoutIndex]
-    }, []) // Only recalculate on mount since hour changes are handled elsewhere
+    } catch (error) {
+      console.error('Error in getSelectedLayout:', error)
+      // Return fallback layout
+      return PREDEFINED_LAYOUTS[0]
+    }
+  }
+
+  const getStatLayout = (stats: any[], isShowingAll = false) => {
     
     // Filter out hidden positions (B2, C2)
+    const selectedLayout = getSelectedLayout()
     const visiblePositions = selectedLayout.filter(pos => pos.type !== 'B2' && pos.type !== 'C2')
     
     const layouts = []
@@ -771,16 +779,25 @@ export default function RectangularDashboard() {
       const totalPoints = allLogs?.reduce((sum, log) => sum + log.points, 0) || 0
       const moneyInPot = totalPoints * 0.10
 
-      // Calculate ALL 14 interesting stats
+      // Calculate ALL 14 interesting stats with error handling
       const allStatTypes = getAllAvailableStats()
       const allStatsData = await Promise.all(
-        allStatTypes.map(statType => calculateInterestingStat(statType))
+        allStatTypes.map(async (statType) => {
+          try {
+            return await calculateInterestingStat(statType)
+          } catch (error) {
+            console.error(`Error calculating stat ${statType}:`, error)
+            return null
+          }
+        })
       )
 
-      const allStatsWithLayout = getStatLayout(allStatsData.filter(stat => stat !== null), true)
-      const selectedStatsData = getStatLayout(
-        selectedStats.map(statType => allStatsData[allStatTypes.indexOf(statType)]).filter(stat => stat !== null), false
-      )
+      // Filter valid stats first to avoid null references
+      const validAllStats = allStatsData.filter(stat => stat !== null)
+      const validSelectedStats = selectedStats.map(statType => allStatsData[allStatTypes.indexOf(statType)]).filter(stat => stat !== null)
+      
+      const allStatsWithLayout = getStatLayout(validAllStats, true)
+      const selectedStatsData = getStatLayout(validSelectedStats, false)
 
       // Set all stats at once to avoid glitchy loading - batch state updates
       const newGroupStats = {
@@ -931,7 +948,7 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen bg-black pb-20">
+    <div className="min-h-screen bg-black pb-24">
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
