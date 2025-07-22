@@ -62,10 +62,10 @@ export default function RectangularDashboard() {
     }
   }, [user, profile])
 
-  // Set random stats selection (changes every hour)
+  // Set random stats selection (changes on page refresh)
   useEffect(() => {
     setSelectedStats(getRandomStats())
-  }, [Math.floor(Date.now() / (1000 * 60 * 60))])
+  }, [user, profile])
 
   // Reload stats when selection changes
   useEffect(() => {
@@ -212,14 +212,11 @@ export default function RectangularDashboard() {
 
   const getRandomStats = () => {
     const allStats = getAllAvailableStats()
-    const currentHour = new Date().getHours()
-    const seed = Math.floor(Date.now() / (1000 * 60 * 60)) // Changes every hour
     
-    // Deterministic shuffle based on hour seed
-    const shuffled = [...allStats].sort(() => {
-      return ((seed * 9301 + 49297) % 233280) / 233280 - 0.5
-    })
+    // Simple random shuffle on each refresh
+    const shuffled = [...allStats].sort(() => Math.random() - 0.5)
     
+    // Ensure we always fill exactly 6 slots
     return shuffled.slice(0, 6)
   }
 
@@ -851,7 +848,7 @@ export default function RectangularDashboard() {
             {groupStats ? (
               <>
                 {/* Rotating Interesting Stats with Dynamic Layout */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-0">
                   {groupStats.interestingStats?.map((stat: any, index: number) => {
                     const getCardStyle = () => {
                       const colors = [
@@ -865,10 +862,10 @@ export default function RectangularDashboard() {
                       return colors[index % colors.length]
                     }
 
-                    // Wide chart (spans 2 columns)
-                    if (stat.type === 'wide_chart') {
+                    // Wide chart (spans 2 columns) - Only use this for first slot to avoid grid issues
+                    if (stat.type === 'wide_chart' && index === 0) {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()} col-span-2`}>
+                        <div key={index} className={`p-4 ${getCardStyle()} col-span-2`}>
                           <div className="mb-3">
                             <h4 className="text-lg font-bold text-white">{stat.title}</h4>
                             <p className="text-sm text-gray-300">{stat.subtitle}</p>
@@ -888,10 +885,27 @@ export default function RectangularDashboard() {
                       )
                     }
 
+                    // Convert wide chart to regular chart if not in first position
+                    if (stat.type === 'wide_chart' && index !== 0) {
+                      // Convert to simple bar display
+                      const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
+                      const avgValue = Math.round((stat.data?.reduce((sum: number, d: any) => sum + d.points, 0) || 0) / (stat.data?.length || 1))
+                      
+                      return (
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                          <div className="text-center">
+                            <h4 className="text-sm font-bold text-white mb-2">{stat.title}</h4>
+                            <div className="text-2xl font-black text-white mb-1">{avgValue}</div>
+                            <div className="text-xs text-gray-300">avg daily points</div>
+                          </div>
+                        </div>
+                      )
+                    }
+
                     // Progress ring
                     if (stat.type === 'progress_ring') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                           </div>
@@ -923,7 +937,7 @@ export default function RectangularDashboard() {
                     // List chart
                     if (stat.type === 'list_chart') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
@@ -946,7 +960,7 @@ export default function RectangularDashboard() {
                     // Heatmap
                     if (stat.type === 'heatmap') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="text-center mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-2xl font-black text-white">{stat.value}</div>
@@ -971,7 +985,7 @@ export default function RectangularDashboard() {
                     // Streak grid
                     if (stat.type === 'streak_grid') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-xl font-black text-white">{stat.value}</div>
@@ -994,7 +1008,7 @@ export default function RectangularDashboard() {
                     // Member progress
                     if (stat.type === 'member_progress') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
@@ -1021,19 +1035,19 @@ export default function RectangularDashboard() {
                     // Weekly pattern (rest days)
                     if (stat.type === 'weekly_pattern') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
-                          <div className="text-center mb-3">
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
+                          <div className="text-center mb-2">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-2xl font-black text-white">{stat.value}</div>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
                           </div>
-                          <div className="flex justify-center space-x-1">
+                          <div className="grid grid-cols-7 gap-1">
                             {stat.data?.map((item: any, i: number) => (
                               <div key={i} className="text-center">
-                                <div className={`w-6 h-6 rounded-full ${
+                                <div className={`w-4 h-4 rounded-full mx-auto ${
                                   item.rested ? 'bg-green-400' : 'bg-white/20'
                                 }`} />
-                                <span className="text-xs text-gray-400 mt-1">{item.day}</span>
+                                <span className="text-xs text-gray-400 mt-1 block">{item.day}</span>
                               </div>
                             )) || []}
                           </div>
@@ -1044,7 +1058,7 @@ export default function RectangularDashboard() {
                     // Variety chart
                     if (stat.type === 'variety_chart') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-xl font-black text-white">{stat.value}</div>
@@ -1065,7 +1079,7 @@ export default function RectangularDashboard() {
                     // Simple time/countdown stats  
                     if (stat.type === 'time_stat' || stat.type === 'countdown_stat' || stat.type === 'recovery_stat') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="text-center">
                             <h4 className="text-sm font-bold text-white mb-2">{stat.title}</h4>
                             <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
@@ -1078,7 +1092,7 @@ export default function RectangularDashboard() {
                     // Percentage list (overachievers)
                     if (stat.type === 'percentage_list') {
                       return (
-                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div key={index} className={`p-4 ${getCardStyle()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
@@ -1097,7 +1111,7 @@ export default function RectangularDashboard() {
 
                     // Default simple stat (should rarely be used now)
                     return (
-                      <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                      <div key={index} className={`p-4 ${getCardStyle()}`}>
                         <div className="text-center">
                           <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
                           <div className="text-xs font-medium text-gray-300 uppercase tracking-wide">{stat.title}</div>
@@ -1110,21 +1124,21 @@ export default function RectangularDashboard() {
 
                 {/* Note about rotation */}
                 <div className="mt-4 text-center">
-                  <p className="text-xs text-gray-500">Stats refresh every hour • View all in Profile</p>
+                  <p className="text-xs text-gray-500">Stats refresh on page reload • View all in Profile</p>
                 </div>
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-0">
                 {/* Loading state with varied layouts */}
-                <div className="p-4 rounded-lg bg-gray-900/30 col-span-2">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-16"></div>
+                <div className="p-4 bg-gray-900/30 col-span-2">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 h-6 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 h-16"></div>
                 </div>
                 {[...Array(4)].map((_, index) => (
-                  <div key={index} className="p-4 rounded-lg bg-gray-900/30">
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6 mb-2"></div>
-                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8 mb-1"></div>
-                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
+                  <div key={index} className="p-4 bg-gray-900/30">
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 h-6 mb-2"></div>
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 h-8 mb-1"></div>
+                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 h-4"></div>
                   </div>
                 ))}
               </div>
