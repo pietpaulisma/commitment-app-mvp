@@ -871,29 +871,29 @@ export default function RectangularDashboard() {
           <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
-            {groupStats && allStats.length > 0 ? (
+            {groupStats?.interestingStats?.length > 0 ? (
               <>
                 {/* Rotating Interesting Stats with Dynamic Layout */}
-                <div className="space-y-0">
+                <div className="grid grid-cols-2 gap-3">
                   {(showAllStats ? allStats : groupStats.interestingStats)?.map((stat: any, index: number) => {
                     const getAccentColor = () => {
                       const colors = [
-                        'text-emerald-400',
-                        'text-blue-400', 
                         'text-purple-400',
-                        'text-orange-400',
-                        'text-pink-400',
-                        'text-yellow-400'
+                        'text-yellow-400', 
+                        'text-purple-300',
+                        'text-yellow-300',
+                        'text-purple-500',
+                        'text-yellow-500'
                       ]
                       return colors[index % colors.length]
                     }
 
                     const getLayoutClasses = () => {
                       switch (stat.layout) {
-                        case 'wide': return 'h-24' // 2:1 ratio - shorter height
-                        case 'tall': return 'h-48' // 1:2 ratio - taller height  
+                        case 'wide': return 'col-span-2 h-24' // 2:1 ratio - spans both columns
+                        case 'tall': return 'col-span-1 h-48' // 1:2 ratio - tall single column
                         case 'square': 
-                        default: return 'h-32' // 1:1 ratio - medium height
+                        default: return 'col-span-1 h-32' // 1:1 ratio - single column
                       }
                     }
 
@@ -901,9 +901,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'wide_chart') {
                       const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative overflow-hidden bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative overflow-hidden bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           {/* Background progress bars */}
                           <div className="absolute inset-0 flex items-end">
                             {stat.data?.map((item: any, i: number) => (
@@ -930,8 +928,6 @@ export default function RectangularDashboard() {
                               )) || []}
                             </div>
                           </div>
-                          </div>
-                        </div>
                       )
                     }
 
@@ -944,9 +940,7 @@ export default function RectangularDashboard() {
                       const strokeOffset = circumference - (stat.percentage || 0) / 100 * circumference
                       
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="p-4 h-full flex flex-col justify-center items-center">
                             <div className="relative mb-4">
                               <svg width={ringSize} height={ringSize} className="transform -rotate-90">
@@ -975,16 +969,13 @@ export default function RectangularDashboard() {
                             </div>
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
                     // List chart
                     if (stat.type === 'list_chart') {
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="p-4 h-full flex flex-col">
                             <div className="mb-3">
                               <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
@@ -1003,16 +994,13 @@ export default function RectangularDashboard() {
                             </div>
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
                     // Heatmap
                     if (stat.type === 'heatmap') {
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="text-center mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-2xl font-black text-white">{stat.value}</div>
@@ -1031,16 +1019,13 @@ export default function RectangularDashboard() {
                             )) || []}
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
                     // Streak grid
                     if (stat.type === 'streak_grid') {
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-xl font-black text-white">{stat.value}</div>
@@ -1057,16 +1042,13 @@ export default function RectangularDashboard() {
                             )) || []}
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
                     // Member progress
                     if (stat.type === 'member_progress') {
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
@@ -1087,16 +1069,13 @@ export default function RectangularDashboard() {
                             )) || []}
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
                     // Weekly pattern (rest days)
                     if (stat.type === 'weekly_pattern') {
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="text-center mb-2">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-2xl font-black text-white">{stat.value}</div>
@@ -1113,16 +1092,13 @@ export default function RectangularDashboard() {
                             )) || []}
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
                     // Variety chart
                     if (stat.type === 'variety_chart') {
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <div className="text-xl font-black text-white">{stat.value}</div>
@@ -1137,7 +1113,6 @@ export default function RectangularDashboard() {
                             )) || []}
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
@@ -1145,9 +1120,7 @@ export default function RectangularDashboard() {
                     if (stat.type === 'time_stat' || stat.type === 'countdown_stat' || stat.type === 'recovery_stat') {
                       const fontSize = stat.layout === 'tall' ? 'text-6xl' : 'text-4xl'
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="p-4 h-full flex flex-col justify-center items-center text-center">
                             <div className={`${fontSize} font-black ${getAccentColor()} leading-none mb-2`}>
                               {stat.value}
@@ -1158,16 +1131,13 @@ export default function RectangularDashboard() {
                             <div className="text-xs text-gray-500">{stat.subtitle}</div>
                           </div>
                         </div>
-                        </div>
                       )
                     }
 
                     // Percentage list (overachievers)
                     if (stat.type === 'percentage_list') {
                       return (
-                        <div key={index}>
-                          {index > 0 && <div className="h-px bg-gray-700/50" />}
-                          <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
                           <div className="mb-3">
                             <h4 className="text-sm font-bold text-white">{stat.title}</h4>
                             <p className="text-xs text-gray-300">{stat.subtitle}</p>
@@ -1180,7 +1150,6 @@ export default function RectangularDashboard() {
                               </div>
                             )) || []}
                           </div>
-                        </div>
                         </div>
                       )
                     }
@@ -1206,11 +1175,10 @@ export default function RectangularDashboard() {
                 </div>
 
                 {/* View All Button */}
-                <div className="mt-0">
-                  <div className="h-px bg-gray-700/50" />
+                <div className="mt-6">
                   <button 
                     onClick={() => setShowAllStats(!showAllStats)}
-                    className="w-full p-4 bg-gray-900/30 hover:bg-gray-900/50 transition-colors duration-200 text-center"
+                    className="w-full p-4 bg-gray-900/30 hover:bg-gray-900/50 transition-colors duration-200 text-center rounded-lg"
                   >
                     <span className="text-sm font-medium text-gray-300">
                       {showAllStats ? 'Show Less' : `View All ${allStats.length} Stats`}
@@ -1227,27 +1195,19 @@ export default function RectangularDashboard() {
                 </div>
               </>
             ) : (
-              <div className="space-y-0">
+              <div className="grid grid-cols-2 gap-3">
                 {/* Loading state with varied layouts */}
                 {[...Array(6)].map((_, index) => (
-                  <div key={index}>
-                    {index > 0 && <div className="h-px bg-gray-700/50" />}
-                    <div className={`p-4 bg-gray-900/30 ${
-                      index === 0 ? 'h-24' : // wide
-                      index === 1 ? 'h-48' : // tall
-                      'h-32' // square
-                    }`}>
-                      <div className="animate-pulse bg-gray-800 h-6 mb-2"></div>
-                      <div className="animate-pulse bg-gray-700 h-8 mb-1"></div>
-                      <div className="animate-pulse bg-gray-600 h-4"></div>
-                    </div>
+                  <div key={index} className={`p-4 bg-gray-900/30 rounded-lg ${
+                    index === 0 ? 'col-span-2 h-24' : // wide
+                    index === 1 ? 'col-span-1 h-48' : // tall
+                    'col-span-1 h-32' // square
+                  }`}>
+                    <div className="animate-pulse bg-gray-800 h-6 mb-2 rounded"></div>
+                    <div className="animate-pulse bg-gray-700 h-8 mb-1 rounded"></div>
+                    <div className="animate-pulse bg-gray-600 h-4 rounded"></div>
                   </div>
                 ))}
-                {/* Loading View All Button */}
-                <div className="h-px bg-gray-700/50" />
-                <div className="p-4 bg-gray-900/30">
-                  <div className="animate-pulse bg-gray-700 h-6 w-32 mx-auto"></div>
-                </div>
               </div>
             )}
           </div>
