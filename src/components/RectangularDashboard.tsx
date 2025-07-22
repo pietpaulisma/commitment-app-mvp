@@ -79,73 +79,41 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
             )}
           </div>
           
-          {/* Line Chart */}
-          <div className="flex-1 relative">
-            <svg className="w-full h-full" style={{ height: '70px' }}>
-              {/* Grid lines */}
-              <defs>
-                <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(75, 85, 99, 0.3)" strokeWidth="0.5"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" opacity="0.3" />
+          {/* Vertical Bar Chart */}
+          <div className="flex-1 flex items-end justify-between gap-px">
+            {data.map((point: any, i: number) => {
+              const height = Math.max(2, (point.points / maxValue) * 70)
+              const isRecord = i === recordIndex
               
-              {/* Data points and lines */}
-              {data.map((point: any, i: number) => {
-                const x = (i / (data.length - 1)) * 100
-                const y = 100 - Math.max(10, (point.points / maxValue) * 80)
-                const isRecord = i === recordIndex
-                const nextPoint = data[i + 1]
-                
-                return (
-                  <g key={i}>
-                    {/* Line to next point */}
-                    {nextPoint && (
-                      <line
-                        x1={`${x}%`}
-                        y1={`${y}%`}
-                        x2={`${((i + 1) / (data.length - 1)) * 100}%`}
-                        y2={`${100 - Math.max(10, (nextPoint.points / maxValue) * 80)}%`}
-                        stroke="rgb(156, 163, 175)"
-                        strokeWidth="2"
-                        className="opacity-70"
-                        style={{
-                          animationDelay: `${i * 30}ms`,
-                          animation: 'fadeInUp 0.6s ease-out forwards'
-                        }}
-                      />
-                    )}
-                    
-                    {/* Data point */}
-                    <circle
-                      cx={`${x}%`}
-                      cy={`${y}%`}
-                      r={isRecord ? "4" : "2"}
-                      fill={isRecord ? "rgb(251, 146, 60)" : "rgb(156, 163, 175)"}
-                      className={isRecord ? "animate-pulse" : ""}
+              return (
+                <div
+                  key={i}
+                  className="flex-1 flex flex-col items-center"
+                >
+                  {/* Vertical bar */}
+                  <div
+                    className={`w-full transition-all duration-700 ${
+                      isRecord ? 'bg-orange-400' : 'bg-gray-500'
+                    }`}
+                    style={{ 
+                      height: `${height}px`,
+                      animationDelay: `${i * 20}ms`,
+                      animation: 'slideUpScale 0.8s ease-out forwards',
+                      minHeight: '2px'
+                    }}
+                  />
+                  {/* Record highlight dot */}
+                  {isRecord && (
+                    <div 
+                      className="w-2 h-2 bg-orange-400 rounded-full -mt-1 animate-pulse"
                       style={{
-                        animationDelay: `${i * 30}ms`,
-                        animation: 'fadeInScale 0.8s ease-out forwards'
+                        animationDelay: `${(i * 20) + 400}ms`
                       }}
                     />
-                    
-                    {/* Record highlight */}
-                    {isRecord && (
-                      <circle
-                        cx={`${x}%`}
-                        cy={`${y}%`}
-                        r="8"
-                        fill="none"
-                        stroke="rgb(251, 146, 60)"
-                        strokeWidth="1"
-                        opacity="0.5"
-                        className="animate-pulse"
-                      />
-                    )}
-                  </g>
-                )
-              })}
-            </svg>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
