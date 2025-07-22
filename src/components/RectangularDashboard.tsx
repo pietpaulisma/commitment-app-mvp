@@ -782,15 +782,17 @@ export default function RectangularDashboard() {
           // Get actual workout frequency data from logs
           const { data: workoutLogs } = await supabase
             .from('logs')
-            .select('exercise_name')
+            .select('exercises(name)')
             .in('user_id', memberIds)
-            .not('exercise_name', 'is', null)
+            .not('exercise_id', 'is', null)
 
           // Count frequency of each exercise
           const exerciseCounts = new Map()
           workoutLogs?.forEach(log => {
-            const exercise = log.exercise_name.trim()
-            exerciseCounts.set(exercise, (exerciseCounts.get(exercise) || 0) + 1)
+            const exercise = log.exercises?.name?.trim()
+            if (exercise) {
+              exerciseCounts.set(exercise, (exerciseCounts.get(exercise) || 0) + 1)
+            }
           })
 
           // Convert to array and get top 5
@@ -931,16 +933,18 @@ export default function RectangularDashboard() {
           // Get actual points data by exercise type
           const { data: pointsLogs } = await supabase
             .from('logs')
-            .select('exercise_name, points')
+            .select('exercises(name), points')
             .in('user_id', memberIds)
-            .not('exercise_name', 'is', null)
+            .not('exercise_id', 'is', null)
             .not('points', 'is', null)
 
           // Sum points by exercise type
           const exercisePoints = new Map()
           pointsLogs?.forEach(log => {
-            const exercise = log.exercise_name.trim()
-            exercisePoints.set(exercise, (exercisePoints.get(exercise) || 0) + log.points)
+            const exercise = log.exercises?.name?.trim()
+            if (exercise && log.points) {
+              exercisePoints.set(exercise, (exercisePoints.get(exercise) || 0) + log.points)
+            }
           })
 
           // Convert to array and get top performers
