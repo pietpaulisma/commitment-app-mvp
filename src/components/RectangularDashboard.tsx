@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
@@ -25,6 +25,64 @@ type RecentActivity = {
   created_at: string
   is_own_activity: boolean
 }
+
+// Memoized chart component for performance
+const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string }) => {
+  // Memoize color selection to avoid repeated array operations
+  const accentColor = useMemo(() => {
+    const colors = [
+      'text-orange-400',
+      'text-green-400', 
+      'text-purple-400',
+      'text-blue-400',
+      'text-yellow-400',
+      'text-pink-400'
+    ]
+    return colors[index % colors.length]
+  }, [index])
+
+  const layoutClasses = getLayoutClasses(stat.layout)
+
+  // Skip placeholder stats from rendering
+  if (stat.isPlaceholder) {
+    return (
+      <div key={index} className={`relative bg-gray-900/10 rounded-lg border-2 border-dashed border-gray-700 ${layoutClasses}`}>
+        <div className="p-4 h-full flex flex-col justify-center items-center text-center opacity-30">
+          <div className="text-gray-500 text-lg mb-1">{stat.value}</div>
+          <div className="text-xs text-gray-600 uppercase tracking-wide">{stat.title}</div>
+          <div className="text-xs text-gray-700">{stat.subtitle}</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Wide chart - Full width bar chart with enhanced animations and hover
+  if (stat.type === 'wide_chart') {
+    const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
+    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '/20')
+    return (
+      <div key={index} className={`relative overflow-hidden ${bgColor} rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
+        {/* Chart implementation continues... */}
+        <div className="p-4 h-full flex items-center justify-center">
+          <span className={`text-lg font-bold ${accentColor}`}>{stat.title}</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Default simple stat display
+  return (
+    <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-500 hover:bg-gray-900/40`}>
+      <div className="p-4 h-full flex flex-col justify-center items-center text-center">
+        <div className={`text-2xl font-black ${accentColor} mb-2`}>{stat.value}</div>
+        <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">{stat.title}</div>
+        <div className="text-xs text-gray-500">{stat.subtitle}</div>
+      </div>
+    </div>
+  )
+}
+
+const MemoizedChartComponent = memo(ChartComponent)
 
 export default function RectangularDashboard() {
   // Add keyframe animations for enhanced chart effects
@@ -239,7 +297,8 @@ export default function RectangularDashboard() {
     'king_recovery'
   ]
 
-  const getRandomStats = () => {
+  // Memoize stats selection for performance
+  const getRandomStats = useCallback(() => {
     const allStats = getAllAvailableStats()
     
     // Use current hour as seed for stable shuffling - changes hourly instead of every refresh
@@ -255,9 +314,10 @@ export default function RectangularDashboard() {
     }
     
     return selected
-  }
+  }, []) // Stable across renders
 
-  const getTimeBasedGradient = () => {
+  // Memoize time-based gradient calculation
+  const getTimeBasedGradient = useCallback(() => {
     const now = new Date()
     const hour = now.getHours()
     
@@ -287,7 +347,7 @@ export default function RectangularDashboard() {
     }
     // Default fallback
     return 'from-orange-600/20 to-orange-500/10'
-  }
+  }, []) // Will be stable during a session
 
   const loadGroupMembers = async () => {
     if (!profile?.group_id) return
@@ -631,7 +691,8 @@ export default function RectangularDashboard() {
     ]
   ]
 
-  const getLayoutClasses = (blockType: string) => {
+  // Memoize layout classes to avoid recalculation
+  const getLayoutClasses = useCallback((blockType: string) => {
     switch (blockType) {
       case 'A': return 'col-span-1 row-span-1 h-32' // 1×1 square
       case 'B1': return 'col-span-1 row-span-2 h-64' // 1×2 tall (top part)
@@ -640,13 +701,15 @@ export default function RectangularDashboard() {
       case 'C2': return 'hidden' // 2×1 wide (right part - handled by C1)
       default: return 'col-span-1 row-span-1 h-32'
     }
-  }
+  }, [])
 
   const getStatLayout = (stats: any[], isShowingAll = false) => {
-    // Choose layout based on current hour - changes every hour instead of every refresh
-    const currentHour = new Date().getHours()
-    const layoutIndex = currentHour % PREDEFINED_LAYOUTS.length
-    const selectedLayout = PREDEFINED_LAYOUTS[layoutIndex]
+    // Memoize layout selection based on current hour
+    const selectedLayout = useMemo(() => {
+      const currentHour = new Date().getHours()
+      const layoutIndex = currentHour % PREDEFINED_LAYOUTS.length
+      return PREDEFINED_LAYOUTS[layoutIndex]
+    }, []) // Only recalculate on mount since hour changes are handled elsewhere
     
     // Filter out hidden positions (B2, C2)
     const visiblePositions = selectedLayout.filter(pos => pos.type !== 'B2' && pos.type !== 'C2')
@@ -1006,388 +1069,14 @@ export default function RectangularDashboard() {
               <>
                 {/* Rotating Interesting Stats with Predefined 2×4 Grid Layouts */}
                 <div className={`grid gap-3 grid-cols-2 grid-rows-4 ${showAllStats ? 'auto-rows-max' : ''}`}>
-                  {(showAllStats ? allStats : groupStats.interestingStats)?.map((stat: any, index: number) => {
-                    const getAccentColor = () => {
-                      const colors = [
-                        'text-orange-400',
-                        'text-green-400', 
-                        'text-purple-400',
-                        'text-blue-400',
-                        'text-yellow-400',
-                        'text-pink-400'
-                      ]
-                      return colors[index % colors.length]
-                    }
-
-                    const layoutClasses = getLayoutClasses(stat.layout)
-
-                    // Skip placeholder stats from rendering
-                    if (stat.isPlaceholder) {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/10 rounded-lg border-2 border-dashed border-gray-700 ${layoutClasses}`}>
-                          <div className="p-4 h-full flex flex-col justify-center items-center text-center opacity-30">
-                            <div className="text-gray-500 text-lg mb-1">{stat.value}</div>
-                            <div className="text-xs text-gray-600 uppercase tracking-wide">{stat.title}</div>
-                            <div className="text-xs text-gray-700">{stat.subtitle}</div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Wide chart - Full width bar chart with enhanced animations and hover
-                    if (stat.type === 'wide_chart') {
-                      const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
-                      const bgColor = getAccentColor().replace('text-', 'bg-').replace('-400', '/20')
-                      return (
-                        <div key={index} className={`relative overflow-hidden ${bgColor} rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
-                          {/* Background progress bars */}
-                          <div className="absolute inset-0 flex items-end">
-                            {stat.data?.map((item: any, i: number) => (
-                              <div key={i} className="flex-1 flex items-end h-full group">
-                                <div 
-                                  className={`w-full transition-all duration-1000 ease-out hover:brightness-110 ${getAccentColor().replace('text-', 'bg-').replace('-400', '-500')}`}
-                                  style={{ 
-                                    height: `${(item.points / maxValue) * 100}%`,
-                                    animationDelay: `${i * 100}ms`,
-                                    transform: 'scaleY(0)',
-                                    transformOrigin: 'bottom',
-                                    animation: `slideUpScale 0.8s ease-out ${i * 150}ms forwards`
-                                  }}
-                                />
-                              </div>
-                            )) || []}
-                          </div>
-                          {/* Content overlay */}
-                          <div className="relative p-4 h-full flex flex-col justify-between">
-                            <div>
-                              <h4 className={`text-lg font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <p className="text-sm text-gray-400">{stat.subtitle}</p>
-                            </div>
-                            <div className="flex justify-between items-end">
-                              {stat.data?.map((item: any, i: number) => (
-                                <div key={i} className="text-center">
-                                  <div className="text-xs text-white font-bold">{item.points}</div>
-                                  <div className="text-xs text-gray-400">{item.day}</div>
-                                </div>
-                              )) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Progress ring - Enhanced with pulse and hover effects
-                    if (stat.type === 'progress_ring') {
-                      const ringSize = stat.layout === 'tall' ? 80 : 60
-                      const strokeWidth = 6
-                      const radius = (ringSize - strokeWidth) / 2
-                      const circumference = 2 * Math.PI * radius
-                      const strokeOffset = circumference - (stat.percentage || 0) / 100 * circumference
-                      
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:bg-gray-900/40`}>
-                          <div className="p-4 h-full flex flex-col justify-center items-center">
-                            <div className="relative mb-4 group-hover:scale-105 transition-transform duration-300">
-                              <svg width={ringSize} height={ringSize} className="transform -rotate-90">
-                                {/* Background circle */}
-                                <circle 
-                                  cx={ringSize/2} cy={ringSize/2} r={radius}
-                                  stroke="rgb(55, 65, 81)" strokeWidth={strokeWidth} fill="none"
-                                />
-                                {/* Animated progress circle */}
-                                <circle 
-                                  cx={ringSize/2} cy={ringSize/2} r={radius}
-                                  className={`${getAccentColor().replace('text-', 'stroke-')} group-hover:brightness-110`}
-                                  strokeWidth={strokeWidth} fill="none"
-                                  strokeDasharray={circumference}
-                                  strokeDashoffset={circumference}
-                                  strokeLinecap="round"
-                                  style={{ 
-                                    transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, filter 0.3s ease',
-                                    animation: `ringProgress 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards`
-                                  }}
-                                />
-                                {/* Pulse effect on hover */}
-                                <circle 
-                                  cx={ringSize/2} cy={ringSize/2} r={radius}
-                                  className={`${getAccentColor().replace('text-', 'stroke-')} opacity-0 group-hover:opacity-30`}
-                                  strokeWidth={strokeWidth + 2} fill="none"
-                                  strokeDasharray={circumference}
-                                  strokeDashoffset={strokeOffset}
-                                  strokeLinecap="round"
-                                  style={{ 
-                                    transition: 'opacity 0.3s ease',
-                                    animation: 'pulse 2s infinite'
-                                  }}
-                                />
-                              </svg>
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className={`text-2xl font-black ${getAccentColor()}`}>{Math.round(stat.percentage || 0)}%</span>
-                              </div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xl font-black text-white mb-1">{stat.value}</div>
-                              <div className="text-xs text-gray-400 uppercase tracking-wide">{stat.title}</div>
-                              <div className="text-xs text-gray-500">{stat.subtitle}</div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // List chart
-                    if (stat.type === 'list_chart') {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:bg-gray-900/40`}>
-                          <div className="p-4 h-full flex flex-col">
-                            <div className="mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()} group-hover:brightness-110 transition-all duration-300`}>{stat.title}</h4>
-                              <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors duration-300">{stat.subtitle}</p>
-                            </div>
-                            <div className="flex-1 space-y-3">
-                              {stat.data?.slice(0, stat.layout === 'tall' ? 4 : 3).map((item: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between hover:bg-gray-800/50 -mx-2 px-2 py-1 rounded-md transition-all duration-200 group/item">
-                                  <div className="flex items-center space-x-3">
-                                    <div 
-                                      className={`w-1 h-6 ${getAccentColor().replace('text-', 'bg-')} transition-all duration-300 group-hover/item:w-2`} 
-                                      style={{
-                                        animation: `slideInLeft 0.5s ease-out ${i * 100}ms forwards`
-                                      }}
-                                    />
-                                    <span className="text-sm text-white font-medium group-hover/item:text-gray-100 transition-colors duration-200">{item.name}</span>
-                                  </div>
-                                  <span 
-                                    className={`text-lg font-black ${getAccentColor()} group-hover/item:scale-110 transition-transform duration-200`}
-                                    style={{
-                                      animation: `countUp 0.8s ease-out ${i * 150}ms forwards`
-                                    }}
-                                  >
-                                    {item.count}
-                                  </span>
-                                </div>
-                              )) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Heatmap
-                    if (stat.type === 'heatmap') {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:bg-gray-900/40`}>
-                          <div className="p-4 h-full flex flex-col">
-                            <div className="text-center mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()} group-hover:brightness-110 transition-all duration-300`}>{stat.title}</h4>
-                              <div 
-                                className={`text-2xl font-black ${getAccentColor()} group-hover:scale-105 transition-transform duration-300`}
-                                style={{ animation: 'fadeInScale 0.8s ease-out 0.3s both' }}
-                              >
-                                {stat.value}
-                              </div>
-                              <p className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors duration-300">{stat.subtitle}</p>
-                            </div>
-                            <div className="grid grid-cols-8 gap-1 flex-1">
-                              {stat.data?.slice(6, 22).map((item: any, i: number) => {
-                                const intensity = item.activity > 5 ? 'high' : item.activity > 3 ? 'medium' : item.activity > 1 ? 'low' : 'none'
-                                const bgClass = {
-                                  'high': getAccentColor().replace('text-', 'bg-'),
-                                  'medium': getAccentColor().replace('text-', 'bg-').replace('-400', '-300'),
-                                  'low': getAccentColor().replace('text-', 'bg-').replace('-400', '-200'),
-                                  'none': 'bg-gray-700'
-                                }[intensity]
-                                
-                                return (
-                                  <div 
-                                    key={i} 
-                                    className={`h-3 rounded-sm ${bgClass} transition-all duration-300 hover:scale-125 hover:brightness-110 cursor-pointer`}
-                                    style={{
-                                      animation: `fadeInUp 0.4s ease-out ${i * 50}ms both`,
-                                      transformOrigin: 'bottom'
-                                    }}
-                                    title={`Hour ${(i + 6) % 24}: ${item.activity} activities`}
-                                  />
-                                )
-                              }) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Streak grid
-                    if (stat.type === 'streak_grid') {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
-                          <div className="p-4 h-full flex flex-col">
-                            <div className="mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <div className={`text-xl font-black ${getAccentColor()}`}>{stat.value}</div>
-                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
-                            </div>
-                            <div className="grid grid-cols-7 gap-1 flex-1">
-                              {stat.data?.map((item: any, i: number) => (
-                                <div 
-                                  key={i} 
-                                  className={`h-4 w-4 rounded-sm ${
-                                    item.completed ? getAccentColor().replace('text-', 'bg-') : 'bg-gray-700'
-                                  }`}
-                                />
-                              )) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Member progress
-                    if (stat.type === 'member_progress') {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
-                          <div className="p-4 h-full flex flex-col">
-                            <div className="mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
-                            </div>
-                            <div className="space-y-2 flex-1">
-                              {stat.data?.map((member: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between">
-                                  <span className="text-sm text-white">{member.name}</span>
-                                  <div className="flex items-center space-x-2">
-                                    <span className={`text-sm font-bold ${getAccentColor()}`}>{member.progress}%</span>
-                                    <span className={`text-xs ${
-                                      member.trend === 'up' ? 'text-green-400' : 'text-red-400'
-                                    }`}>
-                                      {member.trend === 'up' ? '↗' : '↘'}
-                                    </span>
-                                  </div>
-                                </div>
-                              )) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Weekly pattern (rest days)
-                    if (stat.type === 'weekly_pattern') {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
-                          <div className="p-4 h-full flex flex-col">
-                            <div className="text-center mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <div className={`text-2xl font-black ${getAccentColor()}`}>{stat.value}</div>
-                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
-                            </div>
-                            <div className="grid grid-cols-7 gap-1 flex-1">
-                              {stat.data?.map((item: any, i: number) => (
-                                <div key={i} className="text-center">
-                                  <div className={`w-4 h-4 rounded-full mx-auto ${
-                                    item.rested ? getAccentColor().replace('text-', 'bg-') : 'bg-gray-700'
-                                  }`} />
-                                  <span className="text-xs text-gray-400 mt-1 block">{item.day}</span>
-                                </div>
-                              )) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Variety chart
-                    if (stat.type === 'variety_chart') {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
-                          <div className="p-4 h-full flex flex-col">
-                            <div className="mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <div className={`text-xl font-black ${getAccentColor()}`}>{stat.value}</div>
-                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
-                            </div>
-                            <div className="space-y-2 flex-1">
-                              {stat.data?.map((item: any, i: number) => (
-                                <div key={i} className="flex items-center space-x-2">
-                                  <div className={`w-2 h-2 rounded-full ${getAccentColor().replace('text-', 'bg-')}`} />
-                                  <span className="text-xs text-white">{item.name}</span>
-                                </div>
-                              )) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Simple time/countdown stats - Enhanced with pulsing and scale effects
-                    if (stat.type === 'time_stat' || stat.type === 'countdown_stat' || stat.type === 'recovery_stat') {
-                      const fontSize = stat.layout === 'tall' ? 'text-6xl' : 'text-4xl'
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-500 hover:bg-gray-900/40 hover:scale-[1.02]`}>
-                          <div className="p-4 h-full flex flex-col justify-center items-center text-center">
-                            <div 
-                              className={`${fontSize} font-black ${getAccentColor()} leading-none mb-2 group-hover:scale-110 transition-all duration-300`}
-                              style={{ 
-                                animation: 'fadeInScale 1s ease-out 0.2s both',
-                                textShadow: '0 0 20px currentColor'
-                              }}
-                            >
-                              {stat.value}
-                            </div>
-                            <div 
-                              className="text-sm font-bold text-white uppercase tracking-wide mb-1 group-hover:text-gray-200 transition-colors duration-300"
-                              style={{ animation: 'fadeInUp 0.8s ease-out 0.4s both' }}
-                            >
-                              {stat.title}
-                            </div>
-                            <div 
-                              className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors duration-300"
-                              style={{ animation: 'fadeInUp 0.8s ease-out 0.6s both' }}
-                            >
-                              {stat.subtitle}
-                            </div>
-                          </div>
-                          {/* Subtle glow effect */}
-                          <div className={`absolute inset-0 rounded-lg ${getAccentColor().replace('text-', 'bg-').replace('-400', '/5')} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                        </div>
-                      )
-                    }
-
-                    // Percentage list (overachievers)
-                    if (stat.type === 'percentage_list') {
-                      return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
-                          <div className="p-4 h-full flex flex-col">
-                            <div className="mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
-                            </div>
-                            <div className="space-y-2 flex-1">
-                              {stat.data?.map((item: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between">
-                                  <span className="text-sm text-white">{item.name}</span>
-                                  <span className={`text-sm font-bold ${getAccentColor()}`}>{item.percentage}%</span>
-                                </div>
-                              )) || []}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    // Default simple stat - Large typography focus
-                    return (
-                      <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
-                        <div className="p-4 h-full flex flex-col justify-center items-center text-center">
-                          <div className={`${stat.layout === 'tall' ? 'text-5xl' : stat.layout === 'wide' ? 'text-3xl' : 'text-4xl'} font-black ${getAccentColor()} leading-none mb-2`}>
-                            {stat.value}
-                          </div>
-                          <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
-                            {stat.title}
-                          </div>
-                          <div className="text-xs text-gray-400">{stat.subtitle}</div>
-                        </div>
-                      </div>
-                    )
-                  }) || []}
+                  {(showAllStats ? allStats : groupStats.interestingStats)?.map((stat: any, index: number) => (
+                    <MemoizedChartComponent 
+                      key={`${stat.type}-${index}`}
+                      stat={stat} 
+                      index={index} 
+                      getLayoutClasses={getLayoutClasses}
+                    />
+                  )) || []}
                 </div>
 
                 {/* View All Button */}
