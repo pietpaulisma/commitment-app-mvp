@@ -1458,39 +1458,54 @@ export default function RectangularDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                {groupMembers.map((member, index) => {
-                  const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
-                  
-                  // Assign colors to users (they can pick their own later)
-                  const userColors = [
-                    'bg-orange-400',  // Orange
-                    'bg-green-400',   // Green  
-                    'bg-purple-400',  // Purple
-                    'bg-blue-400',    // Blue
-                    'bg-yellow-400',  // Yellow
-                    'bg-pink-400'     // Pink
-                  ]
-                  const userColor = userColors[index % userColors.length]
-                  
-                  return (
-                    <div key={member.id} className="relative h-12 bg-gray-800 overflow-hidden">
-                      {/* Progress bar */}
-                      <div 
-                        className={`h-full ${userColor} transition-all duration-500 ease-out`}
-                        style={{ width: `${Math.min(100, progressPercentage)}%` }}
-                      />
+              <div className="space-y-3">
+                {/* Group members in rows of 2 */}
+                {Array.from({ length: Math.ceil(groupMembers.length / 2) }, (_, rowIndex) => (
+                  <div key={rowIndex} className="grid grid-cols-2 gap-0">
+                    {groupMembers.slice(rowIndex * 2, rowIndex * 2 + 2).map((member, colIndex) => {
+                      const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
                       
-                      {/* Content overlay */}
-                      <div className="absolute inset-0 flex items-center justify-between px-4">
-                        <span className="text-black font-bold text-sm">
-                          {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
-                        </span>
-                        <div className="text-black font-black text-lg">{progressPercentage}%</div>
-                      </div>
-                    </div>
-                  )
-                })}
+                      // Default to purple, user can define their own color later
+                      const userColor = member.preferredColor || 'bg-purple-400'
+                      
+                      // Use chat background color (gray-900/30) when no progress
+                      const backgroundColor = progressPercentage === 0 ? 'bg-gray-900/30' : 'bg-gray-800'
+                      
+                      // Left member: center to left edge, Right member: center to right edge
+                      const isLeftColumn = colIndex === 0
+                      const borderRadius = isLeftColumn ? 'rounded-l-lg' : 'rounded-r-lg'
+                      
+                      return (
+                        <div key={member.id} className={`relative h-12 ${backgroundColor} overflow-hidden ${borderRadius}`}>
+                          {/* Progress bar */}
+                          <div 
+                            className={`h-full ${userColor} transition-all duration-500 ease-out ${
+                              isLeftColumn ? 'origin-right' : 'origin-left'
+                            }`}
+                            style={{ 
+                              width: `${Math.min(100, progressPercentage)}%`,
+                              marginLeft: isLeftColumn && progressPercentage > 0 ? 'auto' : '0'
+                            }}
+                          />
+                          
+                          {/* Content overlay */}
+                          <div className={`absolute inset-0 flex items-center ${
+                            isLeftColumn ? 'justify-start pl-4' : 'justify-end pr-4'
+                          }`}>
+                            <div className={`flex items-center gap-2 ${
+                              isLeftColumn ? 'flex-row-reverse' : 'flex-row'
+                            }`}>
+                              <div className="text-black font-black text-lg">{progressPercentage}%</div>
+                              <span className="text-black font-bold text-sm">
+                                {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
