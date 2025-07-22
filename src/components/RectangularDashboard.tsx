@@ -58,22 +58,22 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
 
   // Typography stat - Big number with accent background
   if (stat.type === 'typography_stat') {
-    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '/20')
+    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '')
     
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-4 h-full flex flex-col justify-center text-center">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
-          <div className={`text-3xl font-black ${accentColor} leading-tight mb-1`}>
+        <div className="p-3 h-full flex flex-col justify-center text-center">
+          <div className="text-xs text-black/70 uppercase tracking-wide font-bold mb-1">{stat.title}</div>
+          <div className="text-4xl font-black text-black leading-none mb-1">
             {stat.value}
           </div>
           {stat.name && (
-            <div className="text-sm text-gray-300 font-medium">
+            <div className="text-sm text-black/80 font-bold">
               {stat.name}
             </div>
           )}
           {stat.subtitle && (
-            <div className="text-xs text-gray-500 mt-1">{stat.subtitle}</div>
+            <div className="text-xs text-black/60 font-medium">{stat.subtitle}</div>
           )}
         </div>
       </div>
@@ -87,8 +87,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-3 h-full flex flex-col">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">{stat.title}</div>
+        <div className="p-2 h-full flex flex-col">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
           
           {/* 24-hour grid (6x4) */}
           <div className="flex-1 grid grid-cols-6 grid-rows-4 gap-1">
@@ -127,10 +127,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-4 h-full flex flex-col">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">{stat.title}</div>
+        <div className="p-3 h-full flex flex-col">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
           
-          <div className="flex-1 flex flex-col justify-center gap-3">
+          <div className="flex-1 flex flex-col justify-center gap-2">
             {data.map((member: any, i: number) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="w-12 text-xs text-gray-300 font-medium truncate">
@@ -163,18 +163,18 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
 
   // Time stat with clock icon
   if (stat.type === 'time_stat') {
-    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '/10')
+    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '/20')
     
     return (
-      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden border border-gray-700/50`}>
-        <div className="p-4 h-full flex flex-col justify-center text-center">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
-          <div className="text-2xl mb-2">⏰</div>
-          <div className={`text-xl font-bold ${accentColor} mb-1`}>
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden border border-gray-700/30`}>
+        <div className="p-3 h-full flex flex-col justify-center text-center">
+          <div className="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">{stat.title}</div>
+          <div className="text-3xl mb-2">⏰</div>
+          <div className={`text-2xl font-black ${accentColor} mb-1 leading-none`}>
             {stat.time}
           </div>
           {stat.subtitle && (
-            <div className="text-xs text-gray-500">{stat.subtitle}</div>
+            <div className="text-xs text-gray-400 font-medium">{stat.subtitle}</div>
           )}
         </div>
       </div>
@@ -367,13 +367,21 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     )
   }
 
-  // Default simple stat display
+  // Default simple stat display - some get accent backgrounds
+  const shouldHaveAccentBg = (index % 4 === 1 || index % 4 === 3) // Every 2nd and 4th item
+  const bgColor = shouldHaveAccentBg ? 
+    accentColor.replace('text-', 'bg-').replace('-400', '') : 
+    'bg-gray-900/30'
+  const textColor = shouldHaveAccentBg ? 'text-black' : 'text-white'
+  const subtitleColor = shouldHaveAccentBg ? 'text-black/70' : 'text-gray-400'
+  const valueColor = shouldHaveAccentBg ? 'text-black' : accentColor
+  
   return (
-    <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-500 hover:bg-gray-900/40`}>
-      <div className="p-4 h-full flex flex-col justify-center items-center text-center">
-        <div className={`text-2xl font-black ${accentColor} mb-2`}>{stat.value}</div>
-        <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">{stat.title}</div>
-        <div className="text-xs text-gray-500">{stat.subtitle}</div>
+    <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-500 ${shouldHaveAccentBg ? 'hover:opacity-90' : 'hover:bg-gray-900/40'}`}>
+      <div className="p-3 h-full flex flex-col justify-center items-center text-center">
+        <div className={`text-3xl font-black ${valueColor} mb-2 leading-none`}>{stat.value}</div>
+        <div className={`text-xs font-bold ${textColor} uppercase tracking-wide mb-1`}>{stat.title}</div>
+        <div className={`text-xs ${subtitleColor} font-medium`}>{stat.subtitle}</div>
       </div>
     </div>
   )
@@ -1431,8 +1439,8 @@ export default function RectangularDashboard() {
       <div className="space-y-0">
         {/* Group Status */}
         <div id="group-status" className="bg-black">
-          <div className="px-4 py-6">
-            <h3 className="text-2xl font-bold text-white mb-6">Status</h3>
+          <div className="px-4 py-3">
+            <h3 className="text-xl font-bold text-white mb-3">Status</h3>
             
             {groupMembers.length === 0 ? (
               <div className="grid grid-cols-2 gap-3">
@@ -1519,13 +1527,13 @@ export default function RectangularDashboard() {
 
         {/* Group Stats */}
         <div id="group-stats" className="bg-black">
-          <div className="px-4 py-6">
-            <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
+          <div className="px-4 py-3">
+            <h3 className="text-xl font-bold text-white mb-3">Stats</h3>
             
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
               <>
                 {/* Rotating Interesting Stats with Predefined 2×4 Grid Layouts */}
-                <div className={`grid gap-3 grid-cols-2 grid-rows-4 ${showAllStats ? 'auto-rows-max' : ''}`}>
+                <div className={`grid gap-2 grid-cols-2 grid-rows-4 ${showAllStats ? 'auto-rows-max' : ''}`}>
                   {(showAllStats ? allStats : groupStats.interestingStats)?.map((stat: any, index: number) => (
                     <MemoizedChartComponent 
                       key={`${stat.type}-${index}`}
@@ -1557,7 +1565,7 @@ export default function RectangularDashboard() {
                 </div>
               </>
             ) : (
-              <div className="grid grid-cols-2 grid-rows-4 gap-3">
+              <div className="grid grid-cols-2 grid-rows-4 gap-2">
                 {/* Loading state using a sample layout (Layout 1) */}
                 {[
                   { type: 'A', position: 0 }, { type: 'A', position: 1 },
