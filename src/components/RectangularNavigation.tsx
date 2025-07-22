@@ -147,12 +147,9 @@ export default function RectangularNavigation() {
                 </span>
               </div>
               
-              <div className="flex flex-col items-end">
-                <span className="text-xl font-black tracking-tight">
+              <div className="flex flex-col items-end justify-center h-full">
+                <span className="text-3xl font-black tracking-tight leading-none">
                   {Math.round(progressPercentage)}%
-                </span>
-                <span className="text-xs opacity-75">
-                  {isComplete ? '🎉' : '💪'}
                 </span>
               </div>
             </div>
@@ -190,11 +187,11 @@ export default function RectangularNavigation() {
               href={isOnProfilePage ? "/dashboard" : "/profile"} 
               className="text-gray-300 hover:text-white transition-colors duration-200"
             >
-              <div className={`w-6 h-6 ${accentBg} flex items-center justify-center`}>
+              <div className="w-6 h-6 flex items-center justify-center">
                 {isOnProfilePage ? (
                   <span className="text-white text-lg font-bold">×</span>
                 ) : (
-                  <UserIcon className="w-4 h-4 text-white" />
+                  <UserIcon className="w-6 h-6 text-gray-300" />
                 )}
               </div>
             </Link>

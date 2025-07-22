@@ -90,8 +90,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         <div className="p-2 h-full flex flex-col">
           <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
           
-          {/* 24-hour grid (6x4) */}
-          <div className="flex-1 grid grid-cols-6 grid-rows-4 gap-1">
+          {/* 24-hour grid (12x2 for rectangle layout) */}
+          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
               const isHigh = intensity > 70
@@ -711,6 +711,22 @@ export default function RectangularDashboard() {
 
       // 2. Money Pot
       const moneyInPot = totalGroupPoints * 0.10
+      
+      // Find biggest contributor
+      const userPointsMap = new Map()
+      logs?.forEach(log => {
+        userPointsMap.set(log.user_id, (userPointsMap.get(log.user_id) || 0) + log.points)
+      })
+      
+      let biggestContributor = 'No data'
+      let maxPoints = 0
+      userPointsMap.forEach((points, userId) => {
+        if (points > maxPoints) {
+          maxPoints = points
+          const user = members.find(m => m.id === userId)
+          biggestContributor = user?.email.split('@')[0] || 'Unknown'
+        }
+      })
 
       // 3. Birthday (fake data for now)
       const nextBirthdayDays = Math.floor(Math.random() * 365) + 1
@@ -747,16 +763,17 @@ export default function RectangularDashboard() {
         },
         moneyPot: {
           title: 'Money Pot',
-          subtitle: 'total raised',
+          subtitle: `top: ${biggestContributor}`,
           value: `$${Math.round(moneyInPot * 100) / 100}`,
           type: 'typography_stat'
         },
         birthday: {
           title: 'Next Birthday',
-          subtitle: `${nextBirthdayDays} days to go`,
-          value: `${monthName} ${dayNum}`,
+          subtitle: members[0]?.email?.split('@')[0] || 'Member', // Person whose birthday it is
+          value: nextBirthdayDays,
           daysUntil: nextBirthdayDays,
           name: `${monthName} ${dayNum}`,
+          doublePoints: true,
           type: 'countdown_bar'
         },
         workoutTimes: {
@@ -785,10 +802,10 @@ export default function RectangularDashboard() {
       if (stats) {
         setGroupStats({
           interestingStats: [
-            { ...stats.groupPoints, layout: 'C1' },
-            { ...stats.moneyPot, layout: 'A' }, 
-            { ...stats.birthday, layout: 'C1' },
-            { ...stats.workoutTimes, layout: 'A' }
+            { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
+            { ...stats.moneyPot, layout: 'square' },        // Bottom left - square
+            { ...stats.birthday, layout: 'square' },        // Bottom middle - square  
+            { ...stats.workoutTimes, layout: 'col-span-2' } // Bottom - full width rectangle
           ]
         })
       }
@@ -1064,7 +1081,11 @@ export default function RectangularDashboard() {
               </div>
               <div className="text-right">
                 <div className="text-3xl font-black text-white">
-                  {timeLeft}
+                  {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
+                    <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
+                      {char}
+                    </span>
+                  ))}
                 </div>
                 <div className="text-sm text-gray-400 font-medium -mt-1">
                   remaining
@@ -1131,8 +1152,10 @@ export default function RectangularDashboard() {
                             <div className={`flex items-center gap-2 ${
                               isLeftColumn ? 'flex-row-reverse' : 'flex-row'
                             }`}>
-                              <div className="text-black font-black text-lg">{progressPercentage}%</div>
-                              <span className="text-black font-bold text-sm">
+                              <div className={`font-black text-lg ${progressPercentage === 0 ? 'text-gray-300' : 'text-black'}`}>
+                                {progressPercentage}%
+                              </div>
+                              <span className={`font-bold text-sm ${progressPercentage === 0 ? 'text-gray-300' : 'text-black'}`}>
                                 {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                               </span>
                             </div>
@@ -1185,25 +1208,67 @@ export default function RectangularDashboard() {
             <h3 className="text-xl font-bold text-white mb-3">Stats</h3>
             
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
-              <div className="grid gap-2 grid-cols-2 grid-rows-2">
-                {groupStats.interestingStats.map((stat: any, index: number) => (
+              <div className="space-y-2">
+                {/* Top row - Group Points (full width) */}
+                <div className="w-full">
                   <MemoizedChartComponent 
-                    key={`${stat.type}-${index}`}
-                    stat={stat} 
-                    index={index} 
+                    key={`${groupStats.interestingStats[0].type}-0`}
+                    stat={groupStats.interestingStats[0]} 
+                    index={0} 
                     getLayoutClasses={getLayoutClasses}
                   />
-                ))}
+                </div>
+                
+                {/* Middle row - Money Pot and Birthday (2 squares) */}
+                <div className="grid grid-cols-2 gap-2">
+                  <MemoizedChartComponent 
+                    key={`${groupStats.interestingStats[1].type}-1`}
+                    stat={groupStats.interestingStats[1]} 
+                    index={1} 
+                    getLayoutClasses={getLayoutClasses}
+                  />
+                  <MemoizedChartComponent 
+                    key={`${groupStats.interestingStats[2].type}-2`}
+                    stat={groupStats.interestingStats[2]} 
+                    index={2} 
+                    getLayoutClasses={getLayoutClasses}
+                  />
+                </div>
+                
+                {/* Bottom row - Workout Times (full width rectangle) */}
+                <div className="w-full">
+                  <MemoizedChartComponent 
+                    key={`${groupStats.interestingStats[3].type}-3`}
+                    stat={groupStats.interestingStats[3]} 
+                    index={3} 
+                    getLayoutClasses={getLayoutClasses}
+                  />
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 grid-rows-2 gap-2">
-                {[0, 1, 2, 3].map((index) => (
-                  <div key={index} className="p-4 bg-gray-900/30 rounded-lg h-32">
+              <div className="space-y-2">
+                <div className="p-4 bg-gray-900/30 rounded-lg h-32">
+                  <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                  <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                  <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-4 bg-gray-900/30 rounded-lg h-32">
                     <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
                     <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
                     <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
                   </div>
-                ))}
+                  <div className="p-4 bg-gray-900/30 rounded-lg h-32">
+                    <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                    <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                    <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                  </div>
+                </div>
+                <div className="p-4 bg-gray-900/30 rounded-lg h-20">
+                  <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                  <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                  <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                </div>
               </div>
             )}
           </div>
