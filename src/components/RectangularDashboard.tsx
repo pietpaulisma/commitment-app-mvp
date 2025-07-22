@@ -56,6 +56,131 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     )
   }
 
+  // Typography stat - Big number with accent background
+  if (stat.type === 'typography_stat') {
+    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '/20')
+    
+    return (
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col justify-center text-center">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
+          <div className={`text-3xl font-black ${accentColor} leading-tight mb-1`}>
+            {stat.value}
+          </div>
+          {stat.name && (
+            <div className="text-sm text-gray-300 font-medium">
+              {stat.name}
+            </div>
+          )}
+          {stat.subtitle && (
+            <div className="text-xs text-gray-500 mt-1">{stat.subtitle}</div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Heatmap grid - 24-hour activity squares
+  if (stat.type === 'heatmap_grid') {
+    const data = stat.data || []
+    const maxActivity = Math.max(...data.map((d: any) => d.activity), 1)
+    
+    return (
+      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-3 h-full flex flex-col">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">{stat.title}</div>
+          
+          {/* 24-hour grid (6x4) */}
+          <div className="flex-1 grid grid-cols-6 grid-rows-4 gap-1">
+            {data.map((hour: any, i: number) => {
+              const intensity = (hour.activity / maxActivity) * 100
+              const isHigh = intensity > 70
+              
+              return (
+                <div
+                  key={i}
+                  className={`rounded transition-all duration-500 ${
+                    isHigh ? 'bg-orange-400' : 
+                    intensity > 30 ? 'bg-gray-500' : 'bg-gray-700'
+                  }`}
+                  style={{
+                    animationDelay: `${i * 30}ms`,
+                    animation: 'fadeInScale 0.6s ease-out forwards'
+                  }}
+                  title={`${hour.hour}:00 - ${hour.activity} logs`}
+                />
+              )
+            })}
+          </div>
+          
+          <div className="text-xs text-gray-500 mt-2 text-center">
+            Peak: {data.find((h: any) => h.activity === maxActivity)?.hour || 0}:00
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Stacked bars for overachievers
+  if (stat.type === 'stacked_bars') {
+    const data = stat.data || []
+    
+    return (
+      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">{stat.title}</div>
+          
+          <div className="flex-1 flex flex-col justify-center gap-3">
+            {data.map((member: any, i: number) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-12 text-xs text-gray-300 font-medium truncate">
+                  {member.name}
+                </div>
+                <div className="flex-1 bg-gray-700 rounded h-4 relative overflow-hidden">
+                  <div
+                    className={`h-full rounded transition-all duration-700 ${
+                      i === 0 ? 'bg-orange-400' : 'bg-gray-500'
+                    }`}
+                    style={{
+                      width: `${Math.min(100, member.percentage)}%`,
+                      animationDelay: `${i * 200}ms`,
+                      animation: 'slideInLeft 0.8s ease-out forwards'
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-end pr-2">
+                    <span className="text-xs font-bold text-white">
+                      {member.percentage}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Time stat with clock icon
+  if (stat.type === 'time_stat') {
+    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '/10')
+    
+    return (
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden border border-gray-700/50`}>
+        <div className="p-4 h-full flex flex-col justify-center text-center">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
+          <div className="text-2xl mb-2">⏰</div>
+          <div className={`text-xl font-bold ${accentColor} mb-1`}>
+            {stat.time}
+          </div>
+          {stat.subtitle && (
+            <div className="text-xs text-gray-500">{stat.subtitle}</div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   // Horizontal bar chart - Vertical rectangle with horizontal bars
   if (stat.type === 'horizontal_bar_chart') {
     const data = stat.data || []
@@ -639,11 +764,11 @@ export default function RectangularDashboard() {
             exerciseCounts.set(exercise, (exerciseCounts.get(exercise) || 0) + 1)
           })
 
-          // Convert to array and get top 6
+          // Convert to array and get top 5
           const workoutData = Array.from(exerciseCounts.entries())
             .map(([name, count]) => ({ name, count }))
             .sort((a, b) => b.count - a.count)
-            .slice(0, 6)
+            .slice(0, 5)
 
           // Fallback if no data
           if (workoutData.length === 0) {
@@ -664,20 +789,25 @@ export default function RectangularDashboard() {
         }
         
         case 'popular_workout_time': {
-          // Generate hourly activity data
-          const hourlyData = Array.from({length: 24}, (_, hour) => ({
-            hour,
-            activity: hour >= 6 && hour <= 20 ? Math.floor(Math.random() * 8) + 1 : Math.floor(Math.random() * 2)
-          }))
-          const peakHour = hourlyData.reduce((peak, current) => 
-            current.activity > peak.activity ? current : peak
-          )
+          // Generate realistic hourly activity data (peak at 7am and 6pm)
+          const hourlyData = Array.from({length: 24}, (_, hour) => {
+            let baseActivity = 1
+            if (hour >= 6 && hour <= 9) baseActivity = 8 // Morning peak
+            else if (hour >= 17 && hour <= 20) baseActivity = 6 // Evening peak
+            else if (hour >= 10 && hour <= 16) baseActivity = 3 // Daytime moderate
+            else if (hour >= 21 || hour <= 5) baseActivity = 1 // Night/early morning low
+            
+            return {
+              hour,
+              activity: Math.floor(Math.random() * 3) + baseActivity
+            }
+          })
           
           return {
-            type: 'heatmap',
-            title: 'Peak Activity',
-            value: `${peakHour.hour}:00`,
-            subtitle: 'most active hour',
+            type: 'heatmap_grid',
+            title: 'Workout Times',
+            subtitle: '24-hour activity',
+            layout: 'col-span-2',
             data: hourlyData
           }
         }
@@ -769,31 +899,60 @@ export default function RectangularDashboard() {
         }
         
         case 'top_workouts_points': {
-          const workoutData = [
-            { name: 'Running', points: Math.floor(Math.random() * 500) + 200 },
-            { name: 'Push-ups', points: Math.floor(Math.random() * 400) + 150 },
-            { name: 'Squats', points: Math.floor(Math.random() * 300) + 100 }
-          ].sort((a, b) => b.points - a.points)
+          // Get actual points data by exercise type
+          const { data: pointsLogs } = await supabase
+            .from('logs')
+            .select('exercise_name, points')
+            .in('user_id', memberIds)
+            .not('exercise_name', 'is', null)
+            .not('points', 'is', null)
+
+          // Sum points by exercise type
+          const exercisePoints = new Map()
+          pointsLogs?.forEach(log => {
+            const exercise = log.exercise_name.trim()
+            exercisePoints.set(exercise, (exercisePoints.get(exercise) || 0) + log.points)
+          })
+
+          // Convert to array and get top performers
+          const workoutData = Array.from(exercisePoints.entries())
+            .map(([name, points]) => ({ name, count: points }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5)
+
+          // Fallback if no data
+          if (workoutData.length === 0) {
+            workoutData.push(
+              { name: 'Running', count: 350 },
+              { name: 'Push-ups', count: 280 },
+              { name: 'Squats', count: 220 }
+            )
+          }
           
           return {
-            type: 'list_chart',
+            type: 'horizontal_bar_chart',
             title: 'Top by Points',
-            subtitle: 'this week',
-            data: workoutData.map(w => ({ name: w.name, count: w.points }))
+            subtitle: 'total points earned',
+            layout: 'vertical',
+            data: workoutData
           }
         }
         
         case 'top_money_contributors': {
+          // Calculate penalty contributions (mock data - would come from penalty system)
           const contributorData = members.slice(0, 3).map(member => ({
             name: member.email.split('@')[0],
             amount: Math.floor(Math.random() * 50) + 10
           })).sort((a, b) => b.amount - a.amount)
           
+          const topContributor = contributorData[0]
+          
           return {
-            type: 'list_chart',
-            title: 'Top Contributors',
-            subtitle: 'penalty pot',
-            data: contributorData.map(c => ({ name: c.name, count: `$${c.amount}` }))
+            type: 'typography_stat',
+            title: 'Top Contributor',
+            value: `$${topContributor?.amount || 0}`,
+            name: topContributor?.name || 'No one',
+            subtitle: 'penalty pot'
           }
         }
         
