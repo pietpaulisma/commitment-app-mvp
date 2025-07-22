@@ -64,10 +64,10 @@ export default function RectangularDashboard() {
     }
   }, [user, profile])
 
-  // Set random stats selection (changes on page refresh)
+  // Set stable stats selection (changes hourly, not on refresh)
   useEffect(() => {
     setSelectedStats(getRandomStats())
-  }, [user, profile])
+  }, []) // Only run once on mount
 
   // Reload stats when selection changes
   useEffect(() => {
@@ -215,11 +215,19 @@ export default function RectangularDashboard() {
   const getRandomStats = () => {
     const allStats = getAllAvailableStats()
     
-    // Simple random shuffle on each refresh
-    const shuffled = [...allStats].sort(() => Math.random() - 0.5)
+    // Use current hour as seed for stable shuffling - changes hourly instead of every refresh
+    const currentHour = new Date().getHours()
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
     
-    // Ensure we always fill exactly 6 slots
-    return shuffled.slice(0, 6)
+    // Create a stable but rotating selection based on hour and day
+    const startIndex = (currentHour + dayOfYear) % allStats.length
+    const selected = []
+    
+    for (let i = 0; i < 6; i++) {
+      selected.push(allStats[(startIndex + i) % allStats.length])
+    }
+    
+    return selected
   }
 
   const getTimeBasedGradient = () => {
@@ -608,8 +616,9 @@ export default function RectangularDashboard() {
   }
 
   const getStatLayout = (stats: any[], isShowingAll = false) => {
-    // Choose a random layout for variety
-    const layoutIndex = Math.floor(Math.random() * PREDEFINED_LAYOUTS.length)
+    // Choose layout based on current hour - changes every hour instead of every refresh
+    const currentHour = new Date().getHours()
+    const layoutIndex = currentHour % PREDEFINED_LAYOUTS.length
     const selectedLayout = PREDEFINED_LAYOUTS[layoutIndex]
     
     // Filter out hidden positions (B2, C2)
