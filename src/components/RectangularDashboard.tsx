@@ -318,74 +318,113 @@ export default function RectangularDashboard() {
       const today = new Date().toISOString().split('T')[0]
 
       switch (statType) {
-        case 'total_donated_money':
+        case 'total_points_trend':
+          // Generate 7 days of mock data
+          const weekData = Array.from({length: 7}, (_, i) => ({
+            day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i],
+            points: Math.floor(Math.random() * 500) + 200
+          }))
           return {
-            emoji: '💰',
-            title: 'Total Pot',
-            value: `$${Math.floor(Math.random() * 500)}`,
-            subtitle: 'from penalties'
+            type: 'wide_chart',
+            title: 'Points This Week',
+            subtitle: `${weekData.reduce((sum, d) => sum + d.points, 0)} total points`,
+            chartType: 'bar',
+            data: weekData,
+            trendUp: true
           }
+        
+        case 'top_workouts_frequency': {
+          const workouts = ['Push-ups', 'Running', 'Squats', 'Planks', 'Cycling']
+          const workoutData = workouts.slice(0, 3).map(workout => ({
+            name: workout,
+            count: Math.floor(Math.random() * 25) + 5,
+            percentage: Math.floor(Math.random() * 40) + 20
+          })).sort((a, b) => b.count - a.count)
+          
+          return {
+            type: 'list_chart',
+            title: 'Top Workouts',
+            subtitle: 'this week',
+            data: workoutData
+          }
+        }
+        
+        case 'popular_workout_time': {
+          // Generate hourly activity data
+          const hourlyData = Array.from({length: 24}, (_, hour) => ({
+            hour,
+            activity: hour >= 6 && hour <= 20 ? Math.floor(Math.random() * 8) + 1 : Math.floor(Math.random() * 2)
+          }))
+          const peakHour = hourlyData.reduce((peak, current) => 
+            current.activity > peak.activity ? current : peak
+          )
+          
+          return {
+            type: 'heatmap',
+            title: 'Peak Activity',
+            value: `${peakHour.hour}:00`,
+            subtitle: 'most active hour',
+            data: hourlyData
+          }
+        }
+        
+        case 'total_donated_money': {
+          const currentAmount = Math.floor(Math.random() * 500) + 100
+          const target = 1000
+          const percentage = (currentAmount / target) * 100
+          
+          return {
+            type: 'progress_ring',
+            title: 'Penalty Pot',
+            value: `$${currentAmount}`,
+            subtitle: `${Math.round(percentage)}% of $${target} goal`,
+            percentage: percentage,
+            color: 'red'
+          }
+        }
         
         case 'longest_streak': {
           const randomMember = members[Math.floor(Math.random() * members.length)]
           const streak = Math.floor(Math.random() * 15) + 1
+          // Generate streak visualization data
+          const streakData = Array.from({length: 30}, (_, i) => ({
+            day: i + 1,
+            completed: i < streak || (i >= streak + 3 && Math.random() > 0.3)
+          }))
+          
           return {
-            emoji: '🏅',
+            type: 'streak_grid',
             title: 'Longest Streak',
             value: `${streak} days`,
-            subtitle: randomMember.email.split('@')[0]
+            subtitle: randomMember.email.split('@')[0],
+            data: streakData.slice(-14) // Last 14 days
           }
         }
         
-        case 'earliest_checkin': {
+        case 'group_progress': {
+          const members_progress = members.slice(0, 4).map(member => ({
+            name: member.email.split('@')[0],
+            progress: Math.floor(Math.random() * 100),
+            trend: Math.random() > 0.5 ? 'up' : 'down'
+          })).sort((a, b) => b.progress - a.progress)
+          
+          return {
+            type: 'member_progress',
+            title: 'Group Progress',
+            subtitle: 'daily targets',
+            data: members_progress
+          }
+        }
+        
+        default: {
           const randomMember = members[Math.floor(Math.random() * members.length)]
-          const hour = Math.floor(Math.random() * 4) + 5 // 5-8 AM
           return {
-            emoji: '🌅',
-            title: 'Early Bird',
-            value: `${hour}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')} AM`,
-            subtitle: randomMember.email.split('@')[0]
-          }
-        }
-        
-        case 'most_varied_member': {
-          const randomMember = members[Math.floor(Math.random() * members.length)]
-          const variety = Math.floor(Math.random() * 6) + 3
-          return {
-            emoji: '🎨',
-            title: 'Most Variety',
-            value: `${variety} types`,
-            subtitle: randomMember.email.split('@')[0]
-          }
-        }
-        
-        case 'top_overachievers': {
-          const randomMember = members[Math.floor(Math.random() * members.length)]
-          const percentage = Math.floor(Math.random() * 50) + 120
-          return {
-            emoji: '🚀',
-            title: 'Top Overachiever',
-            value: `${percentage}%`,
-            subtitle: randomMember.email.split('@')[0]
-          }
-        }
-        
-        case 'popular_workout_time':
-          const hour = Math.floor(Math.random() * 12) + 6 // 6 AM - 6 PM
-          return {
-            emoji: '🕒',
-            title: 'Peak Hour',
-            value: `${hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`,
-            subtitle: 'most popular'
-          }
-        
-        default:
-          return {
-            emoji: '📊',
+            type: 'simple',
             title: 'Group Stat',
             value: Math.floor(Math.random() * 100).toString(),
-            subtitle: 'placeholder'
+            subtitle: randomMember?.email?.split('@')[0] || 'member'
           }
+        }
       }
     } catch (error) {
       console.error('Error calculating stat:', error)
@@ -694,25 +733,185 @@ export default function RectangularDashboard() {
             
             {groupStats ? (
               <>
-                {/* Rotating Interesting Stats */}
+                {/* Rotating Interesting Stats with Dynamic Layout */}
                 <div className="grid grid-cols-2 gap-3">
-                  {groupStats.interestingStats?.map((stat: any, index: number) => (
-                    <div key={index} className={`p-4 rounded-lg ${
-                      index === 0 ? 'bg-gradient-to-r from-emerald-900/50 to-emerald-800/30' :
-                      index === 1 ? 'bg-gradient-to-r from-blue-900/50 to-blue-800/30' :
-                      index === 2 ? 'bg-gradient-to-r from-purple-900/50 to-purple-800/30' :
-                      index === 3 ? 'bg-gradient-to-r from-orange-900/50 to-orange-800/30' :
-                      index === 4 ? 'bg-gradient-to-r from-pink-900/50 to-pink-800/30' :
-                      'bg-gradient-to-r from-yellow-900/50 to-yellow-800/30'
-                    }`}>
-                      <div className="text-center">
-                        <div className="text-2xl mb-1">{stat.emoji}</div>
-                        <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
-                        <div className="text-xs font-medium text-gray-300 uppercase tracking-wide">{stat.title}</div>
-                        <div className="text-xs text-gray-400 mt-1">{stat.subtitle}</div>
+                  {groupStats.interestingStats?.map((stat: any, index: number) => {
+                    const getCardStyle = () => {
+                      const colors = [
+                        'bg-emerald-800',
+                        'bg-blue-800', 
+                        'bg-purple-800',
+                        'bg-orange-800',
+                        'bg-pink-800',
+                        'bg-yellow-800'
+                      ]
+                      return colors[index % colors.length]
+                    }
+
+                    // Wide chart (spans 2 columns)
+                    if (stat.type === 'wide_chart') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()} col-span-2`}>
+                          <div className="mb-3">
+                            <h4 className="text-lg font-bold text-white">{stat.title}</h4>
+                            <p className="text-sm text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="flex items-end space-x-1 h-24">
+                            {stat.data?.map((item: any, i: number) => (
+                              <div key={i} className="flex-1 flex flex-col items-center">
+                                <div 
+                                  className="w-full bg-white/30 rounded-sm transition-all duration-300"
+                                  style={{ height: `${(item.points / Math.max(...stat.data.map((d: any) => d.points))) * 80}px` }}
+                                />
+                                <span className="text-xs text-gray-300 mt-1">{item.day}</span>
+                              </div>
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Progress ring
+                    if (stat.type === 'progress_ring') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                          </div>
+                          <div className="flex items-center justify-center mb-2">
+                            <div className="relative w-16 h-16">
+                              <svg className="w-16 h-16 transform -rotate-90">
+                                <circle cx="32" cy="32" r="28" stroke="white" strokeOpacity="0.3" strokeWidth="4" fill="none" />
+                                <circle 
+                                  cx="32" cy="32" r="28" 
+                                  stroke="white" strokeWidth="4" fill="none"
+                                  strokeDasharray={`${2 * Math.PI * 28}`}
+                                  strokeDashoffset={`${2 * Math.PI * 28 * (1 - (stat.percentage || 0) / 100)}`}
+                                  className="transition-all duration-500"
+                                />
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-lg font-bold text-white">{Math.round(stat.percentage || 0)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xl font-black text-white">{stat.value}</div>
+                            <div className="text-xs text-gray-300">{stat.subtitle}</div>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // List chart
+                    if (stat.type === 'list_chart') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="mb-3">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="space-y-2">
+                            {stat.data?.map((item: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 bg-white rounded-full" />
+                                  <span className="text-sm text-white font-medium">{item.name}</span>
+                                </div>
+                                <span className="text-sm font-bold text-white">{item.count}</span>
+                              </div>
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Heatmap
+                    if (stat.type === 'heatmap') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="text-center mb-3">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                            <div className="text-2xl font-black text-white">{stat.value}</div>
+                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="grid grid-cols-8 gap-1">
+                            {stat.data?.slice(6, 22).map((item: any, i: number) => (
+                              <div 
+                                key={i} 
+                                className={`h-3 rounded-sm ${
+                                  item.activity > 5 ? 'bg-white' : 
+                                  item.activity > 3 ? 'bg-white/70' :
+                                  item.activity > 1 ? 'bg-white/40' : 'bg-white/10'
+                                }`}
+                              />
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Streak grid
+                    if (stat.type === 'streak_grid') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="mb-3">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                            <div className="text-xl font-black text-white">{stat.value}</div>
+                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="grid grid-cols-7 gap-1">
+                            {stat.data?.map((item: any, i: number) => (
+                              <div 
+                                key={i} 
+                                className={`h-4 w-4 rounded-sm ${
+                                  item.completed ? 'bg-green-400' : 'bg-white/20'
+                                }`}
+                              />
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Member progress
+                    if (stat.type === 'member_progress') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="mb-3">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="space-y-2">
+                            {stat.data?.map((member: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between">
+                                <span className="text-sm text-white">{member.name}</span>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm font-bold text-white">{member.progress}%</span>
+                                  <span className={`text-xs ${
+                                    member.trend === 'up' ? 'text-green-400' : 'text-red-400'
+                                  }`}>
+                                    {member.trend === 'up' ? '↗' : '↘'}
+                                  </span>
+                                </div>
+                              </div>
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Default simple stat
+                    return (
+                      <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                        <div className="text-center">
+                          <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
+                          <div className="text-xs font-medium text-gray-300 uppercase tracking-wide">{stat.title}</div>
+                          <div className="text-xs text-gray-400 mt-1">{stat.subtitle}</div>
+                        </div>
                       </div>
-                    </div>
-                  )) || []}
+                    )
+                  }) || []}
                 </div>
 
                 {/* Note about rotation */}
@@ -722,13 +921,16 @@ export default function RectangularDashboard() {
               </>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                {[...Array(6)].map((_, index) => (
+                {/* Loading state with varied layouts */}
+                <div className="p-4 rounded-lg bg-gray-900/30 col-span-2">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-16"></div>
+                </div>
+                {[...Array(4)].map((_, index) => (
                   <div key={index} className="p-4 rounded-lg bg-gray-900/30">
-                    <div className="text-center">
-                      <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6 w-6 mx-auto mb-2"></div>
-                      <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8 mb-1"></div>
-                      <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
-                    </div>
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-6 mb-2"></div>
+                    <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-8 mb-1"></div>
+                    <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
                   </div>
                 ))}
               </div>
