@@ -185,20 +185,14 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
   if (stat.type === 'horizontal_bar_chart') {
     const data = stat.data || []
     const maxCount = Math.max(...data.map((d: any) => d.count), 1)
-    const shouldHaveAccentBg = (index % 3 === 1) // Every 3rd horizontal chart gets accent
-    const bgColor = shouldHaveAccentBg ? 
-      accentColor.replace('text-', 'bg-').replace('-400', '') : 
-      'bg-gray-900/20'
-    const headerTextColor = shouldHaveAccentBg ? 'text-black/80' : 'text-gray-400'
-    const subtitleTextColor = shouldHaveAccentBg ? 'text-black/60' : 'text-gray-500'
     
     return (
-      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-3 h-full flex flex-col">
+      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col">
           {/* Header */}
-          <div className="mb-3">
-            <div className={`text-xs ${headerTextColor} uppercase tracking-wide font-bold mb-1`}>{stat.title}</div>
-            <div className={`text-xs ${subtitleTextColor} font-medium`}>{stat.subtitle}</div>
+          <div className="mb-4">
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-xs text-gray-500">{stat.subtitle}</div>
           </div>
           
           {/* Horizontal Bars */}
@@ -225,10 +219,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                     
                     {/* Workout name inside bar */}
                     <div className="absolute inset-0 flex items-center px-3">
-                      <span className="text-sm font-bold text-white truncate">
+                      <span className="text-xs font-medium text-white truncate">
                         {workout.name}
                       </span>
-                      <span className="ml-auto text-sm font-black text-white">
+                      <span className="ml-auto text-xs font-bold text-white">
                         {workout.count}
                       </span>
                     </div>
@@ -301,24 +295,19 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     const maxValue = Math.max(...data.map((d: any) => d.points), 1)
     const recordIndex = data.findIndex((d: any) => d.points === maxValue)
     const recordDay = recordIndex >= 0 ? data[recordIndex] : null
-    const shouldHaveAccentBg = (index % 4 === 2) // Every 4th line chart gets accent
-    const bgColor = shouldHaveAccentBg ? 
-      accentColor.replace('text-', 'bg-').replace('-400', '-400') + '/30' : 
-      'bg-gray-900/20'
-    const headerTextColor = shouldHaveAccentBg ? 'text-black/90' : 'text-gray-400'
     
     return (
-      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
+      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
           {/* Header */}
           <div className="mb-3">
-            <div className={`text-xs ${headerTextColor} uppercase tracking-wide font-bold mb-1`}>{stat.title}</div>
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
             {recordDay && (
               <div className="flex items-baseline gap-2">
-                <span className={`text-3xl font-black ${accentColor} leading-none`}>
+                <span className={`text-2xl font-bold ${accentColor}`}>
                   {recordDay.points} PT
                 </span>
-                <span className="text-xs text-gray-500 font-medium">MAX {recordDay.day}</span>
+                <span className="text-xs text-gray-500">MAX {recordDay.day}</span>
               </div>
             )}
           </div>
@@ -1452,62 +1441,54 @@ export default function RectangularDashboard() {
         <div id="group-status" className="bg-black">
           <div className="px-4 py-3">
             <h3 className="text-xl font-bold text-white mb-3">Status</h3>
-          </div>
-          
-          {groupMembers.length === 0 ? (
-            <div className="space-y-2">
-              <div className="relative h-12 bg-gray-800 overflow-hidden">
-                <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 h-full w-3/4"></div>
-                <div className="absolute inset-0 flex items-center justify-between px-4">
-                  <span className="text-white font-medium">Loading...</span>
-                  <span className="text-white font-bold">--</span>
+            
+            {groupMembers.length === 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-gray-900/30">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
+                </div>
+                <div className="p-3 rounded-lg bg-gray-900/30">
+                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
+                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {groupMembers.map((member, index) => {
-                const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
-                const isComplete = progressPercentage >= 100
-                
-                // Assign colors to users (they can pick their own later)
-                const userColors = [
-                  'bg-orange-400',  // Orange
-                  'bg-green-400',   // Green  
-                  'bg-purple-400',  // Purple
-                  'bg-blue-400',    // Blue
-                  'bg-yellow-400',  // Yellow
-                  'bg-pink-400'     // Pink
-                ]
-                const userColor = userColors[index % userColors.length]
-                
-                return (
-                  <div key={member.id} className="relative h-12 bg-gray-800 overflow-hidden">
-                    {/* Progress bar */}
-                    <div 
-                      className={`h-full ${userColor} transition-all duration-500 ease-out`}
-                      style={{ width: `${Math.min(100, progressPercentage)}%` }}
-                    />
-                    
-                    {/* Content overlay */}
-                    <div className="absolute inset-0 flex items-center justify-between px-4">
-                      <div className="flex items-center space-x-3">
+            ) : (
+              <div className="space-y-2">
+                {groupMembers.map((member, index) => {
+                  const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
+                  
+                  // Assign colors to users (they can pick their own later)
+                  const userColors = [
+                    'bg-orange-400',  // Orange
+                    'bg-green-400',   // Green  
+                    'bg-purple-400',  // Purple
+                    'bg-blue-400',    // Blue
+                    'bg-yellow-400',  // Yellow
+                    'bg-pink-400'     // Pink
+                  ]
+                  const userColor = userColors[index % userColors.length]
+                  
+                  return (
+                    <div key={member.id} className="relative h-12 bg-gray-800 overflow-hidden">
+                      {/* Progress bar */}
+                      <div 
+                        className={`h-full ${userColor} transition-all duration-500 ease-out`}
+                        style={{ width: `${Math.min(100, progressPercentage)}%` }}
+                      />
+                      
+                      {/* Content overlay */}
+                      <div className="absolute inset-0 flex items-center justify-between px-4">
                         <span className="text-black font-bold text-sm">
                           {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                         </span>
-                        {isComplete && (
-                          <span className="text-black font-bold text-xs">✓</span>
-                        )}
-                      </div>
-                      <div className="text-black font-black text-lg">
-                        {progressPercentage}%
+                        <div className="text-black font-black text-lg">{progressPercentage}%</div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
 
