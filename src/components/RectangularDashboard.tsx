@@ -549,11 +549,26 @@ export default function RectangularDashboard() {
     }
   }
 
-  const getStatLayout = (stats: any[]) => {
-    // Ensure we always have exactly 6 stats to fill the grid properly
-    // Pattern: wide(2 cells) + 4 squares = 6 cells total (2x3 grid)
+  const getStatLayout = (stats: any[], isShowingAll = false) => {
     const layouts = []
-    const basePattern = ['wide', 'square', 'square', 'square', 'square', 'tall']
+    
+    if (isShowingAll) {
+      // For showing all stats, use repeating pattern that works well
+      const allPattern = ['wide', 'square', 'square', 'tall', 'square', 'square']
+      
+      for (let i = 0; i < stats.length; i++) {
+        const layoutType = allPattern[i % allPattern.length]
+        layouts.push({ ...stats[i], layout: layoutType })
+      }
+      
+      return layouts
+    }
+    
+    // For main view: ensure exactly 6 stats in proper 2x3 grid
+    // Row 1: wide(2 cells)
+    // Row 2: square + square  
+    // Row 3: tall + square
+    const basePattern = ['wide', 'square', 'square', 'tall', 'square', 'square']
     
     // Take exactly 6 stats, padding with empty ones if needed
     const paddedStats = [...stats]
@@ -611,9 +626,9 @@ export default function RectangularDashboard() {
         allStatTypes.map(statType => calculateInterestingStat(statType))
       )
 
-      const allStatsWithLayout = getStatLayout(allStatsData.filter(stat => stat !== null))
+      const allStatsWithLayout = getStatLayout(allStatsData.filter(stat => stat !== null), true)
       const selectedStatsData = getStatLayout(
-        selectedStats.map(statType => allStatsData[allStatTypes.indexOf(statType)]).filter(stat => stat !== null)
+        selectedStats.map(statType => allStatsData[allStatTypes.indexOf(statType)]).filter(stat => stat !== null), false
       )
 
       // Set all stats at once to avoid glitchy loading - batch state updates
@@ -900,7 +915,7 @@ export default function RectangularDashboard() {
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
               <>
                 {/* Rotating Interesting Stats with Dynamic Layout */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid gap-3 ${showAllStats ? 'grid-cols-2 auto-rows-max' : 'grid-cols-2'}`}>
                   {(showAllStats ? allStats : groupStats.interestingStats)?.map((stat: any, index: number) => {
                     const getAccentColor = () => {
                       const colors = [
@@ -1248,7 +1263,7 @@ export default function RectangularDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 {/* Loading state that matches the final layout exactly */}
                 {[0, 1, 2, 3, 4, 5].map((index) => {
-                  const layouts = ['wide', 'square', 'square', 'square', 'square', 'tall']
+                  const layouts = ['wide', 'square', 'square', 'tall', 'square', 'square']
                   const layout = layouts[index]
                   const getSkeletonClasses = () => {
                     switch (layout) {
