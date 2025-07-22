@@ -1452,55 +1452,62 @@ export default function RectangularDashboard() {
         <div id="group-status" className="bg-black">
           <div className="px-4 py-3">
             <h3 className="text-xl font-bold text-white mb-3">Status</h3>
-            
-            {groupMembers.length === 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-gray-900/30">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
-                </div>
-                <div className="p-3 rounded-lg bg-gray-900/30">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
+          </div>
+          
+          {groupMembers.length === 0 ? (
+            <div className="space-y-2">
+              <div className="relative h-12 bg-gray-800 overflow-hidden">
+                <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 h-full w-3/4"></div>
+                <div className="absolute inset-0 flex items-center justify-between px-4">
+                  <span className="text-white font-medium">Loading...</span>
+                  <span className="text-white font-bold">--</span>
                 </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {groupMembers.map((member, index) => (
-                  <div key={member.id} className={`p-3 rounded-lg ${
-                    member.isCurrentUser ? 'bg-gray-900/50' : index === 0 ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/10' : 'bg-gray-900/30'
-                  }`}>
-                    <div className="flex items-center justify-between">
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {groupMembers.map((member, index) => {
+                const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
+                const isComplete = progressPercentage >= 100
+                
+                // Assign colors to users (they can pick their own later)
+                const userColors = [
+                  'bg-orange-400',  // Orange
+                  'bg-green-400',   // Green  
+                  'bg-purple-400',  // Purple
+                  'bg-blue-400',    // Blue
+                  'bg-yellow-400',  // Yellow
+                  'bg-pink-400'     // Pink
+                ]
+                const userColor = userColors[index % userColors.length]
+                
+                return (
+                  <div key={member.id} className="relative h-12 bg-gray-800 overflow-hidden">
+                    {/* Progress bar */}
+                    <div 
+                      className={`h-full ${userColor} transition-all duration-500 ease-out`}
+                      style={{ width: `${Math.min(100, progressPercentage)}%` }}
+                    />
+                    
+                    {/* Content overlay */}
+                    <div className="absolute inset-0 flex items-center justify-between px-4">
                       <div className="flex items-center space-x-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
-                          index === 0 ? 'bg-yellow-500 text-black' :
-                          index === 1 ? 'bg-gray-500 text-white' :
-                          index === 2 ? 'bg-amber-600 text-black' :
-                          'bg-gray-600 text-white'
-                        }`}>
-                          {member.isCurrentUser ? 'YOU'.slice(0, 2) : member.email.split('@')[0].slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className={`text-sm font-bold truncate ${
-                            member.isCurrentUser ? 'text-white' : index === 0 ? 'text-yellow-400' : 'text-white'
-                          }`}>
-                            {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right ml-2">
-                        <div className="text-2xl font-black text-white">
-                          {Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)}%
-                        </div>
-                        {member.todayPoints >= (member.dailyTarget || 100) && (
-                          <div className="text-xs text-green-400 font-medium">✓</div>
+                        <span className="text-black font-bold text-sm">
+                          {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
+                        </span>
+                        {isComplete && (
+                          <span className="text-black font-bold text-xs">✓</span>
                         )}
+                      </div>
+                      <div className="text-black font-black text-lg">
+                        {progressPercentage}%
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                )
+              })}
+            </div>
+          )}
           </div>
         </div>
 

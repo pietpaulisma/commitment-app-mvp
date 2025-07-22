@@ -128,7 +128,7 @@ export default function RectangularNavigation() {
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={() => setIsWorkoutOpen(true)}
-            className={`flex-1 relative h-16 ${accentBg} border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-opacity duration-200`}
+            className={`flex-1 relative h-16 ${dailyProgress > 0 ? accentBg : 'bg-gray-900'} border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-opacity duration-200`}
           >
             {/* Progress Background */}
             <div 
@@ -190,7 +190,7 @@ export default function RectangularNavigation() {
               href={isOnProfilePage ? "/dashboard" : "/profile"} 
               className="text-gray-300 hover:text-white transition-colors duration-200"
             >
-              <div className={`w-8 h-8 ${accentBg} flex items-center justify-center rounded-none`}>
+              <div className={`w-6 h-6 ${accentBg} flex items-center justify-center`}>
                 {isOnProfilePage ? (
                   <span className="text-white text-lg font-bold">×</span>
                 ) : (
@@ -216,7 +216,7 @@ export default function RectangularNavigation() {
                 className="text-sm text-gray-300 hover:text-white flex items-center space-x-2 font-medium border border-gray-700 hover:border-gray-600 px-3 py-2 transition-colors duration-200"
               >
                 <span>{isOnProfilePage ? "Back to Dashboard" : "Profile"}</span>
-                <div className={`w-8 h-8 ${accentBg} flex items-center justify-center`}>
+                <div className={`w-6 h-6 ${accentBg} flex items-center justify-center`}>
                   {isOnProfilePage ? (
                     <span className="text-white text-lg font-bold">×</span>
                   ) : (
