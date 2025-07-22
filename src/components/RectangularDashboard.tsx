@@ -139,16 +139,16 @@ export default function RectangularDashboard() {
   const getAccentColors = () => {
     const colorMap = {
       'blue': {
-        primary: 'text-blue-400',
-        bg: 'bg-blue-900/50',
-        border: 'border-blue-400',
-        borderL: 'border-l-blue-500'
+        primary: 'text-purple-400',
+        bg: 'bg-purple-900/50',
+        border: 'border-purple-400',
+        borderL: 'border-l-purple-500'
       },
       'green': {
-        primary: 'text-green-400',
-        bg: 'bg-green-900/50',
-        border: 'border-green-400',
-        borderL: 'border-l-green-500'
+        primary: 'text-yellow-400',
+        bg: 'bg-yellow-900/50',
+        border: 'border-yellow-400',
+        borderL: 'border-l-yellow-500'
       },
       'purple': {
         primary: 'text-purple-400',
@@ -157,22 +157,22 @@ export default function RectangularDashboard() {
         borderL: 'border-l-purple-500'
       },
       'orange': {
-        primary: 'text-orange-400',
-        bg: 'bg-orange-900/50',
-        border: 'border-orange-400',
-        borderL: 'border-l-orange-500'
+        primary: 'text-yellow-400',
+        bg: 'bg-yellow-900/50',
+        border: 'border-yellow-400',
+        borderL: 'border-l-yellow-500'
       },
       'red': {
-        primary: 'text-red-400',
-        bg: 'bg-red-900/50',
-        border: 'border-red-400',
-        borderL: 'border-l-red-500'
+        primary: 'text-purple-400',
+        bg: 'bg-purple-900/50',
+        border: 'border-purple-400',
+        borderL: 'border-l-purple-500'
       },
       'cyan': {
-        primary: 'text-cyan-400',
-        bg: 'bg-cyan-900/50',
-        border: 'border-cyan-400',
-        borderL: 'border-l-cyan-500'
+        primary: 'text-yellow-400',
+        bg: 'bg-yellow-900/50',
+        border: 'border-yellow-400',
+        borderL: 'border-l-yellow-500'
       }
     }
     return colorMap[accentColor as keyof typeof colorMap] || colorMap.blue
@@ -719,7 +719,7 @@ export default function RectangularDashboard() {
       case 'group_admin':
         return 'text-yellow-400'
       default:
-        return 'text-gray-400'
+        return 'text-purple-300'
     }
   }
 
@@ -874,7 +874,7 @@ export default function RectangularDashboard() {
           <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
-            {groupStats?.interestingStats?.length > 0 ? (
+            {groupStats && groupStats.interestingStats && groupStats.interestingStats.length === 6 ? (
               <>
                 {/* Rotating Interesting Stats with Dynamic Layout */}
                 <div className="grid grid-cols-2 gap-3">
@@ -1005,22 +1005,24 @@ export default function RectangularDashboard() {
                     if (stat.type === 'heatmap') {
                       return (
                         <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
-                          <div className="text-center mb-3">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                            <div className="text-2xl font-black text-white">{stat.value}</div>
-                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="grid grid-cols-8 gap-1">
-                            {stat.data?.slice(6, 22).map((item: any, i: number) => (
-                              <div 
-                                key={i} 
-                                className={`h-3 rounded-sm ${
-                                  item.activity > 5 ? 'bg-white' : 
-                                  item.activity > 3 ? 'bg-white/70' :
-                                  item.activity > 1 ? 'bg-white/40' : 'bg-white/10'
-                                }`}
-                              />
-                            )) || []}
+                          <div className="p-4 h-full flex flex-col">
+                            <div className="text-center mb-3">
+                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <div className={`text-2xl font-black ${getAccentColor()}`}>{stat.value}</div>
+                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
+                            </div>
+                            <div className="grid grid-cols-8 gap-1 flex-1">
+                              {stat.data?.slice(6, 22).map((item: any, i: number) => (
+                                <div 
+                                  key={i} 
+                                  className={`h-3 rounded-sm ${
+                                    item.activity > 5 ? getAccentColor().replace('text-', 'bg-') : 
+                                    item.activity > 3 ? getAccentColor().replace('text-', 'bg-').replace('-400', '-300') :
+                                    item.activity > 1 ? getAccentColor().replace('text-', 'bg-').replace('-400', '-200') : 'bg-gray-700'
+                                  }`}
+                                />
+                              )) || []}
+                            </div>
                           </div>
                         </div>
                       )
@@ -1030,20 +1032,22 @@ export default function RectangularDashboard() {
                     if (stat.type === 'streak_grid') {
                       return (
                         <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
-                          <div className="mb-3">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                            <div className="text-xl font-black text-white">{stat.value}</div>
-                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="grid grid-cols-7 gap-1">
-                            {stat.data?.map((item: any, i: number) => (
-                              <div 
-                                key={i} 
-                                className={`h-4 w-4 rounded-sm ${
-                                  item.completed ? 'bg-green-400' : 'bg-white/20'
-                                }`}
-                              />
-                            )) || []}
+                          <div className="p-4 h-full flex flex-col">
+                            <div className="mb-3">
+                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <div className={`text-xl font-black ${getAccentColor()}`}>{stat.value}</div>
+                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
+                            </div>
+                            <div className="grid grid-cols-7 gap-1 flex-1">
+                              {stat.data?.map((item: any, i: number) => (
+                                <div 
+                                  key={i} 
+                                  className={`h-4 w-4 rounded-sm ${
+                                    item.completed ? getAccentColor().replace('text-', 'bg-') : 'bg-gray-700'
+                                  }`}
+                                />
+                              )) || []}
+                            </div>
                           </div>
                         </div>
                       )
@@ -1053,24 +1057,26 @@ export default function RectangularDashboard() {
                     if (stat.type === 'member_progress') {
                       return (
                         <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
-                          <div className="mb-3">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="space-y-2">
-                            {stat.data?.map((member: any, i: number) => (
-                              <div key={i} className="flex items-center justify-between">
-                                <span className="text-sm text-white">{member.name}</span>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-sm font-bold text-white">{member.progress}%</span>
-                                  <span className={`text-xs ${
-                                    member.trend === 'up' ? 'text-green-400' : 'text-red-400'
-                                  }`}>
-                                    {member.trend === 'up' ? '↗' : '↘'}
-                                  </span>
+                          <div className="p-4 h-full flex flex-col">
+                            <div className="mb-3">
+                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
+                            </div>
+                            <div className="space-y-2 flex-1">
+                              {stat.data?.map((member: any, i: number) => (
+                                <div key={i} className="flex items-center justify-between">
+                                  <span className="text-sm text-white">{member.name}</span>
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`text-sm font-bold ${getAccentColor()}`}>{member.progress}%</span>
+                                    <span className={`text-xs ${
+                                      member.trend === 'up' ? 'text-green-400' : 'text-red-400'
+                                    }`}>
+                                      {member.trend === 'up' ? '↗' : '↘'}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            )) || []}
+                              )) || []}
+                            </div>
                           </div>
                         </div>
                       )
@@ -1080,20 +1086,22 @@ export default function RectangularDashboard() {
                     if (stat.type === 'weekly_pattern') {
                       return (
                         <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
-                          <div className="text-center mb-2">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                            <div className="text-2xl font-black text-white">{stat.value}</div>
-                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="grid grid-cols-7 gap-1">
-                            {stat.data?.map((item: any, i: number) => (
-                              <div key={i} className="text-center">
-                                <div className={`w-4 h-4 rounded-full mx-auto ${
-                                  item.rested ? 'bg-green-400' : 'bg-white/20'
-                                }`} />
-                                <span className="text-xs text-gray-400 mt-1 block">{item.day}</span>
-                              </div>
-                            )) || []}
+                          <div className="p-4 h-full flex flex-col">
+                            <div className="text-center mb-3">
+                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <div className={`text-2xl font-black ${getAccentColor()}`}>{stat.value}</div>
+                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
+                            </div>
+                            <div className="grid grid-cols-7 gap-1 flex-1">
+                              {stat.data?.map((item: any, i: number) => (
+                                <div key={i} className="text-center">
+                                  <div className={`w-4 h-4 rounded-full mx-auto ${
+                                    item.rested ? getAccentColor().replace('text-', 'bg-') : 'bg-gray-700'
+                                  }`} />
+                                  <span className="text-xs text-gray-400 mt-1 block">{item.day}</span>
+                                </div>
+                              )) || []}
+                            </div>
                           </div>
                         </div>
                       )
@@ -1103,18 +1111,20 @@ export default function RectangularDashboard() {
                     if (stat.type === 'variety_chart') {
                       return (
                         <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
-                          <div className="mb-3">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                            <div className="text-xl font-black text-white">{stat.value}</div>
-                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="space-y-1">
-                            {stat.data?.map((item: any, i: number) => (
-                              <div key={i} className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-green-400 rounded-full" />
-                                <span className="text-xs text-white">{item.name}</span>
-                              </div>
-                            )) || []}
+                          <div className="p-4 h-full flex flex-col">
+                            <div className="mb-3">
+                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <div className={`text-xl font-black ${getAccentColor()}`}>{stat.value}</div>
+                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
+                            </div>
+                            <div className="space-y-2 flex-1">
+                              {stat.data?.map((item: any, i: number) => (
+                                <div key={i} className="flex items-center space-x-2">
+                                  <div className={`w-2 h-2 rounded-full ${getAccentColor().replace('text-', 'bg-')}`} />
+                                  <span className="text-xs text-white">{item.name}</span>
+                                </div>
+                              )) || []}
+                            </div>
                           </div>
                         </div>
                       )
@@ -1142,17 +1152,19 @@ export default function RectangularDashboard() {
                     if (stat.type === 'percentage_list') {
                       return (
                         <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
-                          <div className="mb-3">
-                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
-                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
-                          </div>
-                          <div className="space-y-2">
-                            {stat.data?.map((item: any, i: number) => (
-                              <div key={i} className="flex items-center justify-between">
-                                <span className="text-sm text-white">{item.name}</span>
-                                <span className="text-sm font-bold text-green-400">{item.percentage}%</span>
-                              </div>
-                            )) || []}
+                          <div className="p-4 h-full flex flex-col">
+                            <div className="mb-3">
+                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
+                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
+                            </div>
+                            <div className="space-y-2 flex-1">
+                              {stat.data?.map((item: any, i: number) => (
+                                <div key={i} className="flex items-center justify-between">
+                                  <span className="text-sm text-white">{item.name}</span>
+                                  <span className={`text-sm font-bold ${getAccentColor()}`}>{item.percentage}%</span>
+                                </div>
+                              )) || []}
+                            </div>
                           </div>
                         </div>
                       )
@@ -1160,18 +1172,15 @@ export default function RectangularDashboard() {
 
                     // Default simple stat - Large typography focus
                     return (
-                      <div key={index}>
-                        {index > 0 && <div className="h-px bg-gray-700/50" />}
-                        <div className={`relative bg-gray-900/30 ${getLayoutClasses()}`}>
-                          <div className="p-4 h-full flex flex-col justify-center items-center text-center">
-                            <div className={`${stat.layout === 'tall' ? 'text-5xl' : stat.layout === 'wide' ? 'text-3xl' : 'text-4xl'} font-black ${getAccentColor()} leading-none mb-2`}>
-                              {stat.value}
-                            </div>
-                            <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
-                              {stat.title}
-                            </div>
-                            <div className="text-xs text-gray-400">{stat.subtitle}</div>
+                      <div key={index} className={`relative bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
+                        <div className="p-4 h-full flex flex-col justify-center items-center text-center">
+                          <div className={`${stat.layout === 'tall' ? 'text-5xl' : stat.layout === 'wide' ? 'text-3xl' : 'text-4xl'} font-black ${getAccentColor()} leading-none mb-2`}>
+                            {stat.value}
                           </div>
+                          <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
+                            {stat.title}
+                          </div>
+                          <div className="text-xs text-gray-400">{stat.subtitle}</div>
                         </div>
                       </div>
                     )
