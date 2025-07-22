@@ -185,14 +185,20 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
   if (stat.type === 'horizontal_bar_chart') {
     const data = stat.data || []
     const maxCount = Math.max(...data.map((d: any) => d.count), 1)
+    const shouldHaveAccentBg = (index % 3 === 1) // Every 3rd horizontal chart gets accent
+    const bgColor = shouldHaveAccentBg ? 
+      accentColor.replace('text-', 'bg-').replace('-400', '') : 
+      'bg-gray-900/20'
+    const headerTextColor = shouldHaveAccentBg ? 'text-black/80' : 'text-gray-400'
+    const subtitleTextColor = shouldHaveAccentBg ? 'text-black/60' : 'text-gray-500'
     
     return (
-      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-4 h-full flex flex-col">
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-3 h-full flex flex-col">
           {/* Header */}
-          <div className="mb-4">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
-            <div className="text-xs text-gray-500">{stat.subtitle}</div>
+          <div className="mb-3">
+            <div className={`text-xs ${headerTextColor} uppercase tracking-wide font-bold mb-1`}>{stat.title}</div>
+            <div className={`text-xs ${subtitleTextColor} font-medium`}>{stat.subtitle}</div>
           </div>
           
           {/* Horizontal Bars */}
@@ -219,10 +225,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                     
                     {/* Workout name inside bar */}
                     <div className="absolute inset-0 flex items-center px-3">
-                      <span className="text-xs font-medium text-white truncate">
+                      <span className="text-sm font-bold text-white truncate">
                         {workout.name}
                       </span>
-                      <span className="ml-auto text-xs font-bold text-white">
+                      <span className="ml-auto text-sm font-black text-white">
                         {workout.count}
                       </span>
                     </div>
@@ -295,19 +301,24 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     const maxValue = Math.max(...data.map((d: any) => d.points), 1)
     const recordIndex = data.findIndex((d: any) => d.points === maxValue)
     const recordDay = recordIndex >= 0 ? data[recordIndex] : null
+    const shouldHaveAccentBg = (index % 4 === 2) // Every 4th line chart gets accent
+    const bgColor = shouldHaveAccentBg ? 
+      accentColor.replace('text-', 'bg-').replace('-400', '/30') : 
+      'bg-gray-900/20'
+    const headerTextColor = shouldHaveAccentBg ? 'text-black/90' : 'text-gray-400'
     
     return (
-      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
           {/* Header */}
           <div className="mb-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className={`text-xs ${headerTextColor} uppercase tracking-wide font-bold mb-1`}>{stat.title}</div>
             {recordDay && (
               <div className="flex items-baseline gap-2">
-                <span className={`text-2xl font-bold ${accentColor}`}>
+                <span className={`text-3xl font-black ${accentColor} leading-none`}>
                   {recordDay.points} PT
                 </span>
-                <span className="text-xs text-gray-500">MAX {recordDay.day}</span>
+                <span className="text-xs text-gray-500 font-medium">MAX {recordDay.day}</span>
               </div>
             )}
           </div>
