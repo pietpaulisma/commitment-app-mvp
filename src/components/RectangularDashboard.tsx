@@ -550,14 +550,32 @@ export default function RectangularDashboard() {
   }
 
   const getStatLayout = (stats: any[]) => {
-    // Create a balanced mix of layouts
+    // Ensure we always have exactly 6 stats to fill the grid properly
+    // Pattern: wide(2 cells) + 4 squares = 6 cells total (2x3 grid)
     const layouts = []
-    const layoutPattern = ['wide', 'square', 'tall', 'square', 'square', 'tall']
+    const basePattern = ['wide', 'square', 'square', 'square', 'square', 'tall']
     
-    for (let i = 0; i < stats.length; i++) {
-      if (stats[i]) {
-        const layoutType = layoutPattern[i % layoutPattern.length] || 'square'
-        layouts.push({ ...stats[i], layout: layoutType })
+    // Take exactly 6 stats, padding with empty ones if needed
+    const paddedStats = [...stats]
+    while (paddedStats.length < 6) {
+      paddedStats.push(null)
+    }
+    
+    // Assign layouts to ensure proper grid filling
+    for (let i = 0; i < 6; i++) {
+      if (paddedStats[i]) {
+        const layoutType = basePattern[i]
+        layouts.push({ ...paddedStats[i], layout: layoutType })
+      } else {
+        // Create placeholder stat for empty slots
+        layouts.push({
+          type: 'placeholder',
+          layout: basePattern[i],
+          title: 'Coming Soon',
+          subtitle: 'More stats coming',
+          value: '...',
+          isPlaceholder: true
+        })
       }
     }
     
@@ -606,9 +624,14 @@ export default function RectangularDashboard() {
         interestingStats: selectedStatsData
       }
       
-      // Use a single state update to prevent glitchy loading
+      // Use batch state updates and wait for all calculations to complete
+      // This prevents individual stats from loading one by one
       setAllStats(allStatsWithLayout)
-      setGroupStats(newGroupStats)
+      
+      // Add small delay to ensure smooth rendering
+      setTimeout(() => {
+        setGroupStats(newGroupStats)
+      }, 50)
     } catch (error) {
       console.error('Error loading group stats:', error)
       setGroupStats({
@@ -874,43 +897,57 @@ export default function RectangularDashboard() {
           <div className="px-4 py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
-            {groupStats && groupStats.interestingStats && groupStats.interestingStats.length === 6 ? (
+            {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
               <>
                 {/* Rotating Interesting Stats with Dynamic Layout */}
                 <div className="grid grid-cols-2 gap-3">
                   {(showAllStats ? allStats : groupStats.interestingStats)?.map((stat: any, index: number) => {
                     const getAccentColor = () => {
                       const colors = [
+                        'text-orange-400',
+                        'text-green-400', 
                         'text-purple-400',
-                        'text-yellow-400', 
-                        'text-purple-300',
-                        'text-yellow-300',
-                        'text-purple-500',
-                        'text-yellow-500'
+                        'text-blue-400',
+                        'text-yellow-400',
+                        'text-pink-400'
                       ]
                       return colors[index % colors.length]
                     }
 
                     const getLayoutClasses = () => {
                       switch (stat.layout) {
-                        case 'wide': return 'col-span-2 h-24' // 2:1 ratio - spans both columns
-                        case 'tall': return 'col-span-1 h-48' // 1:2 ratio - tall single column
+                        case 'wide': return 'col-span-2 h-32' // 2:1 ratio - spans both columns, height = 2 squares
+                        case 'tall': return 'col-span-1 h-64' // 1:2 ratio - tall single column, height = 2 squares
                         case 'square': 
                         default: return 'col-span-1 h-32' // 1:1 ratio - single column
                       }
                     }
 
+                    // Skip placeholder stats from rendering
+                    if (stat.isPlaceholder) {
+                      return (
+                        <div key={index} className={`relative bg-gray-900/10 rounded-lg border-2 border-dashed border-gray-700 ${getLayoutClasses()}`}>
+                          <div className="p-4 h-full flex flex-col justify-center items-center text-center opacity-30">
+                            <div className="text-gray-500 text-lg mb-1">{stat.value}</div>
+                            <div className="text-xs text-gray-600 uppercase tracking-wide">{stat.title}</div>
+                            <div className="text-xs text-gray-700">{stat.subtitle}</div>
+                          </div>
+                        </div>
+                      )
+                    }
+
                     // Wide chart - Full width bar chart like workout button
                     if (stat.type === 'wide_chart') {
                       const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
+                      const bgColor = getAccentColor().replace('text-', 'bg-').replace('-400', '/20')
                       return (
-                        <div key={index} className={`relative overflow-hidden bg-gray-900/30 rounded-lg ${getLayoutClasses()}`}>
+                        <div key={index} className={`relative overflow-hidden ${bgColor} rounded-lg ${getLayoutClasses()}`}>
                           {/* Background progress bars */}
                           <div className="absolute inset-0 flex items-end">
                             {stat.data?.map((item: any, i: number) => (
                               <div key={i} className="flex-1 flex items-end h-full">
                                 <div 
-                                  className={`w-full transition-all duration-1000 ${getAccentColor().replace('text-', 'bg-').replace('-400', '-600')}`}
+                                  className={`w-full transition-all duration-1000 ${getAccentColor().replace('text-', 'bg-').replace('-400', '-500')}`}
                                   style={{ height: `${(item.points / maxValue) * 100}%` }}
                                 />
                               </div>
@@ -1209,18 +1246,27 @@ export default function RectangularDashboard() {
               </>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                {/* Loading state with varied layouts */}
-                {[...Array(6)].map((_, index) => (
-                  <div key={index} className={`p-4 bg-gray-900/30 rounded-lg ${
-                    index === 0 ? 'col-span-2 h-24' : // wide
-                    index === 1 ? 'col-span-1 h-48' : // tall
-                    'col-span-1 h-32' // square
-                  }`}>
-                    <div className="animate-pulse bg-gray-800 h-6 mb-2 rounded"></div>
-                    <div className="animate-pulse bg-gray-700 h-8 mb-1 rounded"></div>
-                    <div className="animate-pulse bg-gray-600 h-4 rounded"></div>
-                  </div>
-                ))}
+                {/* Loading state that matches the final layout exactly */}
+                {[0, 1, 2, 3, 4, 5].map((index) => {
+                  const layouts = ['wide', 'square', 'square', 'square', 'square', 'tall']
+                  const layout = layouts[index]
+                  const getSkeletonClasses = () => {
+                    switch (layout) {
+                      case 'wide': return 'col-span-2 h-32'
+                      case 'tall': return 'col-span-1 h-64' 
+                      case 'square':
+                      default: return 'col-span-1 h-32'
+                    }
+                  }
+                  
+                  return (
+                    <div key={index} className={`p-4 bg-gray-900/30 rounded-lg ${getSkeletonClasses()}`}>
+                      <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                      <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                      <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
