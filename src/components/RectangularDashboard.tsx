@@ -27,6 +27,33 @@ type RecentActivity = {
 }
 
 export default function RectangularDashboard() {
+  // Add keyframe animations for enhanced chart effects
+  const chartAnimationStyles = `
+    @keyframes slideUpScale {
+      0% { transform: scaleY(0); opacity: 0.8; }
+      100% { transform: scaleY(1); opacity: 1; }
+    }
+    @keyframes ringProgress {
+      0% { stroke-dashoffset: ${2 * Math.PI * 30}; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes slideInLeft {
+      0% { transform: translateX(-20px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes countUp {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fadeInScale {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fadeInUp {
+      0% { transform: translateY(10px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+  `
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
@@ -842,6 +869,8 @@ export default function RectangularDashboard() {
 
   return (
     <div className="min-h-screen bg-black pb-20">
+      {/* Inject chart animation styles */}
+      <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div className="bg-black border-b border-gray-800 relative overflow-hidden">
@@ -1005,19 +1034,25 @@ export default function RectangularDashboard() {
                       )
                     }
 
-                    // Wide chart - Full width bar chart like workout button
+                    // Wide chart - Full width bar chart with enhanced animations and hover
                     if (stat.type === 'wide_chart') {
                       const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
                       const bgColor = getAccentColor().replace('text-', 'bg-').replace('-400', '/20')
                       return (
-                        <div key={index} className={`relative overflow-hidden ${bgColor} rounded-lg ${layoutClasses}`}>
+                        <div key={index} className={`relative overflow-hidden ${bgColor} rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}>
                           {/* Background progress bars */}
                           <div className="absolute inset-0 flex items-end">
                             {stat.data?.map((item: any, i: number) => (
-                              <div key={i} className="flex-1 flex items-end h-full">
+                              <div key={i} className="flex-1 flex items-end h-full group">
                                 <div 
-                                  className={`w-full transition-all duration-1000 ${getAccentColor().replace('text-', 'bg-').replace('-400', '-500')}`}
-                                  style={{ height: `${(item.points / maxValue) * 100}%` }}
+                                  className={`w-full transition-all duration-1000 ease-out hover:brightness-110 ${getAccentColor().replace('text-', 'bg-').replace('-400', '-500')}`}
+                                  style={{ 
+                                    height: `${(item.points / maxValue) * 100}%`,
+                                    animationDelay: `${i * 100}ms`,
+                                    transform: 'scaleY(0)',
+                                    transformOrigin: 'bottom',
+                                    animation: `slideUpScale 0.8s ease-out ${i * 150}ms forwards`
+                                  }}
                                 />
                               </div>
                             )) || []}
@@ -1041,7 +1076,7 @@ export default function RectangularDashboard() {
                       )
                     }
 
-                    // Progress ring - Large typography focus
+                    // Progress ring - Enhanced with pulse and hover effects
                     if (stat.type === 'progress_ring') {
                       const ringSize = stat.layout === 'tall' ? 80 : 60
                       const strokeWidth = 6
@@ -1050,22 +1085,40 @@ export default function RectangularDashboard() {
                       const strokeOffset = circumference - (stat.percentage || 0) / 100 * circumference
                       
                       return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:bg-gray-900/40`}>
                           <div className="p-4 h-full flex flex-col justify-center items-center">
-                            <div className="relative mb-4">
+                            <div className="relative mb-4 group-hover:scale-105 transition-transform duration-300">
                               <svg width={ringSize} height={ringSize} className="transform -rotate-90">
+                                {/* Background circle */}
                                 <circle 
                                   cx={ringSize/2} cy={ringSize/2} r={radius}
                                   stroke="rgb(55, 65, 81)" strokeWidth={strokeWidth} fill="none"
                                 />
+                                {/* Animated progress circle */}
                                 <circle 
                                   cx={ringSize/2} cy={ringSize/2} r={radius}
-                                  className={getAccentColor().replace('text-', 'stroke-')}
+                                  className={`${getAccentColor().replace('text-', 'stroke-')} group-hover:brightness-110`}
                                   strokeWidth={strokeWidth} fill="none"
+                                  strokeDasharray={circumference}
+                                  strokeDashoffset={circumference}
+                                  strokeLinecap="round"
+                                  style={{ 
+                                    transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, filter 0.3s ease',
+                                    animation: `ringProgress 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards`
+                                  }}
+                                />
+                                {/* Pulse effect on hover */}
+                                <circle 
+                                  cx={ringSize/2} cy={ringSize/2} r={radius}
+                                  className={`${getAccentColor().replace('text-', 'stroke-')} opacity-0 group-hover:opacity-30`}
+                                  strokeWidth={strokeWidth + 2} fill="none"
                                   strokeDasharray={circumference}
                                   strokeDashoffset={strokeOffset}
                                   strokeLinecap="round"
-                                  style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                                  style={{ 
+                                    transition: 'opacity 0.3s ease',
+                                    animation: 'pulse 2s infinite'
+                                  }}
                                 />
                               </svg>
                               <div className="absolute inset-0 flex items-center justify-center">
@@ -1085,20 +1138,32 @@ export default function RectangularDashboard() {
                     // List chart
                     if (stat.type === 'list_chart') {
                       return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:bg-gray-900/40`}>
                           <div className="p-4 h-full flex flex-col">
                             <div className="mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <p className="text-xs text-gray-500">{stat.subtitle}</p>
+                              <h4 className={`text-sm font-bold ${getAccentColor()} group-hover:brightness-110 transition-all duration-300`}>{stat.title}</h4>
+                              <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors duration-300">{stat.subtitle}</p>
                             </div>
                             <div className="flex-1 space-y-3">
                               {stat.data?.slice(0, stat.layout === 'tall' ? 4 : 3).map((item: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between">
+                                <div key={i} className="flex items-center justify-between hover:bg-gray-800/50 -mx-2 px-2 py-1 rounded-md transition-all duration-200 group/item">
                                   <div className="flex items-center space-x-3">
-                                    <div className={`w-1 h-6 ${getAccentColor().replace('text-', 'bg-')}`} />
-                                    <span className="text-sm text-white font-medium">{item.name}</span>
+                                    <div 
+                                      className={`w-1 h-6 ${getAccentColor().replace('text-', 'bg-')} transition-all duration-300 group-hover/item:w-2`} 
+                                      style={{
+                                        animation: `slideInLeft 0.5s ease-out ${i * 100}ms forwards`
+                                      }}
+                                    />
+                                    <span className="text-sm text-white font-medium group-hover/item:text-gray-100 transition-colors duration-200">{item.name}</span>
                                   </div>
-                                  <span className={`text-lg font-black ${getAccentColor()}`}>{item.count}</span>
+                                  <span 
+                                    className={`text-lg font-black ${getAccentColor()} group-hover/item:scale-110 transition-transform duration-200`}
+                                    style={{
+                                      animation: `countUp 0.8s ease-out ${i * 150}ms forwards`
+                                    }}
+                                  >
+                                    {item.count}
+                                  </span>
                                 </div>
                               )) || []}
                             </div>
@@ -1110,24 +1175,40 @@ export default function RectangularDashboard() {
                     // Heatmap
                     if (stat.type === 'heatmap') {
                       return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-300 hover:bg-gray-900/40`}>
                           <div className="p-4 h-full flex flex-col">
                             <div className="text-center mb-3">
-                              <h4 className={`text-sm font-bold ${getAccentColor()}`}>{stat.title}</h4>
-                              <div className={`text-2xl font-black ${getAccentColor()}`}>{stat.value}</div>
-                              <p className="text-xs text-gray-400">{stat.subtitle}</p>
+                              <h4 className={`text-sm font-bold ${getAccentColor()} group-hover:brightness-110 transition-all duration-300`}>{stat.title}</h4>
+                              <div 
+                                className={`text-2xl font-black ${getAccentColor()} group-hover:scale-105 transition-transform duration-300`}
+                                style={{ animation: 'fadeInScale 0.8s ease-out 0.3s both' }}
+                              >
+                                {stat.value}
+                              </div>
+                              <p className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors duration-300">{stat.subtitle}</p>
                             </div>
                             <div className="grid grid-cols-8 gap-1 flex-1">
-                              {stat.data?.slice(6, 22).map((item: any, i: number) => (
-                                <div 
-                                  key={i} 
-                                  className={`h-3 rounded-sm ${
-                                    item.activity > 5 ? getAccentColor().replace('text-', 'bg-') : 
-                                    item.activity > 3 ? getAccentColor().replace('text-', 'bg-').replace('-400', '-300') :
-                                    item.activity > 1 ? getAccentColor().replace('text-', 'bg-').replace('-400', '-200') : 'bg-gray-700'
-                                  }`}
-                                />
-                              )) || []}
+                              {stat.data?.slice(6, 22).map((item: any, i: number) => {
+                                const intensity = item.activity > 5 ? 'high' : item.activity > 3 ? 'medium' : item.activity > 1 ? 'low' : 'none'
+                                const bgClass = {
+                                  'high': getAccentColor().replace('text-', 'bg-'),
+                                  'medium': getAccentColor().replace('text-', 'bg-').replace('-400', '-300'),
+                                  'low': getAccentColor().replace('text-', 'bg-').replace('-400', '-200'),
+                                  'none': 'bg-gray-700'
+                                }[intensity]
+                                
+                                return (
+                                  <div 
+                                    key={i} 
+                                    className={`h-3 rounded-sm ${bgClass} transition-all duration-300 hover:scale-125 hover:brightness-110 cursor-pointer`}
+                                    style={{
+                                      animation: `fadeInUp 0.4s ease-out ${i * 50}ms both`,
+                                      transformOrigin: 'bottom'
+                                    }}
+                                    title={`Hour ${(i + 6) % 24}: ${item.activity} activities`}
+                                  />
+                                )
+                              }) || []}
                             </div>
                           </div>
                         </div>
@@ -1236,20 +1317,36 @@ export default function RectangularDashboard() {
                       )
                     }
 
-                    // Simple time/countdown stats - Large typography focus
+                    // Simple time/countdown stats - Enhanced with pulsing and scale effects
                     if (stat.type === 'time_stat' || stat.type === 'countdown_stat' || stat.type === 'recovery_stat') {
                       const fontSize = stat.layout === 'tall' ? 'text-6xl' : 'text-4xl'
                       return (
-                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses}`}>
+                        <div key={index} className={`relative bg-gray-900/30 rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-500 hover:bg-gray-900/40 hover:scale-[1.02]`}>
                           <div className="p-4 h-full flex flex-col justify-center items-center text-center">
-                            <div className={`${fontSize} font-black ${getAccentColor()} leading-none mb-2`}>
+                            <div 
+                              className={`${fontSize} font-black ${getAccentColor()} leading-none mb-2 group-hover:scale-110 transition-all duration-300`}
+                              style={{ 
+                                animation: 'fadeInScale 1s ease-out 0.2s both',
+                                textShadow: '0 0 20px currentColor'
+                              }}
+                            >
                               {stat.value}
                             </div>
-                            <div className="text-sm font-bold text-white uppercase tracking-wide mb-1">
+                            <div 
+                              className="text-sm font-bold text-white uppercase tracking-wide mb-1 group-hover:text-gray-200 transition-colors duration-300"
+                              style={{ animation: 'fadeInUp 0.8s ease-out 0.4s both' }}
+                            >
                               {stat.title}
                             </div>
-                            <div className="text-xs text-gray-500">{stat.subtitle}</div>
+                            <div 
+                              className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors duration-300"
+                              style={{ animation: 'fadeInUp 0.8s ease-out 0.6s both' }}
+                            >
+                              {stat.subtitle}
+                            </div>
                           </div>
+                          {/* Subtle glow effect */}
+                          <div className={`absolute inset-0 rounded-lg ${getAccentColor().replace('text-', 'bg-').replace('-400', '/5')} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                         </div>
                       )
                     }
