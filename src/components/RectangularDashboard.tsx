@@ -416,13 +416,130 @@ export default function RectangularDashboard() {
           }
         }
         
-        default: {
-          const randomMember = members[Math.floor(Math.random() * members.length)]
+        case 'top_workouts_points': {
+          const workoutData = [
+            { name: 'Running', points: Math.floor(Math.random() * 500) + 200 },
+            { name: 'Push-ups', points: Math.floor(Math.random() * 400) + 150 },
+            { name: 'Squats', points: Math.floor(Math.random() * 300) + 100 }
+          ].sort((a, b) => b.points - a.points)
+          
           return {
-            type: 'simple',
-            title: 'Group Stat',
-            value: Math.floor(Math.random() * 100).toString(),
-            subtitle: randomMember?.email?.split('@')[0] || 'member'
+            type: 'list_chart',
+            title: 'Top by Points',
+            subtitle: 'this week',
+            data: workoutData.map(w => ({ name: w.name, count: w.points }))
+          }
+        }
+        
+        case 'top_money_contributors': {
+          const contributorData = members.slice(0, 3).map(member => ({
+            name: member.email.split('@')[0],
+            amount: Math.floor(Math.random() * 50) + 10
+          })).sort((a, b) => b.amount - a.amount)
+          
+          return {
+            type: 'list_chart',
+            title: 'Top Contributors',
+            subtitle: 'penalty pot',
+            data: contributorData.map(c => ({ name: c.name, count: `$${c.amount}` }))
+          }
+        }
+        
+        case 'flex_rest_days': {
+          // Generate weekly pattern showing rest days taken
+          const weekPattern = Array.from({length: 7}, (_, i) => ({
+            day: ['S', 'M', 'T', 'W', 'T', 'F', 'S'][i],
+            rested: Math.random() > 0.6
+          }))
+          const restCount = weekPattern.filter(d => d.rested).length
+          
+          return {
+            type: 'weekly_pattern',
+            title: 'Rest Days',
+            value: `${restCount}/7`,
+            subtitle: 'this week',
+            data: weekPattern
+          }
+        }
+        
+        case 'most_varied_member': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const workoutTypes = ['Cardio', 'Strength', 'Flexibility', 'Recovery', 'Sports']
+          const variety = Math.floor(Math.random() * 4) + 2
+          
+          return {
+            type: 'variety_chart',
+            title: 'Most Varied',
+            value: `${variety} types`,
+            subtitle: randomMember.email.split('@')[0],
+            data: workoutTypes.slice(0, variety).map(type => ({
+              name: type,
+              active: true
+            }))
+          }
+        }
+        
+        case 'earliest_checkin': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const hour = Math.floor(Math.random() * 4) + 5 // 5-8 AM
+          const minute = Math.floor(Math.random() * 60)
+          
+          return {
+            type: 'time_stat',
+            title: 'Early Bird',
+            value: `${hour}:${String(minute).padStart(2, '0')}`,
+            subtitle: randomMember.email.split('@')[0]
+          }
+        }
+        
+        case 'latest_checkin': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const hour = Math.floor(Math.random() * 3) + 21 // 9-11 PM
+          const minute = Math.floor(Math.random() * 60)
+          
+          return {
+            type: 'time_stat',
+            title: 'Night Owl',
+            value: `${hour}:${String(minute).padStart(2, '0')}`,
+            subtitle: randomMember.email.split('@')[0]
+          }
+        }
+        
+        case 'next_birthday': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const daysUntil = Math.floor(Math.random() * 90) + 1
+          
+          return {
+            type: 'countdown_stat',
+            title: 'Next Birthday',
+            value: `${daysUntil} days`,
+            subtitle: randomMember.email.split('@')[0]
+          }
+        }
+        
+        case 'top_overachievers': {
+          const overachievers = members.slice(0, 3).map(member => ({
+            name: member.email.split('@')[0],
+            percentage: Math.floor(Math.random() * 80) + 120
+          })).sort((a, b) => b.percentage - a.percentage)
+          
+          return {
+            type: 'percentage_list',
+            title: 'Overachievers',
+            subtitle: 'above target',
+            data: overachievers
+          }
+        }
+        
+        case 'king_recovery': {
+          const randomMember = members[Math.floor(Math.random() * members.length)]
+          const recoveryMinutes = Math.floor(Math.random() * 180) + 60
+          
+          return {
+            type: 'recovery_stat',
+            title: 'Recovery King',
+            value: `${recoveryMinutes}min`,
+            subtitle: randomMember.email.split('@')[0]
           }
         }
       }
@@ -901,7 +1018,84 @@ export default function RectangularDashboard() {
                       )
                     }
 
-                    // Default simple stat
+                    // Weekly pattern (rest days)
+                    if (stat.type === 'weekly_pattern') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="text-center mb-3">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                            <div className="text-2xl font-black text-white">{stat.value}</div>
+                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="flex justify-center space-x-1">
+                            {stat.data?.map((item: any, i: number) => (
+                              <div key={i} className="text-center">
+                                <div className={`w-6 h-6 rounded-full ${
+                                  item.rested ? 'bg-green-400' : 'bg-white/20'
+                                }`} />
+                                <span className="text-xs text-gray-400 mt-1">{item.day}</span>
+                              </div>
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Variety chart
+                    if (stat.type === 'variety_chart') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="mb-3">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                            <div className="text-xl font-black text-white">{stat.value}</div>
+                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="space-y-1">
+                            {stat.data?.map((item: any, i: number) => (
+                              <div key={i} className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-green-400 rounded-full" />
+                                <span className="text-xs text-white">{item.name}</span>
+                              </div>
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Simple time/countdown stats  
+                    if (stat.type === 'time_stat' || stat.type === 'countdown_stat' || stat.type === 'recovery_stat') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="text-center">
+                            <h4 className="text-sm font-bold text-white mb-2">{stat.title}</h4>
+                            <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
+                            <div className="text-xs text-gray-300">{stat.subtitle}</div>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Percentage list (overachievers)
+                    if (stat.type === 'percentage_list') {
+                      return (
+                        <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
+                          <div className="mb-3">
+                            <h4 className="text-sm font-bold text-white">{stat.title}</h4>
+                            <p className="text-xs text-gray-300">{stat.subtitle}</p>
+                          </div>
+                          <div className="space-y-2">
+                            {stat.data?.map((item: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between">
+                                <span className="text-sm text-white">{item.name}</span>
+                                <span className="text-sm font-bold text-green-400">{item.percentage}%</span>
+                              </div>
+                            )) || []}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Default simple stat (should rarely be used now)
                     return (
                       <div key={index} className={`p-4 rounded-lg ${getCardStyle()}`}>
                         <div className="text-center">
