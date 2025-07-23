@@ -98,7 +98,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* 24-hour grid (12x2) */}
-          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
+          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-x-1 gap-y-0.5">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
               const isHigh = intensity > 70
@@ -121,7 +121,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           <div className="text-xs text-gray-500 mt-2 text-center">
-            Peak: {data.find((h: any) => h.activity === maxActivity)?.hour || 0}:00
+            Peak: {data.find((h: any) => h.activity === maxActivity)?.hour || '0:00'}
           </div>
         </div>
       </div>
@@ -310,7 +310,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           
           {/* Vertical Bar Chart */}
           <div className="flex-1 flex items-end gap-1 px-4">
-            {data.slice(-45).map((point: any, i: number) => {
+            {data.slice(-40).map((point: any, i: number) => {
               const height = Math.max(2, (point.points / maxValue) * 70)
               const isRecord = data.indexOf(point) === recordIndex
               
@@ -321,7 +321,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                 >
                   {/* Vertical bar */}
                   <div
-                    className={`w-1 transition-all duration-700 ${
+                    className={`w-0.5 transition-all duration-700 ${
                       isRecord ? 'bg-orange-400' : 'bg-gray-500'
                     }`}
                     style={{ 
