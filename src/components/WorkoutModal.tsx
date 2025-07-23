@@ -413,7 +413,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   // Group exercises by their actual types, with recovery separate
   const allExercises = exercises.filter(ex => ex.type !== 'recovery')
-  const recoveryExercises = exercises.filter(ex => ex.type === 'recovery')
+  
+  // Get recovery exercises that are NOT already in recommendations to avoid duplicates
+  const recommendedExerciseIds = recommendedExercises.map(rec => rec.exercise.id)
+  const recoveryExercises = exercises.filter(ex => 
+    ex.type === 'recovery' && !recommendedExerciseIds.includes(ex.id)
+  )
   
   const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
 
@@ -442,11 +447,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 </div>
                 
                 <div className="flex flex-col items-end">
-                  <span className="text-2xl font-black">
+                  <span className="text-3xl font-black">
                     {Math.round(progressPercentage)}%
                   </span>
                   <span className="text-xs text-gray-400">
-                    {progressPercentage >= 100 ? '🎉' : '💪'}
+                    complete
                   </span>
                 </div>
               </div>
@@ -484,24 +489,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               {recommendedExercises.length > 0 && (
                 <div className="py-6">
                   <h4 className="text-2xl font-bold text-white mb-6 px-4">Recommended for You</h4>
-                  <div className="space-y-0">
+                  <div className="space-y-0 border-t border-gray-800">
                     {recommendedExercises.map((rec, index) => (
                       <button
                         key={rec.exercise.id}
                         onClick={() => quickAddExercise(rec.exercise)}
-                        className={`w-full p-4 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
+                        className={`w-full p-3 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
                           rec.priority === 'high' 
                             ? 'bg-gray-900/40 hover:bg-gray-900/50' 
                             : 'bg-gray-900/30 hover:bg-gray-900/40'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-xl">{rec.exercise.emoji}</span>
-                            <div>
-                              <div className="font-medium text-white">{rec.exercise.name}</div>
-                              <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
-                            </div>
+                          <div>
+                            <div className="font-medium text-white">{rec.exercise.name}</div>
+                            <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-black text-orange-400">{rec.exercise.points_per_unit}</div>
@@ -518,28 +520,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               {allExercises.length > 0 && (
                 <div className="py-6">
                   <h4 className="text-2xl font-bold text-white mb-6 px-4">All Exercises</h4>
-                  <div className="space-y-0">
+                  <div className="space-y-0 border-t border-gray-800">
                     {allExercises.map((exercise) => (
                       <button
                         key={exercise.id}
                         onClick={() => quickAddExercise(exercise)}
-                        className={`w-full p-4 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
+                        className={`w-full p-3 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
                           exercise.todayCount > 0
                             ? 'bg-gray-900/40 hover:bg-gray-900/50'
                             : 'bg-gray-900/30 hover:bg-gray-900/40'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-xl">{exercise.emoji}</span>
-                            <div>
-                              <div className="font-medium text-white">{exercise.name}</div>
-                              {exercise.todayCount > 0 && (
-                                <div className="text-xs text-gray-400">
-                                  Done {exercise.todayCount}x today
-                                </div>
-                              )}
-                            </div>
+                          <div>
+                            <div className="font-medium text-white">{exercise.name}</div>
+                            {exercise.todayCount > 0 && (
+                              <div className="text-xs text-gray-400">
+                                Done {exercise.todayCount}x today
+                              </div>
+                            )}
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-black text-orange-400">{exercise.points_per_unit}</div>
@@ -556,28 +555,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               {recoveryExercises.length > 0 && (
                 <div className="py-6">
                   <h4 className="text-2xl font-bold text-white mb-6 px-4">Recovery</h4>
-                  <div className="space-y-0">
+                  <div className="space-y-0 border-t border-gray-800">
                     {recoveryExercises.map((exercise) => (
                       <button
                         key={exercise.id}
                         onClick={() => quickAddExercise(exercise)}
-                        className={`w-full p-4 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
+                        className={`w-full p-3 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
                           exercise.todayCount > 0
                             ? 'bg-gray-900/40 hover:bg-gray-900/50'
                             : 'bg-gray-900/30 hover:bg-gray-900/40'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-xl">{exercise.emoji}</span>
-                            <div>
-                              <div className="font-medium text-white">{exercise.name}</div>
-                              {exercise.todayCount > 0 && (
-                                <div className="text-xs text-gray-400">
-                                  Done {exercise.todayCount}x today
-                                </div>
-                              )}
-                            </div>
+                          <div>
+                            <div className="font-medium text-white">{exercise.name}</div>
+                            {exercise.todayCount > 0 && (
+                              <div className="text-xs text-gray-400">
+                                Done {exercise.todayCount}x today
+                              </div>
+                            )}
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-black text-orange-400">{exercise.points_per_unit}</div>
