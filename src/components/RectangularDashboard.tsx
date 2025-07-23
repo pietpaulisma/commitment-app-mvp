@@ -64,7 +64,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
           <div className="mb-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
           </div>
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-white leading-none mb-1">
@@ -94,11 +94,11 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
           <div className="mb-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
           </div>
           
           {/* 24-hour grid (12x2) */}
-          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
+          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-x-1 gap-y-1">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
               const isHigh = intensity > 70
@@ -198,7 +198,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         <div className="p-4 h-full flex flex-col">
           {/* Header */}
           <div className="mb-4">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
             <div className="text-xs text-gray-500">{stat.subtitle}</div>
           </div>
           
@@ -260,7 +260,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         {/* Content overlay */}
         <div className="relative p-4 h-full flex flex-col z-10">
           <div className="mb-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
           </div>
           <div className="flex-1 flex flex-col justify-center">
             {/* Days remaining - big copy */}
@@ -271,7 +271,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
             
             {/* Person name with birthday icon */}
             <div className="flex items-center gap-1 text-white">
-              <span className="text-sm">🎂</span>
+              <div className="w-3 h-3 bg-white rounded-full relative">
+                <div className="absolute top-0.5 left-0.5 w-2 h-1.5 bg-purple-400 rounded-t-full"></div>
+              </div>
               <span className="text-sm font-bold">{stat.subtitle}</span>
             </div>
           </div>
@@ -292,7 +294,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         <div className="p-4 h-full flex flex-col">
           {/* Header */}
           <div className="mb-3">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
             {recordDay && (
               <div className="flex items-baseline gap-2">
                 <span className={`text-4xl font-black ${accentColor}`}>
@@ -308,7 +310,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           
           {/* Vertical Bar Chart */}
           <div className="flex-1 flex items-end gap-1 px-4">
-            {data.slice(-20).map((point: any, i: number) => {
+            {data.slice(-40).map((point: any, i: number) => {
               const height = Math.max(2, (point.points / maxValue) * 70)
               const isRecord = data.indexOf(point) === recordIndex
               
