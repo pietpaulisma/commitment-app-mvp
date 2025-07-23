@@ -98,7 +98,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* 24-hour grid (12x2) */}
-          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-x-1 gap-y-1">
+          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
               const isHigh = intensity > 70
@@ -310,7 +310,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           
           {/* Vertical Bar Chart */}
           <div className="flex-1 flex items-end gap-1 px-4">
-            {data.slice(-40).map((point: any, i: number) => {
+            {data.slice(-45).map((point: any, i: number) => {
               const height = Math.max(2, (point.points / maxValue) * 70)
               const isRecord = data.indexOf(point) === recordIndex
               
