@@ -1063,32 +1063,22 @@ export default function RectangularDashboard() {
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
-                  <span className={`text-5xl font-thin uppercase tracking-wide ${
-                    timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
-                  }`}>DAY</span>
-                  <span className={`text-5xl font-black ${
-                    timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
-                  }`}>{challengeDay}</span>
+                  <span className="text-5xl font-thin uppercase tracking-wide text-white">DAY</span>
+                  <span className="text-5xl font-black text-white">{challengeDay}</span>
                 </div>
-                <p className={`text-sm font-medium -mt-1 ${
-                  timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
-                }`}>
+                <p className="text-sm font-medium -mt-1 text-white">
                   {getCurrentDayName()}
                 </p>
               </div>
               <div className="text-right">
-                <div className={`text-3xl font-black ${
-                  timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
-                }`}>
+                <div className="text-3xl font-black text-white">
                   {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
                     <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
                       {char}
                     </span>
                   ))}
                 </div>
-                <div className={`text-sm font-medium -mt-1 ${
-                  timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
-                }`}>
+                <div className="text-sm font-medium -mt-1 text-white">
                   remaining
                 </div>
               </div>
