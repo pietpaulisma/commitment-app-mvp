@@ -851,15 +851,15 @@ export default function RectangularDashboard() {
   // Simple layout classes without useCallback to avoid circular dependencies
   const getLayoutClasses = (blockType: string) => {
     switch (blockType) {
-      case 'A': return 'col-span-1 row-span-1 h-32' // 1×1 square
-      case 'B1': return 'col-span-1 row-span-2 h-64' // 1×2 tall (top part)
+      case 'A': return 'aspect-square' // 1×1 square
+      case 'B1': return 'aspect-[1/2]' // 1×2 tall (top part)
       case 'B2': return 'hidden' // 1×2 tall (bottom part - handled by B1)
-      case 'C1': return 'col-span-2 row-span-1 h-32' // 2×1 wide (left part)  
+      case 'C1': return 'aspect-[2/1]' // 2×1 wide (left part)  
       case 'C2': return 'hidden' // 2×1 wide (right part - handled by C1)
-      case 'square': return 'col-span-1 row-span-1 h-32' // 1×1 square (alias)
-      case 'col-span-2': return 'col-span-2 row-span-1 h-32' // 2×1 wide
-      case 'vertical': return 'col-span-1 row-span-2 h-64' // 1×2 vertical rectangle
-      default: return 'col-span-1 row-span-1 h-32'
+      case 'square': return 'aspect-square' // 1×1 square (alias)
+      case 'col-span-2': return 'aspect-[2/1]' // 2×1 wide
+      case 'vertical': return 'aspect-[1/2]' // 1×2 vertical rectangle
+      default: return 'aspect-square'
     }
   }
 
@@ -1193,7 +1193,7 @@ export default function RectangularDashboard() {
             <h3 className="text-2xl font-bold text-white mb-6 px-4">Stats</h3>
             
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
-              <div className="space-y-0">
+              <div className="space-y-0 border-t border-b border-gray-800">
                 {/* Top row - Group Points (full width) */}
                 <div className="w-full border-b border-gray-800">
                   <MemoizedChartComponent 
