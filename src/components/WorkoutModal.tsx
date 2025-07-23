@@ -424,45 +424,45 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-        {/* Header - EXACT COPY from MobileWorkoutLogger.tsx */}
+        {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
         <div className="sticky top-0">
           <div className="flex">
-            {/* Progress Bar Section - EXACT copy */}
-            <div className="flex-1 bg-black border-b border-gray-800 relative overflow-hidden">
-              {/* Progress bar background */}
+            {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
+            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
+              {/* Progress Background */}
               <div 
-                className="absolute right-0 top-0 bottom-0 bg-orange-400 transition-all duration-1000 ease-out"
-                style={{ width: `${Math.min(100, (dailyProgress / dailyTarget) * 100)}%` }}
+                className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out"
+                style={{ width: `${progressPercentage}%` }}
               />
               
-              {/* Content */}
-              <div className="relative px-4 py-6">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <div className="flex items-baseline space-x-1">
-                      <span className="text-4xl font-black text-white">{dailyProgress}</span>
-                      <span className="text-2xl font-thin text-white">PT</span>
-                    </div>
-                    <p className="text-sm font-medium -mt-1 text-white">
-                      {dailyProgress >= dailyTarget ? "Target Complete!" : `${Math.max(0, dailyTarget - dailyProgress)} remaining`}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-black text-white">
-                      {Math.round((dailyProgress / dailyTarget) * 100)}%
-                    </div>
-                    <div className="text-sm font-medium -mt-1 text-white">
-                      complete
-                    </div>
-                  </div>
+              {/* Button Content */}
+              <div className="relative h-full flex items-center justify-between px-6 text-white">
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-sm tracking-tight uppercase">
+                    {progressPercentage >= 100 ? 'Complete!' : 'Log Workout'}
+                  </span>
+                  <span className="text-xs opacity-75 font-medium">
+                    {dailyProgress}/{dailyTarget} pts
+                  </span>
+                </div>
+                
+                <div className="flex flex-col items-end justify-center h-full">
+                  <span className="text-3xl font-black tracking-tight leading-none">
+                    {Math.round(progressPercentage)}%
+                  </span>
                 </div>
               </div>
+
+              {/* Subtle glow when complete */}
+              {progressPercentage >= 100 && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+              )}
             </div>
 
             {/* X Button */}
             <button
               onClick={onClose}
-              className="w-16 bg-black border-b border-gray-800 border-l border-gray-800 flex items-center justify-center hover:bg-gray-900 text-gray-400 hover:text-white transition-colors duration-200"
+              className="w-16 h-16 bg-gray-900 border-l border-gray-700 flex items-center justify-center hover:bg-gray-800 text-gray-400 hover:text-white transition-colors duration-200"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
