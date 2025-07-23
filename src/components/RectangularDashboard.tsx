@@ -673,10 +673,11 @@ export default function RectangularDashboard() {
       })
 
       // Create final member objects with their points
+      const currentDayOfMonth = new Date().getDate()
       const membersWithProgress = allMembers.map(member => ({
         ...member,
         todayPoints: memberPointsMap.get(member.id) || 0,
-        dailyTarget: 100,
+        dailyTarget: currentDayOfMonth,
         isCurrentUser: member.id === user?.id
       }))
       
@@ -1095,14 +1096,14 @@ export default function RectangularDashboard() {
                 </p>
               </div>
               <div className="text-right">
-                <div className={`text-3xl font-black ${getTimeTextColor()}`}>
+                <div className="text-3xl font-black text-white">
                   {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
                     <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
                       {char}
                     </span>
                   ))}
                 </div>
-                <div className={`text-sm font-medium -mt-1 ${getTimeTextColor()}`}>
+                <div className="text-sm font-medium -mt-1 text-white">
                   remaining
                 </div>
               </div>
@@ -1135,7 +1136,7 @@ export default function RectangularDashboard() {
                 {Array.from({ length: Math.ceil(groupMembers.length / 2) }, (_, rowIndex) => (
                   <div key={rowIndex} className="grid grid-cols-2 gap-0">
                     {groupMembers.slice(rowIndex * 2, rowIndex * 2 + 2).map((member, colIndex) => {
-                      const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
+                      const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || new Date().getDate())) * 100)
                       
                       // Default to purple, user can define their own color later
                       const userColor = member.preferredColor || 'bg-purple-400'

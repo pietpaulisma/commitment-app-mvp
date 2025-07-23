@@ -668,8 +668,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           <div key={workout.id} className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
                             {/* Progress bar background */}
                             <div 
-                              className="absolute left-0 top-0 bottom-0 bg-blue-500/30 transition-all duration-500 ease-out"
-                              style={{ width: `${exerciseProgress.percentage}%` }}
+                              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+                              style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
                             />
                             
                             <div className="relative p-3">
@@ -715,8 +715,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       >
                         {/* Progress bar background */}
                         <div 
-                          className="absolute left-0 top-0 bottom-0 bg-blue-500/30 transition-all duration-500 ease-out"
-                          style={{ width: `${getExerciseProgress(rec.exercise.id).percentage}%` }}
+                          className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+                          style={{ width: `${Math.min(100, getExerciseProgress(rec.exercise.id).percentage)}%` }}
                         />
                         
                         <div className="relative p-3">
@@ -764,8 +764,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       >
                         {/* Progress bar background */}
                         <div 
-                          className="absolute left-0 top-0 bottom-0 bg-blue-500/30 transition-all duration-500 ease-out"
-                          style={{ width: `${getExerciseProgress(exercise.id).percentage}%` }}
+                          className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+                          style={{ width: `${Math.min(100, getExerciseProgress(exercise.id).percentage)}%` }}
                         />
                         
                         <div className="relative p-3">
@@ -812,8 +812,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       >
                         {/* Progress bar background */}
                         <div 
-                          className="absolute left-0 top-0 bottom-0 bg-purple-500/30 transition-all duration-500 ease-out"
-                          style={{ width: `${getExerciseProgress(exercise.id).percentage}%` }}
+                          className="absolute left-0 top-0 bottom-0 bg-purple-500 transition-all duration-500 ease-out"
+                          style={{ width: `${Math.min(100, getExerciseProgress(exercise.id).percentage)}%` }}
                         />
                         
                         <div className="relative p-3">
