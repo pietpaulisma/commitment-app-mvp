@@ -304,33 +304,33 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
             )}
           </div>
           
-          {/* Horizontal Bar Chart */}
-          <div className="flex-1 flex flex-col justify-center gap-1 px-4">
-            {data.slice(-10).map((point: any, i: number) => {
-              const width = Math.max(2, (point.points / maxValue) * 90)
-              const isRecord = data.indexOf(point) === recordIndex
+          {/* Vertical Bar Chart */}
+          <div className="flex-1 flex items-end justify-center gap-1 px-2">
+            {data.map((point: any, i: number) => {
+              const height = Math.max(2, (point.points / maxValue) * 70)
+              const isRecord = i === recordIndex
               
               return (
                 <div
                   key={i}
-                  className="flex items-center gap-1"
+                  className="flex flex-col items-center"
                 >
-                  {/* Horizontal bar */}
+                  {/* Vertical bar */}
                   <div
-                    className={`h-1 transition-all duration-700 ${
+                    className={`w-1 transition-all duration-700 ${
                       isRecord ? 'bg-orange-400' : 'bg-gray-500'
                     }`}
                     style={{ 
-                      width: `${width}%`,
+                      height: `${height}px`,
                       animationDelay: `${i * 20}ms`,
-                      animation: 'slideRightScale 0.8s ease-out forwards',
-                      minWidth: '2px'
+                      animation: 'slideUpScale 0.8s ease-out forwards',
+                      minHeight: '2px'
                     }}
                   />
                   {/* Record highlight dot */}
                   {isRecord && (
                     <div 
-                      className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"
+                      className="w-2 h-2 bg-orange-400 rounded-full -mt-1 animate-pulse"
                       style={{
                         animationDelay: `${(i * 20) + 400}ms`
                       }}
@@ -796,8 +796,8 @@ export default function RectangularDashboard() {
           interestingStats: [
             { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
             { ...stats.moneyPot, layout: 'square' },        // Bottom left - square
-            { ...stats.birthday, layout: 'square' },        // Bottom middle - square  
-            { ...stats.workoutTimes, layout: 'square' }     // Bottom right - square
+            { ...stats.birthday, layout: 'square' },        // Bottom right - square  
+            { ...stats.workoutTimes, layout: 'col-span-2' } // Bottom - full width rectangle
           ]
         })
       }
@@ -1210,8 +1210,8 @@ export default function RectangularDashboard() {
                   />
                 </div>
                 
-                {/* Bottom row - Money Pot, Birthday, and Workout Times (3 squares) */}
-                <div className="grid grid-cols-3 gap-0">
+                {/* Middle row - Money Pot and Birthday (2 squares) */}
+                <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
                   <div className="border-r border-gray-800">
                     <MemoizedChartComponent 
                       key={`${groupStats.interestingStats[1].type}-1`}
@@ -1220,14 +1220,16 @@ export default function RectangularDashboard() {
                       getLayoutClasses={getLayoutClasses}
                     />
                   </div>
-                  <div className="border-r border-gray-800">
-                    <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[2].type}-2`}
-                      stat={groupStats.interestingStats[2]} 
-                      index={2} 
-                      getLayoutClasses={getLayoutClasses}
-                    />
-                  </div>
+                  <MemoizedChartComponent 
+                    key={`${groupStats.interestingStats[2].type}-2`}
+                    stat={groupStats.interestingStats[2]} 
+                    index={2} 
+                    getLayoutClasses={getLayoutClasses}
+                  />
+                </div>
+                
+                {/* Bottom row - Workout Times (full width rectangle) */}
+                <div className="w-full">
                   <MemoizedChartComponent 
                     key={`${groupStats.interestingStats[3].type}-3`}
                     stat={groupStats.interestingStats[3]} 
