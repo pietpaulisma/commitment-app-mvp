@@ -1195,7 +1195,7 @@ export default function RectangularDashboard() {
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
               <div className="space-y-0">
                 {/* Top row - Group Points (full width) */}
-                <div className="w-full">
+                <div className="w-full border-b border-gray-800">
                   <MemoizedChartComponent 
                     key={`${groupStats.interestingStats[0].type}-0`}
                     stat={groupStats.interestingStats[0]} 
@@ -1205,13 +1205,15 @@ export default function RectangularDashboard() {
                 </div>
                 
                 {/* Middle row - Money Pot and Birthday (2 squares) */}
-                <div className="grid grid-cols-2 gap-0">
-                  <MemoizedChartComponent 
-                    key={`${groupStats.interestingStats[1].type}-1`}
-                    stat={groupStats.interestingStats[1]} 
-                    index={1} 
-                    getLayoutClasses={getLayoutClasses}
-                  />
+                <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
+                  <div className="border-r border-gray-800">
+                    <MemoizedChartComponent 
+                      key={`${groupStats.interestingStats[1].type}-1`}
+                      stat={groupStats.interestingStats[1]} 
+                      index={1} 
+                      getLayoutClasses={getLayoutClasses}
+                    />
+                  </div>
                   <MemoizedChartComponent 
                     key={`${groupStats.interestingStats[2].type}-2`}
                     stat={groupStats.interestingStats[2]} 
