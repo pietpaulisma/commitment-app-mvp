@@ -64,7 +64,7 @@ export default function DarkMobileDashboard() {
           .from('group_settings')
           .select('*')
           .eq('group_id', profile.group_id)
-          .single()
+          .maybeSingle()
 
         if (groupSettings) {
           const daysSinceStart = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))

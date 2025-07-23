@@ -78,11 +78,15 @@ export default function NewDashboard() {
       // Get target
       let todayTarget = 100
       if (profile.group_id) {
-        const { data: groupSettings } = await supabase
+        const { data: groupSettings, error: settingsError } = await supabase
           .from('group_settings')
           .select('*')
           .eq('group_id', profile.group_id)
-          .single()
+          .maybeSingle()
+        
+        if (settingsError) {
+          console.log('Error loading group settings:', settingsError)
+        }
 
         if (groupSettings) {
           const daysSinceStart = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))

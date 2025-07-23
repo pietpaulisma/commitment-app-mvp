@@ -73,7 +73,7 @@ export default function MobileTargets() {
         .from('group_settings')
         .select('*')
         .eq('group_id', profile.group_id)
-        .single()
+        .maybeSingle()
 
       if (settingsError) throw settingsError
 
