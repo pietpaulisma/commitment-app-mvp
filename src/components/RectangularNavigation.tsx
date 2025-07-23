@@ -21,6 +21,7 @@ export default function RectangularNavigation() {
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(100)
+  const [recoveryProgress, setRecoveryProgress] = useState(0)
   const [accentColor, setAccentColor] = useState('blue')
   const [groupName, setGroupName] = useState('')
 
@@ -38,17 +39,24 @@ export default function RectangularNavigation() {
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Get today's points
+      // Get today's points with exercise types
       const { data: todayLogs } = await supabase
         .from('logs')
-        .select('points')
+        .select(`
+          points,
+          exercises (type)
+        `)
         .eq('user_id', user.id)
         .eq('date', today)
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+      const recoveryPoints = todayLogs
+        ?.filter(log => log.exercises?.type === 'recovery')
+        ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target based on day type
-      let target = 100
+      // Calculate target based on current day number (day of the month)
+      const currentDate = new Date()
+      let target = currentDate.getDate() // Day number (1-31)
       let restDays = [1] // Default Monday
       let recoveryDays = [5] // Default Friday
       
@@ -57,7 +65,7 @@ export default function RectangularNavigation() {
           // Load group and group settings
           const { data: group } = await supabase
             .from('groups')
-            .select('start_date, name')
+            .select('name')
             .eq('id', profile.group_id)
             .single()
           
@@ -65,7 +73,7 @@ export default function RectangularNavigation() {
 
           const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
-            .select('*')
+            .select('rest_days, recovery_days, accent_color')
             .eq('group_id', profile.group_id)
             .maybeSingle()
 
@@ -73,12 +81,6 @@ export default function RectangularNavigation() {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
             setAccentColor(groupSettings.accent_color || 'blue')
-            
-            const daysSinceStart = group?.start_date 
-              ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-              : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
-            
-            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
           }
         }
       } catch (error) {
@@ -86,15 +88,16 @@ export default function RectangularNavigation() {
       }
 
       // Adjust target based on day type
-      const currentDayOfWeek = new Date().getDay()
+      const currentDayOfWeek = currentDate.getDay()
       if (restDays.includes(currentDayOfWeek)) {
         target = 0 // Rest day - no points required
       } else if (recoveryDays.includes(currentDayOfWeek)) {
-        target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
+        target = Math.round(target * 0.25) // Recovery day - 25% of daily target for recovery
       }
 
       setDailyProgress(todayPoints)
       setDailyTarget(target)
+      setRecoveryProgress(recoveryPoints)
     } catch (error) {
       console.error('Error loading daily progress:', error)
     }
@@ -117,6 +120,8 @@ export default function RectangularNavigation() {
   }
 
   const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
+  const recoveryPercentage = dailyTarget > 0 ? Math.min(25, (recoveryProgress / dailyTarget) * 100) : 0
+  const regularPercentage = progressPercentage - recoveryPercentage
   const isComplete = progressPercentage >= 100
   const accentBg = getAccentColor()
 
@@ -130,10 +135,15 @@ export default function RectangularNavigation() {
             onClick={() => setIsWorkoutOpen(true)}
             className={`flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-opacity duration-200`}
           >
-            {/* Progress Background */}
+            {/* Regular Progress Background */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out"
-              style={{ width: `${progressPercentage}%` }}
+              className="absolute left-0 top-0 bottom-0 bg-purple-500 transition-all duration-500 ease-out"
+              style={{ width: `${Math.max(0, regularPercentage)}%` }}
+            />
+            {/* Recovery Progress Background */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+              style={{ width: `${recoveryPercentage}%` }}
             />
             
             {/* Button Content */}

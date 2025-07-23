@@ -54,6 +54,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [exercisesLoading, setExercisesLoading] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(100)
+  const [recoveryProgress, setRecoveryProgress] = useState(0)
   const [showSportSelection, setShowSportSelection] = useState(false)
   const [selectedSportType, setSelectedSportType] = useState('')
   const [selectedIntensity, setSelectedIntensity] = useState('medium')
@@ -79,44 +80,39 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Get today's points
+      // Get today's points with exercise types
       const { data: todayLogs } = await supabase
         .from('logs')
-        .select('points')
+        .select(`
+          points,
+          exercises (type)
+        `)
         .eq('user_id', user.id)
         .eq('date', today)
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+      const recoveryPoints = todayLogs
+        ?.filter(log => log.exercises?.type === 'recovery')
+        ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target based on day type
-      let target = 100
+      // Calculate target based on current day number (day of the month)
+      const currentDate = new Date()
+      let target = currentDate.getDate() // Day number (1-31)
       let restDays = [1] // Default Monday
       let recoveryDays = [5] // Default Friday
       
       try {
         if (profile.group_id) {
-          // Load group and group settings
-          const { data: group } = await supabase
-            .from('groups')
-            .select('start_date')
-            .eq('id', profile.group_id)
-            .single()
-
+          // Load group settings for day type configurations
           const { data: groupSettings } = await supabase
             .from('group_settings')
-            .select('*')
+            .select('rest_days, recovery_days')
             .eq('group_id', profile.group_id)
             .single()
 
           if (groupSettings) {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
-            
-            const daysSinceStart = group?.start_date 
-              ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-              : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
-            
-            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
           }
         }
       } catch (error) {
@@ -124,15 +120,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       }
 
       // Adjust target based on day type
-      const currentDayOfWeek = new Date().getDay()
+      const currentDayOfWeek = currentDate.getDay()
       if (restDays.includes(currentDayOfWeek)) {
         target = 0 // Rest day - no points required
       } else if (recoveryDays.includes(currentDayOfWeek)) {
-        target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
+        target = Math.round(target * 0.25) // Recovery day - 25% of daily target for recovery
       }
 
       setDailyProgress(todayPoints)
       setDailyTarget(target)
+      setRecoveryProgress(recoveryPoints)
     } catch (error) {
       console.error('Error loading daily progress:', error)
     }
@@ -161,22 +158,86 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   }
 
   const getExerciseIcon = (exercise: Exercise) => {
-    const type = exercise.type.toLowerCase()
+    const name = exercise.name.toLowerCase()
     
-    // Type-based icon mappings using Heroicons
-    switch (type) {
-      case 'strength':
+    // Exercise-specific icon mappings using Heroicons
+    switch (name) {
+      // Strength exercises
+      case 'push-ups':
+      case 'pushups':
         return <FireIcon className="w-5 h-5 text-gray-400" />
-      case 'cardio':
-        return <HeartIcon className="w-5 h-5 text-gray-400" />
-      case 'flexibility':
-        return <SparklesIcon className="w-5 h-5 text-gray-400" />
-      case 'recovery':
-        return <MoonIcon className="w-5 h-5 text-gray-400" />
-      case 'endurance':
+      case 'pull-ups':
+      case 'pullups':
         return <BoltIcon className="w-5 h-5 text-gray-400" />
-      default:
+      case 'squats':
+        return <HeartIcon className="w-5 h-5 text-gray-400" />
+      case 'lunges':
+        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+      case 'sit-ups':
+      case 'situps':
+        return <MoonIcon className="w-5 h-5 text-gray-400" />
+      case 'dips':
+        return <BoltIcon className="w-5 h-5 text-gray-400" />
+      case 'jumping jacks':
+        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+      
+      // Cardio exercises
+      case 'running':
+        return <BoltIcon className="w-5 h-5 text-gray-400" />
+      case 'cycling':
+      case 'biking':
+        return <HeartIcon className="w-5 h-5 text-gray-400" />
+      case 'swimming':
+        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+      case 'walking':
         return <FireIcon className="w-5 h-5 text-gray-400" />
+      
+      // Recovery exercises
+      case 'stretching':
+        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+      case 'yoga':
+        return <MoonIcon className="w-5 h-5 text-gray-400" />
+      case 'meditation':
+        return <MoonIcon className="w-5 h-5 text-gray-400" />
+      case 'foam rolling':
+      case 'blackrolling':
+        return <HeartIcon className="w-5 h-5 text-gray-400" />
+      case 'massage':
+        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+      case 'sauna':
+        return <FireIcon className="w-5 h-5 text-gray-400" />
+      case 'ice bath':
+      case 'cold shower':
+        return <BoltIcon className="w-5 h-5 text-gray-400" />
+      
+      // Sport activities
+      case 'tennis':
+        return <BoltIcon className="w-5 h-5 text-gray-400" />
+      case 'basketball':
+        return <FireIcon className="w-5 h-5 text-gray-400" />
+      case 'football':
+      case 'soccer':
+        return <HeartIcon className="w-5 h-5 text-gray-400" />
+      case 'volleyball':
+        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+      
+      default:
+        // Fallback to type-based icons
+        const type = exercise.type?.toLowerCase()
+        switch (type) {
+          case 'strength':
+            return <FireIcon className="w-5 h-5 text-gray-400" />
+          case 'cardio':
+            return <HeartIcon className="w-5 h-5 text-gray-400" />
+          case 'flexibility':
+            return <SparklesIcon className="w-5 h-5 text-gray-400" />
+          case 'recovery':
+            return <MoonIcon className="w-5 h-5 text-gray-400" />
+          case 'endurance':
+            return <BoltIcon className="w-5 h-5 text-gray-400" />
+          default:
+            return <FireIcon className="w-5 h-5 text-gray-400" />
+        }
     }
   }
 
@@ -504,6 +565,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   })
   
   const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
+  const recoveryPercentage = dailyTarget > 0 ? Math.min(25, (recoveryProgress / dailyTarget) * 100) : 0
+  const regularPercentage = progressPercentage - recoveryPercentage
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
@@ -512,10 +575,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           <div className="flex">
             {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
-              {/* Progress Background */}
+              {/* Regular Progress Background */}
               <div 
-                className="absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500 ease-out"
-                style={{ width: `${progressPercentage}%` }}
+                className="absolute left-0 top-0 bottom-0 bg-purple-500 transition-all duration-500 ease-out"
+                style={{ width: `${Math.max(0, regularPercentage)}%` }}
+              />
+              {/* Recovery Progress Background */}
+              <div 
+                className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+                style={{ width: `${recoveryPercentage}%` }}
               />
               
               {/* Button Content */}
@@ -581,14 +649,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       <p className="text-gray-500 text-sm mt-1">Select exercises below to get started</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-0 border-t border-gray-800">
                       {todaysWorkouts.map((workout) => {
                         const exerciseProgress = getExerciseProgress(workout.exercise_id)
                         return (
-                          <div key={workout.id} className="relative bg-gray-900/30 rounded-lg overflow-hidden">
+                          <div key={workout.id} className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
                             {/* Progress bar background */}
                             <div 
-                              className="absolute left-0 top-0 bottom-0 bg-green-500/30 transition-all duration-500 ease-out"
+                              className="absolute left-0 top-0 bottom-0 bg-purple-500/30 transition-all duration-500 ease-out"
                               style={{ width: `${exerciseProgress.percentage}%` }}
                             />
                             
@@ -600,13 +668,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                                     <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <span className="text-lg font-black text-gray-500">
+                                <div className="text-right min-w-[80px]">
+                                  <span className="font-medium text-white">
                                     {workout.points % 1 === 0 
                                       ? workout.points 
                                       : workout.points.toFixed(2)
-                                    } <span className="font-thin">pts</span>
+                                    }
                                   </span>
+                                  <span className="font-thin text-white ml-1">pts</span>
                                 </div>
                               </div>
                             </div>
@@ -635,7 +704,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       >
                         {/* Progress bar background */}
                         <div 
-                          className="absolute left-0 top-0 bottom-0 bg-green-500/30 transition-all duration-500 ease-out"
+                          className="absolute left-0 top-0 bottom-0 bg-purple-500/30 transition-all duration-500 ease-out"
                           style={{ width: `${getExerciseProgress(rec.exercise.id).percentage}%` }}
                         />
                         
@@ -684,7 +753,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       >
                         {/* Progress bar background */}
                         <div 
-                          className="absolute left-0 top-0 bottom-0 bg-green-500/30 transition-all duration-500 ease-out"
+                          className="absolute left-0 top-0 bottom-0 bg-purple-500/30 transition-all duration-500 ease-out"
                           style={{ width: `${getExerciseProgress(exercise.id).percentage}%` }}
                         />
                         
@@ -697,7 +766,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                               </div>
                             </div>
                             <div className="text-right min-w-[80px]">
-                              <span className="font-medium text-white">
+                              <span className="font-medium text-gray-500">
                                 {exercise.points_per_unit % 1 === 0 
                                   ? exercise.points_per_unit 
                                   : exercise.points_per_unit.toFixed(2)
@@ -732,7 +801,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       >
                         {/* Progress bar background */}
                         <div 
-                          className="absolute left-0 top-0 bottom-0 bg-green-500/30 transition-all duration-500 ease-out"
+                          className="absolute left-0 top-0 bottom-0 bg-purple-500/30 transition-all duration-500 ease-out"
                           style={{ width: `${getExerciseProgress(exercise.id).percentage}%` }}
                         />
                         
@@ -745,7 +814,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                               </div>
                             </div>
                             <div className="text-right min-w-[80px]">
-                              <span className="font-medium text-white">
+                              <span className="font-medium text-gray-500">
                                 {exercise.points_per_unit % 1 === 0 
                                   ? exercise.points_per_unit 
                                   : exercise.points_per_unit.toFixed(2)
