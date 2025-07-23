@@ -177,6 +177,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
+  const getExerciseProgress = (exerciseId: string) => {
+    const exercisePoints = todaysWorkouts
+      .filter(workout => workout.exercise_id === exerciseId)
+      .reduce((sum, workout) => sum + workout.points, 0)
+    
+    // Calculate percentage of daily target this exercise represents
+    const progressPercentage = dailyTarget > 0 ? Math.min(100, (exercisePoints / dailyTarget) * 100) : 0
+    
+    return {
+      points: exercisePoints,
+      percentage: progressPercentage
+    }
+  }
+
   const loadExercises = async () => {
     if (!profile?.group_id || !user) {
       console.log('Cannot load exercises - missing profile or user:', { profile: !!profile, user: !!user })
@@ -556,17 +570,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
-                                <span className="text-sm font-black text-orange-400">
-                                  {workout.points % 1 === 0 
-                                    ? workout.points 
-                                    : workout.points.toFixed(2)
-                                  }
-                                </span>
-                                <span className="text-xs font-medium text-orange-300 ml-1">
-                                  pts
-                                </span>
-                              </div>
+                              <span className="text-lg font-black text-gray-500">
+                                {workout.points % 1 === 0 
+                                  ? workout.points 
+                                  : workout.points.toFixed(2)
+                                } pts
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -585,28 +594,39 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       <button
                         key={rec.exercise.id}
                         onClick={() => quickAddExercise(rec.exercise)}
-                        className={`w-full p-3 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
+                        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 hover:scale-105 ${
                           rec.priority === 'high' 
                             ? 'bg-gray-900/40 hover:bg-gray-900/50' 
                             : 'bg-gray-900/30 hover:bg-gray-900/40'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            {getExerciseIcon(rec.exercise)}
-                            <div>
-                              <div className="font-medium text-white">{rec.exercise.name}</div>
-                              <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
+                        {/* Progress bar background */}
+                        <div 
+                          className="absolute left-0 top-0 bottom-0 bg-green-500/30 transition-all duration-500 ease-out"
+                          style={{ width: `${getExerciseProgress(rec.exercise.id).percentage}%` }}
+                        />
+                        
+                        <div className="relative p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {getExerciseIcon(rec.exercise)}
+                              <div>
+                                <div className="font-medium text-white">{rec.exercise.name}</div>
+                                <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="text-left min-w-[80px]">
-                            <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
-                              <span className="text-sm font-black text-orange-400">
-                                {rec.exercise.points_per_unit}
-                              </span>
-                              <span className="text-xs font-medium text-orange-300 ml-1">
-                                {rec.exercise.unit.replace('minute', 'min').replace('hour', 'h')}
-                              </span>
+                            <div className="text-left min-w-[80px]">
+                              <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
+                                <span className="text-sm font-black text-orange-400">
+                                  {rec.exercise.points_per_unit % 1 === 0 
+                                    ? rec.exercise.points_per_unit 
+                                    : rec.exercise.points_per_unit.toFixed(2)
+                                  }
+                                </span>
+                                <span className="text-xs font-medium text-orange-300 ml-1">
+                                  {rec.exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -625,35 +645,43 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       <button
                         key={exercise.id}
                         onClick={() => quickAddExercise(exercise)}
-                        className={`w-full p-3 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
+                        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 hover:scale-105 ${
                           exercise.todayCount > 0
                             ? 'bg-gray-900/40 hover:bg-gray-900/50'
                             : 'bg-gray-900/30 hover:bg-gray-900/40'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            {getExerciseIcon(exercise)}
-                            <div>
-                              <div className="font-medium text-white">{exercise.name}</div>
-                              {exercise.todayCount > 0 && (
-                                <div className="text-xs text-gray-400">
-                                  Done {exercise.todayCount}x today
-                                </div>
-                              )}
+                        {/* Progress bar background */}
+                        <div 
+                          className="absolute left-0 top-0 bottom-0 bg-green-500/30 transition-all duration-500 ease-out"
+                          style={{ width: `${getExerciseProgress(exercise.id).percentage}%` }}
+                        />
+                        
+                        <div className="relative p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {getExerciseIcon(exercise)}
+                              <div>
+                                <div className="font-medium text-white">{exercise.name}</div>
+                                {exercise.todayCount > 0 && (
+                                  <div className="text-xs text-gray-400">
+                                    Done {exercise.todayCount}x today
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div className="text-left min-w-[80px]">
-                            <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
-                              <span className="text-sm font-black text-orange-400">
-                                {exercise.points_per_unit % 1 === 0 
-                                  ? exercise.points_per_unit 
-                                  : exercise.points_per_unit.toFixed(2)
-                                }
-                              </span>
-                              <span className="text-xs font-medium text-orange-300 ml-1">
-                                {exercise.unit.replace('minute', 'min').replace('hour', 'h')}
-                              </span>
+                            <div className="text-left min-w-[80px]">
+                              <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
+                                <span className="text-sm font-black text-orange-400">
+                                  {exercise.points_per_unit % 1 === 0 
+                                    ? exercise.points_per_unit 
+                                    : exercise.points_per_unit.toFixed(2)
+                                  }
+                                </span>
+                                <span className="text-xs font-medium text-orange-300 ml-1">
+                                  {exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -672,35 +700,43 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       <button
                         key={exercise.id}
                         onClick={() => quickAddExercise(exercise)}
-                        className={`w-full p-3 text-left transition-all duration-300 hover:scale-105 border-b border-gray-800 ${
+                        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 hover:scale-105 ${
                           exercise.todayCount > 0
                             ? 'bg-gray-900/40 hover:bg-gray-900/50'
                             : 'bg-gray-900/30 hover:bg-gray-900/40'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            {getExerciseIcon(exercise)}
-                            <div>
-                              <div className="font-medium text-white">{exercise.name}</div>
-                              {exercise.todayCount > 0 && (
-                                <div className="text-xs text-gray-400">
-                                  Done {exercise.todayCount}x today
-                                </div>
-                              )}
+                        {/* Progress bar background */}
+                        <div 
+                          className="absolute left-0 top-0 bottom-0 bg-green-500/30 transition-all duration-500 ease-out"
+                          style={{ width: `${getExerciseProgress(exercise.id).percentage}%` }}
+                        />
+                        
+                        <div className="relative p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {getExerciseIcon(exercise)}
+                              <div>
+                                <div className="font-medium text-white">{exercise.name}</div>
+                                {exercise.todayCount > 0 && (
+                                  <div className="text-xs text-gray-400">
+                                    Done {exercise.todayCount}x today
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                          <div className="text-left min-w-[80px]">
-                            <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
-                              <span className="text-sm font-black text-orange-400">
-                                {exercise.points_per_unit % 1 === 0 
-                                  ? exercise.points_per_unit 
-                                  : exercise.points_per_unit.toFixed(2)
-                                }
-                              </span>
-                              <span className="text-xs font-medium text-orange-300 ml-1">
-                                {exercise.unit.replace('minute', 'min').replace('hour', 'h')}
-                              </span>
+                            <div className="text-left min-w-[80px]">
+                              <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
+                                <span className="text-sm font-black text-orange-400">
+                                  {exercise.points_per_unit % 1 === 0 
+                                    ? exercise.points_per_unit 
+                                    : exercise.points_per_unit.toFixed(2)
+                                  }
+                                </span>
+                                <span className="text-xs font-medium text-orange-300 ml-1">
+                                  {exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
