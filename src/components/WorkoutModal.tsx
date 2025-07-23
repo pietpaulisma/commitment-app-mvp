@@ -415,13 +415,22 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   
   // Get recovery exercises that are NOT already in recommendations to avoid duplicates
   const recommendedExerciseIds = recommendedExercises.map(rec => rec.exercise.id)
-  console.log('Recommended exercise IDs:', recommendedExerciseIds)
-  console.log('All recovery exercises:', exercises.filter(ex => ex.type === 'recovery').map(ex => ex.id))
   
-  const recoveryExercises = exercises.filter(ex => 
+  // TEMP FIX: Deduplicate recovery exercises by name to handle database duplicates
+  const recoveryExercisesRaw = exercises.filter(ex => 
     ex.type === 'recovery' && !recommendedExerciseIds.includes(ex.id)
   )
-  console.log('Filtered recovery exercises:', recoveryExercises.map(ex => ex.id))
+  
+  // Remove duplicates by exercise name (case insensitive)
+  const seenNames = new Set()
+  const recoveryExercises = recoveryExercisesRaw.filter(ex => {
+    const normalizedName = ex.name.toLowerCase().trim()
+    if (seenNames.has(normalizedName)) {
+      return false
+    }
+    seenNames.add(normalizedName)
+    return true
+  })
   
   const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
 
