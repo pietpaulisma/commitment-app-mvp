@@ -4,7 +4,14 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { 
+  XMarkIcon,
+  HeartIcon,
+  FireIcon,
+  MoonIcon,
+  BoltIcon,
+  SparklesIcon
+} from '@heroicons/react/24/outline'
 
 type Exercise = {
   id: string
@@ -123,31 +130,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
-  const getExerciseEmoji = (exercise: Exercise): string => {
-    const name = exercise.name.toLowerCase()
+  const getExerciseIcon = (exercise: Exercise) => {
     const type = exercise.type.toLowerCase()
     
-    // Specific exercise mappings
-    if (name.includes('push') || name.includes('press')) return '💪'
-    if (name.includes('pull') || name.includes('row')) return '🦵'
-    if (name.includes('squat')) return '🏃'
-    if (name.includes('deadlift')) return '🏋️'
-    if (name.includes('run') || name.includes('jog')) return '🏃'
-    if (name.includes('walk')) return '🚶'
-    if (name.includes('swim')) return '🏊'
-    if (name.includes('cycle') || name.includes('bike')) return '🚴'
-    if (name.includes('plank')) return '🧘'
-    if (name.includes('stretch') || name.includes('yoga')) return '🧘'
-    if (name.includes('cardio')) return '❤️'
-    
-    // Type-based mappings
-    if (type === 'strength') return '💪'
-    if (type === 'cardio') return '❤️'
-    if (type === 'flexibility') return '🧘'
-    if (type === 'recovery') return '😴'
-    if (type === 'endurance') return '🏃'
-    
-    return '🏋️' // Default gym emoji
+    // Type-based icon mappings using Heroicons
+    switch (type) {
+      case 'strength':
+        return <FireIcon className="w-5 h-5 text-gray-400" />
+      case 'cardio':
+        return <HeartIcon className="w-5 h-5 text-gray-400" />
+      case 'flexibility':
+        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+      case 'recovery':
+        return <MoonIcon className="w-5 h-5 text-gray-400" />
+      case 'endurance':
+        return <BoltIcon className="w-5 h-5 text-gray-400" />
+      default:
+        return <FireIcon className="w-5 h-5 text-gray-400" />
+    }
   }
 
   const loadExercises = async () => {
@@ -219,12 +219,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       // Process exercises with progress
       const exercisesWithProgress: ExerciseWithProgress[] = exerciseList.map(exercise => {
         const todayCount = todayLogs?.filter(log => log.exercise_id === exercise.id).length || 0
-        const emoji = getExerciseEmoji(exercise)
         
         return {
           ...exercise,
           todayCount,
-          emoji
+          emoji: '' // Keep for compatibility but will use icons instead
         }
       })
       
@@ -503,13 +502,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-white">{rec.exercise.name}</div>
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
+                          <div className="flex items-center space-x-3">
+                            {getExerciseIcon(rec.exercise)}
+                            <div>
+                              <div className="font-medium text-white">{rec.exercise.name}</div>
+                              <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
+                            </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-black text-orange-400">{rec.exercise.points_per_unit}</div>
-                            <div className="text-xs text-gray-400">pts</div>
+                            <div className="text-lg font-black text-white">{rec.exercise.points_per_unit}/{rec.exercise.unit}</div>
                           </div>
                         </div>
                       </button>
@@ -534,17 +535,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-white">{exercise.name}</div>
-                            {exercise.todayCount > 0 && (
-                              <div className="text-xs text-gray-400">
-                                Done {exercise.todayCount}x today
-                              </div>
-                            )}
+                          <div className="flex items-center space-x-3">
+                            {getExerciseIcon(exercise)}
+                            <div>
+                              <div className="font-medium text-white">{exercise.name}</div>
+                              {exercise.todayCount > 0 && (
+                                <div className="text-xs text-gray-400">
+                                  Done {exercise.todayCount}x today
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-black text-orange-400">{exercise.points_per_unit}</div>
-                            <div className="text-xs text-gray-400">pts</div>
+                            <div className="text-lg font-black text-white">{exercise.points_per_unit}/{exercise.unit}</div>
                           </div>
                         </div>
                       </button>
@@ -569,17 +572,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-white">{exercise.name}</div>
-                            {exercise.todayCount > 0 && (
-                              <div className="text-xs text-gray-400">
-                                Done {exercise.todayCount}x today
-                              </div>
-                            )}
+                          <div className="flex items-center space-x-3">
+                            {getExerciseIcon(exercise)}
+                            <div>
+                              <div className="font-medium text-white">{exercise.name}</div>
+                              {exercise.todayCount > 0 && (
+                                <div className="text-xs text-gray-400">
+                                  Done {exercise.todayCount}x today
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-black text-orange-400">{exercise.points_per_unit}</div>
-                            <div className="text-xs text-gray-400">pts</div>
+                            <div className="text-lg font-black text-white">{exercise.points_per_unit}/{exercise.unit}</div>
                           </div>
                         </div>
                       </button>
