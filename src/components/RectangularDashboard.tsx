@@ -570,23 +570,40 @@ export default function RectangularDashboard() {
   }
 
   const getTimeBasedBarColor = () => {
-    // Use time remaining percentage to determine color progression
-    // Early day (lots of time left): happy green
-    // Mid day (some time left): neutral blue/purple  
-    // Late day (little time left): warning yellow then orange
+    // Calculate actual hours remaining
+    const now = new Date()
+    const endOfDay = new Date(now)
+    endOfDay.setHours(23, 59, 59, 999)
+    const hoursRemaining = (endOfDay.getTime() - now.getTime()) / (1000 * 60 * 60)
     
-    if (timeRemainingPercentage <= 20) {
-      // Less than 20% of day left: urgent orange
-      return 'bg-orange-400'
-    } else if (timeRemainingPercentage <= 40) {
-      // Less than 40% of day left: warning yellow
-      return 'bg-yellow-400'
-    } else if (timeRemainingPercentage <= 70) {
-      // Mid-day: neutral purple
-      return 'bg-purple-400'
+    if (hoursRemaining <= 1) {
+      // Last hour: urgent red
+      return 'bg-red-500'
+    } else if (hoursRemaining <= 3) {
+      // Low time: warning orange
+      return 'bg-orange-500'
     } else {
-      // Early day: happy green
-      return 'bg-green-400'
+      // Plenty of time: calm blue
+      return 'bg-blue-400'
+    }
+  }
+
+  const getTimeTextColor = () => {
+    // Calculate actual hours remaining
+    const now = new Date()
+    const endOfDay = new Date(now)
+    endOfDay.setHours(23, 59, 59, 999)
+    const hoursRemaining = (endOfDay.getTime() - now.getTime()) / (1000 * 60 * 60)
+    
+    if (hoursRemaining <= 1) {
+      // Last hour: urgent red text
+      return 'text-red-400'
+    } else if (hoursRemaining <= 3) {
+      // Low time: warning orange text
+      return 'text-orange-400'
+    } else {
+      // Plenty of time: calm blue text
+      return 'text-blue-400'
     }
   }
 
@@ -1078,14 +1095,14 @@ export default function RectangularDashboard() {
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-black text-white">
+                <div className={`text-3xl font-black ${getTimeTextColor()}`}>
                   {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
                     <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
                       {char}
                     </span>
                   ))}
                 </div>
-                <div className="text-sm font-medium -mt-1 text-white">
+                <div className={`text-sm font-medium -mt-1 ${getTimeTextColor()}`}>
                   remaining
                 </div>
               </div>
