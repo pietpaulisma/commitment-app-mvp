@@ -415,9 +415,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   
   // Get recovery exercises that are NOT already in recommendations to avoid duplicates
   const recommendedExerciseIds = recommendedExercises.map(rec => rec.exercise.id)
+  console.log('Recommended exercise IDs:', recommendedExerciseIds)
+  console.log('All recovery exercises:', exercises.filter(ex => ex.type === 'recovery').map(ex => ex.id))
+  
   const recoveryExercises = exercises.filter(ex => 
     ex.type === 'recovery' && !recommendedExerciseIds.includes(ex.id)
   )
+  console.log('Filtered recovery exercises:', recoveryExercises.map(ex => ex.id))
   
   const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
 
@@ -509,8 +513,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                               <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-lg font-black text-white">{rec.exercise.points_per_unit}/{rec.exercise.unit}</div>
+                          <div className="text-left min-w-[80px]">
+                            <div className="text-base font-black text-white">
+                              {rec.exercise.points_per_unit}<span className="font-thin text-sm">/{rec.exercise.unit}</span>
+                            </div>
                           </div>
                         </div>
                       </button>
@@ -546,8 +552,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                               )}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-lg font-black text-white">{exercise.points_per_unit}/{exercise.unit}</div>
+                          <div className="text-left min-w-[80px]">
+                            <div className="text-base font-black text-white">
+                              {exercise.points_per_unit}<span className="font-thin text-sm">/{exercise.unit}</span>
+                            </div>
                           </div>
                         </div>
                       </button>
@@ -583,8 +591,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                               )}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-lg font-black text-white">{exercise.points_per_unit}/{exercise.unit}</div>
+                          <div className="text-left min-w-[80px]">
+                            <div className="text-base font-black text-white">
+                              {exercise.points_per_unit}<span className="font-thin text-sm">/{exercise.unit}</span>
+                            </div>
                           </div>
                         </div>
                       </button>
