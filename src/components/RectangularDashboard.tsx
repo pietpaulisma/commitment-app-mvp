@@ -98,7 +98,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* 24-hour grid (12x2) */}
-          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
+          <div className="grid grid-cols-12 grid-rows-2 gap-1 h-16">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
               const isHigh = intensity > 70
@@ -106,7 +106,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
               return (
                 <div
                   key={i}
-                  className={`aspect-square rounded transition-all duration-500 ${
+                  className={`rounded transition-all duration-500 ${
                     isHigh ? 'bg-orange-400' : 
                     intensity > 30 ? 'bg-gray-500' : 'bg-gray-700'
                   }`}
