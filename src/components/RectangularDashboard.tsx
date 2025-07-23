@@ -63,9 +63,12 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-3 h-full flex flex-col justify-center text-left">
-          <div className="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">{stat.title}</div>
-          <div className="text-5xl font-black text-white leading-none mb-1">
-            €{stat.value}
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+          <div className="text-6xl font-black text-white leading-none mb-1">
+            {stat.value}
+          </div>
+          <div className="text-lg font-thin text-gray-300 mb-1">
+            euros
           </div>
           {stat.name && (
             <div className="text-sm text-gray-300 font-bold">
@@ -88,7 +91,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-2 h-full flex flex-col">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           
           {/* 24-hour grid (12x2 for rectangle layout) */}
           <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
@@ -128,7 +131,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-3 h-full flex flex-col">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{stat.title}</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           
           <div className="flex-1 flex flex-col justify-center gap-2">
             {data.map((member: any, i: number) => (
@@ -168,7 +171,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden border border-gray-700/30`}>
         <div className="p-3 h-full flex flex-col justify-center text-center">
-          <div className="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">{stat.title}</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           <div className="text-3xl mb-2">⏰</div>
           <div className={`text-2xl font-black ${accentColor} mb-1 leading-none`}>
             {stat.time}
@@ -290,41 +293,44 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
             <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
             {recordDay && (
               <div className="flex items-baseline gap-2">
-                <span className={`text-2xl font-bold ${accentColor}`}>
-                  {recordDay.points} PT
+                <span className={`text-4xl font-black ${accentColor}`}>
+                  {recordDay.points}
+                </span>
+                <span className={`text-xl font-thin ${accentColor} ml-1`}>
+                  PT
                 </span>
                 <span className="text-xs text-gray-500">MAX {recordDay.day}</span>
               </div>
             )}
           </div>
           
-          {/* Vertical Bar Chart */}
-          <div className="flex-1 flex items-end justify-center gap-1 px-2">
-            {data.map((point: any, i: number) => {
-              const height = Math.max(2, (point.points / maxValue) * 70)
-              const isRecord = i === recordIndex
+          {/* Horizontal Bar Chart */}
+          <div className="flex-1 flex flex-col justify-center gap-1 px-4">
+            {data.slice(-10).map((point: any, i: number) => {
+              const width = Math.max(2, (point.points / maxValue) * 90)
+              const isRecord = data.indexOf(point) === recordIndex
               
               return (
                 <div
                   key={i}
-                  className="flex flex-col items-center"
+                  className="flex items-center gap-1"
                 >
-                  {/* Vertical bar */}
+                  {/* Horizontal bar */}
                   <div
-                    className={`w-1 transition-all duration-700 ${
+                    className={`h-1 transition-all duration-700 ${
                       isRecord ? 'bg-orange-400' : 'bg-gray-500'
                     }`}
                     style={{ 
-                      height: `${height}px`,
+                      width: `${width}%`,
                       animationDelay: `${i * 20}ms`,
-                      animation: 'slideUpScale 0.8s ease-out forwards',
-                      minHeight: '2px'
+                      animation: 'slideRightScale 0.8s ease-out forwards',
+                      minWidth: '2px'
                     }}
                   />
                   {/* Record highlight dot */}
                   {isRecord && (
                     <div 
-                      className="w-2 h-2 bg-orange-400 rounded-full -mt-1 animate-pulse"
+                      className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"
                       style={{
                         animationDelay: `${(i * 20) + 400}ms`
                       }}
@@ -366,7 +372,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-500 ${shouldHaveAccentBg ? 'hover:opacity-90' : 'hover:bg-gray-900/40'}`}>
       <div className="p-3 h-full flex flex-col justify-center items-center text-center">
         <div className={`text-3xl font-black ${valueColor} mb-2 leading-none`}>{stat.value}</div>
-        <div className={`text-xs font-bold ${textColor} uppercase tracking-wide mb-1`}>{stat.title}</div>
+        <div className={`text-xs ${textColor} uppercase tracking-wide mb-1`}>{stat.title}</div>
         <div className={`text-xs ${subtitleColor} font-medium`}>{stat.subtitle}</div>
       </div>
     </div>
@@ -791,7 +797,7 @@ export default function RectangularDashboard() {
             { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
             { ...stats.moneyPot, layout: 'square' },        // Bottom left - square
             { ...stats.birthday, layout: 'square' },        // Bottom middle - square  
-            { ...stats.workoutTimes, layout: 'col-span-2' } // Bottom - full width rectangle
+            { ...stats.workoutTimes, layout: 'square' }     // Bottom right - square
           ]
         })
       }
@@ -1204,8 +1210,8 @@ export default function RectangularDashboard() {
                   />
                 </div>
                 
-                {/* Middle row - Money Pot and Birthday (2 squares) */}
-                <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
+                {/* Bottom row - Money Pot, Birthday, and Workout Times (3 squares) */}
+                <div className="grid grid-cols-3 gap-0">
                   <div className="border-r border-gray-800">
                     <MemoizedChartComponent 
                       key={`${groupStats.interestingStats[1].type}-1`}
@@ -1214,16 +1220,14 @@ export default function RectangularDashboard() {
                       getLayoutClasses={getLayoutClasses}
                     />
                   </div>
-                  <MemoizedChartComponent 
-                    key={`${groupStats.interestingStats[2].type}-2`}
-                    stat={groupStats.interestingStats[2]} 
-                    index={2} 
-                    getLayoutClasses={getLayoutClasses}
-                  />
-                </div>
-                
-                {/* Bottom row - Workout Times (full width rectangle) */}
-                <div className="w-full">
+                  <div className="border-r border-gray-800">
+                    <MemoizedChartComponent 
+                      key={`${groupStats.interestingStats[2].type}-2`}
+                      stat={groupStats.interestingStats[2]} 
+                      index={2} 
+                      getLayoutClasses={getLayoutClasses}
+                    />
+                  </div>
                   <MemoizedChartComponent 
                     key={`${groupStats.interestingStats[3].type}-3`}
                     stat={groupStats.interestingStats[3]} 
