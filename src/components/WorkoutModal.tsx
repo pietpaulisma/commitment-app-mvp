@@ -21,6 +21,7 @@ type Exercise = {
   points_per_unit: number
   is_weighted: boolean
   is_time_based: boolean
+  supports_decreased?: boolean
 }
 
 type ExerciseWithProgress = Exercise & {
@@ -60,6 +61,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [selectedWorkoutExercise, setSelectedWorkoutExercise] = useState<ExerciseWithProgress | null>(null)
   const [workoutCount, setWorkoutCount] = useState(0)
   const [todaysWorkouts, setTodaysWorkouts] = useState<any[]>([])
+  const [selectedWeight, setSelectedWeight] = useState(0)
+  const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -189,6 +192,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       points: exercisePoints,
       percentage: progressPercentage
     }
+  }
+
+  const calculateWorkoutPoints = (exercise: ExerciseWithProgress, count: number, weight: number, isDecreased: boolean) => {
+    let points = count * exercise.points_per_unit
+    
+    // Apply weight multiplier for weighted exercises
+    if (exercise.is_weighted && weight > 0) {
+      let weightMultiplier = 1
+      if (weight >= 10 && weight < 15) weightMultiplier = 1.5
+      else if (weight >= 15 && weight < 20) weightMultiplier = 2
+      else if (weight >= 20 && weight < 25) weightMultiplier = 2.5
+      else if (weight >= 25 && weight < 30) weightMultiplier = 3
+      else if (weight >= 30) weightMultiplier = 3.5
+      
+      points *= weightMultiplier
+    }
+    
+    // Apply decreased exercise bonus (1.5x points)
+    if (isDecreased && exercise.supports_decreased) {
+      points *= 1.5
+    }
+    
+    return Math.round(points * 100) / 100 // Round to 2 decimal places
   }
 
   const loadExercises = async () => {
@@ -411,9 +437,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       return
     }
     
-    // Open workout input popup instead of directly setting exercise
+    // Reset state and open workout input popup
     setSelectedWorkoutExercise(exercise)
     setWorkoutCount(defaultQuantity)
+    setSelectedWeight(0)
+    setIsDecreasedExercise(false)
     setWorkoutInputOpen(true)
     setShowSportSelection(false)
   }
@@ -1013,13 +1041,81 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   </div>
                 </div>
 
+                {/* Weight Options for Weighted Exercises */}
+                {selectedWorkoutExercise.is_weighted && (
+                  <div>
+                    <h4 className="text-sm text-gray-400 uppercase tracking-wide mb-3">Weight (kg)</h4>
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      <button
+                        onClick={() => setSelectedWeight(0)}
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                          selectedWeight === 0 
+                            ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
+                            : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                        }`}
+                      >
+                        0kg
+                      </button>
+                      {[10, 15, 20, 25, 30].map((weight) => (
+                        <button
+                          key={weight}
+                          onClick={() => setSelectedWeight(weight)}
+                          className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                            selectedWeight === weight 
+                              ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
+                              : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                          }`}
+                        >
+                          {weight}kg
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Decreased Exercise Option */}
+                {selectedWorkoutExercise.supports_decreased && (
+                  <div>
+                    <h4 className="text-sm text-gray-400 uppercase tracking-wide mb-3">Exercise Difficulty</h4>
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <button
+                        onClick={() => setIsDecreasedExercise(false)}
+                        className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
+                          !isDecreasedExercise 
+                            ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
+                            : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                        }`}
+                      >
+                        Regular
+                      </button>
+                      <button
+                        onClick={() => setIsDecreasedExercise(true)}
+                        className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
+                          isDecreasedExercise 
+                            ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
+                            : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                        }`}
+                      >
+                        Decreased
+                        <div className="text-xs opacity-75">+1.5x points</div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Points Display */}
                 <div className="text-center bg-gray-900/30 rounded-lg p-4 border border-gray-800">
                   <div className="text-2xl font-black text-white mb-1">
-                    {Math.round((workoutCount * selectedWorkoutExercise.points_per_unit) * 100) / 100}
+                    {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)}
                   </div>
                   <div className="text-sm text-gray-400">
                     points earned
+                    {selectedWeight > 0 && (
+                      <span className="ml-2 text-orange-400">• +{selectedWeight}kg</span>
+                    )}
+                    {isDecreasedExercise && (
+                      <span className="ml-2 text-orange-400">• Decreased</span>
+                    )}
                   </div>
                 </div>
 
@@ -1030,7 +1126,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     
                     setLoading(true)
                     try {
-                      const points = Math.round((workoutCount * selectedWorkoutExercise.points_per_unit) * 100) / 100
+                      const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
                       
                       const { error } = await supabase
                         .from('logs')
@@ -1039,11 +1135,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           group_id: profile?.group_id,
                           exercise_id: selectedWorkoutExercise.id,
                           count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
-                          weight: 0, // No weight functionality in popup yet
+                          weight: selectedWeight,
                           duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
                           points: points,
                           date: new Date().toISOString().split('T')[0],
-                          timestamp: Date.now()
+                          timestamp: Date.now(),
+                          is_decreased: isDecreasedExercise
                         })
 
                       if (error) {
@@ -1053,6 +1150,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         setWorkoutInputOpen(false)
                         setSelectedWorkoutExercise(null)
                         setWorkoutCount(0)
+                        setSelectedWeight(0)
+                        setIsDecreasedExercise(false)
                         
                         // Refresh data
                         if (onWorkoutAdded) {
