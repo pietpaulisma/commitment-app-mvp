@@ -930,90 +930,96 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         {/* Workout Input Overlay */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-10 flex items-center justify-center p-4">
-            <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 space-y-6">
-                {/* Exercise Header */}
+            <div className="bg-black border border-gray-800 rounded-lg max-w-sm w-full max-h-[90vh] overflow-y-auto">
+              
+              {/* Header Section - similar to dashboard style */}
+              <div className="bg-gray-900/30 border-b border-gray-800 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {getExerciseIcon(selectedWorkoutExercise)}
-                    <h3 className="text-xl font-bold text-white">{selectedWorkoutExercise.name}</h3>
+                    <div>
+                      <h3 className="font-medium text-white">{selectedWorkoutExercise.name}</h3>
+                      <div className="text-white">
+                        <span className="font-medium">
+                          {selectedWorkoutExercise.points_per_unit % 1 === 0 
+                            ? selectedWorkoutExercise.points_per_unit 
+                            : selectedWorkoutExercise.points_per_unit.toFixed(2)
+                          }
+                        </span>
+                        <span className="font-thin text-gray-500 ml-1">
+                          /{selectedWorkoutExercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <button
                     onClick={() => setWorkoutInputOpen(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     <XMarkIcon className="w-6 h-6" />
                   </button>
                 </div>
+              </div>
 
-                {/* Count Section */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">
-                    COUNT ({selectedWorkoutExercise.unit.toUpperCase()})
-                  </h4>
+              <div className="p-6 space-y-6">
+                {/* Counter Section */}
+                <div className="text-center">
+                  {/* Big counter display */}
+                  <div className="mb-6">
+                    <div className="text-6xl font-black text-white mb-2">
+                      {workoutCount}
+                    </div>
+                    <div className="text-sm text-gray-400 uppercase tracking-wide">
+                      {selectedWorkoutExercise.unit}
+                    </div>
+                  </div>
                   
-                  {/* Main counter */}
-                  <div className="flex items-center justify-center gap-4 mb-6">
+                  {/* Counter buttons */}
+                  <div className="flex items-center justify-center gap-3 mb-6">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                      className="w-16 h-16 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700"
+                      className="w-12 h-12 bg-gray-900/30 border border-gray-800 rounded-lg flex items-center justify-center text-white text-xl font-bold hover:bg-gray-900/50 transition-colors"
                     >
                       −
                     </button>
-                    <div className="text-6xl font-black text-white min-w-[120px] text-center">
-                      {workoutCount}
-                    </div>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
-                      className="w-16 h-16 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700"
+                      className="w-12 h-12 bg-gray-900/30 border border-gray-800 rounded-lg flex items-center justify-center text-white text-xl font-bold hover:bg-gray-900/50 transition-colors"
                     >
                       +
                     </button>
                   </div>
 
                   {/* Quick add buttons */}
-                  <div className="flex justify-center gap-3 mb-6">
+                  <div className="flex justify-center gap-2 mb-6">
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
-                      className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
+                      className="px-4 py-2 bg-gray-900/30 border border-gray-800 rounded-lg text-white font-medium hover:bg-gray-900/50 transition-colors text-sm"
                     >
                       +1
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
-                      className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
+                      className="px-4 py-2 bg-gray-900/30 border border-gray-800 rounded-lg text-white font-medium hover:bg-gray-900/50 transition-colors text-sm"
                     >
                       +5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
-                      className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
+                      className="px-4 py-2 bg-gray-900/30 border border-gray-800 rounded-lg text-white font-medium hover:bg-gray-900/50 transition-colors text-sm"
                     >
                       +10
                     </button>
                   </div>
                 </div>
 
-                {/* Weight Section */}
-                {selectedWorkoutExercise.is_weighted && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Weight</h4>
-                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                      <div className="text-white text-lg">No weight</div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Points Display */}
-                <div className="text-center">
-                  <div className="text-6xl font-black text-gray-400 mb-2">
-                    {Math.round((workoutCount * selectedWorkoutExercise.points_per_unit) * 100) / 100} points
+                <div className="text-center bg-gray-900/30 rounded-lg p-4 border border-gray-800">
+                  <div className="text-2xl font-black text-white mb-1">
+                    {Math.round((workoutCount * selectedWorkoutExercise.points_per_unit) * 100) / 100}
                   </div>
-                  <div className="text-gray-500">
-                    {selectedWorkoutExercise.points_per_unit % 1 === 0 
-                      ? selectedWorkoutExercise.points_per_unit 
-                      : selectedWorkoutExercise.points_per_unit.toFixed(2)
-                    } points per {selectedWorkoutExercise.unit}
+                  <div className="text-sm text-gray-400">
+                    points earned
                   </div>
                 </div>
 
@@ -1068,7 +1074,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     }
                   }}
                   disabled={loading || workoutCount <= 0}
-                  className="w-full bg-orange-400 text-black py-4 px-4 rounded-lg hover:bg-orange-500 transition-colors font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-orange-400 text-black py-4 px-4 rounded-lg hover:bg-orange-500 transition-colors font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide"
                 >
                   {loading ? 'SAVING...' : 'SAVE WORKOUT'}
                 </button>
