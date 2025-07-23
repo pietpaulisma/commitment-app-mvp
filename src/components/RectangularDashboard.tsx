@@ -98,7 +98,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* 24-hour grid (12x2) */}
-          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-x-1 gap-y-0.5">
+          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-x-1 gap-y-0">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
               const isHigh = intensity > 70
