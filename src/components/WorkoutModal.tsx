@@ -59,12 +59,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [workoutInputOpen, setWorkoutInputOpen] = useState(false)
   const [selectedWorkoutExercise, setSelectedWorkoutExercise] = useState<ExerciseWithProgress | null>(null)
   const [workoutCount, setWorkoutCount] = useState(0)
+  const [todaysWorkouts, setTodaysWorkouts] = useState<any[]>([])
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
       console.log('Loading exercises for group:', profile.group_id)
       loadExercises()
       loadDailyProgress()
+      loadTodaysWorkouts()
     }
   }, [isOpen, user, profile?.group_id])
 
@@ -130,6 +132,28 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       setDailyTarget(target)
     } catch (error) {
       console.error('Error loading daily progress:', error)
+    }
+  }
+
+  const loadTodaysWorkouts = async () => {
+    if (!user) return
+
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      
+      const { data: workouts } = await supabase
+        .from('logs')
+        .select(`
+          *,
+          exercises (*)
+        `)
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .order('timestamp', { ascending: false })
+
+      setTodaysWorkouts(workouts || [])
+    } catch (error) {
+      console.error('Error loading today\'s workouts:', error)
     }
   }
 
@@ -348,6 +372,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         
         // Refresh daily progress
         loadDailyProgress()
+        loadTodaysWorkouts()
         
         // Close modal
         onClose()
@@ -507,12 +532,47 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               <div className="py-6 border-b border-gray-800">
                 <h4 className="text-2xl font-bold text-white mb-6 px-4">Today's Workouts</h4>
                 
-                {/* TODO: Add logged workouts with progress bars */}
                 <div className="px-4">
-                  <div className="text-center py-8 bg-gray-900/30 rounded-lg">
-                    <p className="text-gray-400 font-medium">No workouts logged yet</p>
-                    <p className="text-gray-500 text-sm mt-1">Select exercises below to get started</p>
-                  </div>
+                  {todaysWorkouts.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-900/30 rounded-lg">
+                      <p className="text-gray-400 font-medium">No workouts logged yet</p>
+                      <p className="text-gray-500 text-sm mt-1">Select exercises below to get started</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {todaysWorkouts.map((workout) => (
+                        <div key={workout.id} className="bg-gray-900/30 rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {getExerciseIcon(workout.exercises)}
+                              <div>
+                                <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
+                                <div className="text-xs text-gray-400">
+                                  {workout.count || workout.duration} {workout.exercises?.unit || ''}
+                                  {workout.weight > 0 && (
+                                    <span className="ml-2">• {workout.weight}kg</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
+                                <span className="text-sm font-black text-orange-400">
+                                  {workout.points % 1 === 0 
+                                    ? workout.points 
+                                    : workout.points.toFixed(2)
+                                  }
+                                </span>
+                                <span className="text-xs font-medium text-orange-300 ml-1">
+                                  pts
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -586,7 +646,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           <div className="text-left min-w-[80px]">
                             <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
                               <span className="text-sm font-black text-orange-400">
-                                {exercise.points_per_unit}
+                                {exercise.points_per_unit % 1 === 0 
+                                  ? exercise.points_per_unit 
+                                  : exercise.points_per_unit.toFixed(2)
+                                }
                               </span>
                               <span className="text-xs font-medium text-orange-300 ml-1">
                                 {exercise.unit.replace('minute', 'min').replace('hour', 'h')}
@@ -630,7 +693,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           <div className="text-left min-w-[80px]">
                             <div className="inline-flex items-center bg-orange-400/20 border border-orange-400/30 rounded px-2 py-1">
                               <span className="text-sm font-black text-orange-400">
-                                {exercise.points_per_unit}
+                                {exercise.points_per_unit % 1 === 0 
+                                  ? exercise.points_per_unit 
+                                  : exercise.points_per_unit.toFixed(2)
+                                }
                               </span>
                               <span className="text-xs font-medium text-orange-300 ml-1">
                                 {exercise.unit.replace('minute', 'min').replace('hour', 'h')}
@@ -916,23 +982,70 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 {/* Points Display */}
                 <div className="text-center">
                   <div className="text-6xl font-black text-gray-400 mb-2">
-                    {workoutCount * selectedWorkoutExercise.points_per_unit} points
+                    {Math.round((workoutCount * selectedWorkoutExercise.points_per_unit) * 100) / 100} points
                   </div>
                   <div className="text-gray-500">
-                    {selectedWorkoutExercise.points_per_unit} points per {selectedWorkoutExercise.unit}
+                    {selectedWorkoutExercise.points_per_unit % 1 === 0 
+                      ? selectedWorkoutExercise.points_per_unit 
+                      : selectedWorkoutExercise.points_per_unit.toFixed(2)
+                    } points per {selectedWorkoutExercise.unit}
                   </div>
                 </div>
 
                 {/* Save Button */}
                 <button
-                  onClick={() => {
-                    // TODO: Actually save the workout
-                    console.log('Save workout:', selectedWorkoutExercise.name, workoutCount)
-                    setWorkoutInputOpen(false)
+                  onClick={async () => {
+                    if (!user || !selectedWorkoutExercise || workoutCount <= 0) return
+                    
+                    setLoading(true)
+                    try {
+                      const points = Math.round((workoutCount * selectedWorkoutExercise.points_per_unit) * 100) / 100
+                      
+                      const { error } = await supabase
+                        .from('logs')
+                        .insert({
+                          user_id: user.id,
+                          group_id: profile?.group_id,
+                          exercise_id: selectedWorkoutExercise.id,
+                          count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
+                          weight: 0, // No weight functionality in popup yet
+                          duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
+                          points: points,
+                          date: new Date().toISOString().split('T')[0],
+                          timestamp: Date.now()
+                        })
+
+                      if (error) {
+                        alert('Error logging workout: ' + error.message)
+                      } else {
+                        // Reset state
+                        setWorkoutInputOpen(false)
+                        setSelectedWorkoutExercise(null)
+                        setWorkoutCount(0)
+                        
+                        // Refresh data
+                        if (onWorkoutAdded) {
+                          onWorkoutAdded()
+                        }
+                        loadDailyProgress()
+                        loadTodaysWorkouts()
+                        
+                        // Haptic feedback
+                        if (navigator.vibrate) {
+                          navigator.vibrate(100)
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Error saving workout:', error)
+                      alert('An error occurred while saving your workout.')
+                    } finally {
+                      setLoading(false)
+                    }
                   }}
-                  className="w-full bg-gray-700 text-white py-4 px-4 rounded-lg hover:bg-gray-600 transition-colors font-bold text-lg"
+                  disabled={loading || workoutCount <= 0}
+                  className="w-full bg-orange-400 text-black py-4 px-4 rounded-lg hover:bg-orange-500 transition-colors font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save
+                  {loading ? 'SAVING...' : 'SAVE WORKOUT'}
                 </button>
               </div>
             </div>
