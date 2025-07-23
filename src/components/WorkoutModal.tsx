@@ -696,7 +696,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       })}
                     </div>
                   )}
-                </div>
               </div>
 
               {/* Recommended Workouts */}
