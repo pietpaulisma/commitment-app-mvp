@@ -98,29 +98,31 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* 24-hour grid (12x2) */}
-          <div className="grid grid-cols-12 grid-rows-2 gap-1 h-16">
-            {data.map((hour: any, i: number) => {
-              const intensity = (hour.activity / maxActivity) * 100
-              const isHigh = intensity > 70
-              
-              return (
-                <div
-                  key={i}
-                  className={`rounded transition-all duration-500 ${
-                    isHigh ? 'bg-orange-400' : 
-                    intensity > 30 ? 'bg-gray-500' : 'bg-gray-700'
-                  }`}
-                  style={{
-                    animationDelay: `${i * 30}ms`,
-                    animation: 'fadeInScale 0.6s ease-out forwards'
-                  }}
-                  title={`${hour.hour}:00 - ${hour.activity} logs`}
-                />
-              )
-            })}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="grid grid-cols-12 grid-rows-2 gap-1">
+              {data.map((hour: any, i: number) => {
+                const intensity = (hour.activity / maxActivity) * 100
+                const isHigh = intensity > 70
+                
+                return (
+                  <div
+                    key={i}
+                    className={`aspect-square rounded transition-all duration-500 ${
+                      isHigh ? 'bg-orange-400' : 
+                      intensity > 30 ? 'bg-gray-500' : 'bg-gray-700'
+                    }`}
+                    style={{
+                      animationDelay: `${i * 30}ms`,
+                      animation: 'fadeInScale 0.6s ease-out forwards'
+                    }}
+                    title={`${hour.hour}:00 - ${hour.activity} logs`}
+                  />
+                )
+              })}
+            </div>
           </div>
           
-          <div className="text-xs text-gray-500 mt-2 text-center">
+          <div className="text-xs text-gray-500 text-center">
             Peak: {data.find((h: any) => h.activity === maxActivity)?.hour || '0:00'}
           </div>
         </div>
