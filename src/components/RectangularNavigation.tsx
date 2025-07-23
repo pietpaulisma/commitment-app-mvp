@@ -128,7 +128,7 @@ export default function RectangularNavigation() {
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={() => setIsWorkoutOpen(true)}
-            className={`flex-1 relative h-16 ${dailyProgress > 0 ? accentBg : 'bg-gray-900'} border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-opacity duration-200`}
+            className={`flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-opacity duration-200`}
           >
             {/* Progress Background */}
             <div 

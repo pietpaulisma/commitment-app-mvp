@@ -1066,7 +1066,7 @@ export default function RectangularDashboard() {
           />
           
           {/* Content with more vertical padding */}
-          <div className="relative px-4 py-6">
+          <div className="relative px-4 py-10">
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
@@ -1132,15 +1132,13 @@ export default function RectangularDashboard() {
                       
                       return (
                         <div key={member.id} className={`relative h-12 ${backgroundColor} overflow-hidden ${borderRadius}`}>
-                          {/* Progress bar container */}
-                          <div className={`h-full flex ${isLeftColumn ? 'justify-end' : 'justify-start'}`}>
-                            <div 
-                              className={`h-full ${userColor} transition-all duration-500 ease-out`}
-                              style={{ 
-                                width: `${Math.min(100, progressPercentage)}%`
-                              }}
-                            />
-                          </div>
+                          {/* Progress bar - always fills from left to right */}
+                          <div 
+                            className={`absolute left-0 top-0 bottom-0 ${userColor} transition-all duration-500 ease-out`}
+                            style={{ 
+                              width: `${Math.min(100, progressPercentage)}%`
+                            }}
+                          />
                           
                           {/* Content overlay */}
                           <div className={`absolute inset-0 flex items-center ${
@@ -1149,10 +1147,10 @@ export default function RectangularDashboard() {
                             <div className={`flex items-center gap-2 ${
                               isLeftColumn ? 'flex-row-reverse' : 'flex-row'
                             }`}>
-                              <div className={`font-black text-lg ${progressPercentage === 0 ? 'text-gray-300' : 'text-black'}`}>
+                              <div className="font-black text-lg text-white">
                                 {progressPercentage}%
                               </div>
-                              <span className={`font-bold text-sm ${progressPercentage === 0 ? 'text-gray-300' : 'text-black'}`}>
+                              <span className="font-bold text-sm text-white">
                                 {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                               </span>
                             </div>
