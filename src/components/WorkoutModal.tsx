@@ -424,18 +424,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-        {/* Header with Progress Bar - Match Dashboard Exactly */}
-        <div className="sticky top-0 bg-black border-b border-gray-800">
+        {/* Header - EXACT COPY from MobileWorkoutLogger.tsx */}
+        <div className="sticky top-0">
           <div className="flex">
-            {/* Progress Bar (80% width) */}
-            <div className="flex-1 relative bg-black border-r border-gray-800 overflow-hidden">
-              {/* Progress Background */}
+            {/* Progress Bar Section - EXACT copy */}
+            <div className="flex-1 bg-black border-b border-gray-800 relative overflow-hidden">
+              {/* Progress bar background */}
               <div 
                 className="absolute right-0 top-0 bottom-0 bg-orange-400 transition-all duration-1000 ease-out"
-                style={{ width: `${progressPercentage}%` }}
+                style={{ width: `${Math.min(100, (dailyProgress / dailyTarget) * 100)}%` }}
               />
               
-              {/* Content - Match Dashboard Layout Exactly */}
+              {/* Content */}
               <div className="relative px-4 py-6">
                 <div className="flex items-end justify-between">
                   <div>
@@ -444,12 +444,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       <span className="text-2xl font-thin text-white">PT</span>
                     </div>
                     <p className="text-sm font-medium -mt-1 text-white">
-                      {progressPercentage >= 100 ? "Target Complete!" : `${Math.max(0, dailyTarget - dailyProgress)} remaining`}
+                      {dailyProgress >= dailyTarget ? "Target Complete!" : `${Math.max(0, dailyTarget - dailyProgress)} remaining`}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-black text-white">
-                      {Math.round(progressPercentage)}%
+                      {Math.round((dailyProgress / dailyTarget) * 100)}%
                     </div>
                     <div className="text-sm font-medium -mt-1 text-white">
                       complete
@@ -459,10 +459,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               </div>
             </div>
 
-            {/* X Button (20% width) */}
+            {/* X Button */}
             <button
               onClick={onClose}
-              className="w-16 flex items-center justify-center bg-black hover:bg-gray-900 text-gray-400 hover:text-white transition-colors duration-200 rounded-none border-l border-gray-800"
+              className="w-16 bg-black border-b border-gray-800 border-l border-gray-800 flex items-center justify-center hover:bg-gray-900 text-gray-400 hover:text-white transition-colors duration-200"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
