@@ -595,9 +595,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
                 style={{ width: `${Math.min(100, Math.max(0, regularPercentage))}%` }}
               />
-              {/* Recovery Progress Background */}
+              {/* Recovery Progress Background - positioned on the right */}
               <div 
-                className="absolute left-0 top-0 bottom-0 bg-purple-500 transition-all duration-500 ease-out"
+                className="absolute right-0 top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
                 style={{ width: `${Math.min(100, recoveryPercentage)}%` }}
               />
               
@@ -816,7 +816,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       >
                         {/* Progress bar background */}
                         <div 
-                          className="absolute left-0 top-0 bottom-0 bg-purple-500 transition-all duration-500 ease-out"
+                          className="absolute left-0 top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
                           style={{ width: `${Math.min(100, getExerciseProgress(exercise.id).percentage)}%` }}
                         />
                         
