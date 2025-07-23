@@ -424,35 +424,37 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-        {/* Header with Progress Bar */}
+        {/* Header with Progress Bar - Match Dashboard Exactly */}
         <div className="sticky top-0 bg-black border-b border-gray-800">
           <div className="flex">
             {/* Progress Bar (80% width) */}
-            <div className="flex-1 relative h-16 bg-black border-r border-gray-800 overflow-hidden">
+            <div className="flex-1 relative bg-black border-r border-gray-800 overflow-hidden">
               {/* Progress Background */}
               <div 
                 className="absolute right-0 top-0 bottom-0 bg-orange-400 transition-all duration-1000 ease-out"
                 style={{ width: `${progressPercentage}%` }}
               />
               
-              {/* Progress Content */}
-              <div className="relative h-full flex items-center justify-between px-4 text-white">
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium">
-                    {progressPercentage >= 100 ? 'Complete!' : 'Log Workout'}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {dailyProgress}/{dailyTarget} points
-                  </span>
-                </div>
-                
-                <div className="flex flex-col items-end">
-                  <span className="text-3xl font-black">
-                    {Math.round(progressPercentage)}%
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    complete
-                  </span>
+              {/* Content - Match Dashboard Layout */}
+              <div className="relative px-4 py-6">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="flex items-baseline space-x-1">
+                      <span className="text-4xl font-black text-white">{dailyProgress}</span>
+                      <span className="text-2xl font-thin text-white">PT</span>
+                    </div>
+                    <p className="text-sm font-medium -mt-1 text-white">
+                      {progressPercentage >= 100 ? "Target Complete!" : `${Math.max(0, dailyTarget - dailyProgress)} remaining`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-black text-white">
+                      {Math.round(progressPercentage)}%
+                    </div>
+                    <div className="text-sm font-medium -mt-1 text-white">
+                      complete
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -460,7 +462,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             {/* X Button (20% width) */}
             <button
               onClick={onClose}
-              className="w-16 h-16 flex items-center justify-center bg-black hover:bg-gray-900 text-gray-400 hover:text-white transition-colors duration-200 rounded-none border-l border-gray-800"
+              className="w-16 flex items-center justify-center bg-black hover:bg-gray-900 text-gray-400 hover:text-white transition-colors duration-200 rounded-none border-l border-gray-800"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
