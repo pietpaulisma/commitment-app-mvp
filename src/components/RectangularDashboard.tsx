@@ -62,20 +62,24 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-3 h-full flex flex-col justify-center text-left">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
-          <div className="text-white leading-none mb-1">
-            <span className="text-2xl font-thin">€</span>
-            <span className="text-6xl font-black">{stat.value}</span>
+        <div className="p-4 h-full flex flex-col">
+          <div className="mb-3">
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           </div>
-          {stat.name && (
-            <div className="text-sm text-gray-300 font-bold">
-              {stat.name}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="text-white leading-none mb-1">
+              <span className="text-2xl font-thin">€</span>
+              <span className="text-6xl font-black">{stat.value}</span>
             </div>
-          )}
-          {stat.subtitle && (
-            <div className="text-xs text-gray-500 font-medium">{stat.subtitle}</div>
-          )}
+            {stat.name && (
+              <div className="text-sm text-gray-300 font-bold">
+                {stat.name}
+              </div>
+            )}
+            {stat.subtitle && (
+              <div className="text-xs text-gray-500 font-medium">{stat.subtitle}</div>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -88,10 +92,12 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-2 h-full flex flex-col">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+        <div className="p-4 h-full flex flex-col">
+          <div className="mb-3">
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+          </div>
           
-          {/* 24-hour grid (12x2 for rectangle layout) */}
+          {/* 24-hour grid (12x2) */}
           <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
@@ -100,7 +106,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
               return (
                 <div
                   key={i}
-                  className={`rounded transition-all duration-500 ${
+                  className={`aspect-square rounded transition-all duration-500 ${
                     isHigh ? 'bg-orange-400' : 
                     intensity > 30 ? 'bg-gray-500' : 'bg-gray-700'
                   }`}
@@ -252,19 +258,22 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         />
         
         {/* Content overlay */}
-        <div className="p-3 h-full flex flex-col justify-center text-left">
-          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
-          
-          {/* Days remaining - big copy */}
-          <div className="text-white leading-none mb-1">
-            <span className="text-6xl font-black">{daysUntil}</span>
-            <span className="text-2xl font-thin ml-1">DAYS</span>
+        <div className="relative p-4 h-full flex flex-col z-10">
+          <div className="mb-3">
+            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           </div>
-          
-          {/* Person name with birthday icon */}
-          <div className="flex items-center gap-1 text-white">
-            <span className="text-sm">🎂</span>
-            <span className="text-sm font-bold">{stat.subtitle}</span>
+          <div className="flex-1 flex flex-col justify-center">
+            {/* Days remaining - big copy */}
+            <div className="text-white leading-none mb-1">
+              <span className="text-6xl font-black">{daysUntil}</span>
+              <span className="text-2xl font-thin ml-1">DAYS</span>
+            </div>
+            
+            {/* Person name with birthday icon */}
+            <div className="flex items-center gap-1 text-white">
+              <span className="text-sm">🎂</span>
+              <span className="text-sm font-bold">{stat.subtitle}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -298,15 +307,15 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* Vertical Bar Chart */}
-          <div className="flex-1 flex items-end justify-center gap-1 px-4">
-            {data.map((point: any, i: number) => {
+          <div className="flex-1 flex items-end gap-1 px-4">
+            {data.slice(-20).map((point: any, i: number) => {
               const height = Math.max(2, (point.points / maxValue) * 70)
-              const isRecord = i === recordIndex
+              const isRecord = data.indexOf(point) === recordIndex
               
               return (
                 <div
                   key={i}
-                  className="flex flex-col items-center"
+                  className="flex-1 flex flex-col items-center"
                 >
                   {/* Vertical bar */}
                   <div
