@@ -435,7 +435,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 style={{ width: `${progressPercentage}%` }}
               />
               
-              {/* Content - Match Dashboard Layout */}
+              {/* Content - Match Dashboard Layout Exactly */}
               <div className="relative px-4 py-6">
                 <div className="flex items-end justify-between">
                   <div>
