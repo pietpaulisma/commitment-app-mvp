@@ -91,8 +91,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         <div className="p-2 h-full flex flex-col">
           <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           
-          {/* 24-hour grid (8x3 for more square layout) */}
-          <div className="flex-1 grid grid-cols-8 grid-rows-3 gap-1">
+          {/* 24-hour grid (12x2 for rectangle layout) */}
+          <div className="flex-1 grid grid-cols-12 grid-rows-2 gap-1">
             {data.map((hour: any, i: number) => {
               const intensity = (hour.activity / maxActivity) * 100
               const isHigh = intensity > 70
@@ -252,8 +252,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         />
         
         {/* Content overlay */}
-        <div className="relative h-full flex flex-col justify-center px-4">
-          <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
+        <div className="p-3 h-full flex flex-col justify-center text-left">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           
           {/* Days remaining - big copy */}
           <div className="text-white leading-none mb-1">
@@ -262,14 +262,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           </div>
           
           {/* Person name with birthday icon */}
-          <div className="flex items-center gap-1 mb-1 text-white">
+          <div className="flex items-center gap-1 text-white">
             <span className="text-sm">🎂</span>
             <span className="text-sm font-bold">{stat.subtitle}</span>
-          </div>
-          
-          {/* Double points info */}
-          <div className="text-xs font-medium text-gray-400">
-            Double points (200 pts)
           </div>
         </div>
       </div>
@@ -754,7 +749,7 @@ export default function RectangularDashboard() {
         moneyPot: {
           title: 'Money Pot',
           subtitle: `top: ${biggestContributor}`,
-          value: `$${Math.max(0, Math.round(moneyInPot * 100) / 100)}`,
+          value: Math.max(0, Math.round(moneyInPot * 100) / 100),
           type: 'typography_stat'
         },
         birthday: {
