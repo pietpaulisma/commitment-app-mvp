@@ -64,8 +64,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-3 h-full flex flex-col justify-center text-left">
           <div className="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">{stat.title}</div>
-          <div className="text-4xl font-black text-white leading-none mb-1">
-            {stat.value}
+          <div className="text-5xl font-black text-white leading-none mb-1">
+            €{stat.value}
           </div>
           {stat.name && (
             <div className="text-sm text-gray-300 font-bold">
@@ -243,7 +243,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     const progressPercentage = Math.max(0, ((maxDays - daysUntil) / maxDays) * 100)
     
     return (
-      <div key={index} className={`relative bg-gray-800 rounded-lg ${layoutClasses} overflow-hidden`}>
+      <div key={index} className={`relative bg-black rounded-lg ${layoutClasses} overflow-hidden`}>
         {/* Full rectangle progress background */}
         <div 
           className="absolute left-0 top-0 bottom-0 bg-purple-400 transition-all duration-1000 ease-out"
@@ -255,24 +255,19 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
           <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
           
           {/* Days remaining - big copy */}
-          <div className={`text-3xl font-black leading-tight mb-1 ${
-            progressPercentage > 50 ? 'text-black' : 'text-white'
-          }`}>
-            {daysUntil} DAYS
+          <div className="text-white leading-tight mb-1">
+            <span className="text-3xl font-black">{daysUntil}</span>
+            <span className="text-xl font-thin ml-1">DAYS</span>
           </div>
           
           {/* Person name with birthday icon */}
-          <div className={`flex items-center gap-1 mb-1 ${
-            progressPercentage > 50 ? 'text-black' : 'text-white'
-          }`}>
+          <div className="flex items-center gap-1 mb-1 text-white">
             <span className="text-sm">🎂</span>
             <span className="text-sm font-bold">{stat.subtitle}</span>
           </div>
           
           {/* Double points info */}
-          <div className={`text-xs font-medium ${
-            progressPercentage > 50 ? 'text-black/70' : 'text-gray-400'
-          }`}>
+          <div className="text-xs font-medium text-gray-400">
             Double points (200 pts)
           </div>
         </div>
@@ -1091,7 +1086,7 @@ export default function RectangularDashboard() {
       <div className="space-y-0">
         {/* Group Status */}
         <div id="group-status" className="bg-black">
-          <div className="px-4 py-3">
+          <div className="py-3">
             <h3 className="text-2xl font-bold text-white mb-6">Status</h3>
             
             {groupMembers.length === 0 ? (
@@ -1162,7 +1157,7 @@ export default function RectangularDashboard() {
 
         {/* Chats Section */}
         <div id="chats" className="bg-black">
-          <div className="px-4 py-6">
+          <div className="py-6">
             <h3 className="text-2xl font-bold text-white mb-6">Chats</h3>
             
             {recentChats.length === 0 ? (
@@ -1194,11 +1189,11 @@ export default function RectangularDashboard() {
 
         {/* Essential Stats */}
         <div id="group-stats" className="bg-black">
-          <div className="px-4 py-3">
+          <div className="py-3">
             <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-0">
                 {/* Top row - Group Points (full width) */}
                 <div className="w-full">
                   <MemoizedChartComponent 
@@ -1210,7 +1205,7 @@ export default function RectangularDashboard() {
                 </div>
                 
                 {/* Middle row - Money Pot and Birthday (2 squares) */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-0">
                   <MemoizedChartComponent 
                     key={`${groupStats.interestingStats[1].type}-1`}
                     stat={groupStats.interestingStats[1]} 
@@ -1236,13 +1231,13 @@ export default function RectangularDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-0">
                 <div className="p-4 bg-gray-900/30 rounded-lg h-32">
                   <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
                   <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
                   <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-0">
                   <div className="p-4 bg-gray-900/30 rounded-lg h-32">
                     <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
                     <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
