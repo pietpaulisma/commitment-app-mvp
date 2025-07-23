@@ -763,104 +763,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             </>
           )}
 
-          {/* Workout Input Popup */}
-          {workoutInputOpen && selectedWorkoutExercise && (
-            <div className="p-4 space-y-6">
-              {/* Exercise Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {getExerciseIcon(selectedWorkoutExercise)}
-                  <h3 className="text-xl font-bold text-white">{selectedWorkoutExercise.name}</h3>
-                </div>
-                <button
-                  onClick={() => setWorkoutInputOpen(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <XMarkIcon className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Count Section */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">
-                  COUNT ({selectedWorkoutExercise.unit.toUpperCase()})
-                </h4>
-                
-                {/* Main counter */}
-                <div className="flex items-center justify-center gap-4 mb-6">
-                  <button
-                    onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                    className="w-16 h-16 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700"
-                  >
-                    −
-                  </button>
-                  <div className="text-6xl font-black text-white min-w-[120px] text-center">
-                    {workoutCount}
-                  </div>
-                  <button
-                    onClick={() => setWorkoutCount(workoutCount + 1)}
-                    className="w-16 h-16 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700"
-                  >
-                    +
-                  </button>
-                </div>
-
-                {/* Quick add buttons */}
-                <div className="flex justify-center gap-3 mb-6">
-                  <button
-                    onClick={() => setWorkoutCount(workoutCount + 1)}
-                    className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
-                  >
-                    +1
-                  </button>
-                  <button
-                    onClick={() => setWorkoutCount(workoutCount + 5)}
-                    className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
-                  >
-                    +5
-                  </button>
-                  <button
-                    onClick={() => setWorkoutCount(workoutCount + 10)}
-                    className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
-                  >
-                    +10
-                  </button>
-                </div>
-              </div>
-
-              {/* Weight Section */}
-              {selectedWorkoutExercise.is_weighted && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Weight</h4>
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                    <div className="text-white text-lg">No weight</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Points Display */}
-              <div className="text-center">
-                <div className="text-6xl font-black text-gray-400 mb-2">
-                  {workoutCount * selectedWorkoutExercise.points_per_unit} points
-                </div>
-                <div className="text-gray-500">
-                  {selectedWorkoutExercise.points_per_unit} points per {selectedWorkoutExercise.unit}
-                </div>
-              </div>
-
-              {/* Save Button */}
-              <button
-                onClick={() => {
-                  // TODO: Actually save the workout
-                  console.log('Save workout:', selectedWorkoutExercise.name, workoutCount)
-                  setWorkoutInputOpen(false)
-                }}
-                className="w-full bg-gray-700 text-white py-4 px-4 rounded-lg hover:bg-gray-600 transition-colors font-bold text-lg"
-              >
-                Save
-              </button>
-            </div>
-          )}
 
           {/* Sport Selection Screen */}
           {showSportSelection && (
@@ -933,6 +835,109 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             </div>
           )}
         </div>
+
+        {/* Workout Input Overlay */}
+        {workoutInputOpen && selectedWorkoutExercise && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-10 flex items-center justify-center p-4">
+            <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 space-y-6">
+                {/* Exercise Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {getExerciseIcon(selectedWorkoutExercise)}
+                    <h3 className="text-xl font-bold text-white">{selectedWorkoutExercise.name}</h3>
+                  </div>
+                  <button
+                    onClick={() => setWorkoutInputOpen(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <XMarkIcon className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Count Section */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4">
+                    COUNT ({selectedWorkoutExercise.unit.toUpperCase()})
+                  </h4>
+                  
+                  {/* Main counter */}
+                  <div className="flex items-center justify-center gap-4 mb-6">
+                    <button
+                      onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
+                      className="w-16 h-16 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700"
+                    >
+                      −
+                    </button>
+                    <div className="text-6xl font-black text-white min-w-[120px] text-center">
+                      {workoutCount}
+                    </div>
+                    <button
+                      onClick={() => setWorkoutCount(workoutCount + 1)}
+                      className="w-16 h-16 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  {/* Quick add buttons */}
+                  <div className="flex justify-center gap-3 mb-6">
+                    <button
+                      onClick={() => setWorkoutCount(workoutCount + 1)}
+                      className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
+                    >
+                      +1
+                    </button>
+                    <button
+                      onClick={() => setWorkoutCount(workoutCount + 5)}
+                      className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
+                    >
+                      +5
+                    </button>
+                    <button
+                      onClick={() => setWorkoutCount(workoutCount + 10)}
+                      className="px-6 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white font-bold hover:bg-gray-700"
+                    >
+                      +10
+                    </button>
+                  </div>
+                </div>
+
+                {/* Weight Section */}
+                {selectedWorkoutExercise.is_weighted && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">Weight</h4>
+                    <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                      <div className="text-white text-lg">No weight</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Points Display */}
+                <div className="text-center">
+                  <div className="text-6xl font-black text-gray-400 mb-2">
+                    {workoutCount * selectedWorkoutExercise.points_per_unit} points
+                  </div>
+                  <div className="text-gray-500">
+                    {selectedWorkoutExercise.points_per_unit} points per {selectedWorkoutExercise.unit}
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <button
+                  onClick={() => {
+                    // TODO: Actually save the workout
+                    console.log('Save workout:', selectedWorkoutExercise.name, workoutCount)
+                    setWorkoutInputOpen(false)
+                  }}
+                  className="w-full bg-gray-700 text-white py-4 px-4 rounded-lg hover:bg-gray-600 transition-colors font-bold text-lg"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   )
 }
