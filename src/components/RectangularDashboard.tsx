@@ -58,22 +58,22 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
 
   // Typography stat - Big number with accent background
   if (stat.type === 'typography_stat') {
-    const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '')
+    const bgColor = 'bg-gray-900/30' // Use neutral background
     
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-3 h-full flex flex-col justify-center text-center">
-          <div className="text-xs text-black/70 uppercase tracking-wide font-bold mb-1">{stat.title}</div>
-          <div className="text-4xl font-black text-black leading-none mb-1">
+        <div className="p-3 h-full flex flex-col justify-center text-left">
+          <div className="text-xs text-gray-400 uppercase tracking-wide font-bold mb-1">{stat.title}</div>
+          <div className="text-4xl font-black text-white leading-none mb-1">
             {stat.value}
           </div>
           {stat.name && (
-            <div className="text-sm text-black/80 font-bold">
+            <div className="text-sm text-gray-300 font-bold">
               {stat.name}
             </div>
           )}
           {stat.subtitle && (
-            <div className="text-xs text-black/60 font-medium">{stat.subtitle}</div>
+            <div className="text-xs text-gray-500 font-medium">{stat.subtitle}</div>
           )}
         </div>
       </div>
@@ -236,54 +236,45 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     )
   }
 
-  // Countdown bar chart - Square typography-focused birthday countdown
+  // Countdown bar chart - Full rectangle bar chart for birthday countdown
   if (stat.type === 'countdown_bar') {
     const daysUntil = stat.daysUntil || 0
     const maxDays = 365
     const progressPercentage = Math.max(0, ((maxDays - daysUntil) / maxDays) * 100)
     
     return (
-      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-4 h-full flex flex-col justify-between">
-          {/* Header */}
-          <div className="text-left">
-            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
-            <div className={`text-2xl font-bold ${accentColor} leading-tight mb-1`}>
-              {stat.name}
-            </div>
-            <div className="text-sm text-gray-300 mb-3">
-              {daysUntil === 0 ? 'Today!' : 
-               daysUntil === 1 ? 'Tomorrow' : 
-               `${daysUntil} days`}
-            </div>
+      <div key={index} className={`relative bg-gray-800 rounded-lg ${layoutClasses} overflow-hidden`}>
+        {/* Full rectangle progress background */}
+        <div 
+          className="absolute left-0 top-0 bottom-0 bg-purple-400 transition-all duration-1000 ease-out"
+          style={{ width: `${progressPercentage}%` }}
+        />
+        
+        {/* Content overlay */}
+        <div className="relative h-full flex flex-col justify-center px-4">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
+          
+          {/* Days remaining - big copy */}
+          <div className={`text-3xl font-black leading-tight mb-1 ${
+            progressPercentage > 50 ? 'text-black' : 'text-white'
+          }`}>
+            {daysUntil} DAYS
           </div>
           
-          {/* Countdown Progress Bar */}
-          <div className="mb-3">
-            <div className="w-full bg-gray-700 rounded-full h-1">
-              <div 
-                className={`h-1 rounded-full transition-all duration-1000 ${
-                  daysUntil <= 7 ? 'bg-orange-400' : 'bg-gray-500'
-                }`}
-                style={{ 
-                  width: `${progressPercentage}%`,
-                  animation: 'slideInLeft 1.2s ease-out forwards'
-                }}
-              />
-            </div>
+          {/* Person name with birthday icon */}
+          <div className={`flex items-center gap-1 mb-1 ${
+            progressPercentage > 50 ? 'text-black' : 'text-white'
+          }`}>
+            <span className="text-sm">🎂</span>
+            <span className="text-sm font-bold">{stat.subtitle}</span>
           </div>
           
-          {/* Double Points Notice */}
-          {stat.doublePoints && (
-            <div className="text-left">
-              <div className={`text-xs ${accentColor} font-semibold uppercase tracking-wide`}>
-                🎉 Double Point Target
-              </div>
-              <div className="text-xs text-gray-500">
-                Birthday workouts count 2x
-              </div>
-            </div>
-          )}
+          {/* Double points info */}
+          <div className={`text-xs font-medium ${
+            progressPercentage > 50 ? 'text-black/70' : 'text-gray-400'
+          }`}>
+            Double points (200 pts)
+          </div>
         </div>
       </div>
     )
@@ -764,7 +755,7 @@ export default function RectangularDashboard() {
         moneyPot: {
           title: 'Money Pot',
           subtitle: `top: ${biggestContributor}`,
-          value: `$${Math.round(moneyInPot * 100) / 100}`,
+          value: `$${Math.max(0, Math.round(moneyInPot * 100) / 100)}`,
           type: 'typography_stat'
         },
         birthday: {
@@ -1072,22 +1063,32 @@ export default function RectangularDashboard() {
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
-                  <span className="text-5xl font-thin text-white uppercase tracking-wide">DAY</span>
-                  <span className="text-5xl font-black text-white">{challengeDay}</span>
+                  <span className={`text-5xl font-thin uppercase tracking-wide ${
+                    timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
+                  }`}>DAY</span>
+                  <span className={`text-5xl font-black ${
+                    timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
+                  }`}>{challengeDay}</span>
                 </div>
-                <p className="text-gray-400 text-sm font-medium -mt-1">
+                <p className={`text-sm font-medium -mt-1 ${
+                  timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
+                }`}>
                   {getCurrentDayName()}
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-black text-white">
+                <div className={`text-3xl font-black ${
+                  timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
+                }`}>
                   {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
                     <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
                       {char}
                     </span>
                   ))}
                 </div>
-                <div className="text-sm text-gray-400 font-medium -mt-1">
+                <div className={`text-sm font-medium -mt-1 ${
+                  timeRemainingPercentage <= 40 ? 'text-black' : 'text-white'
+                }`}>
                   remaining
                 </div>
               </div>
@@ -1101,7 +1102,7 @@ export default function RectangularDashboard() {
         {/* Group Status */}
         <div id="group-status" className="bg-black">
           <div className="px-4 py-3">
-            <h3 className="text-xl font-bold text-white mb-3">Status</h3>
+            <h3 className="text-2xl font-bold text-white mb-6">Status</h3>
             
             {groupMembers.length === 0 ? (
               <div className="grid grid-cols-2 gap-3">
@@ -1134,16 +1135,15 @@ export default function RectangularDashboard() {
                       
                       return (
                         <div key={member.id} className={`relative h-12 ${backgroundColor} overflow-hidden ${borderRadius}`}>
-                          {/* Progress bar */}
-                          <div 
-                            className={`h-full ${userColor} transition-all duration-500 ease-out ${
-                              isLeftColumn ? 'origin-right' : 'origin-left'
-                            }`}
-                            style={{ 
-                              width: `${Math.min(100, progressPercentage)}%`,
-                              marginLeft: isLeftColumn && progressPercentage > 0 ? 'auto' : '0'
-                            }}
-                          />
+                          {/* Progress bar container */}
+                          <div className={`h-full flex ${isLeftColumn ? 'justify-end' : 'justify-start'}`}>
+                            <div 
+                              className={`h-full ${userColor} transition-all duration-500 ease-out`}
+                              style={{ 
+                                width: `${Math.min(100, progressPercentage)}%`
+                              }}
+                            />
+                          </div>
                           
                           {/* Content overlay */}
                           <div className={`absolute inset-0 flex items-center ${
@@ -1205,7 +1205,7 @@ export default function RectangularDashboard() {
         {/* Essential Stats */}
         <div id="group-stats" className="bg-black">
           <div className="px-4 py-3">
-            <h3 className="text-xl font-bold text-white mb-3">Stats</h3>
+            <h3 className="text-2xl font-bold text-white mb-6">Stats</h3>
             
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
               <div className="space-y-2">
