@@ -236,9 +236,9 @@ export default function MobileWorkoutLogger() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+          <div className="animate-spin h-8 w-8 border-2 border-gray-800 border-t-orange-400 mx-auto"></div>
           <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
@@ -247,8 +247,9 @@ export default function MobileWorkoutLogger() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-center">
+          <p className="text-2xl font-bold text-white mb-2">Access Required</p>
           <p className="text-gray-400">Please log in to track your workouts.</p>
         </div>
       </div>
@@ -259,230 +260,290 @@ export default function MobileWorkoutLogger() {
   const recoveryExercises = exercises.filter(ex => ex.type === 'recovery').slice(0, 3)
 
   return (
-    <div className="min-h-screen bg-gray-950 pb-20">
-      {/* Daily Target Progress - Mobile First */}
+    <div className="min-h-screen bg-black pb-20">
+      {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
-        <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-4">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold mb-2">
-              {getTotalPoints() >= dailyTarget ? "🎯 Target Complete!" : "Today's Target"}
-            </h2>
-            <div className="text-3xl font-bold mb-2">
-              {getTotalPoints()} / {dailyTarget}
-            </div>
-            <div className="text-sm opacity-90 mb-3">
-              {Math.max(0, dailyTarget - getTotalPoints())} points remaining
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="bg-white bg-opacity-30 rounded-full h-3 mb-2">
-              <div 
-                className="bg-white rounded-full h-3 transition-all duration-500"
-                style={{ width: `${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%` }}
-              ></div>
-            </div>
-            <div className="text-sm opacity-90">
-              {Math.round((getTotalPoints() / dailyTarget) * 100)}% complete
+        <div className="bg-black border-b border-gray-800 relative overflow-hidden">
+          {/* Progress bar background */}
+          <div 
+            className="absolute right-0 top-0 bottom-0 bg-orange-400 transition-all duration-1000 ease-out"
+            style={{ width: `${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%` }}
+          />
+          
+          {/* Content */}
+          <div className="relative px-4 py-6">
+            <div className="flex items-end justify-between">
+              <div>
+                <div className="flex items-baseline space-x-1">
+                  <span className="text-4xl font-black text-white">{getTotalPoints()}</span>
+                  <span className="text-2xl font-thin text-white">PT</span>
+                </div>
+                <p className="text-sm font-medium -mt-1 text-white">
+                  {getTotalPoints() >= dailyTarget ? "Target Complete!" : `${Math.max(0, dailyTarget - getTotalPoints())} remaining`}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-black text-white">
+                  {Math.round((getTotalPoints() / dailyTarget) * 100)}%
+                </div>
+                <div className="text-sm font-medium -mt-1 text-white">
+                  complete
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="p-4 space-y-4">
-        {/* Quick Add Buttons */}
-        <div className="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
-          <h3 className="text-lg font-semibold mb-3 text-white">Quick Add</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {popularExercises.map((exercise) => (
-              <button
-                key={exercise.id}
-                onClick={() => quickAddExercise(exercise)}
-                className="bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 p-3 rounded-lg text-sm font-medium transition-colors border border-blue-700"
-              >
-                <div className="font-semibold">{exercise.name}</div>
-                <div className="text-xs opacity-75">{exercise.points_per_unit} pts/{exercise.unit}</div>
-              </button>
-            ))}
-          </div>
-
-          {recoveryExercises.length > 0 && (
-            <>
-              <div className="mt-4 mb-2">
-                <span className="text-sm font-medium text-gray-400">Recovery Exercises</span>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                {recoveryExercises.map((exercise) => (
+      <div className="space-y-0">
+        {/* Quick Add Section */}
+        <div id="quick-add" className="bg-black">
+          <div className="py-6">
+            <h3 className="text-2xl font-bold text-white mb-6 px-4">Quick Add</h3>
+            
+            <div className="px-4">
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {popularExercises.map((exercise) => (
                   <button
                     key={exercise.id}
-                    onClick={() => quickAddExercise(exercise, 5)}
-                    className="bg-green-900/50 hover:bg-green-800/50 text-green-300 p-3 rounded-lg text-sm font-medium transition-colors border border-green-700"
+                    onClick={() => quickAddExercise(exercise)}
+                    className="bg-gray-900/30 hover:bg-gray-900/40 text-white p-4 rounded-lg transition-all duration-300 hover:scale-105"
                   >
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">{exercise.name}</span>
-                      <span className="text-xs opacity-75">{exercise.points_per_unit} pts/{exercise.unit}</span>
+                    <div className="text-center">
+                      <div className="text-lg font-black text-orange-400 mb-1">{exercise.points_per_unit}</div>
+                      <div className="text-sm font-medium mb-1">{exercise.name}</div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wide">per {exercise.unit}</div>
                     </div>
                   </button>
                 ))}
               </div>
-            </>
-          )}
-        </div>
 
-        {/* Workout Form */}
-        <div className="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 text-white">Log Workout</h3>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Exercise Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Exercise</label>
-              <select 
-                value={selectedExercise?.id || ''} 
-                onChange={(e) => handleExerciseChange(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-700 text-white"
-              >
-                <option value="">Select an exercise...</option>
-                <optgroup label="Regular Exercises">
-                  {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
-                    <option key={exercise.id} value={exercise.id}>
-                      {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Recovery Exercises">
-                  {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
-                    <option key={exercise.id} value={exercise.id}>
-                      {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-
-            {selectedExercise && (
-              <>
-                {/* Exercise Info Card */}
-                <div className={`p-3 rounded-lg ${
-                  selectedExercise.type === 'recovery' ? 'bg-blue-900/30 border border-blue-700' : 'bg-gray-700 border border-gray-600'
-                }`}>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-medium text-gray-200">Type: {selectedExercise.type}</span>
-                    <span className="font-bold text-green-400">{selectedExercise.points_per_unit} pts/{selectedExercise.unit}</span>
+              {recoveryExercises.length > 0 && (
+                <>
+                  <div className="mb-3">
+                    <span className="text-sm font-medium text-gray-400 uppercase tracking-wide">Recovery Exercises</span>
                   </div>
-                  {selectedExercise.type === 'recovery' && (
-                    <div className="text-xs text-blue-400 mt-1">
-                      💡 Recovery exercises help with rest and mobility
-                    </div>
-                  )}
-                </div>
-                
-                {/* Quantity Input */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} 
-                    <span className="text-gray-400 ml-1">({selectedExercise.unit})</span>
-                  </label>
-                  <input 
-                    type="number" 
-                    step="any" 
-                    min="0" 
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-700 text-white"
-                    placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
-                    required
-                  />
-                </div>
-
-                {/* Weight Input */}
-                {selectedExercise.is_weighted && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
-                    <input 
-                      type="number" 
-                      step="any" 
-                      min="0" 
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base bg-gray-700 text-white"
-                      placeholder="Enter weight (optional)"
-                    />
+                  <div className="space-y-2">
+                    {recoveryExercises.map((exercise) => (
+                      <button
+                        key={exercise.id}
+                        onClick={() => quickAddExercise(exercise, 5)}
+                        className="w-full bg-gray-900/30 hover:bg-gray-900/40 text-white p-4 rounded-lg transition-all duration-300 hover:scale-105"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="text-left">
+                            <div className="text-sm font-medium">{exercise.name}</div>
+                            <div className="text-xs text-gray-400">Recovery Exercise</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-black text-orange-400">{exercise.points_per_unit}</div>
+                            <div className="text-xs text-gray-400">per {exercise.unit}</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                )}
-
-                {/* Points Preview */}
-                {quantity && (
-                  <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-300">Points for this workout:</span>
-                      <span className="text-2xl font-bold text-green-400">{calculatePoints()}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <button 
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-4 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg shadow-sm"
-                >
-                  Log Workout
-                </button>
-              </>
-            )}
-          </form>
-        </div>
-
-        {/* Today's Summary */}
-        <div className="bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-700">
-          <h3 className="text-lg font-semibold mb-4 text-white">Today's Summary</h3>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">{getTotalPoints()}</div>
-              <div className="text-sm text-gray-400">Total Points</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{getRecoveryPercentage()}%</div>
-              <div className="text-sm text-gray-400">Recovery</div>
+                </>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Recovery Warning */}
-          {getRecoveryPercentage() > 25 && (
-            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4">
-              <p className="text-sm text-yellow-300 text-center">
-                ⚠️ Recovery exercises exceed 25% of your daily total
-              </p>
-            </div>
-          )}
+        {/* Log Workout Section */}
+        <div id="log-workout" className="bg-black">
+          <div className="py-6">
+            <h3 className="text-2xl font-bold text-white mb-6 px-4">Log Workout</h3>
+            
+            <div className="px-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Exercise Selection */}
+                <div>
+                  <label className="block text-xs text-gray-400 uppercase tracking-wide mb-3">Exercise</label>
+                  <select 
+                    value={selectedExercise?.id || ''} 
+                    onChange={(e) => handleExerciseChange(e.target.value)}
+                    className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                  >
+                    <option value="">Select an exercise...</option>
+                    <optgroup label="Regular Exercises">
+                      {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
+                        <option key={exercise.id} value={exercise.id}>
+                          {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Recovery Exercises">
+                      {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
+                        <option key={exercise.id} value={exercise.id}>
+                          {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
 
-          {/* Today's Workouts */}
-          <div>
-            <h4 className="font-medium mb-3 text-white">Today's Workouts ({todaysLogs.length})</h4>
-            {todaysLogs.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-4">No workouts logged yet today</p>
-            ) : (
-              <div className="space-y-2">
-                {todaysLogs.slice(0, 5).map(log => (
-                  <div key={log.id} className="flex justify-between items-center py-2 px-3 bg-gray-700 rounded-lg">
-                    <div>
-                      <span className="font-medium text-sm text-white">{log.exercises?.name || 'Unknown'}</span>
-                      <div className="text-xs text-gray-400">
-                        {log.count || log.duration} {log.exercises?.unit || ''}
-                        {log.exercises?.type === 'recovery' && (
-                          <span className="ml-2 bg-blue-900/50 text-blue-300 px-1 rounded text-xs">Recovery</span>
-                        )}
+                {selectedExercise && (
+                  <>
+                    {/* Exercise Info Card */}
+                    <div className="bg-gray-900/30 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="text-sm font-medium text-white">{selectedExercise.name}</div>
+                          <div className="text-xs text-gray-400 uppercase tracking-wide">
+                            {selectedExercise.type} exercise
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-black text-orange-400">{selectedExercise.points_per_unit}</div>
+                          <div className="text-xs text-gray-400">per {selectedExercise.unit}</div>
+                        </div>
                       </div>
+                      {selectedExercise.type === 'recovery' && (
+                        <div className="text-xs text-gray-500 mt-2 border-t border-gray-800 pt-2">
+                          Recovery exercises help with rest and mobility
+                        </div>
+                      )}
                     </div>
-                    <span className="font-bold text-green-400 text-sm">{log.points} pts</span>
+                    
+                    {/* Quantity Input */}
+                    <div>
+                      <label className="block text-xs text-gray-400 uppercase tracking-wide mb-3">
+                        {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} ({selectedExercise.unit})
+                      </label>
+                      <input 
+                        type="number" 
+                        step="any" 
+                        min="0" 
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                        placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
+                        required
+                      />
+                    </div>
+
+                    {/* Weight Input */}
+                    {selectedExercise.is_weighted && (
+                      <div>
+                        <label className="block text-xs text-gray-400 uppercase tracking-wide mb-3">Weight (kg)</label>
+                        <input 
+                          type="number" 
+                          step="any" 
+                          min="0" 
+                          value={weight}
+                          onChange={(e) => setWeight(e.target.value)}
+                          className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                          placeholder="Enter weight (optional)"
+                        />
+                      </div>
+                    )}
+
+                    {/* Points Preview */}
+                    {quantity && (
+                      <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-800">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Points Earned</div>
+                            <div className="text-sm text-white">This workout</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-4xl font-black text-orange-400">{calculatePoints()}</div>
+                            <div className="text-xs text-gray-400">points</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Submit Button */}
+                    <button 
+                      type="submit"
+                      className="w-full bg-orange-400 text-black py-4 px-4 rounded-lg hover:bg-orange-500 transition-all duration-300 font-black text-lg shadow-sm hover:scale-105"
+                    >
+                      LOG WORKOUT
+                    </button>
+                  </>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Today's Summary Section */}
+        <div id="todays-summary" className="bg-black">
+          <div className="py-6">
+            <h3 className="text-2xl font-bold text-white mb-6 px-4">Today's Summary</h3>
+            
+            <div className="px-4">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-0 mb-6 border border-gray-800 rounded-lg overflow-hidden">
+                <div className="bg-gray-900/30 p-4 border-r border-gray-800">
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-orange-400 mb-1">{getTotalPoints()}</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Total Points</div>
                   </div>
-                ))}
-                {todaysLogs.length > 5 && (
-                  <div className="text-center text-sm text-gray-400 py-2">
-                    +{todaysLogs.length - 5} more workouts
+                </div>
+                <div className="bg-gray-900/30 p-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-orange-400 mb-1">{getRecoveryPercentage()}%</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Recovery</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recovery Warning */}
+              {getRecoveryPercentage() > 25 && (
+                <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-4 mb-6">
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-orange-400 mb-1">Recovery Notice</div>
+                    <div className="text-xs text-gray-400">
+                      Recovery exercises exceed 25% of your daily total
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Today's Workouts */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-xs text-gray-400 uppercase tracking-wide">Today's Workouts</h4>
+                  <span className="text-xs text-gray-500">({todaysLogs.length})</span>
+                </div>
+                
+                {todaysLogs.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-900/30 rounded-lg">
+                    <p className="text-gray-400 font-medium">No workouts logged yet</p>
+                    <p className="text-gray-500 text-sm mt-1">Start your first workout above</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {todaysLogs.slice(0, 5).map(log => (
+                      <div key={log.id} className="bg-gray-900/30 rounded-lg p-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="text-sm font-medium text-white">{log.exercises?.name || 'Unknown'}</div>
+                            <div className="text-xs text-gray-400">
+                              {log.count || log.duration} {log.exercises?.unit || ''}
+                              {log.exercises?.type === 'recovery' && (
+                                <span className="ml-2 text-xs text-gray-500">• Recovery</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-black text-orange-400">{log.points}</div>
+                            <div className="text-xs text-gray-400">pts</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {todaysLogs.length > 5 && (
+                      <div className="text-center text-xs text-gray-500 py-2">
+                        +{todaysLogs.length - 5} more workouts
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
