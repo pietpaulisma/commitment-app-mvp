@@ -54,9 +54,8 @@ export default function RectangularNavigation() {
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Calculate target based on current day number (day of the month)
-      const currentDate = new Date()
-      let target = currentDate.getDate() // Day number (1-31)
+      // Get today's target based on day type
+      let target = 100
       let restDays = [1] // Default Monday
       let recoveryDays = [5] // Default Friday
       
@@ -65,7 +64,7 @@ export default function RectangularNavigation() {
           // Load group and group settings
           const { data: group } = await supabase
             .from('groups')
-            .select('name')
+            .select('start_date, name')
             .eq('id', profile.group_id)
             .single()
           
@@ -73,7 +72,7 @@ export default function RectangularNavigation() {
 
           const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
-            .select('rest_days, recovery_days, accent_color')
+            .select('*')
             .eq('group_id', profile.group_id)
             .maybeSingle()
 
@@ -81,6 +80,12 @@ export default function RectangularNavigation() {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
             setAccentColor(groupSettings.accent_color || 'blue')
+            
+            const daysSinceStart = group?.start_date 
+              ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+              : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+            
+            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
           }
         }
       } catch (error) {
@@ -88,11 +93,11 @@ export default function RectangularNavigation() {
       }
 
       // Adjust target based on day type
-      const currentDayOfWeek = currentDate.getDay()
+      const currentDayOfWeek = new Date().getDay()
       if (restDays.includes(currentDayOfWeek)) {
         target = 0 // Rest day - no points required
       } else if (recoveryDays.includes(currentDayOfWeek)) {
-        target = Math.round(target * 0.25) // Recovery day - 25% of daily target for recovery
+        target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
       }
 
       setDailyProgress(todayPoints)
@@ -119,9 +124,9 @@ export default function RectangularNavigation() {
     return null
   }
 
-  const progressPercentage = dailyTarget > 0 ? Math.min(100, (dailyProgress / dailyTarget) * 100) : 0
+  const progressPercentage = dailyTarget > 0 ? (dailyProgress / dailyTarget) * 100 : 0
   const recoveryPercentage = dailyTarget > 0 ? Math.min(25, (recoveryProgress / dailyTarget) * 100) : 0
-  const regularPercentage = progressPercentage - recoveryPercentage
+  const regularPercentage = Math.max(0, progressPercentage - recoveryPercentage)
   const isComplete = progressPercentage >= 100
   const accentBg = getAccentColor()
 
@@ -137,13 +142,13 @@ export default function RectangularNavigation() {
           >
             {/* Regular Progress Background */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-purple-500 transition-all duration-500 ease-out"
-              style={{ width: `${Math.max(0, regularPercentage)}%` }}
+              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+              style={{ width: `${Math.min(100, Math.max(0, regularPercentage))}%` }}
             />
             {/* Recovery Progress Background */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-              style={{ width: `${recoveryPercentage}%` }}
+              className="absolute left-0 top-0 bottom-0 bg-purple-500 transition-all duration-500 ease-out"
+              style={{ width: `${Math.min(100, recoveryPercentage)}%` }}
             />
             
             {/* Button Content */}
