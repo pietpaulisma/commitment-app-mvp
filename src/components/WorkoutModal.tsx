@@ -184,7 +184,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         .select('exercise_id')
         .eq('user_id', user.id)
 
-      if (error) throw error
+      if (error) {
+        console.log('Favorites table not available:', error.message)
+        return
+      }
 
       setFavoriteExerciseIds(favorites?.map(f => f.exercise_id) || [])
     } catch (error) {
@@ -208,7 +211,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           .eq('user_id', user.id)
           .eq('exercise_id', exerciseId)
 
-        if (error) throw error
+        if (error) {
+          console.log('Cannot remove favorite - table not available:', error.message)
+          return
+        }
 
         setFavoriteExerciseIds(prev => prev.filter(id => id !== exerciseId))
       } else {
@@ -217,7 +223,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           .from('user_favorite_exercises')
           .insert({ user_id: user.id, exercise_id: exerciseId })
 
-        if (error) throw error
+        if (error) {
+          console.log('Cannot add favorite - table not available:', error.message)
+          return
+        }
 
         setFavoriteExerciseIds(prev => [...prev, exerciseId])
       }
@@ -491,69 +500,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         }
       })
       
-      // Generate recommendations
-      const recommendations = generateRecommendations(exercisesWithProgress, yesterdayLogs || [])
-      
       setExercises(exercisesWithProgress)
-      setRecommendedExercises(recommendations)
       console.log('Exercises loaded successfully:', exercisesWithProgress.length)
     } catch (error) {
       console.error('Error loading exercises:', error)
     } finally {
       setExercisesLoading(false)
     }
-  }
-  
-  const generateRecommendations = (exercises: ExerciseWithProgress[], yesterdayLogs: any[]): RecommendedExercise[] => {
-    const recommendations: RecommendedExercise[] = []
-    
-    // Get yesterday's exercise types
-    const yesterdayTypes = yesterdayLogs.map(log => log.exercises?.type).filter(Boolean)
-    
-    // Recommend balance - if they did strength yesterday, suggest cardio/flexibility
-    if (yesterdayTypes.includes('strength')) {
-      const cardioExercise = exercises.find(ex => ex.type === 'cardio' && ex.todayCount === 0)
-      if (cardioExercise) {
-        recommendations.push({
-          exercise: cardioExercise,
-          reason: 'Balance yesterday\'s strength training',
-          priority: 'high'
-        })
-      }
-      
-      const flexibilityExercise = exercises.find(ex => ex.type === 'flexibility' && ex.todayCount === 0)
-      if (flexibilityExercise) {
-        recommendations.push({
-          exercise: flexibilityExercise,
-          reason: 'Recovery and flexibility',
-          priority: 'medium'
-        })
-      }
-    }
-    
-    // If they did cardio yesterday, suggest strength
-    if (yesterdayTypes.includes('cardio')) {
-      const strengthExercise = exercises.find(ex => ex.type === 'strength' && ex.todayCount === 0)
-      if (strengthExercise) {
-        recommendations.push({
-          exercise: strengthExercise,
-          reason: 'Build strength after cardio',
-          priority: 'high'
-        })
-      }
-    }
-    
-    // Always recommend recovery if they haven't done any today
-    const recoveryExercise = exercises.find(ex => ex.type === 'recovery' && ex.todayCount === 0)
-    if (recoveryExercise && yesterdayLogs.length > 0) {
-      recommendations.push({
-        exercise: recoveryExercise,
-        reason: 'Important for muscle recovery',
-        priority: 'medium'
-      })
-    }
-    
-    return recommendations.slice(0, 3) // Limit to 3 recommendations
   }
 
   const calculatePoints = () => {
@@ -823,8 +776,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
               {/* Favorites Section */}
               {favoriteExercises.length > 0 && (
-                <div className="py-6">
-                  <div className="flex items-center justify-between mb-6 px-4">
+                <div className="py-3">
+                  <div className="flex items-center justify-between mb-3 px-4">
                     <h4 className="text-2xl font-bold text-white">Favorites</h4>
                     <StarIconSolid className="w-6 h-6 text-yellow-400" />
                   </div>
@@ -836,10 +789,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
               {/* All Main Exercises - Collapsible */}
               {allExercises.length > 0 && (
-                <div className="py-6">
+                <div className="py-3">
                   <button
                     onClick={() => setAllExercisesExpanded(!allExercisesExpanded)}
-                    className="flex items-center justify-between w-full mb-6 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
                   >
                     <h4 className="text-2xl font-bold text-white">All Exercises</h4>
                     <div className="flex items-center space-x-2">
@@ -861,10 +814,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
               {/* Recovery Exercises - Collapsible */}
               {recoveryExercises.length > 0 && (
-                <div className="py-6">
+                <div className="py-3">
                   <button
                     onClick={() => setRecoveryExpanded(!recoveryExpanded)}
-                    className="flex items-center justify-between w-full mb-6 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
                   >
                     <h4 className="text-2xl font-bold text-white">Recovery</h4>
                     <div className="flex items-center space-x-2">
