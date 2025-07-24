@@ -62,16 +62,16 @@ export default function Login() {
         return
       }
 
-      // Incomplete demo mode - for testing onboarding flow
-      if (email === 'incomplete@test.com' && password === 'demo123') {
-        console.log('Incomplete demo user login detected')
-        const incompleteData = {
-          id: 'incomplete-user-id',
-          email: 'incomplete@test.com',
+      // Onboarding demo mode - for testing onboarding flow
+      if (email === 'onboarding@test.com' && password === 'demo123') {
+        console.log('Onboarding demo user login detected')
+        const onboardingData = {
+          id: 'onboarding-user-id',
+          email: 'onboarding@test.com',
           role: 'user'
         }
-        localStorage.setItem('demo-user', JSON.stringify(incompleteData))
-        console.log('Incomplete demo user stored:', localStorage.getItem('demo-user'))
+        localStorage.setItem('demo-user', JSON.stringify(onboardingData))
+        console.log('Onboarding demo user stored:', localStorage.getItem('demo-user'))
         
         // Force a page reload to trigger AuthContext re-check and onboarding redirect
         setTimeout(() => {
@@ -177,11 +177,11 @@ export default function Login() {
                 <span className="font-mono text-xs text-orange-400">admin@test.com / admin123</span>
               </button>
               <button 
-                onClick={() => fillDemoCredentials('incomplete@test.com', 'demo123')}
+                onClick={() => fillDemoCredentials('onboarding@test.com', 'demo123')}
                 className="w-full flex justify-between items-center p-2 hover:bg-gray-700 transition-colors"
               >
                 <span className="text-gray-400">Onboarding Test:</span>
-                <span className="font-mono text-xs text-red-400">incomplete@test.com / demo123</span>
+                <span className="font-mono text-xs text-red-400">onboarding@test.com / demo123</span>
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">
