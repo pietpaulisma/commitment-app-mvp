@@ -15,6 +15,8 @@ export type UserProfile = {
   is_weekly_mode: boolean
   location: string
   use_ip_location: boolean
+  personal_color: string
+  custom_icon: string
   created_at: string
   updated_at: string
 }
