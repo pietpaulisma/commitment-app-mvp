@@ -125,6 +125,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             console.log('Error loading group settings:', settingsError)
           }
 
+          console.log('🔧 Group Settings loaded:', groupSettings)
+
           if (groupSettings) {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
@@ -132,6 +134,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             const daysSinceStart = group?.start_date 
               ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
               : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+            
+            console.log('🎯 Daily Target Calculation:', {
+              group_start_date: group?.start_date,
+              profile_created_at: profile.created_at,
+              daysSinceStart,
+              daily_target_base: groupSettings.daily_target_base,
+              daily_increment: groupSettings.daily_increment,
+              calculated_target: groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+            })
             
             target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
           }
@@ -148,6 +159,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
       }
 
+      console.log('🎯 Final daily target set to:', target)
+      
       setDailyProgress(todayPoints)
       setDailyTarget(target)
       setRecoveryProgress(recoveryPoints)
