@@ -62,6 +62,25 @@ export default function Login() {
         return
       }
 
+      // Incomplete demo mode - for testing onboarding flow
+      if (email === 'incomplete@test.com' && password === 'demo123') {
+        console.log('Incomplete demo user login detected')
+        const incompleteData = {
+          id: 'incomplete-user-id',
+          email: 'incomplete@test.com',
+          role: 'user'
+        }
+        localStorage.setItem('demo-user', JSON.stringify(incompleteData))
+        console.log('Incomplete demo user stored:', localStorage.getItem('demo-user'))
+        
+        // Force a page reload to trigger AuthContext re-check and onboarding redirect
+        setTimeout(() => {
+          console.log('Reloading page to trigger onboarding flow...')
+          window.location.href = '/dashboard' // OnboardingGuard will redirect to onboarding
+        }, 100)
+        return
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -156,6 +175,13 @@ export default function Login() {
               >
                 <span className="text-gray-400">Admin Demo:</span>
                 <span className="font-mono text-xs text-orange-400">admin@test.com / admin123</span>
+              </button>
+              <button 
+                onClick={() => fillDemoCredentials('incomplete@test.com', 'demo123')}
+                className="w-full flex justify-between items-center p-2 hover:bg-gray-700 transition-colors"
+              >
+                <span className="text-gray-400">Onboarding Test:</span>
+                <span className="font-mono text-xs text-red-400">incomplete@test.com / demo123</span>
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">

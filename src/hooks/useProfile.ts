@@ -45,6 +45,10 @@ export function useProfile() {
         if (demoUser) {
           try {
             const userData = JSON.parse(demoUser)
+            
+            // Check if this is the incomplete demo user for onboarding testing
+            const isIncompleteDemo = userData.email === 'incomplete@test.com'
+            
             setProfile({
               id: userData.id,
               email: userData.email,
@@ -56,10 +60,10 @@ export function useProfile() {
               use_ip_location: false,
               personal_color: '#3b82f6',
               custom_icon: '💪',
-              first_name: 'Demo',
-              last_name: 'User',
-              onboarding_completed: true, // Demo users skip onboarding
-              commitment_statement: 'Demo commitment statement',
+              first_name: isIncompleteDemo ? null : 'Demo',
+              last_name: isIncompleteDemo ? null : 'User',
+              onboarding_completed: !isIncompleteDemo, // Incomplete demo goes through onboarding
+              commitment_statement: isIncompleteDemo ? null : 'Demo commitment statement',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
