@@ -33,8 +33,11 @@ export default function CommitPage() {
         }
         localStorage.setItem('demo-user', JSON.stringify(testUser))
         
-        // Proceed to profile setup
-        router.push('/onboarding/profile')
+        // Add a small delay to ensure localStorage is set before navigation
+        setTimeout(() => {
+          // Force page reload to trigger auth context update
+          window.location.href = '/onboarding/profile'
+        }, 100)
         return
       }
 
