@@ -66,6 +66,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
+  const [sportsExpanded, setSportsExpanded] = useState(false)
   const [favoritesExpanded, setFavoritesExpanded] = useState(true)
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState<string[]>([])
   const [favoritesLoading, setFavoritesLoading] = useState(false)
@@ -588,8 +589,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   }
 
   const quickAddExercise = (exercise: ExerciseWithProgress, defaultQuantity: number = 10) => {
-    // Check if exercise name is 'sport' (case insensitive) for sport selection
-    if (exercise.name.toLowerCase() === 'sport') {
+    // Check if exercise is a sport type (Light Sport, Medium Sport, Intense Sport) for sport selection
+    if (exercise.type === 'sport' || exercise.name.toLowerCase().includes('sport')) {
+      // Set the intensity based on the exercise name
+      if (exercise.name.toLowerCase().includes('light')) {
+        setSelectedIntensity('light')
+      } else if (exercise.name.toLowerCase().includes('medium')) {
+        setSelectedIntensity('medium')
+      } else if (exercise.name.toLowerCase().includes('intense')) {
+        setSelectedIntensity('intense')
+      }
       setShowSportSelection(true)
       return
     }
@@ -603,43 +612,84 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     setShowSportSelection(false)
   }
 
-  const handleSportSelection = (sportType: string) => {
-    // Create a virtual sport exercise with the selected type
-    const sportExercise: ExerciseWithProgress = {
-      id: `sport_${selectedIntensity}`,
-      name: `${sportType} (${selectedIntensity})`,
-      type: 'cardio',
-      unit: 'minute',
-      points_per_unit: selectedIntensity === 'light' ? 125 : selectedIntensity === 'medium' ? 250 : 375,
-      is_weighted: false,
-      is_time_based: true,
-      todayCount: 0,
-      emoji: '🏃'
+  const handleSportSelection = async (sportType: string) => {
+    if (!user) return
+
+    try {
+      // Calculate points based on intensity (per hour, so convert to per minute)
+      const pointsPerHour = selectedIntensity === 'light' ? 125 : selectedIntensity === 'medium' ? 250 : 375
+      const pointsPerMinute = pointsPerHour / 60
+      
+      // Default to 60 minutes (1 hour) for sports
+      const duration = 60
+      const totalPoints = Math.round(pointsPerHour)
+
+      // Log the sport workout with sport_type and sport_intensity
+      const { error } = await supabase
+        .from('logs')
+        .insert({
+          user_id: user.id,
+          group_id: profile?.group_id,
+          exercise_id: `sport_${selectedIntensity}`, // Use the sport intensity exercise ID
+          count: 0,
+          weight: 0,
+          duration: duration,
+          points: totalPoints,
+          sport_type: sportType,
+          sport_intensity: selectedIntensity,
+          date: new Date().toISOString().split('T')[0],
+          timestamp: Date.now()
+        })
+
+      if (error) {
+        alert('Error logging sport workout: ' + error.message)
+      } else {
+        // Call callback to refresh data
+        if (onWorkoutAdded) {
+          onWorkoutAdded()
+        }
+        
+        // Refresh daily progress and workouts
+        loadDailyProgress()
+        loadTodaysWorkouts()
+        
+        // Close modal
+        setShowSportSelection(false)
+        onClose()
+        
+        // Haptic feedback on mobile
+        if (navigator.vibrate) {
+          navigator.vibrate(100)
+        }
+      }
+    } catch (error) {
+      console.error('Error logging sport workout:', error)
+      alert('An error occurred while logging your sport workout.')
     }
-    
-    setSelectedExercise(sportExercise)
-    setQuantity('30') // Default 30 minutes
-    setWeight('')
-    setShowSportSelection(false)
   }
 
   const sportTypes = [
-    { name: 'Canoeing', emoji: '🛶' },
-    { name: 'Mountain Biking', emoji: '🚵' },
-    { name: 'Surfing', emoji: '🏄' },
-    { name: 'Running', emoji: '🏃' },
-    { name: 'Swimming', emoji: '🏊' },
-    { name: 'Hiking', emoji: '🥾' },
-    { name: 'Tennis', emoji: '🎾' },
-    { name: 'Football', emoji: '⚽' },
-    { name: 'Basketball', emoji: '🏀' },
-    { name: 'Volleyball', emoji: '🏐' }
+    'Surfing',
+    'Volleyball', 
+    'Basketball',
+    'Soccer/Football',
+    'Tennis',
+    'Swimming',
+    'Cycling',
+    'Running',
+    'Hiking',
+    'Rock Climbing',
+    'Canoeing',
+    'Mountain Biking'
   ]
 
   if (!isOpen) return null
 
-  // Group exercises by their actual types, with recovery separate
-  const allExercises = exercises.filter(ex => ex.type !== 'recovery')
+  // Group exercises by their actual types, with recovery and sports separate
+  const allExercises = exercises.filter(ex => ex.type !== 'recovery' && ex.type !== 'sport')
+  
+  // Get sport exercises (Light Sport, Medium Sport, Intense Sport)
+  const sportsExercises = exercises.filter(ex => ex.type === 'sport')
   
   // Get favorite exercises
   const favoriteExercises = exercises.filter(ex => favoriteExerciseIds.includes(ex.id))
@@ -807,6 +857,34 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   {favoritesExpanded && (
                     <div className="space-y-0 border-t border-gray-800">
                       {favoriteExercises.map((exercise) => renderExerciseButton(exercise, false))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sports Section - Collapsible */}
+              {sportsExercises.length > 0 && (
+                <div className="py-3">
+                  <button
+                    onClick={() => setSportsExpanded(!sportsExpanded)}
+                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <BoltIcon className="w-6 h-6 text-purple-400" />
+                      <h4 className="text-2xl font-bold text-white">Sports</h4>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-400">({sportsExercises.length})</span>
+                      <ChevronDownIcon 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          sportsExpanded ? 'rotate-180' : ''
+                        }`} 
+                      />
+                    </div>
+                  </button>
+                  {sportsExpanded && (
+                    <div className="space-y-0 border-t border-gray-800">
+                      {sportsExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
                 </div>
@@ -992,7 +1070,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           {showSportSelection && (
             <div className="p-4 space-y-4">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">🏃 Choose Your Sport</h3>
+                <h3 className="text-xl font-bold text-white mb-2">Choose Your Sport</h3>
                 <p className="text-gray-400 text-sm">Select the type of sport activity</p>
               </div>
 
@@ -1000,17 +1078,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               <div className="space-y-2">
                 {sportTypes.map((sport) => (
                   <button
-                    key={sport.name}
-                    onClick={() => handleSportSelection(sport.name)}
+                    key={sport}
+                    onClick={() => handleSportSelection(sport)}
                     className="w-full p-3 text-left transition-colors border-b border-gray-700 bg-gray-800 hover:bg-gray-700"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <span className="text-xl">{sport.emoji}</span>
-                        <div className="font-medium text-white">{sport.name}</div>
+                        <BoltIcon className="w-5 h-5 text-purple-400" />
+                        <div className="font-medium text-white">{sport}</div>
                       </div>
                       <div className="text-sm font-bold text-green-400">
-                        {selectedIntensity === 'light' ? '125' : selectedIntensity === 'medium' ? '250' : '375'} pts/min
+                        {selectedIntensity === 'light' ? '125' : selectedIntensity === 'medium' ? '250' : '375'} pts/hr
                       </div>
                     </div>
                   </button>
@@ -1022,9 +1100,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 <h4 className="text-white font-semibold mb-3">Intensity Level</h4>
                 <div className="space-y-2">
                   {[
-                    { id: 'light', name: 'Light', points: 125, emoji: '🚶' },
-                    { id: 'medium', name: 'Medium', points: 250, emoji: '🏃' },
-                    { id: 'intense', name: 'Intense', points: 375, emoji: '💨' }
+                    { id: 'light', name: 'Light', points: 125 },
+                    { id: 'medium', name: 'Medium', points: 250 },
+                    { id: 'intense', name: 'Intense', points: 375 }
                   ].map((intensity) => (
                     <button
                       key={intensity.id}
@@ -1037,11 +1115,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <span className="text-lg">{intensity.emoji}</span>
+                          <BoltIcon className="w-5 h-5 text-purple-400" />
                           <span className="font-medium">{intensity.name}</span>
                         </div>
                         <span className="text-sm font-bold">
-                          {intensity.points} pts/min
+                          {intensity.points} pts/hr
                         </span>
                       </div>
                     </button>
