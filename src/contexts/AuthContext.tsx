@@ -31,6 +31,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
+      // Check for demo user first
+      const demoUser = localStorage.getItem('demo-user')
+      if (demoUser) {
+        const userData = JSON.parse(demoUser)
+        // Create a mock user object compatible with Supabase User type
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          user_metadata: { role: userData.role },
+          app_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as User)
+        setLoading(false)
+        return
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       setLoading(false)
@@ -50,6 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signOut = async () => {
+    // Clear demo user if exists
+    localStorage.removeItem('demo-user')
+    setUser(null)
     await supabase.auth.signOut()
   }
 
