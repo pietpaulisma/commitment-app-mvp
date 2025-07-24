@@ -110,9 +110,9 @@ export default function NewDashboard() {
       // Get current streak
       const { data: checkins } = await supabase
         .from('daily_checkins')
-        .select('checkin_date, is_complete')
+        .select('date, is_complete')
         .eq('user_id', user.id)
-        .order('checkin_date', { ascending: false })
+        .order('date', { ascending: false })
         .limit(30)
 
       let currentStreak = 0
@@ -157,9 +157,9 @@ export default function NewDashboard() {
         // Get streaks for all members
         const { data: memberCheckins } = await supabase
           .from('daily_checkins')
-          .select('user_id, checkin_date, is_complete')
+          .select('user_id, date, is_complete')
           .in('user_id', memberIds)
-          .order('checkin_date', { ascending: false })
+          .order('date', { ascending: false })
 
         const memberStreaksMap = new Map()
         memberIds.forEach(memberId => {

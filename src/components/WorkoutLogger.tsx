@@ -123,7 +123,7 @@ export default function WorkoutLogger() {
           .from('daily_checkins')
           .select('*')
           .eq('user_id', userId)
-          .eq('checkin_date', todayString)
+          .eq('date', todayString)
           .single()
 
         if (!existingCheckin) {
@@ -132,7 +132,7 @@ export default function WorkoutLogger() {
             .from('daily_checkins')
             .insert({
               user_id: userId,
-              checkin_date: todayString,
+              date: todayString,
               target_points: target,
               total_points: 0,
               recovery_points: 0,
@@ -164,7 +164,7 @@ export default function WorkoutLogger() {
           is_complete: isComplete
         })
         .eq('user_id', user.id)
-        .eq('checkin_date', todayString)
+        .eq('date', todayString)
     } catch (error) {
       console.error('Error updating daily checkin:', error)
     }

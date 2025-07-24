@@ -20,7 +20,7 @@ type GroupSettings = {
 type DailyCheckin = {
   id: string
   user_id: string
-  checkin_date: string
+  date: string
   target_points: number
   total_points: number
   recovery_points: number
@@ -81,7 +81,7 @@ export default function MobileTargets() {
         .from('daily_checkins')
         .select('*')
         .eq('user_id', user.id)
-        .order('checkin_date', { ascending: false })
+        .order('date', { ascending: false })
         .limit(14)
 
       if (checkinsError) throw checkinsError
@@ -101,7 +101,7 @@ export default function MobileTargets() {
         const daysSinceStart = Math.floor((date.getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
         const target = settings.daily_target_base + (settings.daily_increment * Math.max(0, daysSinceStart))
 
-        const checkin = checkins?.find(c => c.checkin_date === dateString)
+        const checkin = checkins?.find(c => c.date === dateString)
         
         const earned = checkin?.total_points || 0
         const isComplete = checkin?.is_complete || false
