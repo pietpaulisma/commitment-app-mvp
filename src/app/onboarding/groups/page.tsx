@@ -128,15 +128,14 @@ export default function GroupSelectionPage() {
       const { error: joinError } = await supabase
         .from('profiles')
         .update({ 
-          group_id: groupIdToJoin,
-          onboarding_completed: true
+          group_id: groupIdToJoin
         })
         .eq('id', user.id)
 
       if (joinError) throw joinError
 
-      // Success! Redirect to dashboard
-      router.push('/dashboard')
+      // Success! Now go to profile setup with group context
+      router.push('/onboarding/profile')
     } catch (error: any) {
       console.error('Error joining group:', error)
       setError(error.message || 'Failed to join group. The system rejected your request.')
@@ -149,7 +148,7 @@ export default function GroupSelectionPage() {
   }
 
   const handleBack = () => {
-    router.push('/onboarding/profile')
+    router.push('/onboarding/commit')
   }
 
   if (!user) {

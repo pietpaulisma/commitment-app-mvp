@@ -35,8 +35,8 @@ export default function CommitPage() {
         
         // Add a small delay to ensure localStorage is set before navigation
         setTimeout(() => {
-          // Force page reload to trigger auth context update
-          window.location.href = '/onboarding/profile'
+          // Force page reload to trigger auth context update - go to groups first
+          window.location.href = '/onboarding/groups'
         }, 100)
         return
       }
@@ -70,8 +70,8 @@ export default function CommitPage() {
       }
 
       if (data.user) {
-        // Proceed to profile setup
-        router.push('/onboarding/profile')
+        // Proceed to group selection first
+        router.push('/onboarding/groups')
       }
     } catch (error: any) {
       console.error('Commitment failed:', error)

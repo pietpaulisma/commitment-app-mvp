@@ -42,7 +42,7 @@ export default function ProfileSetupPage() {
   }, [user, router])
 
   const handleBack = () => {
-    router.push('/onboarding/commit')
+    router.push('/onboarding/groups')
   }
 
   const handleContinue = async () => {
@@ -61,12 +61,52 @@ export default function ProfileSetupPage() {
     setIsSubmitting(true)
 
     try {
-      // First, let's check if the columns exist and add them if they don't
+      // First, get the user's current group to check for uniqueness
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('group_id')
+        .eq('id', user?.id)
+        .single()
+
+      if (currentProfile?.group_id) {
+        // Check if color is already taken in this group
+        const { data: colorConflict } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('group_id', currentProfile.group_id)
+          .eq('personal_color', personalColor)
+          .neq('id', user?.id)
+          .single()
+
+        if (colorConflict) {
+          setError('This color is already taken by another group member. Please choose a different color.')
+          setIsSubmitting(false)
+          return
+        }
+
+        // Check if icon is already taken in this group
+        const { data: iconConflict } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('group_id', currentProfile.group_id)
+          .eq('custom_icon', customIcon)
+          .neq('id', user?.id)
+          .single()
+
+        if (iconConflict) {
+          setError('This icon is already taken by another group member. Please choose a different icon.')
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      // Update profile with uniqueness guaranteed
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           first_name: firstName.trim(),
           last_name: lastName.trim(),
+          onboarding_completed: true,
           ...(personalColor && { personal_color: personalColor }),
           ...(customIcon && { custom_icon: customIcon })
         })
@@ -82,7 +122,8 @@ export default function ProfileSetupPage() {
             .from('profiles')
             .update({
               first_name: firstName.trim(),
-              last_name: lastName.trim()
+              last_name: lastName.trim(),
+              onboarding_completed: true
             })
             .eq('id', user?.id)
             
@@ -94,8 +135,8 @@ export default function ProfileSetupPage() {
         }
       }
 
-      // Proceed to group selection
-      router.push('/onboarding/groups')
+      // Onboarding complete! Go to dashboard
+      router.push('/dashboard')
     } catch (error: any) {
       console.error('Profile setup failed:', error)
       setError(error.message || 'Failed to save profile. The system rejected your data.')
@@ -116,7 +157,7 @@ export default function ProfileSetupPage() {
             IDENTITY PROTOCOL
           </h1>
           <p className="text-gray-400 text-sm">
-            Define yourself within the system.
+            Define yourself within your group. Choose wisely - no duplicates allowed.
           </p>
         </div>
 
@@ -243,7 +284,7 @@ export default function ProfileSetupPage() {
           disabled={isSubmitting || !firstName.trim() || !lastName.trim()}
           className="w-full bg-red-600 text-white py-4 px-6 border border-red-400 hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-black text-lg"
         >
-          {isSubmitting ? 'REGISTERING IDENTITY...' : 'LOCK IN IDENTITY'}
+          {isSubmitting ? 'REGISTERING IDENTITY...' : 'COMPLETE COMMITMENT'}
         </button>
 
         <div className="text-center mt-4">

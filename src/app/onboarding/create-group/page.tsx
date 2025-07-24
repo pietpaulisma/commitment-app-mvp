@@ -79,8 +79,7 @@ export default function CreateGroupPage() {
         .from('profiles')
         .update({
           role: 'group_admin',
-          group_id: groupData.id,
-          onboarding_completed: true
+          group_id: groupData.id
         })
         .eq('id', user?.id)
 
@@ -101,8 +100,8 @@ export default function CreateGroupPage() {
         // Don't fail the whole process for this
       }
 
-      // Success! Redirect to dashboard
-      router.push('/dashboard')
+      // Success! Now go to profile setup with group context
+      router.push('/onboarding/profile')
     } catch (error: any) {
       console.error('Error creating group:', error)
       setError(error.message || 'Failed to create group. The system rejected your request.')
