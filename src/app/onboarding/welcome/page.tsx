@@ -12,7 +12,7 @@ export default function WelcomePage() {
 
   return (
     <OnboardingLayout>
-      <div className="flex-1 flex flex-col justify-center px-6 py-8">
+      <div className="px-6 py-8 min-h-full flex flex-col justify-center">
         {/* App Logo/Icon */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-red-600 border-2 border-red-400 flex items-center justify-center mx-auto mb-4">

@@ -158,7 +158,7 @@ export default function GroupSelectionPage() {
 
   return (
     <OnboardingLayout showBackButton onBack={handleBack}>
-      <div className="flex-1 flex flex-col px-6 py-8">
+      <div className="px-6 py-8 min-h-full">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-black text-red-400 mb-2 tracking-tight">

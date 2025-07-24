@@ -8,14 +8,20 @@
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
   }
   
-  /* Handle iOS safe areas */
+  /* Handle iOS safe areas - use margin instead of padding to avoid scroll issues */
   body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    margin-top: env(safe-area-inset-top);
+    margin-bottom: env(safe-area-inset-bottom);
+    margin-left: env(safe-area-inset-left);
+    margin-right: env(safe-area-inset-right);
+  }
+  
+  /* Ensure proper touch scrolling */
+  * {
+    -webkit-overflow-scrolling: touch;
   }
   
   /* Status bar area for iOS */
