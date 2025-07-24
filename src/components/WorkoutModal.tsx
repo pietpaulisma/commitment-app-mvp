@@ -10,8 +10,11 @@ import {
   FireIcon,
   MoonIcon,
   BoltIcon,
-  SparklesIcon
+  SparklesIcon,
+  ChevronDownIcon,
+  StarIcon
 } from '@heroicons/react/24/outline'
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
 type Exercise = {
   id: string
@@ -30,11 +33,6 @@ type ExerciseWithProgress = Exercise & {
   lastDone?: string
 }
 
-type RecommendedExercise = {
-  exercise: ExerciseWithProgress
-  reason: string
-  priority: 'high' | 'medium' | 'low'
-}
 
 type WorkoutModalProps = {
   isOpen: boolean
@@ -46,7 +44,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const { user } = useAuth()
   const { profile } = useProfile()
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
-  const [recommendedExercises, setRecommendedExercises] = useState<RecommendedExercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<ExerciseWithProgress | null>(null)
   const [quantity, setQuantity] = useState('')
   const [weight, setWeight] = useState('')
@@ -64,6 +61,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [todaysWorkouts, setTodaysWorkouts] = useState<any[]>([])
   const [selectedWeight, setSelectedWeight] = useState(0)
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
+  const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
+  const [recoveryExpanded, setRecoveryExpanded] = useState(false)
+  const [favoriteExerciseIds, setFavoriteExerciseIds] = useState<string[]>([])
+  const [favoritesLoading, setFavoritesLoading] = useState(false)
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -71,6 +72,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       loadExercises()
       loadDailyProgress()
       loadTodaysWorkouts()
+      loadFavoriteExercises()
     }
   }, [isOpen, user, profile?.group_id])
 
@@ -172,6 +174,58 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
+  const loadFavoriteExercises = async () => {
+    if (!user) return
+
+    try {
+      setFavoritesLoading(true)
+      const { data: favorites, error } = await supabase
+        .from('user_favorite_exercises')
+        .select('exercise_id')
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      setFavoriteExerciseIds(favorites?.map(f => f.exercise_id) || [])
+    } catch (error) {
+      console.error('Error loading favorite exercises:', error)
+    } finally {
+      setFavoritesLoading(false)
+    }
+  }
+
+  const toggleFavorite = async (exerciseId: string) => {
+    if (!user) return
+
+    try {
+      const isFavorite = favoriteExerciseIds.includes(exerciseId)
+      
+      if (isFavorite) {
+        // Remove from favorites
+        const { error } = await supabase
+          .from('user_favorite_exercises')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('exercise_id', exerciseId)
+
+        if (error) throw error
+
+        setFavoriteExerciseIds(prev => prev.filter(id => id !== exerciseId))
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from('user_favorite_exercises')
+          .insert({ user_id: user.id, exercise_id: exerciseId })
+
+        if (error) throw error
+
+        setFavoriteExerciseIds(prev => [...prev, exerciseId])
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+    }
+  }
+
   const getExerciseIcon = (exercise: Exercise) => {
     const name = exercise.name.toLowerCase()
     
@@ -268,6 +322,73 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       points: exercisePoints,
       percentage: progressPercentage
     }
+  }
+
+  const renderExerciseButton = (exercise: ExerciseWithProgress, showFavorite: boolean = true) => {
+    const isFavorite = favoriteExerciseIds.includes(exercise.id)
+    const exerciseProgress = getExerciseProgress(exercise.id)
+    
+    return (
+      <div
+        key={exercise.id}
+        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 ${
+          exercise.todayCount > 0
+            ? 'bg-gray-900/40 hover:bg-gray-900/50'
+            : 'bg-gray-900/30 hover:bg-gray-900/40'
+        }`}
+      >
+        {/* Progress bar background */}
+        <div 
+          className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+          style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+        />
+        
+        <div className="relative flex">
+          {/* Main exercise button */}
+          <button
+            onClick={() => quickAddExercise(exercise)}
+            className="flex-1 p-3 hover:scale-105 transition-transform duration-300"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {getExerciseIcon(exercise)}
+                <div>
+                  <div className="font-medium text-white text-left">{exercise.name}</div>
+                </div>
+              </div>
+              <div className="text-right min-w-[80px]">
+                <span className="font-medium text-gray-500">
+                  {exercise.points_per_unit % 1 === 0 
+                    ? exercise.points_per_unit 
+                    : exercise.points_per_unit.toFixed(2)
+                  }
+                </span>
+                <span className="font-thin text-gray-500 ml-1">
+                  /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                </span>
+              </div>
+            </div>
+          </button>
+          
+          {/* Favorite button */}
+          {showFavorite && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleFavorite(exercise.id)
+              }}
+              className="w-12 flex items-center justify-center hover:bg-gray-800/50 transition-colors duration-200"
+            >
+              {isFavorite ? (
+                <StarIconSolid className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <StarIcon className="w-5 h-5 text-gray-500 hover:text-yellow-400" />
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    )
   }
 
   const calculateWorkoutPoints = (exercise: ExerciseWithProgress, count: number, weight: number, isDecreased: boolean) => {
@@ -560,13 +681,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   // Group exercises by their actual types, with recovery separate
   const allExercises = exercises.filter(ex => ex.type !== 'recovery')
   
-  // Get recovery exercises that are NOT already in recommendations to avoid duplicates
-  const recommendedExerciseIds = recommendedExercises.map(rec => rec.exercise.id)
+  // Get favorite exercises
+  const favoriteExercises = exercises.filter(ex => favoriteExerciseIds.includes(ex.id))
   
   // TEMP FIX: Deduplicate recovery exercises by name to handle database duplicates
-  const recoveryExercisesRaw = exercises.filter(ex => 
-    ex.type === 'recovery' && !recommendedExerciseIds.includes(ex.id)
-  )
+  const recoveryExercisesRaw = exercises.filter(ex => ex.type === 'recovery')
   
   // Remove duplicates by exercise name (case insensitive)
   const seenNames = new Set()
@@ -702,148 +821,66 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   )}
               </div>
 
-              {/* Recommended Workouts */}
-              {recommendedExercises.length > 0 && (
+              {/* Favorites Section */}
+              {favoriteExercises.length > 0 && (
                 <div className="py-6">
-                  <h4 className="text-2xl font-bold text-white mb-6 px-4">Recommended for You</h4>
+                  <div className="flex items-center justify-between mb-6 px-4">
+                    <h4 className="text-2xl font-bold text-white">Favorites</h4>
+                    <StarIconSolid className="w-6 h-6 text-yellow-400" />
+                  </div>
                   <div className="space-y-0 border-t border-gray-800">
-                    {recommendedExercises.map((rec, index) => (
-                      <button
-                        key={rec.exercise.id}
-                        onClick={() => quickAddExercise(rec.exercise)}
-                        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 hover:scale-105 ${
-                          rec.priority === 'high' 
-                            ? 'bg-gray-900/40 hover:bg-gray-900/50' 
-                            : 'bg-gray-900/30 hover:bg-gray-900/40'
-                        }`}
-                      >
-                        {/* Progress bar background */}
-                        <div 
-                          className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-                          style={{ width: `${Math.min(100, getExerciseProgress(rec.exercise.id).percentage)}%` }}
-                        />
-                        
-                        <div className="relative p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              {getExerciseIcon(rec.exercise)}
-                              <div>
-                                <div className="font-medium text-white">{rec.exercise.name}</div>
-                                <div className="text-xs text-gray-400 uppercase tracking-wide">{rec.reason}</div>
-                              </div>
-                            </div>
-                            <div className="text-right min-w-[80px]">
-                              <span className="font-medium text-white">
-                                {rec.exercise.points_per_unit % 1 === 0 
-                                  ? rec.exercise.points_per_unit 
-                                  : rec.exercise.points_per_unit.toFixed(2)
-                                }
-                              </span>
-                              <span className="font-thin text-gray-500 ml-1">
-                                /{rec.exercise.unit.replace('minute', 'min').replace('hour', 'h')}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                    {favoriteExercises.map((exercise) => renderExerciseButton(exercise, false))}
                   </div>
                 </div>
               )}
 
-              {/* All Main Exercises */}
+              {/* All Main Exercises - Collapsible */}
               {allExercises.length > 0 && (
                 <div className="py-6">
-                  <h4 className="text-2xl font-bold text-white mb-6 px-4">All Exercises</h4>
-                  <div className="space-y-0 border-t border-gray-800">
-                    {allExercises.map((exercise) => (
-                      <button
-                        key={exercise.id}
-                        onClick={() => quickAddExercise(exercise)}
-                        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 hover:scale-105 ${
-                          exercise.todayCount > 0
-                            ? 'bg-gray-900/40 hover:bg-gray-900/50'
-                            : 'bg-gray-900/30 hover:bg-gray-900/40'
-                        }`}
-                      >
-                        {/* Progress bar background */}
-                        <div 
-                          className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-                          style={{ width: `${Math.min(100, getExerciseProgress(exercise.id).percentage)}%` }}
-                        />
-                        
-                        <div className="relative p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              {getExerciseIcon(exercise)}
-                              <div>
-                                <div className="font-medium text-white">{exercise.name}</div>
-                              </div>
-                            </div>
-                            <div className="text-right min-w-[80px]">
-                              <span className="font-medium text-gray-500">
-                                {exercise.points_per_unit % 1 === 0 
-                                  ? exercise.points_per_unit 
-                                  : exercise.points_per_unit.toFixed(2)
-                                }
-                              </span>
-                              <span className="font-thin text-gray-500 ml-1">
-                                /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    onClick={() => setAllExercisesExpanded(!allExercisesExpanded)}
+                    className="flex items-center justify-between w-full mb-6 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                  >
+                    <h4 className="text-2xl font-bold text-white">All Exercises</h4>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-400">({allExercises.length})</span>
+                      <ChevronDownIcon 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          allExercisesExpanded ? 'rotate-180' : ''
+                        }`} 
+                      />
+                    </div>
+                  </button>
+                  {allExercisesExpanded && (
+                    <div className="space-y-0 border-t border-gray-800">
+                      {allExercises.map((exercise) => renderExerciseButton(exercise))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Recovery Exercises at Bottom */}
+              {/* Recovery Exercises - Collapsible */}
               {recoveryExercises.length > 0 && (
                 <div className="py-6">
-                  <h4 className="text-2xl font-bold text-white mb-6 px-4">Recovery</h4>
-                  <div className="space-y-0 border-t border-gray-800">
-                    {recoveryExercises.map((exercise) => (
-                      <button
-                        key={exercise.id}
-                        onClick={() => quickAddExercise(exercise)}
-                        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 hover:scale-105 ${
-                          exercise.todayCount > 0
-                            ? 'bg-gray-900/40 hover:bg-gray-900/50'
-                            : 'bg-gray-900/30 hover:bg-gray-900/40'
-                        }`}
-                      >
-                        {/* Progress bar background */}
-                        <div 
-                          className="absolute left-0 top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
-                          style={{ width: `${Math.min(100, getExerciseProgress(exercise.id).percentage)}%` }}
-                        />
-                        
-                        <div className="relative p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              {getExerciseIcon(exercise)}
-                              <div>
-                                <div className="font-medium text-white">{exercise.name}</div>
-                              </div>
-                            </div>
-                            <div className="text-right min-w-[80px]">
-                              <span className="font-medium text-gray-500">
-                                {exercise.points_per_unit % 1 === 0 
-                                  ? exercise.points_per_unit 
-                                  : exercise.points_per_unit.toFixed(2)
-                                }
-                              </span>
-                              <span className="font-thin text-gray-500 ml-1">
-                                /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    onClick={() => setRecoveryExpanded(!recoveryExpanded)}
+                    className="flex items-center justify-between w-full mb-6 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                  >
+                    <h4 className="text-2xl font-bold text-white">Recovery</h4>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-400">({recoveryExercises.length})</span>
+                      <ChevronDownIcon 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          recoveryExpanded ? 'rotate-180' : ''
+                        }`} 
+                      />
+                    </div>
+                  </button>
+                  {recoveryExpanded && (
+                    <div className="space-y-0 border-t border-gray-800">
+                      {recoveryExercises.map((exercise) => renderExerciseButton(exercise))}
+                    </div>
+                  )}
                 </div>
               )}
               

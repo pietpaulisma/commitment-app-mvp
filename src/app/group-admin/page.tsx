@@ -35,6 +35,18 @@ type WorkoutSummary = {
   most_active_day: string
 }
 
+type GroupSettings = {
+  id: string
+  group_id: string
+  daily_target_base: number
+  daily_increment: number
+  penalty_amount: number
+  recovery_percentage: number
+  rest_days: number[]
+  recovery_days: number[]
+  accent_color: string
+}
+
 export default function GroupAdminDashboard() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { profile, loading: profileLoading, isGroupAdmin } = useProfile()
@@ -43,7 +55,10 @@ export default function GroupAdminDashboard() {
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null)
+  const [groupSettings, setGroupSettings] = useState<GroupSettings | null>(null)
   const [loading, setLoading] = useState(true)
+  const [settingsLoading, setSettingsLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -60,6 +75,7 @@ export default function GroupAdminDashboard() {
   useEffect(() => {
     if (isGroupAdmin && profile) {
       loadGroupData()
+      loadGroupSettings()
     }
   }, [isGroupAdmin, profile])
 
@@ -145,6 +161,36 @@ export default function GroupAdminDashboard() {
     }
   }
 
+  const loadGroupSettings = async () => {
+    if (!profile) return
+
+    try {
+      setSettingsLoading(true)
+
+      const { data: groupData, error: groupError } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('admin_id', profile.id)
+        .single()
+
+      if (groupError) throw groupError
+
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('group_settings')
+        .select('*')
+        .eq('group_id', groupData.id)
+        .maybeSingle()
+
+      if (settingsError) throw settingsError
+
+      setGroupSettings(settingsData)
+    } catch (error) {
+      console.error('Error loading group settings:', error)
+    } finally {
+      setSettingsLoading(false)
+    }
+  }
+
   const removeUserFromGroup = async (userId: string) => {
     if (!confirm('Are you sure you want to remove this member from your group?')) {
       return
@@ -213,7 +259,37 @@ export default function GroupAdminDashboard() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Group Summary Cards */}
+            {/* Tab Navigation */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8 px-6">
+                  <button
+                    onClick={() => setActiveTab('overview')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'overview'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'settings'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Group Settings
+                  </button>
+                </nav>
+              </div>
+            </div>
+
+            {activeTab === 'overview' ? (
+              <>
+                {/* Group Summary Cards */}
             {workoutSummary && (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white rounded-lg shadow p-6">
@@ -324,6 +400,106 @@ export default function GroupAdminDashboard() {
                 </div>
               )}
             </div>
+              </>
+            ) : (
+              /* Settings Tab */
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Group Settings</h3>
+                
+                {settingsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading settings...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Current Settings Display */}
+                    {groupSettings ? (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Current Settings</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <div className="text-gray-600">Base Target</div>
+                            <div className="font-semibold text-lg">{groupSettings.daily_target_base} pts</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-600">Daily Increment</div>
+                            <div className="font-semibold text-lg">+{groupSettings.daily_increment} pts/day</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-600">Penalty Amount</div>
+                            <div className="font-semibold text-lg">${groupSettings.penalty_amount}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-600">Recovery Percentage</div>
+                            <div className="font-semibold text-lg">{groupSettings.recovery_percentage}%</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-600">Rest Days</div>
+                            <div className="font-semibold text-lg">
+                              {groupSettings.rest_days?.length > 0 
+                                ? groupSettings.rest_days.map(day => {
+                                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                                    return days[day];
+                                  }).join(', ')
+                                : 'None'
+                              }
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-gray-600">Accent Color</div>
+                            <div className="flex items-center space-x-2">
+                              <div 
+                                className="w-4 h-4 rounded"
+                                style={{ backgroundColor: groupSettings.accent_color }}
+                              ></div>
+                              <div className="font-semibold">{groupSettings.accent_color}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="text-yellow-800">
+                          <h4 className="font-medium">No Group Settings Found</h4>
+                          <p className="text-sm mt-1">
+                            Default settings will be used. You can create custom settings below.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Target Preview */}
+                    {groupSettings && (
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Target Progression Preview</h4>
+                        <div className="text-sm text-gray-600 mb-3">
+                          Shows how daily targets increase over the first 10 days:
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                          {Array.from({ length: 10 }, (_, i) => {
+                            const day = i + 1;
+                            const target = groupSettings.daily_target_base + (groupSettings.daily_increment * i);
+                            return (
+                              <div key={day} className="text-center p-2 bg-white rounded border">
+                                <div className="text-xs text-gray-500">Day {day}</div>
+                                <div className="font-medium">{target}pts</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 text-sm">
+                        Settings management interface coming soon. Contact a Supreme Admin to modify group settings.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
