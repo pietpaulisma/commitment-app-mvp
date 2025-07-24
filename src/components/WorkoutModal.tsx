@@ -108,6 +108,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       
       try {
         if (profile.group_id) {
+          console.log('🔍 Looking for group settings with group_id:', profile.group_id)
+          
           // Load group and group settings
           const { data: group } = await supabase
             .from('groups')
@@ -122,7 +124,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             .maybeSingle()
 
           if (settingsError) {
-            console.log('Error loading group settings:', settingsError)
+            console.log('❌ Error loading group settings:', settingsError)
           }
 
           console.log('🔧 Group Settings loaded:', groupSettings)
