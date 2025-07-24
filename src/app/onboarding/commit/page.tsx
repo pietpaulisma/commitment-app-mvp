@@ -11,7 +11,6 @@ export default function CommitPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [commitmentStatement, setCommitmentStatement] = useState('')
   const [isCommitting, setIsCommitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -21,38 +20,43 @@ export default function CommitPage() {
 
   const handleCommit = async () => {
     setError('')
-    
-    // Validation
-    if (!email || !password || !confirmPassword) {
-      setError('All fields are required to proceed with commitment.')
-      return
-    }
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. The system demands precision.')
-      return
-    }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters. Security is non-negotiable.')
-      return
-    }
-    
-    if (!commitmentStatement.trim()) {
-      setError('You must declare your commitment. Words have power.')
-      return
-    }
-
     setIsCommitting(true)
     
     try {
-      // Create the user account
+      // For testing purposes, if no email/password provided, create a mock session
+      if (!email.trim() || !password.trim()) {
+        // Create a test user session
+        const testUser = {
+          id: 'test-onboarding-user-' + Date.now(),
+          email: email.trim() || 'test@onboarding.com',
+          role: 'user'
+        }
+        localStorage.setItem('demo-user', JSON.stringify(testUser))
+        
+        // Proceed to profile setup
+        router.push('/onboarding/profile')
+        return
+      }
+
+      // If email/password provided, validate them
+      if (password !== confirmPassword) {
+        setError('Passwords do not match. The system demands precision.')
+        setIsCommitting(false)
+        return
+      }
+      
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters. Security is non-negotiable.')
+        setIsCommitting(false)
+        return
+      }
+
+      // Create the real user account
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
         options: {
           data: {
-            commitment_statement: commitmentStatement.trim(),
             onboarding_started: true
           }
         }
@@ -63,18 +67,6 @@ export default function CommitPage() {
       }
 
       if (data.user) {
-        // Update profile with commitment statement
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            commitment_statement: commitmentStatement.trim()
-          })
-          .eq('id', data.user.id)
-
-        if (profileError) {
-          console.error('Error updating profile:', profileError)
-        }
-
         // Proceed to profile setup
         router.push('/onboarding/profile')
       }
@@ -103,68 +95,49 @@ export default function CommitPage() {
           {/* Email */}
           <div>
             <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-              Email Address
+              Email Address (Optional for testing)
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
-              placeholder="your.email@domain.com"
+              placeholder="Leave empty to skip for testing"
               disabled={isCommitting}
-              required
             />
           </div>
 
           {/* Password */}
           <div>
             <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-              Password
+              Password (Optional for testing)
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
-              placeholder="Enter a strong password"
+              placeholder="Leave empty to skip for testing"
               disabled={isCommitting}
-              required
             />
           </div>
 
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
-              placeholder="Confirm your password"
-              disabled={isCommitting}
-              required
-            />
-          </div>
-
-          {/* Commitment Statement */}
-          <div>
-            <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-              Your Commitment Statement
-            </label>
-            <textarea
-              value={commitmentStatement}
-              onChange={(e) => setCommitmentStatement(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors h-24 resize-none"
-              placeholder="I commit to transforming my body and mind through disciplined action..."
-              disabled={isCommitting}
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              This will be visible to your accountability group
+          {/* Confirm Password - only show if password is entered */}
+          {password && (
+            <div>
+              <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
+                placeholder="Confirm your password"
+                disabled={isCommitting}
+              />
             </div>
-          </div>
+          )}
         </div>
 
         {/* Error display */}
@@ -187,9 +160,12 @@ export default function CommitPage() {
         {!isCommitting && (
           <div className="text-center">
             <p className="text-xs text-gray-600 font-mono leading-relaxed">
-              By holding the button above, you swear to uphold your commitment.<br/>
-              The system will track your every move.<br/>
-              <span className="text-red-400">There is no undo.</span>
+              By holding the button above, you enter the commitment system.<br/>
+              {email.trim() || password.trim() ? (
+                <>The system will track your every move.<br/><span className="text-red-400">There is no undo.</span></>
+              ) : (
+                <span className="text-orange-400">Testing mode: Leave fields empty to skip account creation.</span>
+              )}
             </p>
           </div>
         )}

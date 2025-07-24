@@ -20,7 +20,6 @@ export type UserProfile = {
   first_name: string | null
   last_name: string | null
   onboarding_completed: boolean
-  commitment_statement: string | null
   created_at: string
   updated_at: string
 }
@@ -63,7 +62,6 @@ export function useProfile() {
               first_name: isOnboardingDemo ? null : 'Demo',
               last_name: isOnboardingDemo ? null : 'User',
               onboarding_completed: !isOnboardingDemo, // Onboarding demo goes through onboarding
-              commitment_statement: isOnboardingDemo ? null : 'Demo commitment statement',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
