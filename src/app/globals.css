@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+/* PWA Standalone Mode Styles */
+@media (display-mode: standalone) {
+  /* Ensure no browser chrome interferes */
+  html, body {
+    overscroll-behavior: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Handle iOS safe areas */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* Status bar area for iOS */
+  .status-bar-spacer {
+    height: env(safe-area-inset-top);
+    background-color: var(--background);
+  }
+}
+
 /* Clean modern dark theme */
 :root {
   --background: #000000;

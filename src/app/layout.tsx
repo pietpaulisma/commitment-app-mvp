@@ -23,7 +23,33 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Commitment"
-  }
+  },
+  applicationName: "Commitment",
+  keywords: ["fitness", "commitment", "workout", "health", "accountability"],
+  authors: [{ name: "Commitment Team" }],
+  creator: "Commitment Team",
+  publisher: "Commitment Team",
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Commitment Fitness App",
+    title: "Commitment Fitness App",
+    description: "Track your fitness journey with commitment and consistency",
+  },
+  twitter: {
+    card: "summary",
+    title: "Commitment Fitness App",
+    description: "Track your fitness journey with commitment and consistency",
+  },
+  itunes: {
+    appId: "commitment-fitness-app",
+  },
+  verification: {
+    google: "commitment-fitness-app",
+    yandex: "commitment-fitness-app",
+  },
 };
 
 export const viewport = {
@@ -32,7 +58,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#3b82f6"
+  themeColor: "#f97316"
 };
 
 export default function RootLayout({
@@ -43,11 +69,38 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* PWA Primary Meta Tags */}
+        <meta name="application-name" content="Commitment" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#f97316" />
+        
+        {/* iOS Safari Specific Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Commitment" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        
+        {/* iOS Safari Icon Tags */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        
+        {/* Android Chrome Specific Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#3b82f6" />
+        <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
+        
+        {/* Favicon and Icons */}
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        
+        {/* Prevent zooming and ensure fullscreen */}
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        
+        {/* Windows specific */}
+        <meta name="msapplication-TileColor" content="#f97316" />
+        <meta name="msapplication-config" content="none" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

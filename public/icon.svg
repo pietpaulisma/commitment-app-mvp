@@ -1,0 +1,19 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#f97316"/>
+      <stop offset="100%" style="stop-color:#dc2626"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#bg)" rx="96"/>
+  
+  <!-- Border -->
+  <rect width="512" height="512" fill="none" stroke="#991b1b" stroke-width="8" rx="96"/>
+  
+  <!-- Letter C with shadow -->
+  <text x="256" y="340" font-family="Arial, sans-serif" font-size="280" font-weight="bold" text-anchor="middle" fill="rgba(0,0,0,0.2)">C</text>
+  <text x="256" y="330" font-family="Arial, sans-serif" font-size="280" font-weight="bold" text-anchor="middle" fill="white">C</text>
+</svg>
