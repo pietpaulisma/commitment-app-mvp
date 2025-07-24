@@ -17,6 +17,10 @@ export type UserProfile = {
   use_ip_location: boolean
   personal_color: string
   custom_icon: string
+  first_name: string | null
+  last_name: string | null
+  onboarding_completed: boolean
+  commitment_statement: string | null
   created_at: string
   updated_at: string
 }
@@ -52,6 +56,10 @@ export function useProfile() {
               use_ip_location: false,
               personal_color: '#3b82f6',
               custom_icon: '💪',
+              first_name: 'Demo',
+              last_name: 'User',
+              onboarding_completed: true, // Demo users skip onboarding
+              commitment_statement: 'Demo commitment statement',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })

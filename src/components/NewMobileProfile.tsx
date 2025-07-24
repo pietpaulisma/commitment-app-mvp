@@ -14,6 +14,7 @@ import {
   UsersIcon,
   PaintBrushIcon
 } from '@heroicons/react/24/outline'
+import InviteCodeManager from '@/components/InviteCodeManager'
 
 type ProfileFormData = {
   preferred_weight: number
@@ -535,6 +536,9 @@ export default function NewMobileProfile() {
                         </div>
                       </div>
                     </Link>
+                    
+                    {/* Invite Code Manager */}
+                    <InviteCodeManager />
                   </div>
                 )}
               </div>

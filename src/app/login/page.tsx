@@ -8,14 +8,12 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
 
   const fillDemoCredentials = (email: string, password: string) => {
     setEmail(email)
     setPassword(password)
-    setIsSignUp(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,21 +62,12 @@ export default function Login() {
         return
       }
 
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        })
-        if (error) throw error
-        setMessage('Check your email for the confirmation link!')
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (error) throw error
-        router.push('/dashboard')
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) throw error
+      router.push('/dashboard')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'An error occurred')
     } finally {
@@ -91,7 +80,7 @@ export default function Login() {
       <div className="max-w-md w-full px-4">
         <div className="bg-gray-900/30 border border-gray-800 p-6">
           <h2 className="text-2xl font-bold text-center mb-6 text-white">
-            {isSignUp ? 'Sign Up' : 'Sign In'}
+            Sign In
           </h2>
           
           {message && (
@@ -137,16 +126,16 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-orange-400 text-black py-4 px-4 hover:bg-orange-500 transition-colors font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+              {loading ? 'Loading...' : 'Sign In'}
             </button>
           </form>
           
           <div className="mt-4 text-center">
             <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-orange-400 hover:text-orange-300 text-sm"
+              onClick={() => router.push('/onboarding/welcome')}
+              className="text-orange-400 hover:text-orange-300 text-sm font-bold"
             >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+              New to the system? → BEGIN COMMITMENT
             </button>
           </div>
 
