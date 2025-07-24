@@ -59,6 +59,8 @@ export default function GroupAdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [settingsLoading, setSettingsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
+  const [editingSettings, setEditingSettings] = useState(false)
+  const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings>>({})
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -186,6 +188,56 @@ export default function GroupAdminDashboard() {
       setGroupSettings(settingsData)
     } catch (error) {
       console.error('Error loading group settings:', error)
+    } finally {
+      setSettingsLoading(false)
+    }
+  }
+
+  const startEditingSettings = () => {
+    if (groupSettings) {
+      setSettingsForm({
+        daily_target_base: groupSettings.daily_target_base,
+        daily_increment: groupSettings.daily_increment,
+        penalty_amount: groupSettings.penalty_amount,
+        recovery_percentage: groupSettings.recovery_percentage
+      })
+    }
+    setEditingSettings(true)
+  }
+
+  const cancelEditingSettings = () => {
+    setEditingSettings(false)
+    setSettingsForm({})
+  }
+
+  const saveGroupSettings = async () => {
+    if (!group || !settingsForm) return
+
+    try {
+      setSettingsLoading(true)
+      
+      const { error } = await supabase
+        .from('group_settings')
+        .update({
+          daily_target_base: settingsForm.daily_target_base,
+          daily_increment: settingsForm.daily_increment,
+          penalty_amount: settingsForm.penalty_amount,
+          recovery_percentage: settingsForm.recovery_percentage,
+          updated_at: new Date().toISOString()
+        })
+        .eq('group_id', group.id)
+
+      if (error) throw error
+
+      // Reload settings to get updated values
+      await loadGroupSettings()
+      setEditingSettings(false)
+      setSettingsForm({})
+      
+      alert('Group settings updated successfully!')
+    } catch (error) {
+      console.error('Error saving group settings:', error)
+      alert('Failed to save settings: ' + (error instanceof Error ? error.message : 'Unknown error'))
     } finally {
       setSettingsLoading(false)
     }
@@ -491,11 +543,120 @@ export default function GroupAdminDashboard() {
                       </div>
                     )}
 
-                    <div className="text-center py-4">
-                      <p className="text-gray-600 text-sm">
-                        Settings management interface coming soon. Contact a Supreme Admin to modify group settings.
-                      </p>
-                    </div>
+                    {/* Edit Settings Form */}
+                    {groupSettings && (
+                      <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-lg font-semibold text-gray-900">Edit Settings</h4>
+                          {!editingSettings ? (
+                            <button
+                              onClick={startEditingSettings}
+                              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                            >
+                              Edit Settings
+                            </button>
+                          ) : (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={cancelEditingSettings}
+                                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={saveGroupSettings}
+                                disabled={settingsLoading}
+                                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                              >
+                                {settingsLoading ? 'Saving...' : 'Save Changes'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {editingSettings ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Base Target (points)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={settingsForm.daily_target_base || ''}
+                                onChange={(e) => setSettingsForm(prev => ({
+                                  ...prev,
+                                  daily_target_base: parseInt(e.target.value) || 0
+                                }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., 100"
+                              />
+                              <p className="text-sm text-gray-500 mt-1">Starting target for Day 1</p>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Daily Increment (points)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={settingsForm.daily_increment || ''}
+                                onChange={(e) => setSettingsForm(prev => ({
+                                  ...prev,
+                                  daily_increment: parseInt(e.target.value) || 0
+                                }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., 25"
+                              />
+                              <p className="text-sm text-gray-500 mt-1">Points added each day</p>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Penalty Amount ($)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={settingsForm.penalty_amount || ''}
+                                onChange={(e) => setSettingsForm(prev => ({
+                                  ...prev,
+                                  penalty_amount: parseFloat(e.target.value) || 0
+                                }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., 10.00"
+                              />
+                              <p className="text-sm text-gray-500 mt-1">Penalty for missing daily target</p>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Recovery Percentage (%)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={settingsForm.recovery_percentage || ''}
+                                onChange={(e) => setSettingsForm(prev => ({
+                                  ...prev,
+                                  recovery_percentage: parseInt(e.target.value) || 0
+                                }))}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., 25"
+                              />
+                              <p className="text-sm text-gray-500 mt-1">Recovery exercise bonus percentage</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <p>Click "Edit Settings" to modify group settings</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

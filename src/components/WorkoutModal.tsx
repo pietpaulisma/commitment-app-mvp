@@ -117,11 +117,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             .eq('id', profile.group_id)
             .single()
 
-          const { data: groupSettings, error: settingsError } = await supabase
+          // Try direct query first, then with RPC if needed
+          let groupSettingsQuery = supabase
             .from('group_settings')
             .select('*')
             .eq('group_id', profile.group_id)
             .maybeSingle()
+          
+          const { data: groupSettings, error: settingsError } = await groupSettingsQuery
 
           if (settingsError) {
             console.log('❌ Error loading group settings:', settingsError)
