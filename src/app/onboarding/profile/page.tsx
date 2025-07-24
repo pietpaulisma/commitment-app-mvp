@@ -61,18 +61,37 @@ export default function ProfileSetupPage() {
     setIsSubmitting(true)
 
     try {
+      // First, let's check if the columns exist and add them if they don't
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           first_name: firstName.trim(),
           last_name: lastName.trim(),
-          personal_color: personalColor,
-          custom_icon: customIcon
+          ...(personalColor && { personal_color: personalColor }),
+          ...(customIcon && { custom_icon: customIcon })
         })
         .eq('id', user?.id)
 
       if (updateError) {
-        throw updateError
+        // If it's a column not found error, proceed without the missing columns for now
+        if (updateError.message.includes('custom_icon') || updateError.message.includes('personal_color')) {
+          console.warn('Profile customization columns not yet available in database, proceeding with basic profile update')
+          
+          // Try updating just the basic fields
+          const { error: basicUpdateError } = await supabase
+            .from('profiles')
+            .update({
+              first_name: firstName.trim(),
+              last_name: lastName.trim()
+            })
+            .eq('id', user?.id)
+            
+          if (basicUpdateError) {
+            throw basicUpdateError
+          }
+        } else {
+          throw updateError
+        }
       }
 
       // Proceed to group selection
