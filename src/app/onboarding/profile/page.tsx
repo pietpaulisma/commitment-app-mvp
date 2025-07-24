@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import OnboardingLayout from '@/components/OnboardingLayout'
+import EmojiPicker from '@/components/EmojiPicker'
 
 export default function ProfileSetupPage() {
   const router = useRouter()
@@ -29,11 +30,6 @@ export default function ProfileSetupPage() {
     { color: '#6b7280', name: 'Steel Gray' }
   ]
 
-  const availableIcons = [
-    '💪', '🔥', '⚡', '🏋️', '🎯', '🚀', 
-    '💎', '🏆', '👑', '⭐', '🌟', '⚽',
-    '🏀', '🎾', '🥊', '🦄', '🐺', '🦅'
-  ]
 
   useEffect(() => {
     if (!user) {
@@ -243,30 +239,11 @@ export default function ProfileSetupPage() {
           </div>
 
           {/* Icon selection */}
-          <div>
-            <label className="block text-sm font-bold text-red-400 mb-3 uppercase tracking-wide">
-              Your Symbol
-            </label>
-            <div className="grid grid-cols-6 gap-3">
-              {availableIcons.map((icon) => (
-                <button
-                  key={icon}
-                  onClick={() => setCustomIcon(icon)}
-                  disabled={isSubmitting}
-                  className={`w-12 h-12 border-2 flex items-center justify-center text-xl transition-all ${
-                    customIcon === icon 
-                      ? 'border-white bg-gray-700' 
-                      : 'border-gray-600 hover:border-gray-400 hover:bg-gray-800'
-                  }`}
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
-            <div className="text-xs text-gray-500 mt-2">
-              Choose a symbol that represents your commitment
-            </div>
-          </div>
+          <EmojiPicker
+            selectedEmoji={customIcon}
+            onEmojiSelect={setCustomIcon}
+            disabled={isSubmitting}
+          />
         </div>
 
         {/* Error display */}
