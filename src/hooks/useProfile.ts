@@ -35,26 +35,33 @@ export function useProfile() {
         return
       }
 
-      // Handle demo users
-      const demoUser = localStorage.getItem('demo-user')
-      if (demoUser) {
-        const userData = JSON.parse(demoUser)
-        setProfile({
-          id: userData.id,
-          email: userData.email,
-          role: userData.role,
-          group_id: null,
-          preferred_weight: 70,
-          is_weekly_mode: false,
-          location: '',
-          use_ip_location: false,
-          personal_color: '#3b82f6',
-          custom_icon: '💪',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        setLoading(false)
-        return
+      // Handle demo users (only on client side)
+      if (typeof window !== 'undefined') {
+        const demoUser = localStorage.getItem('demo-user')
+        if (demoUser) {
+          try {
+            const userData = JSON.parse(demoUser)
+            setProfile({
+              id: userData.id,
+              email: userData.email,
+              role: userData.role,
+              group_id: null,
+              preferred_weight: 70,
+              is_weekly_mode: false,
+              location: '',
+              use_ip_location: false,
+              personal_color: '#3b82f6',
+              custom_icon: '💪',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            setLoading(false)
+            return
+          } catch (error) {
+            console.error('Error parsing demo user profile:', error)
+            localStorage.removeItem('demo-user')
+          }
+        }
       }
 
       try {

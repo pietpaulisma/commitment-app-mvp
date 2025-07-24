@@ -31,22 +31,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      // Check for demo user first
-      const demoUser = localStorage.getItem('demo-user')
-      if (demoUser) {
-        const userData = JSON.parse(demoUser)
-        // Create a mock user object compatible with Supabase User type
-        setUser({
-          id: userData.id,
-          email: userData.email,
-          user_metadata: { role: userData.role },
-          app_metadata: {},
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as User)
-        setLoading(false)
-        return
+      // Check for demo user first (only on client side)
+      if (typeof window !== 'undefined') {
+        const demoUser = localStorage.getItem('demo-user')
+        if (demoUser) {
+          try {
+            const userData = JSON.parse(demoUser)
+            // Create a mock user object compatible with Supabase User type
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              user_metadata: { role: userData.role },
+              app_metadata: {},
+              aud: 'authenticated',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            } as User)
+            setLoading(false)
+            return
+          } catch (error) {
+            console.error('Error parsing demo user:', error)
+            localStorage.removeItem('demo-user')
+          }
+        }
       }
 
       const { data: { session } } = await supabase.auth.getSession()

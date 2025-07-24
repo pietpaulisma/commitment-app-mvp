@@ -26,23 +26,27 @@ export default function Login() {
     try {
       // Demo mode - bypass auth for testing
       if (email === 'demo@test.com' && password === 'demo123') {
+        console.log('Demo user login')
         // Set demo user in localStorage for testing
         localStorage.setItem('demo-user', JSON.stringify({
           id: 'demo-user-id',
           email: 'demo@test.com',
           role: 'user'
         }))
+        console.log('Demo user stored, redirecting to dashboard')
         router.push('/dashboard')
         return
       }
 
       // Admin demo mode
       if (email === 'admin@test.com' && password === 'admin123') {
+        console.log('Demo admin login')
         localStorage.setItem('demo-user', JSON.stringify({
           id: 'admin-user-id',
           email: 'admin@test.com',
           role: 'supreme_admin'
         }))
+        console.log('Demo admin stored, redirecting to dashboard')
         router.push('/dashboard')
         return
       }
