@@ -303,7 +303,7 @@ export default function NewMobileProfile() {
                 </>
               )}
               
-              {isGroupAdmin && (
+              {(isGroupAdmin || (isSupremeAdmin && profile?.group_id)) && (
                 <Link 
                   href="/group-admin"
                   className="flex items-center justify-between p-3 bg-blue-900/30 hover:bg-blue-800/30 rounded-lg border border-blue-700 transition-colors"
@@ -312,7 +312,9 @@ export default function NewMobileProfile() {
                     <UserGroupIcon className="w-5 h-5 text-blue-400 mr-3" />
                     <span className="text-blue-300 font-medium">Manage My Group</span>
                   </div>
-                  <span className="text-xs text-blue-400">Group Admin</span>
+                  <span className="text-xs text-blue-400">
+                    {isSupremeAdmin ? 'Supreme' : 'Group Admin'}
+                  </span>
                 </Link>
               )}
             </div>

@@ -48,15 +48,6 @@ export default function RoleBasedNavigation() {
                 Targets
               </Link>
 
-              {isGroupAdmin && !isSupremeAdmin && (
-                <Link 
-                  href="/group-admin" 
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Manage Group
-                </Link>
-              )}
-
               {hasAdminPrivileges && (
                 <Link 
                   href="/admin" 

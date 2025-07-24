@@ -69,17 +69,17 @@ export default function GroupAdminDashboard() {
   }, [user, authLoading, router])
 
   useEffect(() => {
-    if (!profileLoading && profile && !isGroupAdmin) {
+    if (!profileLoading && profile && !isGroupAdmin && !(isSupremeAdmin && profile.group_id)) {
       router.push('/dashboard')
     }
-  }, [profile, profileLoading, isGroupAdmin, router])
+  }, [profile, profileLoading, isGroupAdmin, isSupremeAdmin, router])
 
   useEffect(() => {
-    if (isGroupAdmin && profile) {
+    if ((isGroupAdmin || (isSupremeAdmin && profile?.group_id)) && profile) {
       loadGroupData()
       loadGroupSettings()
     }
-  }, [isGroupAdmin, profile])
+  }, [isGroupAdmin, isSupremeAdmin, profile])
 
   const loadGroupData = async () => {
     if (!profile) return
@@ -275,7 +275,7 @@ export default function GroupAdminDashboard() {
     )
   }
 
-  if (!user || !profile || !isGroupAdmin) {
+  if (!user || !profile || (!isGroupAdmin && !(isSupremeAdmin && profile.group_id))) {
     return null
   }
 
