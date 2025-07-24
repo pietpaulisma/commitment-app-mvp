@@ -49,7 +49,7 @@ type GroupSettings = {
 
 export default function GroupAdminDashboard() {
   const { user, loading: authLoading, signOut } = useAuth()
-  const { profile, loading: profileLoading, isGroupAdmin } = useProfile()
+  const { profile, loading: profileLoading, isGroupAdmin, isSupremeAdmin } = useProfile()
   const router = useRouter()
   
   const [group, setGroup] = useState<Group | null>(null)

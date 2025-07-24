@@ -108,9 +108,9 @@ export default function NewMobileProfile() {
       // Get current streak from checkins
       const { data: checkins } = await supabase
         .from('daily_checkins')
-        .select('checkin_date, is_complete')
+        .select('date, is_complete')
         .eq('user_id', user.id)
-        .order('checkin_date', { ascending: false })
+        .order('date', { ascending: false })
         .limit(30)
 
       let currentStreak = 0
