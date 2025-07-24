@@ -12,7 +12,10 @@ import {
   BoltIcon,
   SparklesIcon,
   ChevronDownIcon,
-  StarIcon
+  StarIcon,
+  RectangleStackIcon,
+  FaceSmileIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
@@ -63,6 +66,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
+  const [favoritesExpanded, setFavoritesExpanded] = useState(true)
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState<string[]>([])
   const [favoritesLoading, setFavoritesLoading] = useState(false)
 
@@ -727,7 +731,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             <>
               {/* Current Workouts Section */}
               <div className="py-6 border-b border-gray-800">
-                <h4 className="text-2xl font-bold text-white mb-6 px-4">Today's Workouts</h4>
+                <div className="flex items-center space-x-3 mb-6 px-4">
+                  <CalendarDaysIcon className="w-6 h-6 text-purple-400" />
+                  <h4 className="text-2xl font-bold text-white">Today's Workouts</h4>
+                </div>
                 
                 {todaysWorkouts.length === 0 ? (
                   <div className="px-4">
@@ -774,16 +781,31 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   )}
               </div>
 
-              {/* Favorites Section */}
+              {/* Favorites Section - Collapsible */}
               {favoriteExercises.length > 0 && (
                 <div className="py-3">
-                  <div className="flex items-center justify-between mb-3 px-4">
-                    <h4 className="text-2xl font-bold text-white">Favorites</h4>
-                    <StarIconSolid className="w-6 h-6 text-yellow-400" />
-                  </div>
-                  <div className="space-y-0 border-t border-gray-800">
-                    {favoriteExercises.map((exercise) => renderExerciseButton(exercise, false))}
-                  </div>
+                  <button
+                    onClick={() => setFavoritesExpanded(!favoritesExpanded)}
+                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <StarIconSolid className="w-6 h-6 text-yellow-400" />
+                      <h4 className="text-2xl font-bold text-white">Favorites</h4>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-400">({favoriteExercises.length})</span>
+                      <ChevronDownIcon 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          favoritesExpanded ? 'rotate-180' : ''
+                        }`} 
+                      />
+                    </div>
+                  </button>
+                  {favoritesExpanded && (
+                    <div className="space-y-0 border-t border-gray-800">
+                      {favoriteExercises.map((exercise) => renderExerciseButton(exercise, false))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -794,7 +816,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     onClick={() => setAllExercisesExpanded(!allExercisesExpanded)}
                     className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
                   >
-                    <h4 className="text-2xl font-bold text-white">All Exercises</h4>
+                    <div className="flex items-center space-x-3">
+                      <RectangleStackIcon className="w-6 h-6 text-blue-400" />
+                      <h4 className="text-2xl font-bold text-white">All Exercises</h4>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-400">({allExercises.length})</span>
                       <ChevronDownIcon 
@@ -819,7 +844,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     onClick={() => setRecoveryExpanded(!recoveryExpanded)}
                     className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
                   >
-                    <h4 className="text-2xl font-bold text-white">Recovery</h4>
+                    <div className="flex items-center space-x-3">
+                      <FaceSmileIcon className="w-6 h-6 text-green-400" />
+                      <h4 className="text-2xl font-bold text-white">Recovery</h4>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-400">({recoveryExercises.length})</span>
                       <ChevronDownIcon 
