@@ -1,33 +1,39 @@
 @import "tailwindcss";
 
+/* Ensure proper scrolling on all devices */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* Allow natural scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
 /* PWA Standalone Mode Styles */
 @media (display-mode: standalone) {
-  /* Ensure no browser chrome interferes */
+  /* Ensure no browser chrome interferes but allow normal scrolling */
   html, body {
-    overscroll-behavior: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
   
-  /* Handle iOS safe areas - use margin instead of padding to avoid scroll issues */
-  body {
-    margin-top: env(safe-area-inset-top);
-    margin-bottom: env(safe-area-inset-bottom);
-    margin-left: env(safe-area-inset-left);
-    margin-right: env(safe-area-inset-right);
+  /* Handle iOS safe areas - use padding on the root container */
+  html {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   
-  /* Ensure proper touch scrolling */
-  * {
+  /* Ensure smooth touch scrolling */
+  body, * {
     -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Status bar area for iOS */
-  .status-bar-spacer {
-    height: env(safe-area-inset-top);
-    background-color: var(--background);
   }
 }
 
