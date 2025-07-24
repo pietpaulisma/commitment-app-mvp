@@ -20,34 +20,47 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Form submitted with:', email, password)
     setLoading(true)
     setMessage('')
 
     try {
       // Demo mode - bypass auth for testing
       if (email === 'demo@test.com' && password === 'demo123') {
-        console.log('Demo user login')
+        console.log('Demo user login detected')
         // Set demo user in localStorage for testing
-        localStorage.setItem('demo-user', JSON.stringify({
+        const demoData = {
           id: 'demo-user-id',
           email: 'demo@test.com',
           role: 'user'
-        }))
-        console.log('Demo user stored, redirecting to dashboard')
-        router.push('/dashboard')
+        }
+        localStorage.setItem('demo-user', JSON.stringify(demoData))
+        console.log('Demo user stored:', localStorage.getItem('demo-user'))
+        
+        // Force a page reload to trigger AuthContext re-check
+        setTimeout(() => {
+          console.log('Reloading page to trigger auth check...')
+          window.location.href = '/dashboard'
+        }, 100)
         return
       }
 
       // Admin demo mode
       if (email === 'admin@test.com' && password === 'admin123') {
-        console.log('Demo admin login')
-        localStorage.setItem('demo-user', JSON.stringify({
+        console.log('Demo admin login detected')
+        const adminData = {
           id: 'admin-user-id',
           email: 'admin@test.com',
           role: 'supreme_admin'
-        }))
-        console.log('Demo admin stored, redirecting to dashboard')
-        router.push('/dashboard')
+        }
+        localStorage.setItem('demo-user', JSON.stringify(adminData))
+        console.log('Demo admin stored:', localStorage.getItem('demo-user'))
+        
+        // Force a page reload to trigger AuthContext re-check
+        setTimeout(() => {
+          console.log('Reloading page to trigger auth check...')
+          window.location.href = '/dashboard'
+        }, 100)
         return
       }
 
