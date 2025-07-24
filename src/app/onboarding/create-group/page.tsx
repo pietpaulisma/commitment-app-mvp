@@ -11,6 +11,7 @@ export default function CreateGroupPage() {
   const { user } = useAuth()
   const [groupName, setGroupName] = useState('')
   const [startDate, setStartDate] = useState('')
+  const [penaltyAmount, setPenaltyAmount] = useState(10)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -65,7 +66,8 @@ export default function CreateGroupPage() {
         .insert({
           name: groupName.trim(),
           start_date: startDate,
-          admin_id: user?.id
+          admin_id: user?.id,
+          penalty_amount: penaltyAmount
         })
         .select()
         .single()
@@ -175,6 +177,30 @@ export default function CreateGroupPage() {
             />
             <div className="text-xs text-gray-500 mt-1">
               When your group's commitment journey begins
+            </div>
+          </div>
+
+          {/* Penalty Amount */}
+          <div>
+            <label className="block text-sm font-bold text-orange-400 mb-2 uppercase tracking-wide">
+              Penalty Amount: €{penaltyAmount}
+            </label>
+            <input
+              type="range"
+              min="10"
+              max="1000"
+              step="10"
+              value={penaltyAmount}
+              onChange={(e) => setPenaltyAmount(parseInt(e.target.value))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              disabled={isSubmitting}
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>€10</span>
+              <span>€1000</span>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              The penalty each member pays for missing their commitment
             </div>
           </div>
         </div>

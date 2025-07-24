@@ -37,6 +37,38 @@ body {
   }
 }
 
+/* Custom slider styling */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  background: #f97316;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #000;
+}
+
+.slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  background: #f97316;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #000;
+}
+
+.slider::-webkit-slider-track {
+  background: #374151;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.slider::-moz-range-track {
+  background: #374151;
+  height: 8px;
+  border-radius: 4px;
+}
+
 /* Clean modern dark theme */
 :root {
   --background: #000000;
