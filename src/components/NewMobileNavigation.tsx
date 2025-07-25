@@ -226,7 +226,7 @@ export default function NewMobileNavigation() {
       </nav>
 
       {/* Spacer for mobile bottom nav */}
-      <div className="lg:hidden h-20"></div>
+      <div className="lg:hidden h-16"></div>
 
       {/* Group Chat Modal */}
       <GroupChat 

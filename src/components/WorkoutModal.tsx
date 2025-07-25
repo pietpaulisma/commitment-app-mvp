@@ -761,6 +761,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             <button
               onClick={onClose}
               className="w-16 h-16 bg-gray-900 border-l border-gray-700 flex items-center justify-center hover:bg-gray-800 text-gray-400 hover:text-white transition-colors duration-200"
+              aria-label="Close workout log"
             >
               <XMarkIcon className="w-6 h-6" />
             </button>

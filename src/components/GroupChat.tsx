@@ -511,7 +511,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
 
   if (!profile?.group_id) {
     return (
-      <div className="fixed inset-0 bg-gray-950 z-50 flex items-center justify-center p-6">
+      <div className="fixed inset-0 bg-gray-950 z-60 flex items-center justify-center p-6">
         <div className="text-center">
           <ChatBubbleLeftRightIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-white mb-2">No Group Chat</h3>
@@ -528,7 +528,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-950 z-50 flex flex-col fixed-fullscreen">
+    <div className="fixed inset-0 bg-gray-950 z-60 flex flex-col fixed-fullscreen">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
           <div>
@@ -538,6 +538,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg"
+            aria-label="Close chat"
           >
             <XMarkIcon className="w-6 h-6" />
           </button>
@@ -717,6 +718,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="flex-shrink-0 w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors border border-gray-700"
+              aria-label="Upload image"
             >
               <PhotoIcon className="w-5 h-5 text-gray-400" />
             </button>
@@ -747,6 +749,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
               type="submit"
               disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
               className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              aria-label="Send message"
             >
               {sending || uploading ? (
                 <div className="w-5 h-5 animate-spin border-2 border-white border-t-transparent rounded-full"></div>

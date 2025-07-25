@@ -120,9 +120,14 @@ body {
   color: var(--text-muted);
 }
 
-/* Keep rectangular corners but cleaner */
-* {
-  border-radius: 0 !important;
+/* Keep rectangular corners for main UI elements but allow some rounding for interactive elements */
+.bg-modern-card,
+.border-modern,
+button:not(.rounded),
+input:not(.rounded),
+textarea:not(.rounded),
+select:not(.rounded) {
+  border-radius: 0;
 }
 
 /* Clean modern headers */
