@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
+import { supabase } from '@/lib/supabase'
 
 interface OnboardingGuardProps {
   children: React.ReactNode
@@ -14,6 +15,38 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
   const pathname = usePathname()
+
+  const createSupremeAdminProfile = async () => {
+    try {
+      console.log('Creating supreme admin profile...')
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: user?.id,
+          username: 'Matthijs',
+          email: user?.email,
+          role: 'supreme_admin',
+          custom_icon: '🔥',
+          personal_color: '#ef4444',
+          onboarding_completed: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (error) {
+        console.error('Error creating supreme admin profile:', error)
+        // If creation fails, redirect to onboarding as fallback
+        router.push('/onboarding/welcome')
+      } else {
+        console.log('Supreme admin profile created successfully')
+        // Refresh the page to trigger profile reload
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('Error creating supreme admin profile:', error)
+      router.push('/onboarding/welcome')
+    }
+  }
 
   useEffect(() => {
     // Don't redirect while loading
@@ -30,6 +63,13 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     const isOnboardingPage = pathname?.startsWith('/onboarding')
     const isAuthPage = pathname === '/login' || pathname === '/signup'
     if (isOnboardingPage || isAuthPage) {
+      return
+    }
+
+    // Special handling for supreme admin account (pre-existing account)
+    if (user?.email === 'klipperdeklip@gmail.com' && !profile) {
+      console.log('Creating supreme admin profile for klipperdeklip@gmail.com')
+      createSupremeAdminProfile()
       return
     }
 

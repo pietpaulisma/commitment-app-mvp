@@ -10,8 +10,7 @@ import EmojiPicker from '@/components/EmojiPicker'
 export default function ProfileSetupPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
+  const [username, setUsername] = useState('')
   const [personalColor, setPersonalColor] = useState('#ef4444') // Default red
   const [customIcon, setCustomIcon] = useState('💪') // Default muscle
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -44,13 +43,13 @@ export default function ProfileSetupPage() {
   const handleContinue = async () => {
     setError('')
     
-    if (!firstName.trim() || !lastName.trim()) {
-      setError('Both first and last name are required to continue.')
+    if (!username.trim()) {
+      setError('Username is required to continue.')
       return
     }
 
-    if (firstName.trim().length < 2 || lastName.trim().length < 2) {
-      setError('Names must be at least 2 characters long.')
+    if (username.trim().length < 2) {
+      setError('Username must be at least 2 characters long.')
       return
     }
 
@@ -100,8 +99,7 @@ export default function ProfileSetupPage() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
+          username: username.trim(),
           onboarding_completed: true,
           ...(personalColor && { personal_color: personalColor }),
           ...(customIcon && { custom_icon: customIcon })
@@ -117,8 +115,7 @@ export default function ProfileSetupPage() {
           const { error: basicUpdateError } = await supabase
             .from('profiles')
             .update({
-              first_name: firstName.trim(),
-              last_name: lastName.trim(),
+              username: username.trim(),
               onboarding_completed: true
             })
             .eq('id', user?.id)
@@ -170,7 +167,7 @@ export default function ProfileSetupPage() {
               <span className="text-2xl">{customIcon}</span>
             </div>
             <div className="text-white font-bold">
-              {firstName || 'First'} {lastName || 'Last'}
+              {username || 'Username'}
             </div>
             <div className="text-xs text-gray-400 uppercase tracking-widest mt-1">
               COMMITTED MEMBER
@@ -180,35 +177,22 @@ export default function ProfileSetupPage() {
 
         {/* Form */}
         <div className="space-y-6 mb-8">
-          {/* Name fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-                First Name
-              </label>
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
-                placeholder="John"
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-                Last Name
-              </label>
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
-                placeholder="Doe"
-                disabled={isSubmitting}
-                required
-              />
+          {/* Username field */}
+          <div>
+            <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
+              placeholder="Enter your username"
+              disabled={isSubmitting}
+              required
+            />
+            <div className="text-xs text-gray-500 mt-1">
+              This will be your display name in the group
             </div>
           </div>
 
@@ -258,7 +242,7 @@ export default function ProfileSetupPage() {
         {/* Continue button */}
         <button
           onClick={handleContinue}
-          disabled={isSubmitting || !firstName.trim() || !lastName.trim()}
+          disabled={isSubmitting || !username.trim()}
           className="w-full bg-red-600 text-white py-4 px-6 border border-red-400 hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-black text-lg"
         >
           {isSubmitting ? 'REGISTERING IDENTITY...' : 'COMPLETE COMMITMENT'}
