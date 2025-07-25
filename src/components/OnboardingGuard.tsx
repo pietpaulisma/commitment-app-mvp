@@ -18,34 +18,31 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
   const createSupremeAdminProfile = async () => {
     try {
-      console.log('🔥 Creating supreme admin profile for:', user?.email, 'ID:', user?.id)
+      console.log('🔥 Updating supreme admin profile for:', user?.email, 'ID:', user?.id)
       
       const profileData = {
-        id: user?.id,
         username: 'Matthijs',
-        email: user?.email,
-        role: 'supreme_admin',
         custom_icon: '🔥',
         personal_color: '#ef4444',
         onboarding_completed: true,
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
       
-      console.log('📝 Profile data to insert:', profileData)
+      console.log('📝 Profile data to update:', profileData)
       
       const { data, error } = await supabase
         .from('profiles')
-        .insert(profileData)
+        .update(profileData)
+        .eq('id', user?.id)
         .select()
 
       if (error) {
-        console.error('❌ Error creating supreme admin profile:', error)
+        console.error('❌ Error updating supreme admin profile:', error)
         console.error('❌ Error details:', error.message, error.code)
-        // If creation fails, redirect to onboarding as fallback
+        // If update fails, redirect to onboarding as fallback
         router.push('/onboarding/welcome')
       } else {
-        console.log('✅ Supreme admin profile created successfully:', data)
+        console.log('✅ Supreme admin profile updated successfully:', data)
         // Add a small delay to ensure database consistency
         setTimeout(() => {
           console.log('🚀 Redirecting to dashboard...')
@@ -53,7 +50,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         }, 1000)
       }
     } catch (error) {
-      console.error('💥 Exception creating supreme admin profile:', error)
+      console.error('💥 Exception updating supreme admin profile:', error)
       router.push('/onboarding/welcome')
     }
   }
@@ -76,8 +73,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
     // Special handling for supreme admin account (pre-existing account)
     // This needs to happen BEFORE checking onboarding pages
-    if (user?.email === 'klipperdeklip@gmail.com' && !profile) {
-      console.log('🔥 SUPREME ADMIN DETECTED! Creating profile for klipperdeklip@gmail.com')
+    if (user?.email === 'klipperdeklip@gmail.com' && profile && !profile.onboarding_completed) {
+      console.log('🔥 SUPREME ADMIN DETECTED! Updating profile for klipperdeklip@gmail.com')
       createSupremeAdminProfile()
       return
     }
