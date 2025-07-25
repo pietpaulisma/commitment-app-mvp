@@ -18,51 +18,66 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
   const createSupremeAdminProfile = async () => {
     try {
-      console.log('Creating supreme admin profile...')
-      const { error } = await supabase
+      console.log('🔥 Creating supreme admin profile for:', user?.email, 'ID:', user?.id)
+      
+      const profileData = {
+        id: user?.id,
+        username: 'Matthijs',
+        email: user?.email,
+        role: 'supreme_admin',
+        custom_icon: '🔥',
+        personal_color: '#ef4444',
+        onboarding_completed: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      
+      console.log('📝 Profile data to insert:', profileData)
+      
+      const { data, error } = await supabase
         .from('profiles')
-        .insert({
-          id: user?.id,
-          username: 'Matthijs',
-          email: user?.email,
-          role: 'supreme_admin',
-          custom_icon: '🔥',
-          personal_color: '#ef4444',
-          onboarding_completed: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .insert(profileData)
+        .select()
 
       if (error) {
-        console.error('Error creating supreme admin profile:', error)
+        console.error('❌ Error creating supreme admin profile:', error)
+        console.error('❌ Error details:', error.message, error.code)
         // If creation fails, redirect to onboarding as fallback
         router.push('/onboarding/welcome')
       } else {
-        console.log('Supreme admin profile created successfully')
-        // Redirect to dashboard immediately
-        router.push('/dashboard')
+        console.log('✅ Supreme admin profile created successfully:', data)
+        // Add a small delay to ensure database consistency
+        setTimeout(() => {
+          console.log('🚀 Redirecting to dashboard...')
+          router.push('/dashboard')
+        }, 1000)
       }
     } catch (error) {
-      console.error('Error creating supreme admin profile:', error)
+      console.error('💥 Exception creating supreme admin profile:', error)
       router.push('/onboarding/welcome')
     }
   }
 
   useEffect(() => {
+    console.log('🔍 OnboardingGuard useEffect triggered')
+    console.log('📊 Auth state:', { authLoading, profileLoading, userEmail: user?.email, hasProfile: !!profile })
+    
     // Don't redirect while loading
     if (authLoading || profileLoading) {
+      console.log('⏳ Still loading, waiting...')
       return
     }
 
     // Don't redirect if no user (let other auth guards handle this)
     if (!user) {
+      console.log('👤 No user found, skipping...')
       return
     }
 
     // Special handling for supreme admin account (pre-existing account)
     // This needs to happen BEFORE checking onboarding pages
     if (user?.email === 'klipperdeklip@gmail.com' && !profile) {
-      console.log('Creating supreme admin profile for klipperdeklip@gmail.com')
+      console.log('🔥 SUPREME ADMIN DETECTED! Creating profile for klipperdeklip@gmail.com')
       createSupremeAdminProfile()
       return
     }
