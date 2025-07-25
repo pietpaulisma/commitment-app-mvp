@@ -100,6 +100,16 @@ export default function WelcomePage() {
           I UNDERSTAND THE RISKS
         </button>
 
+        {/* Login link */}
+        <div className="text-center mt-4">
+          <button
+            onClick={() => router.push('/login')}
+            className="text-gray-400 text-sm hover:text-white transition-colors underline"
+          >
+            Already have an account? Sign in
+          </button>
+        </div>
+
         <div className="text-center mt-4">
           <p className="text-xs text-gray-600 font-mono">
             No turning back after this point

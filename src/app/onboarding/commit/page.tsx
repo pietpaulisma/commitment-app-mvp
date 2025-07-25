@@ -159,6 +159,18 @@ export default function CommitPage() {
           className="mb-6"
         />
 
+        {/* Login link */}
+        {!isCommitting && (
+          <div className="text-center mb-4">
+            <button
+              onClick={() => router.push('/login')}
+              className="text-gray-400 text-sm hover:text-white transition-colors underline"
+            >
+              Already have an account? Sign in
+            </button>
+          </div>
+        )}
+
         {/* Final warning */}
         {!isCommitting && (
           <div className="text-center">
