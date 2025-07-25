@@ -415,7 +415,7 @@ export default function RectangularDashboard() {
       100% { transform: translateY(0); opacity: 1; }
     }
   `
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, isDemoMode, exitDemoMode } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
   const [recentChats, setRecentChats] = useState<RecentChat[]>([])
@@ -1070,6 +1070,26 @@ export default function RectangularDashboard() {
 
   return (
     <div className="min-h-screen bg-black pb-32">
+      {/* Demo Mode Indicator */}
+      {isDemoMode && (
+        <div className="bg-orange-900/20 border-b border-orange-600/50 px-4 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+              <span className="text-orange-200 text-sm font-medium">
+                Demo Mode Active - Testing with mock data
+              </span>
+            </div>
+            <button
+              onClick={exitDemoMode}
+              className="text-xs bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500 transition-colors"
+            >
+              Exit Demo Mode
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
