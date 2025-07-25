@@ -19,7 +19,7 @@ export default function OnboardingLayout({
     <div className={`min-h-screen bg-black ${className}`}>
       {/* Header with optional back button */}
       {showBackButton && (
-        <div className="flex items-center justify-between p-4 border-b border-red-900/50 sticky top-0 bg-black z-10">
+        <div className="flex items-center justify-between p-4 border-b border-red-900/50 sticky top-0 bg-black z-40">
           <button
             onClick={onBack}
             className="text-red-400 hover:text-red-300 transition-colors p-2"

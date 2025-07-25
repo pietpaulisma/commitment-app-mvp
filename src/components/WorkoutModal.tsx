@@ -713,9 +713,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const regularPercentage = Math.max(0, progressPercentage - recoveryPercentage)
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className="fixed inset-0 bg-black z-60 flex flex-col fixed-fullscreen">
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
-        <div className="sticky top-0">
+        <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex">
             {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
@@ -724,10 +724,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
                 style={{ width: `${Math.min(100, Math.max(0, regularPercentage))}%` }}
               />
-              {/* Recovery Progress Background - positioned on the right */}
+              {/* Recovery Progress Background - positioned adjacent to regular progress */}
               <div 
-                className="absolute right-0 top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
-                style={{ width: `${Math.min(100, recoveryPercentage)}%` }}
+                className="absolute top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
+                style={{ 
+                  left: `${Math.min(100, Math.max(0, regularPercentage))}%`,
+                  width: `${Math.min(100 - Math.max(0, regularPercentage), recoveryPercentage)}%`
+                }}
               />
               
               {/* Button Content */}
@@ -1140,7 +1143,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
         {/* Workout Input Overlay */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-10 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-70 flex items-center justify-center p-4">
             <div className="bg-black border border-gray-800 rounded-lg max-w-sm w-full max-h-[90vh] overflow-y-auto">
               
               {/* Header Section - similar to dashboard style */}

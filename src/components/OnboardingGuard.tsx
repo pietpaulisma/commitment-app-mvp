@@ -57,7 +57,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
   useEffect(() => {
     console.log('🔍 OnboardingGuard useEffect triggered')
-    console.log('📊 Auth state:', { authLoading, profileLoading, userEmail: user?.email, hasProfile: !!profile })
+    console.log('📊 Auth state:', { authLoading, profileLoading, userEmail: user?.email, hasProfile: !!profile, pathname })
     
     // Don't redirect while loading
     if (authLoading || profileLoading) {
@@ -71,24 +71,31 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       return
     }
 
+    // Don't redirect if we're already in onboarding or auth pages
+    const isOnboardingPage = pathname?.startsWith('/onboarding')
+    const isAuthPage = pathname === '/login' || pathname === '/signup'
+    if (isOnboardingPage || isAuthPage) {
+      console.log('📄 Already on onboarding/auth page, skipping redirect')
+      return
+    }
+
     // Special handling for supreme admin account (pre-existing account)
-    // This needs to happen BEFORE checking onboarding pages
+    // This needs to happen BEFORE checking regular onboarding logic
     if (user?.email === 'klipperdeklip@gmail.com' && profile && !profile.onboarding_completed) {
       console.log('🔥 SUPREME ADMIN DETECTED! Updating profile for klipperdeklip@gmail.com')
       createSupremeAdminProfile()
       return
     }
 
-    // Don't redirect if we're already in onboarding or auth pages
-    const isOnboardingPage = pathname?.startsWith('/onboarding')
-    const isAuthPage = pathname === '/login' || pathname === '/signup'
-    if (isOnboardingPage || isAuthPage) {
+    // If user has profile and completed onboarding, allow access (no redirect needed)
+    if (profile && profile.onboarding_completed) {
+      console.log('✅ User has completed onboarding, allowing access')
       return
     }
 
     // If user has profile but hasn't completed onboarding, redirect to welcome
     if (profile && !profile.onboarding_completed) {
-      console.log('User has not completed onboarding, redirecting to welcome page')
+      console.log('⚠️  User has not completed onboarding, redirecting to welcome page')
       router.push('/onboarding/welcome')
       return
     }
@@ -96,7 +103,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     // If user exists but no profile is found, redirect to onboarding
     // This can happen with new signups that haven't triggered profile creation yet
     if (user && !profile) {
-      console.log('User exists but no profile found, redirecting to welcome page')
+      console.log('🆕 User exists but no profile found, redirecting to welcome page')
       router.push('/onboarding/welcome')
       return
     }

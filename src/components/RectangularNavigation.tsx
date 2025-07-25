@@ -145,10 +145,13 @@ export default function RectangularNavigation() {
               className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
               style={{ width: `${Math.min(100, Math.max(0, regularPercentage))}%` }}
             />
-            {/* Recovery Progress Background - positioned on the right */}
+            {/* Recovery Progress Background - positioned adjacent to regular progress */}
             <div 
-              className="absolute right-0 top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
-              style={{ width: `${Math.min(100, recoveryPercentage)}%` }}
+              className="absolute top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
+              style={{ 
+                left: `${Math.min(100, Math.max(0, regularPercentage))}%`,
+                width: `${Math.min(100 - Math.max(0, regularPercentage), recoveryPercentage)}%`
+              }}
             />
             
             {/* Button Content */}
