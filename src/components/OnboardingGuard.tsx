@@ -39,8 +39,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         router.push('/onboarding/welcome')
       } else {
         console.log('Supreme admin profile created successfully')
-        // Refresh the page to trigger profile reload
-        window.location.reload()
+        // Redirect to dashboard immediately
+        router.push('/dashboard')
       }
     } catch (error) {
       console.error('Error creating supreme admin profile:', error)
@@ -59,17 +59,18 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       return
     }
 
+    // Special handling for supreme admin account (pre-existing account)
+    // This needs to happen BEFORE checking onboarding pages
+    if (user?.email === 'klipperdeklip@gmail.com' && !profile) {
+      console.log('Creating supreme admin profile for klipperdeklip@gmail.com')
+      createSupremeAdminProfile()
+      return
+    }
+
     // Don't redirect if we're already in onboarding or auth pages
     const isOnboardingPage = pathname?.startsWith('/onboarding')
     const isAuthPage = pathname === '/login' || pathname === '/signup'
     if (isOnboardingPage || isAuthPage) {
-      return
-    }
-
-    // Special handling for supreme admin account (pre-existing account)
-    if (user?.email === 'klipperdeklip@gmail.com' && !profile) {
-      console.log('Creating supreme admin profile for klipperdeklip@gmail.com')
-      createSupremeAdminProfile()
       return
     }
 
