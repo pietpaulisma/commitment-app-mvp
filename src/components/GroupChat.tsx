@@ -528,9 +528,9 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-950 z-50 flex flex-col">
+    <div className="fixed inset-0 bg-gray-950 z-50 flex flex-col fixed-fullscreen">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900">
+        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
           <div>
             <h3 className="text-lg font-semibold text-white">{groupName} Chat</h3>
             <p className="text-sm text-gray-400">Group discussion</p>
@@ -709,7 +709,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
         )}
 
         {/* Message Input */}
-        <form onSubmit={sendMessage} className="p-4 border-t border-gray-800 bg-gray-900">
+        <form onSubmit={sendMessage} className="p-4 pb-safe border-t border-gray-800 bg-gray-900" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="flex items-end space-x-3">
             {/* Image upload button */}
             <button
@@ -727,7 +727,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[2.75rem]"
                 disabled={sending || uploading}
                 maxLength={500}
                 rows={1}

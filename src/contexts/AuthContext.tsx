@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe()
       window.removeEventListener('storage', handleStorageChange)
     }
-  }, [])
+  }, [isDemoMode])
 
   const exitDemoMode = () => {
     console.log('Exiting demo mode')
