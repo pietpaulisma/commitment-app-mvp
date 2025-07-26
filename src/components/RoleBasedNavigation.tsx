@@ -11,39 +11,39 @@ export default function RoleBasedNavigation() {
   }
 
   return (
-    <nav className="bg-white shadow">
+    <nav className="bg-gray-900/30 border-b border-gray-800 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-8">
-            <Link href="/dashboard" className="text-xl font-bold text-gray-900">
+            <Link href="/dashboard" className="text-xl font-bold text-white">
               Commitment App
             </Link>
             
-            <div className="flex space-x-6">
+            <div className="hidden md:flex space-x-6">
               <Link 
                 href="/dashboard" 
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 Dashboard
               </Link>
               
               <Link 
                 href="/workout" 
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 Log Workout
               </Link>
 
               <Link 
                 href="/leaderboard" 
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 Leaderboard
               </Link>
 
               <Link 
                 href="/targets" 
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 Targets
               </Link>
@@ -51,7 +51,7 @@ export default function RoleBasedNavigation() {
               {hasAdminPrivileges && (
                 <Link 
                   href="/admin" 
-                  className="text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
                 >
                   Admin Panel
                 </Link>
@@ -61,19 +61,19 @@ export default function RoleBasedNavigation() {
                 <>
                   <Link 
                     href="/admin/exercises" 
-                    className="text-purple-600 hover:text-purple-800 font-medium"
+                    className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
                   >
                     Manage Exercises
                   </Link>
                   <Link 
                     href="/admin/groups" 
-                    className="text-purple-600 hover:text-purple-800 font-medium"
+                    className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
                   >
                     Manage Groups
                   </Link>
                   <Link 
                     href="/admin/users" 
-                    className="text-purple-600 hover:text-purple-800 font-medium"
+                    className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
                   >
                     Manage Users
                   </Link>
@@ -85,19 +85,19 @@ export default function RoleBasedNavigation() {
           <div className="flex items-center space-x-4">
             <Link 
               href="/profile" 
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block"
             >
-              <span className="text-gray-600">Signed in as </span>
-              <span className="font-medium hover:underline">{profile.email}</span>
+              <span className="text-gray-400">Signed in as </span>
+              <span className="font-medium hover:underline text-white">{profile.email}</span>
             </Link>
             
             <div className="flex items-center">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium border ${
                 isSupremeAdmin 
-                  ? 'bg-purple-100 text-purple-800'
+                  ? 'bg-purple-900/50 text-purple-400 border-purple-700'
                   : isGroupAdmin 
-                  ? 'bg-blue-100 text-blue-800' 
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-orange-900/50 text-orange-400 border-orange-700' 
+                  : 'bg-gray-800/50 text-gray-400 border-gray-700'
               }`}>
                 {profile.role === 'supreme_admin' ? 'Supreme Admin' : 
                  profile.role === 'group_admin' ? 'Group Admin' : 'Member'}

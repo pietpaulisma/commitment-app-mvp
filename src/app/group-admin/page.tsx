@@ -284,7 +284,7 @@ export default function GroupAdminDashboard() {
       <RoleBasedNavigation />
       
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Group Admin Dashboard</h1>
             <p className="text-gray-400">
@@ -293,7 +293,7 @@ export default function GroupAdminDashboard() {
           </div>
           <button
             onClick={signOut}
-            className="bg-red-600 text-white px-4 py-2 hover:bg-red-700 transition-colors"
+            className="bg-red-600 text-white px-4 py-2 hover:bg-red-700 transition-colors self-start sm:self-center"
           >
             Sign Out
           </button>
@@ -388,11 +388,64 @@ export default function GroupAdminDashboard() {
 
             {/* Members List */}
             <div className="bg-gray-900/30 border border-gray-800">
-              <div className="px-6 py-4 border-b border-gray-800">
+              <div className="px-4 md:px-6 py-4 border-b border-gray-800">
                 <h3 className="text-lg font-semibold text-white">Group Members ({members.length})</h3>
               </div>
               
-              <div className="overflow-x-auto">
+              {/* Mobile Card View */}
+              <div className="block md:hidden">
+                {members.map((member) => (
+                  <div key={member.id} className="p-4 border-b border-gray-800 last:border-b-0">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-white">{member.email}</div>
+                        <div className="text-xs text-gray-400">
+                          Joined {new Date(member.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeUserFromGroup(member.id)}
+                        className="text-red-400 hover:text-red-300 transition-colors text-sm ml-4"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <div className="text-gray-400 text-xs uppercase tracking-wide">Location</div>
+                        <div className="text-white">{member.location}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-xs uppercase tracking-wide">Points</div>
+                        <div className="text-green-500 font-medium">{member.total_points || 0} pts</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-xs uppercase tracking-wide">Weight</div>
+                        <div className="text-white">{member.preferred_weight} kg</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 text-xs uppercase tracking-wide">Mode</div>
+                        <div className="text-white">{member.is_weekly_mode ? 'Weekly' : 'Daily'}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3">
+                      <div className="text-gray-400 text-xs uppercase tracking-wide mb-1">Recent Activity</div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium ${
+                        (member.recent_workouts || 0) > 3 ? 'bg-green-900/50 text-green-400 border border-green-700' :
+                        (member.recent_workouts || 0) > 0 ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700' :
+                        'bg-red-900/50 text-red-400 border border-red-700'
+                      }`}>
+                        {member.recent_workouts || 0} workouts (7 days)
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-800/50">
                     <tr>
@@ -455,7 +508,7 @@ export default function GroupAdminDashboard() {
               </>
             ) : (
               /* Settings Tab */
-              <div className="bg-gray-900/30 border border-gray-800 p-6">
+              <div className="bg-gray-900/30 border border-gray-800 p-4 md:p-6">
                 <h3 className="text-lg font-semibold text-white mb-6">Group Settings</h3>
                 
                 {settingsLoading ? (
@@ -469,7 +522,7 @@ export default function GroupAdminDashboard() {
                     {groupSettings ? (
                       <div className="bg-gray-800/50 border border-gray-700 p-4">
                         <h4 className="text-md font-medium text-white mb-3">Current Settings</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                           <div>
                             <div className="text-gray-400 uppercase tracking-wide">Base Target</div>
                             <div className="font-semibold text-lg text-white">{groupSettings.daily_target_base} pts</div>
@@ -528,7 +581,7 @@ export default function GroupAdminDashboard() {
                         <div className="text-sm text-gray-400 mb-3">
                           Shows how daily targets increase over the first 10 days:
                         </div>
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                           {Array.from({ length: 10 }, (_, i) => {
                             const day = i + 1;
                             const target = groupSettings.daily_target_base + (groupSettings.daily_increment * i);
@@ -546,7 +599,7 @@ export default function GroupAdminDashboard() {
                     {/* Edit Settings Form */}
                     {groupSettings && (
                       <div className="space-y-6">
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                           <h4 className="text-lg font-semibold text-white">Edit Settings</h4>
                           {!editingSettings ? (
                             <button
