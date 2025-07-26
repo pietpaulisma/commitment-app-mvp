@@ -110,9 +110,18 @@ export default function WorkoutLogger() {
         .single()
 
       if (groupSettings) {
+        // Get group start date for proper target calculation
+        const { data: group } = await supabase
+          .from('groups')
+          .select('start_date')
+          .eq('id', profile.group_id)
+          .single()
+
         // Calculate today's target
         const today = new Date()
-        const daysSinceStart = Math.floor((today.getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+        const daysSinceStart = group?.start_date 
+          ? Math.floor((today.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+          : Math.floor((today.getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
         const target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
         
         setDailyTarget(target)

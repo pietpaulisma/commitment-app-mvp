@@ -69,6 +69,7 @@ export default function MobileTargets() {
     }
 
     try {
+      // Get group settings and group start date
       const { data: settings, error: settingsError } = await supabase
         .from('group_settings')
         .select('*')
@@ -76,6 +77,15 @@ export default function MobileTargets() {
         .maybeSingle()
 
       if (settingsError) throw settingsError
+
+      // Get group start date
+      const { data: groupData, error: groupError } = await supabase
+        .from('groups')
+        .select('start_date')
+        .eq('id', profile.group_id)
+        .single()
+
+      if (groupError) throw groupError
 
       const { data: checkins, error: checkinsError } = await supabase
         .from('daily_checkins')
@@ -87,6 +97,7 @@ export default function MobileTargets() {
       if (checkinsError) throw checkinsError
 
       const today = new Date()
+      const groupStartDate = new Date(groupData.start_date)
       const progressData: TargetProgress[] = []
       let currentStreakCount = 0
       let longestStreakCount = 0
@@ -98,8 +109,9 @@ export default function MobileTargets() {
         date.setDate(date.getDate() - i)
         const dateString = date.toISOString().split('T')[0]
 
-        const daysSinceStart = Math.floor((date.getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
-        const target = settings.daily_target_base + (settings.daily_increment * Math.max(0, daysSinceStart))
+        // Use group start date instead of profile creation date
+        const daysSinceStart = Math.floor((date.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
+        const target = settings ? settings.daily_target_base + (settings.daily_increment * Math.max(0, daysSinceStart)) : 100
 
         const checkin = checkins?.find(c => c.date === dateString)
         

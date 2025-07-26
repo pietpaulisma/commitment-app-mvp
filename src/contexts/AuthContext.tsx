@@ -69,21 +69,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      // Check for demo user first
-      if (checkDemoUser()) {
-        return
-      }
+      try {
+        // Check for demo user first
+        if (checkDemoUser()) {
+          return
+        }
 
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Error getting session:', error)
+          // Don't clear user on session errors, might be temporary
+          setLoading(false)
+          return
+        }
+        
+        setUser(session?.user ?? null)
+        setLoading(false)
+      } catch (error) {
+        console.error('Error in getInitialSession:', error)
+        setLoading(false)
+      }
     }
 
     getInitialSession()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email)
         
         // If user signs in with real credentials, clear demo mode
@@ -101,6 +113,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setIsDemoMode(false)
             setLoading(false)
           }
+        }
+        // For token refresh, maintain current user if session is valid
+        else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          setUser(session.user)
+          setLoading(false)
         }
         // For other events, only update if not in demo mode
         else if (!isDemoMode) {

@@ -89,7 +89,16 @@ export default function NewDashboard() {
         }
 
         if (groupSettings) {
-          const daysSinceStart = Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+          // Get group start date for proper target calculation
+          const { data: group } = await supabase
+            .from('groups')
+            .select('start_date')
+            .eq('id', profile.group_id)
+            .single()
+
+          const daysSinceStart = group?.start_date 
+            ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+            : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
           todayTarget = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
         }
       }
