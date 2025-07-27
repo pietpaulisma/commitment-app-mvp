@@ -88,59 +88,73 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
   return (
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
-      {/* Main organic blob positioned by time */}
+      {/* Main organic sunrise/sunset blob */}
       <div
-        className="absolute inset-0 opacity-80"
+        className="absolute inset-0 opacity-70"
         style={{
           background: `
-            radial-gradient(ellipse 800px 1200px at ${blobPositionX + Math.sin(animationOffset * 0.008) * 15}% ${50 + Math.cos(animationOffset * 0.006) * 20}%, 
-              ${colors.primary}35 0%, 
-              ${colors.secondary}25 25%, 
-              ${colors.accent}18 40%, 
-              transparent 65%),
-            radial-gradient(ellipse 600px 900px at ${blobPositionX + 30 + Math.cos(animationOffset * 0.01) * 20}% ${30 + Math.sin(animationOffset * 0.007) * 25}%, 
-              ${colors.secondary}30 0%, 
-              ${colors.accent}20 30%, 
-              transparent 55%)
+            radial-gradient(circle 1000px at ${blobPositionX + Math.sin(animationOffset * 0.008) * 20}% ${80 + Math.cos(animationOffset * 0.006) * 30}%, 
+              ${colors.primary}40 0%, 
+              ${colors.secondary}30 20%, 
+              ${colors.accent}20 35%, 
+              ${colors.primary}15 50%, 
+              transparent 70%)
           `,
-          transform: `rotate(${animationOffset * 0.015}deg) scale(${1 + Math.sin(animationOffset * 0.004) * 0.1})`,
-          transition: 'background 3s ease-in-out'
+          transform: `scale(${1.2 + Math.sin(animationOffset * 0.004) * 0.15}) rotate(${animationOffset * 0.01}deg)`,
+          transition: 'background 4s ease-in-out',
+          filter: 'blur(1px)'
         }}
       />
       
-      {/* Secondary flowing organic shapes */}
+      {/* Secondary organic blob layer */}
+      <div
+        className="absolute inset-0 opacity-50"
+        style={{
+          background: `
+            radial-gradient(circle 800px at ${blobPositionX + 50 + Math.cos(animationOffset * 0.009) * 25}% ${60 + Math.sin(animationOffset * 0.007) * 35}%, 
+              ${colors.secondary}35 0%, 
+              ${colors.accent}25 25%, 
+              ${colors.primary}18 45%, 
+              transparent 65%)
+          `,
+          transform: `scale(${1.1 + Math.cos(animationOffset * 0.006) * 0.12}) rotate(${-animationOffset * 0.008}deg)`,
+          transition: 'background 4s ease-in-out',
+          filter: 'blur(2px)'
+        }}
+      />
+
+      {/* Flowing organic shapes for movement */}
       <div
         className="absolute inset-0 opacity-60"
         style={{
           background: `
-            radial-gradient(ellipse 500px 800px at ${blobPositionX - 20 + Math.sin(animationOffset * 0.012) * 25}% ${70 + Math.cos(animationOffset * 0.009) * 15}%, 
-              ${colors.accent}25 0%, 
-              ${colors.primary}18 35%, 
-              transparent 60%),
-            radial-gradient(ellipse 700px 400px at ${blobPositionX + 40 + Math.cos(animationOffset * 0.007) * 18}% ${20 + Math.sin(animationOffset * 0.011) * 22}%, 
-              ${colors.secondary}22 0%, 
-              transparent 45%)
+            radial-gradient(circle 600px at ${blobPositionX - 30 + Math.sin(animationOffset * 0.012) * 30}% ${90 + Math.cos(animationOffset * 0.009) * 20}%, 
+              ${colors.accent}30 0%, 
+              ${colors.secondary}20 30%, 
+              transparent 55%),
+            radial-gradient(circle 400px at ${blobPositionX + 80 + Math.cos(animationOffset * 0.011) * 25}% ${40 + Math.sin(animationOffset * 0.008) * 30}%, 
+              ${colors.primary}25 0%, 
+              ${colors.accent}15 35%, 
+              transparent 60%)
           `,
-          transform: `rotate(${-animationOffset * 0.01}deg) scale(${1 + Math.cos(animationOffset * 0.005) * 0.08})`,
-          transition: 'background 3s ease-in-out'
+          transform: `scale(${0.9 + Math.sin(animationOffset * 0.005) * 0.1}) rotate(${animationOffset * 0.006}deg)`,
+          transition: 'background 3s ease-in-out',
+          filter: 'blur(4px)'
         }}
       />
 
-      {/* Subtle organic texture layer */}
+      {/* Subtle texture overlay */}
       <div 
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-30"
         style={{
           background: `
-            radial-gradient(ellipse 400px 600px at ${blobPositionX + 10 + Math.sin(animationOffset * 0.006) * 12}% ${40 + Math.cos(animationOffset * 0.008) * 18}%, 
-              ${colors.primary}15 0%, 
-              ${colors.secondary}12 25%, 
-              transparent 50%),
-            radial-gradient(circle 300px at ${blobPositionX + 50 + Math.cos(animationOffset * 0.009) * 15}% ${60 + Math.sin(animationOffset * 0.005) * 20}%, 
-              ${colors.accent}12 0%, 
-              transparent 35%)
+            radial-gradient(circle 500px at ${blobPositionX + 20 + Math.sin(animationOffset * 0.007) * 15}% ${70 + Math.cos(animationOffset * 0.005) * 25}%, 
+              ${colors.secondary}20 0%, 
+              ${colors.primary}12 40%, 
+              transparent 65%)
           `,
-          filter: 'blur(3px)',
-          transform: `scale(${1 + Math.sin(animationOffset * 0.003) * 0.05}) rotate(${animationOffset * 0.005}deg)`
+          filter: 'blur(6px)',
+          transform: `scale(${1.3 + Math.cos(animationOffset * 0.003) * 0.08}) rotate(${animationOffset * 0.003}deg)`
         }}
       />
     </div>

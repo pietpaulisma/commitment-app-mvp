@@ -9,11 +9,23 @@ import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 import TimeGradient from './TimeGradient'
 
-// Helper function to convert Tailwind classes to gradient styles
-const getGradientStyle = (colorClass: string) => {
+// Helper function to convert Tailwind classes to organic gradient styles
+const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'linear') => {
+  if (type === 'organic') {
+    const organicMap: Record<string, string> = {
+      'bg-orange-400': 'radial-gradient(ellipse 200% 100% at 50% 0%, #fb923c 0%, #f97316 30%, #ea580c 60%, #dc2626 100%)',
+      'bg-purple-400': 'radial-gradient(ellipse 200% 100% at 50% 0%, #c084fc 0%, #a855f7 30%, #9333ea 60%, #7c3aed 100%)', 
+      'bg-blue-500': 'radial-gradient(ellipse 200% 100% at 50% 0%, #3b82f6 0%, #2563eb 30%, #1d4ed8 60%, #1e40af 100%)',
+      'bg-gray-500': 'radial-gradient(ellipse 150% 100% at 50% 0%, #6b7280 0%, #4b5563 40%, #374151 80%, #1f2937 100%)',
+      'bg-gray-700': 'radial-gradient(ellipse 150% 100% at 50% 0%, #374151 0%, #1f2937 50%, #111827 100%)'
+    }
+    return organicMap[colorClass] || colorClass
+  }
+  
   const gradientMap: Record<string, string> = {
     'bg-orange-400': 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
     'bg-purple-400': 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)', 
+    'bg-blue-500': 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
     'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
     'bg-gray-700': 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)'
   }
@@ -160,7 +172,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                   <div
                     className="h-full rounded transition-all duration-700"
                     style={{
-                      background: i === 0 ? getGradientStyle('bg-orange-400') : getGradientStyle('bg-gray-500'),
+                      background: i === 0 ? getGradientStyle('bg-orange-400', 'organic') : getGradientStyle('bg-gray-500', 'organic'),
                       width: `${Math.min(100, member.percentage)}%`,
                       animationDelay: `${i * 200}ms`,
                       animation: 'slideInLeft 0.8s ease-out forwards'
@@ -228,7 +240,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                     <div 
                       className="h-full rounded transition-all duration-700"
                       style={{ 
-                        background: isTop ? getGradientStyle('bg-orange-400') : getGradientStyle('bg-gray-500'),
+                        background: isTop ? getGradientStyle('bg-orange-400', 'organic') : getGradientStyle('bg-gray-500', 'organic'),
                         width: `${Math.max(20, percentage)}%`,
                         animationDelay: `${i * 100}ms`,
                         animation: 'slideInLeft 0.8s ease-out forwards'
@@ -266,7 +278,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
         <div 
           className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
           style={{ 
-            background: getGradientStyle('bg-purple-400'),
+            background: getGradientStyle('bg-purple-400', 'organic'),
             width: `${progressPercentage}%`
           }}
         />
