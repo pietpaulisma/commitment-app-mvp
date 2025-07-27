@@ -9,6 +9,17 @@ import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 import TimeGradient from './TimeGradient'
 
+// Helper function to convert Tailwind classes to gradient styles
+const getGradientStyle = (colorClass: string) => {
+  const gradientMap: Record<string, string> = {
+    'bg-orange-400': 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
+    'bg-purple-400': 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)', 
+    'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
+    'bg-gray-700': 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)'
+  }
+  return gradientMap[colorClass] || colorClass
+}
+
 type RecentChat = {
   id: string
   message: string
@@ -428,17 +439,6 @@ export default function RectangularDashboard() {
   const [dayType, setDayType] = useState<'rest' | 'recovery' | 'normal'>('normal')
   const [timeLeft, setTimeLeft] = useState('')
   const [timeRemainingPercentage, setTimeRemainingPercentage] = useState(0)
-
-  // Helper function to convert Tailwind classes to gradient styles
-  const getGradientStyle = (colorClass: string) => {
-    const gradientMap: Record<string, string> = {
-      'bg-orange-400': 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
-      'bg-purple-400': 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)', 
-      'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
-      'bg-gray-700': 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)'
-    }
-    return gradientMap[colorClass] || colorClass
-  }
   const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
   const [accentColor, setAccentColor] = useState('blue') // Default blue
