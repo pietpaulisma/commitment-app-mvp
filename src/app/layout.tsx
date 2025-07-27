@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { WeekModeProvider } from "@/contexts/WeekModeContext";
 import OnboardingGuard from "@/components/OnboardingGuard";
 import DevTestingPanel from "@/components/DevTestingPanel";
 
@@ -106,9 +107,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <OnboardingGuard>
-            {children}
-          </OnboardingGuard>
+          <WeekModeProvider>
+            <OnboardingGuard>
+              {children}
+            </OnboardingGuard>
+          </WeekModeProvider>
         </AuthProvider>
       </body>
     </html>

@@ -12,10 +12,13 @@ import GroupChat from '@/components/GroupChat'
 import WorkoutModal from '@/components/WorkoutModal'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useWeekMode } from '@/contexts/WeekModeContext'
+import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 
 export default function RectangularNavigation() {
   const { profile, loading } = useProfile()
   const { user } = useAuth()
+  const { weekMode } = useWeekMode()
   const pathname = usePathname()
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false)
@@ -31,7 +34,7 @@ export default function RectangularNavigation() {
     if (user && profile) {
       loadDailyProgress()
     }
-  }, [user, profile])
+  }, [user, profile, weekMode])
 
   const loadDailyProgress = async () => {
     if (!user || !profile) return
@@ -54,7 +57,7 @@ export default function RectangularNavigation() {
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get target using correct formula
+      // Calculate target using centralized utility
       let target = 1 // Default base target
       let restDays = [1] // Default Monday
       let recoveryDays = [5] // Default Friday
@@ -71,49 +74,32 @@ export default function RectangularNavigation() {
           setGroupName(group?.name || '')
 
           if (group?.start_date) {
-            const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-            target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+            const daysSinceStart = getDaysSinceStart(group.start_date)
             
-            // Apply week mode logic for groups 448+ days old
-            if (daysSinceStart >= 448) {
-              // Will load week mode from group settings below
-              const tempTarget = target // Store for potential week mode calculation
-            }
-          }
+            // Load group settings for other features (rest days, etc.)
+            const { data: groupSettings, error: settingsError } = await supabase
+              .from('group_settings')
+              .select('rest_days, recovery_days, accent_color')
+              .eq('group_id', profile.group_id)
+              .maybeSingle()
 
-          // Load group settings for other features (rest days, etc.) but don't use for target calculation
-          const { data: groupSettings, error: settingsError } = await supabase
-            .from('group_settings')
-            .select('*')
-            .eq('group_id', profile.group_id)
-            .maybeSingle()
-
-          if (!settingsError && groupSettings) {
-            restDays = groupSettings.rest_days || [1]
-            recoveryDays = groupSettings.recovery_days || [5]
-            setAccentColor(groupSettings.accent_color || 'blue')
-            
-            // Apply week mode logic if group is 448+ days old
-            if (group?.start_date) {
-              const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-              if (daysSinceStart >= 448 && groupSettings.week_mode === 'sane') {
-                // Sane mode: weekly progression starting from day 448
-                target = 448 + Math.floor((daysSinceStart - 448) / 7)
-              }
-              // Insane mode continues with daily progression (no change needed)
+            if (!settingsError && groupSettings) {
+              restDays = groupSettings.rest_days || [1]
+              recoveryDays = groupSettings.recovery_days || [5]
+              setAccentColor(groupSettings.accent_color || 'blue')
             }
+
+            // Calculate target using centralized utility
+            target = calculateDailyTarget({
+              daysSinceStart,
+              weekMode,
+              restDays,
+              recoveryDays
+            })
           }
         }
       } catch (error) {
         console.log('Group settings not available, using defaults')
-      }
-
-      // Adjust target based on day type
-      const currentDayOfWeek = new Date().getDay()
-      if (restDays.includes(currentDayOfWeek)) {
-        target = 0 // Rest day - no points required
-      } else if (recoveryDays.includes(currentDayOfWeek)) {
-        target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
       }
 
       setDailyProgress(todayPoints)

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
+import { useWeekMode } from '@/contexts/WeekModeContext'
+import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { 
   XMarkIcon,
   HeartIcon,
@@ -48,6 +50,7 @@ type WorkoutModalProps = {
 export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: WorkoutModalProps) {
   const { user } = useAuth()
   const { profile } = useProfile()
+  const { weekMode, setWeekMode, isWeekModeAvailable } = useWeekMode()
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [selectedExercise, setSelectedExercise] = useState<ExerciseWithProgress | null>(null)
   const [quantity, setQuantity] = useState('')
@@ -60,7 +63,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [showSportSelection, setShowSportSelection] = useState(false)
   const [selectedSportType, setSelectedSportType] = useState('')
   const [selectedIntensity, setSelectedIntensity] = useState('medium')
-  const [weekMode, setWeekMode] = useState<'sane' | 'insane' | null>(null)
   const [groupDaysSinceStart, setGroupDaysSinceStart] = useState(0)
   const [workoutInputOpen, setWorkoutInputOpen] = useState(false)
   const [selectedWorkoutExercise, setSelectedWorkoutExercise] = useState<ExerciseWithProgress | null>(null)
@@ -106,7 +108,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target using correct formula
+      // Calculate target using centralized utility
       let target = 1 // Default base target
       let restDays = [1] // Default Monday
       let recoveryDays = [5] // Default Friday
@@ -121,60 +123,55 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             .single()
 
           if (group?.start_date) {
-            // Calculate target using correct formula
-            const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-            target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+            const daysSinceStart = getDaysSinceStart(group.start_date)
             setGroupDaysSinceStart(daysSinceStart)
             
-            // Apply week mode logic for groups 448+ days old
-            if (daysSinceStart >= 448 && weekMode === 'sane') {
-              // Sane mode: weekly progression starting from day 448
-              target = 448 + Math.floor((daysSinceStart - 448) / 7)
-            }
-            // Insane mode continues with daily progression (current behavior)
-            
-            // Set week mode for groups that are 448+ days old
-            if (daysSinceStart >= 448) {
-              // Determine week mode based on current week performance or default to 'sane'
-              // For now, we'll start with 'sane' mode. Later this could be determined by actual performance
-              setWeekMode('sane')
-            } else {
-              setWeekMode(null)
-            }
-          }
+            // Load group settings for rest/recovery days
+            const { data: groupSettings } = await supabase
+              .from('group_settings')
+              .select('rest_days, recovery_days')
+              .eq('group_id', profile.group_id)
+              .maybeSingle()
 
-          // Load group settings for other features (rest days, etc.) but don't use for target calculation
-          let groupSettingsQuery = supabase
-            .from('group_settings')
-            .select('*')
-            .eq('group_id', profile.group_id)
-            .maybeSingle()
-          
-          const { data: groupSettings, error: settingsError } = await groupSettingsQuery
-
-          if (settingsError) {
-            console.log('Error loading group settings:', settingsError)
-          }
-
-          if (groupSettings) {
-            restDays = groupSettings.rest_days || [1]
-            recoveryDays = groupSettings.recovery_days || [5]
-            // Only set week mode from database on initial load, not on toggle updates
-            if (weekMode === null) {
-              setWeekMode(groupSettings.week_mode || 'sane')
+            if (groupSettings) {
+              restDays = groupSettings.rest_days || [1]
+              recoveryDays = groupSettings.recovery_days || [5]
             }
+
+            // Calculate target using centralized utility
+            target = calculateDailyTarget({
+              daysSinceStart,
+              weekMode,
+              restDays,
+              recoveryDays
+            })
           }
         }
       } catch (error) {
         console.log('Group settings not available, using defaults')
-      }
-
-      // Adjust target based on day type
-      const currentDayOfWeek = new Date().getDay()
-      if (restDays.includes(currentDayOfWeek)) {
-        target = 0 // Rest day - no points required
-      } else if (recoveryDays.includes(currentDayOfWeek)) {
-        target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
+        // Still calculate target with defaults if group info fails
+        if (profile.group_id) {
+          try {
+            const { data: group } = await supabase
+              .from('groups')
+              .select('start_date')
+              .eq('id', profile.group_id)
+              .single()
+            
+            if (group?.start_date) {
+              const daysSinceStart = getDaysSinceStart(group.start_date)
+              setGroupDaysSinceStart(daysSinceStart)
+              target = calculateDailyTarget({
+                daysSinceStart,
+                weekMode,
+                restDays,
+                recoveryDays
+              })
+            }
+          } catch (fallbackError) {
+            console.log('Unable to load group start date, using default target')
+          }
+        }
       }
 
       setDailyProgress(todayPoints)
@@ -819,31 +816,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     return Math.round(parseFloat(quantity) * pointsPerMinute)
   }
 
-  const saveWeekMode = async (mode: 'sane' | 'insane') => {
-    if (!profile?.group_id) return
-    
-    try {
-      // Only try to update existing records to avoid RLS issues
-      const { error } = await supabase
-        .from('group_settings')
-        .update({ week_mode: mode })
-        .eq('group_id', profile.group_id)
-      
-      if (error) {
-        console.log('Could not save week mode to database (using local state):', error.message)
-        // Don't throw error - just use local state
-        return
-      }
-      
-      console.log('Week mode saved to database:', mode)
-      
-      // Small delay to ensure database update is complete
-      await new Promise(resolve => setTimeout(resolve, 100))
-    } catch (error) {
-      console.log('Could not save week mode to database (using local state):', error)
-      // Don't throw error - just use local state
-    }
-  }
 
   const handleSportSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1240,7 +1212,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               )}
 
               {/* Week Mode Toggle - Bottom Section */}
-              {weekMode && groupDaysSinceStart >= 448 && (
+              {isWeekModeAvailable(groupDaysSinceStart) && (
                 <div className="py-6 px-4">
                   <div className="bg-gray-900/30 p-4 rounded-lg">
                     <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
@@ -1257,14 +1229,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       
                       <div className="relative flex">
                         <button
-                          onClick={async () => {
+                          onClick={() => {
                             setWeekMode('sane')
-                            await saveWeekMode('sane')
-                            // Manually recalculate target without full reload
-                            if (groupDaysSinceStart >= 448) {
-                              const newTarget = 448 + Math.floor((groupDaysSinceStart - 448) / 7)
-                              setDailyTarget(newTarget)
-                            }
+                            // Recalculate target immediately
+                            loadDailyProgress()
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
@@ -1275,14 +1243,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         </button>
                         
                         <button
-                          onClick={async () => {
+                          onClick={() => {
                             setWeekMode('insane')
-                            await saveWeekMode('insane')
-                            // Manually recalculate target without full reload
-                            if (groupDaysSinceStart >= 448) {
-                              const newTarget = 1 + groupDaysSinceStart
-                              setDailyTarget(newTarget)
-                            }
+                            // Recalculate target immediately
+                            loadDailyProgress()
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'

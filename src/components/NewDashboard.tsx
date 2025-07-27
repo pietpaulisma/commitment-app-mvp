@@ -5,6 +5,8 @@ import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useWeekMode } from '@/contexts/WeekModeContext'
+import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 
 type GroupMemberStats = {
   id: string
@@ -30,6 +32,7 @@ type DashboardStats = {
 export default function NewDashboard() {
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
+  const { weekMode } = useWeekMode()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -47,7 +50,7 @@ export default function NewDashboard() {
       const interval = setInterval(loadDashboardStats, 30000) // Refresh every 30 seconds
       return () => clearInterval(interval)
     }
-  }, [user, profile])
+  }, [user, profile, weekMode])
 
   const loadDashboardStats = async () => {
     if (!user || !profile) return
@@ -75,10 +78,10 @@ export default function NewDashboard() {
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get target using correct formula
+      // Calculate target using centralized utility
       let todayTarget = 1 // Default base target
       if (profile.group_id) {
-        // Get group start date for proper target calculation
+        // Get group start date and settings for proper target calculation
         const { data: group } = await supabase
           .from('groups')
           .select('start_date')
@@ -86,25 +89,25 @@ export default function NewDashboard() {
           .single()
 
         if (group?.start_date) {
-          const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-          todayTarget = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+          const daysSinceStart = getDaysSinceStart(group.start_date)
           
-          // Apply week mode logic for groups 448+ days old
-          if (daysSinceStart >= 448) {
-            // Load week mode from group settings
-            const { data: groupSettings } = await supabase
-              .from('group_settings')
-              .select('week_mode')
-              .eq('group_id', profile.group_id)
-              .maybeSingle()
-            
-            const weekMode = groupSettings?.week_mode || 'sane'
-            if (weekMode === 'sane') {
-              // Sane mode: weekly progression starting from day 448
-              todayTarget = 448 + Math.floor((daysSinceStart - 448) / 7)
-            }
-            // Insane mode continues with daily progression (current behavior)
-          }
+          // Load group settings for rest/recovery days
+          const { data: groupSettings } = await supabase
+            .from('group_settings')
+            .select('rest_days, recovery_days')
+            .eq('group_id', profile.group_id)
+            .maybeSingle()
+
+          const restDays = groupSettings?.rest_days || [1]
+          const recoveryDays = groupSettings?.recovery_days || [5]
+
+          // Calculate target using centralized utility
+          todayTarget = calculateDailyTarget({
+            daysSinceStart,
+            weekMode,
+            restDays,
+            recoveryDays
+          })
         }
       }
 
