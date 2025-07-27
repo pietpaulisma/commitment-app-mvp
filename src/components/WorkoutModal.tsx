@@ -802,17 +802,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     setShowSportSelection(false)
   }
 
-  const handleSportSelection = async (sportType: string) => {
-    if (!user) return
+  const calculateSportPoints = () => {
+    if (!quantity) return 0
+    const pointsPerHour = selectedIntensity === 'light' ? 125 : selectedIntensity === 'medium' ? 250 : 375
+    const pointsPerMinute = pointsPerHour / 60
+    return Math.round(parseFloat(quantity) * pointsPerMinute)
+  }
+
+  const handleSportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !selectedSportType || !quantity) return
+
+    setLoading(true)
 
     try {
-      // Calculate points based on intensity (per hour, so convert to per minute)
+      // Calculate points based on intensity and duration
       const pointsPerHour = selectedIntensity === 'light' ? 125 : selectedIntensity === 'medium' ? 250 : 375
       const pointsPerMinute = pointsPerHour / 60
-      
-      // Default to 60 minutes (1 hour) for sports
-      const duration = 60
-      const totalPoints = Math.round(pointsPerHour)
+      const totalPoints = Math.round(parseFloat(quantity) * pointsPerMinute)
 
       // Log the sport workout with sport_type and sport_intensity
       const { error } = await supabase
@@ -823,9 +830,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           exercise_id: `sport_${selectedIntensity}`, // Use the sport intensity exercise ID
           count: 0,
           weight: 0,
-          duration: duration,
+          duration: parseFloat(quantity),
           points: totalPoints,
-          sport_type: sportType,
+          sport_type: selectedSportType,
           sport_intensity: selectedIntensity,
           date: new Date().toISOString().split('T')[0],
           timestamp: Date.now()
@@ -843,8 +850,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         loadDailyProgress()
         loadTodaysWorkouts()
         
-        // Close modal
+        // Reset form and close modal
         setShowSportSelection(false)
+        setSelectedSportType('')
+        setQuantity('')
         onClose()
         
         // Haptic feedback on mobile
@@ -855,6 +864,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     } catch (error) {
       console.error('Error logging sport workout:', error)
       alert('An error occurred while logging your sport workout.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -1084,33 +1095,57 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 </div>
               )}
 
-              {/* Sports Section - Collapsible */}
-              {sportsExercises.length > 0 && (
-                <div className="py-3">
-                  <button
-                    onClick={() => setSportsExpanded(!sportsExpanded)}
-                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <BoltIcon className="w-6 h-6 text-purple-400" />
-                      <h4 className="text-2xl font-bold text-white">Sports</h4>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">({sportsExercises.length})</span>
-                      <ChevronDownIcon 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          sportsExpanded ? 'rotate-180' : ''
-                        }`} 
-                      />
-                    </div>
-                  </button>
-                  {sportsExpanded && (
-                    <div className="space-y-0 border-t border-gray-800">
-                      {sportsExercises.map((exercise) => renderExerciseButton(exercise))}
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Sports List - Collapsible */}
+              <div className="py-3">
+                <button
+                  onClick={() => setSportsExpanded(!sportsExpanded)}
+                  className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                >
+                  <div className="flex items-center space-x-3">
+                    <BoltIcon className="w-6 h-6 text-purple-400" />
+                    <h4 className="text-2xl font-bold text-white">Sports</h4>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-400">({sportTypes.length})</span>
+                    <ChevronDownIcon 
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                        sportsExpanded ? 'rotate-180' : ''
+                      }`} 
+                    />
+                  </div>
+                </button>
+                {sportsExpanded && (
+                  <div className="space-y-0 border-t border-gray-800">
+                    {sportTypes.map((sport) => (
+                      <button
+                        key={sport}
+                        onClick={() => {
+                          setSelectedSportType(sport)
+                          setShowSportSelection(true)
+                        }}
+                        className="w-full transition-colors duration-200 relative bg-gray-900/30 border-b border-gray-800 overflow-hidden"
+                      >
+                        <div className="flex">
+                          <div className="flex-1 relative overflow-hidden">
+                            <div className="relative p-4 flex items-center justify-between text-left">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-lg">🏃</span>
+                                <div>
+                                  <div className="font-medium text-white">{sport}</div>
+                                  <div className="text-xs text-gray-400">Tap to log workout</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <button className="w-16 flex items-center justify-center">
+                            <StarIcon className="w-5 h-5 text-gray-500" />
+                          </button>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* All Main Exercises - Collapsible */}
               {allExercises.length > 0 && (
@@ -1330,56 +1365,43 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           )}
 
 
-          {/* Sport Selection Screen */}
-          {showSportSelection && (
-            <div className="p-4 space-y-4">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">Choose Your Sport</h3>
-                <p className="text-gray-400 text-sm">Select the type of sport activity</p>
+          {/* Sport Input Screen */}
+          {showSportSelection && selectedSportType && (
+            <form onSubmit={handleSportSubmit} className="p-4 space-y-6 bg-black border-t border-gray-800">
+              <div className="text-center bg-gray-900/30 rounded-lg p-4">
+                <h4 className="text-lg font-medium text-white mb-2">
+                  🏃 {selectedSportType}
+                </h4>
+                <div className="flex justify-center items-baseline space-x-1">
+                  <span className="text-2xl font-black text-purple-400">
+                    {selectedIntensity === 'light' ? '125' : selectedIntensity === 'medium' ? '250' : '375'}
+                  </span>
+                  <span className="text-sm text-gray-400">pts per hour</span>
+                </div>
               </div>
-
-              {/* Sport Types */}
-              <div className="space-y-2">
-                {sportTypes.map((sport) => (
-                  <button
-                    key={sport}
-                    onClick={() => handleSportSelection(sport)}
-                    className="w-full p-3 text-left transition-colors border-b border-gray-700 bg-gray-800 hover:bg-gray-700"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <BoltIcon className="w-5 h-5 text-purple-400" />
-                        <div className="font-medium text-white">{sport}</div>
-                      </div>
-                      <div className="text-sm font-bold text-green-400">
-                        {selectedIntensity === 'light' ? '125' : selectedIntensity === 'medium' ? '250' : '375'} pts/hr
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Intensity Selection */}
-              <div className="mt-6 p-4 bg-gray-800 border border-gray-700">
-                <h4 className="text-white font-semibold mb-3">Intensity Level</h4>
+              
+              {/* Intensity Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Intensity Level</label>
                 <div className="space-y-2">
                   {[
-                    { id: 'light', name: 'Light', points: 125 },
-                    { id: 'medium', name: 'Medium', points: 250 },
-                    { id: 'intense', name: 'Intense', points: 375 }
+                    { id: 'light', name: 'Light', points: 125, emoji: '🚶' },
+                    { id: 'medium', name: 'Medium', points: 250, emoji: '🏃' },
+                    { id: 'intense', name: 'Intense', points: 375, emoji: '💨' }
                   ].map((intensity) => (
                     <button
                       key={intensity.id}
+                      type="button"
                       onClick={() => setSelectedIntensity(intensity.id)}
                       className={`w-full p-3 text-left transition-colors border ${
                         selectedIntensity === intensity.id
-                          ? 'bg-purple-900/50 border-blue-500 text-blue-300'
+                          ? 'bg-purple-900/50 border-purple-500 text-purple-300'
                           : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <BoltIcon className="w-5 h-5 text-purple-400" />
+                          <span className="text-lg">{intensity.emoji}</span>
                           <span className="font-medium">{intensity.name}</span>
                         </div>
                         <span className="text-sm font-bold">
@@ -1391,14 +1413,62 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                 </div>
               </div>
 
-              {/* Back Button */}
-              <button
-                onClick={() => setShowSportSelection(false)}
-                className="w-full bg-gray-700 text-white py-3 px-4 hover:bg-gray-600 transition-colors font-semibold border border-gray-600"
-              >
-                ← Back to Exercises
-              </button>
-            </div>
+              {/* Duration Input */}
+              <div>
+                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-3">
+                  Duration (minutes)
+                </label>
+                <input 
+                  type="number" 
+                  step="any" 
+                  min="0" 
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 text-base bg-gray-900/30 text-white"
+                  placeholder="Enter duration in minutes"
+                  required
+                />
+              </div>
+
+              {/* Points Preview */}
+              {quantity && (
+                <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-800">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Points Earned</div>
+                      <div className="text-sm text-white">This workout</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-4xl font-black text-purple-400">{calculateSportPoints()}</div>
+                      <div className="text-xs text-gray-400">points</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button 
+                  type="submit"
+                  disabled={loading || !quantity}
+                  className="w-full bg-purple-400 text-black py-4 px-4 rounded-lg hover:bg-purple-500 transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {loading ? 'LOGGING...' : 'LOG SPORT WORKOUT'}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSportSelection(false)
+                    setSelectedSportType('')
+                    setQuantity('')
+                  }}
+                  className="w-full bg-gray-700 text-white py-3 px-4 rounded-lg hover:bg-gray-600 transition-colors font-semibold border border-gray-600"
+                >
+                  ← Back to Exercises
+                </button>
+              </div>
+            </form>
           )}
         </div>
 
