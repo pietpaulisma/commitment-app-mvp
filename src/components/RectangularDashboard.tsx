@@ -1131,7 +1131,7 @@ export default function RectangularDashboard() {
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="relative overflow-hidden border-b border-gray-800">
+        <div className="relative overflow-hidden">
           {/* Dynamic Time Gradient Background */}
           <TimeGradient className="z-0" />
           
