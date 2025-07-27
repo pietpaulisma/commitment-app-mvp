@@ -917,7 +917,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     <div className="fixed inset-0 bg-black z-[100] flex flex-col">
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
         <div className="sticky top-0">
-          <div className="flex">
+          <div className="flex" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
               {/* Regular Progress Background */}
