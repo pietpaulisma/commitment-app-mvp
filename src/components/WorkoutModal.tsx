@@ -126,8 +126,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
             setGroupDaysSinceStart(daysSinceStart)
             
-            // Set week mode for groups that are 300+ days old
-            if (daysSinceStart >= 300) {
+            // Apply week mode logic for groups 448+ days old
+            if (daysSinceStart >= 448 && weekMode === 'sane') {
+              // Sane mode: weekly targets (1 point per week since day 448)
+              const weeksSinceWeekMode = Math.floor((daysSinceStart - 448) / 7)
+              target = 1 + weeksSinceWeekMode
+            }
+            // Insane mode continues with daily progression (current behavior)
+            
+            // Set week mode for groups that are 448+ days old
+            if (daysSinceStart >= 448) {
               // Determine week mode based on current week performance or default to 'sane'
               // For now, we'll start with 'sane' mode. Later this could be determined by actual performance
               setWeekMode('sane')
@@ -1204,7 +1212,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               )}
 
               {/* Week Mode Toggle - Bottom Section */}
-              {weekMode && groupDaysSinceStart >= 300 && (
+              {weekMode && groupDaysSinceStart >= 448 && (
                 <div className="py-6 px-4">
                   <div className="bg-gray-900/30 p-4 rounded-lg">
                     <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
@@ -1221,7 +1229,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       
                       <div className="relative flex">
                         <button
-                          onClick={() => setWeekMode('sane')}
+                          onClick={() => {
+                            setWeekMode('sane')
+                            loadDailyProgress()
+                          }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
                           }`}
@@ -1231,7 +1242,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         </button>
                         
                         <button
-                          onClick={() => setWeekMode('insane')}
+                          onClick={() => {
+                            setWeekMode('insane')
+                            loadDailyProgress()
+                          }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
                           }`}
