@@ -83,6 +83,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
       console.log('Loading exercises for group:', profile.group_id)
+      console.log('isAnimatedIn before:', isAnimatedIn)
       loadExercises()
       loadDailyProgress()
       loadTodaysWorkouts()
@@ -90,9 +91,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       
       // Trigger slide-up animation after component mounts
       setTimeout(() => {
+        console.log('Setting isAnimatedIn to true')
         setIsAnimatedIn(true)
-      }, 50)
+      }, 100) // Increased delay to be more visible
     } else if (!isOpen) {
+      console.log('Setting isAnimatedIn to false')
       setIsAnimatedIn(false)
     }
   }, [isOpen, user, profile?.group_id])
@@ -921,12 +924,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   if (!isOpen) return null
 
+  console.log('Rendering modal with isAnimatedIn:', isAnimatedIn)
+
   return (
     <div 
-      className={`fixed inset-0 bg-black z-[100] flex flex-col transition-transform duration-500 ease-out ${
-        isAnimatedIn ? 'transform translate-y-0' : 'transform translate-y-full'
-      }`} 
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className="fixed inset-0 bg-black z-[100] flex flex-col transition-transform duration-500 ease-out"
+      style={{ 
+        paddingTop: 'env(safe-area-inset-top)',
+        transform: isAnimatedIn ? 'translateY(0)' : 'translateY(100vh)'
+      }}
     >
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
         <div className="sticky top-0">
@@ -974,23 +980,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Chat → X Button Transition */}
             <button
               onClick={onClose}
-              className="w-16 h-16 bg-gray-900 border-l border-gray-700 flex items-center justify-center hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
+              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
               aria-label="Close workout log"
             >
               {/* Chat Icon (slides up and out) */}
               <div 
-                className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out ${
-                  isAnimatedIn ? 'transform -translate-y-full' : 'transform translate-y-0'
-                }`}
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out"
+                style={{
+                  transform: isAnimatedIn ? 'translateY(-64px)' : 'translateY(0px)'
+                }}
               >
                 <ChatBubbleLeftRightIcon className="w-6 h-6" />
               </div>
               
               {/* X Icon (slides up from below) */}
               <div 
-                className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out ${
-                  isAnimatedIn ? 'transform translate-y-0' : 'transform translate-y-full'
-                }`}
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out"
+                style={{
+                  transform: isAnimatedIn ? 'translateY(0px)' : 'translateY(64px)'
+                }}
               >
                 <XMarkIcon className="w-6 h-6" />
               </div>
