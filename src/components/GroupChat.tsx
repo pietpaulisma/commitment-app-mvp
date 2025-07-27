@@ -694,7 +694,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
             messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex items-end space-x-2 ${
+                className={`flex items-end space-x-3 mb-1 ${
                   message.user_id === user?.id ? 'justify-end flex-row-reverse space-x-reverse' : 'justify-start'
                 }`}
               >
@@ -707,33 +707,33 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                   </div>
                 )}
                 
-                <div className="max-w-xs lg:max-w-md">
-                  {/* User name (for others' messages) */}
-                  {message.user_id !== user?.id && (
-                    <div className="text-xs mb-1 px-2">
-                      <span className={getUserColor(message.user_email || '', message.user_role || 'user')}>
-                        {message.user_email?.split('@')[0] || 'Unknown'}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Message bubble */}
+                <div className="max-w-xs lg:max-w-md xl:max-w-lg">
+                  {/* Message bubble - WhatsApp style */}
                   <div
-                    className={`relative px-4 py-3 rounded-full shadow-sm ${
+                    className={`relative px-3 py-2 rounded-lg shadow-sm ${
                       message.user_id === user?.id
                         ? message.id.startsWith('temp-') 
-                          ? 'bg-blue-600 text-white opacity-70' 
-                          : 'bg-blue-600 text-white'
-                        : 'bg-gray-800 text-white border border-gray-700'
+                          ? 'bg-green-600 text-white opacity-70' 
+                          : 'bg-green-600 text-white'
+                        : 'bg-gray-700 text-white'
                     }`}
                   >
+                    {/* User name inside bubble (for others' messages) - WhatsApp style */}
+                    {message.user_id !== user?.id && (
+                      <div className="mb-1">
+                        <span className={`text-xs font-medium ${getUserColor(message.user_email || '', message.user_role || 'user')}`}>
+                          {message.user_email?.split('@')[0] || 'Unknown'}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Image message */}
                     {message.message_type === 'image' && message.image_url && (
                       <div className="mb-2">
                         <img 
                           src={message.image_url} 
                           alt="Shared image" 
-                          className="rounded-2xl max-w-full h-auto"
+                          className="rounded-lg max-w-full h-auto"
                           style={{ maxHeight: '300px' }}
                         />
                       </div>
@@ -747,20 +747,22 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                       />
                     )}
                     
-                    {/* Text content */}
+                    {/* Text content with timestamp - WhatsApp style */}
                     {message.message && message.message_type !== 'workout_completion' && (
-                      <div className="text-sm whitespace-pre-wrap break-words">
-                        {message.message}
+                      <div className="pr-14 pb-4">
+                        <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                          {message.message}
+                        </div>
                       </div>
                     )}
                     
-                    {/* Timestamp and status */}
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="text-xs opacity-75">
+                    {/* Timestamp bottom-right - WhatsApp style */}
+                    <div className="absolute bottom-1 right-3 flex items-center space-x-1">
+                      <span className="text-xs opacity-70 text-gray-300">
                         {formatTime(message.created_at)}
-                      </div>
+                      </span>
                       {message.id.startsWith('temp-') && (
-                        <div className="w-4 h-4 animate-spin border border-white border-t-transparent rounded-full opacity-50"></div>
+                        <div className="w-3 h-3 animate-spin border border-white border-t-transparent rounded-full opacity-50"></div>
                       )}
                     </div>
                     
