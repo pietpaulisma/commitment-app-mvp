@@ -478,24 +478,12 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp)
-    const now = new Date()
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      })
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-    }
+    // Always show just time like WhatsApp, no dates
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    })
   }
 
   const loadReactions = async (messageIds: string[]) => {
@@ -715,13 +703,13 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                         ? message.id.startsWith('temp-') 
                           ? 'bg-green-600 text-white opacity-70' 
                           : 'bg-green-600 text-white'
-                        : 'bg-gray-700 text-white'
+                        : 'bg-gray-800 text-white'
                     }`}
                   >
                     {/* User name inside bubble (for others' messages) - WhatsApp style */}
                     {message.user_id !== user?.id && (
                       <div className="mb-1">
-                        <span className={`text-xs font-medium ${getUserColor(message.user_email || '', message.user_role || 'user')}`}>
+                        <span className={`text-xs font-semibold ${getUserColor(message.user_email || '', message.user_role || 'user')}`}>
                           {message.user_email?.split('@')[0] || 'Unknown'}
                         </span>
                       </div>
@@ -749,7 +737,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                     
                     {/* Text content with timestamp - WhatsApp style */}
                     {message.message && message.message_type !== 'workout_completion' && (
-                      <div className="pr-14 pb-4">
+                      <div className="pr-16 pb-5">
                         <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                           {message.message}
                         </div>
@@ -757,8 +745,8 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                     )}
                     
                     {/* Timestamp bottom-right - WhatsApp style */}
-                    <div className="absolute bottom-1 right-3 flex items-center space-x-1">
-                      <span className="text-xs opacity-70 text-gray-300">
+                    <div className="absolute bottom-1.5 right-3 flex items-center space-x-1">
+                      <span className="text-xs opacity-60">
                         {formatTime(message.created_at)}
                       </span>
                       {message.id.startsWith('temp-') && (
@@ -882,9 +870,6 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                   target.style.height = Math.min(target.scrollHeight, 120) + 'px'
                 }}
               />
-              <div className="text-xs text-gray-500 mt-1 px-1">
-                {newMessage.length}/500 characters
-              </div>
             </div>
             
             {/* Send button */}
