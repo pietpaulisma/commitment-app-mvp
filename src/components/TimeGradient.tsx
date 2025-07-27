@@ -90,17 +90,17 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
       {/* Main organic blob positioned by time */}
       <div
-        className="absolute inset-0 opacity-60"
+        className="absolute inset-0 opacity-80"
         style={{
           background: `
             radial-gradient(ellipse 800px 1200px at ${blobPositionX + Math.sin(animationOffset * 0.008) * 15}% ${50 + Math.cos(animationOffset * 0.006) * 20}%, 
-              ${colors.primary}20 0%, 
-              ${colors.secondary}15 25%, 
-              ${colors.accent}10 40%, 
+              ${colors.primary}35 0%, 
+              ${colors.secondary}25 25%, 
+              ${colors.accent}18 40%, 
               transparent 65%),
             radial-gradient(ellipse 600px 900px at ${blobPositionX + 30 + Math.cos(animationOffset * 0.01) * 20}% ${30 + Math.sin(animationOffset * 0.007) * 25}%, 
-              ${colors.secondary}18 0%, 
-              ${colors.accent}12 30%, 
+              ${colors.secondary}30 0%, 
+              ${colors.accent}20 30%, 
               transparent 55%)
           `,
           transform: `rotate(${animationOffset * 0.015}deg) scale(${1 + Math.sin(animationOffset * 0.004) * 0.1})`,
@@ -110,15 +110,15 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
       
       {/* Secondary flowing organic shapes */}
       <div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0 opacity-60"
         style={{
           background: `
             radial-gradient(ellipse 500px 800px at ${blobPositionX - 20 + Math.sin(animationOffset * 0.012) * 25}% ${70 + Math.cos(animationOffset * 0.009) * 15}%, 
-              ${colors.accent}15 0%, 
-              ${colors.primary}10 35%, 
+              ${colors.accent}25 0%, 
+              ${colors.primary}18 35%, 
               transparent 60%),
             radial-gradient(ellipse 700px 400px at ${blobPositionX + 40 + Math.cos(animationOffset * 0.007) * 18}% ${20 + Math.sin(animationOffset * 0.011) * 22}%, 
-              ${colors.secondary}12 0%, 
+              ${colors.secondary}22 0%, 
               transparent 45%)
           `,
           transform: `rotate(${-animationOffset * 0.01}deg) scale(${1 + Math.cos(animationOffset * 0.005) * 0.08})`,
@@ -128,15 +128,15 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
       {/* Subtle organic texture layer */}
       <div 
-        className="absolute inset-0 opacity-25"
+        className="absolute inset-0 opacity-40"
         style={{
           background: `
             radial-gradient(ellipse 400px 600px at ${blobPositionX + 10 + Math.sin(animationOffset * 0.006) * 12}% ${40 + Math.cos(animationOffset * 0.008) * 18}%, 
-              ${colors.primary}08 0%, 
-              ${colors.secondary}06 25%, 
+              ${colors.primary}15 0%, 
+              ${colors.secondary}12 25%, 
               transparent 50%),
             radial-gradient(circle 300px at ${blobPositionX + 50 + Math.cos(animationOffset * 0.009) * 15}% ${60 + Math.sin(animationOffset * 0.005) * 20}%, 
-              ${colors.accent}06 0%, 
+              ${colors.accent}12 0%, 
               transparent 35%)
           `,
           filter: 'blur(3px)',

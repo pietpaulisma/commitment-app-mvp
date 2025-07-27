@@ -108,11 +108,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                 return (
                   <div
                     key={i}
-                    className={`aspect-square rounded transition-all duration-500 ${
-                      isHigh ? 'bg-orange-400' : 
-                      intensity > 30 ? 'bg-gray-500' : 'bg-gray-700'
-                    }`}
+                    className="aspect-square rounded transition-all duration-500"
                     style={{
+                      background: isHigh ? getGradientStyle('bg-orange-400') : 
+                                 intensity > 30 ? getGradientStyle('bg-gray-500') : getGradientStyle('bg-gray-700'),
                       animationDelay: `${i * 30}ms`,
                       animation: 'fadeInScale 0.6s ease-out forwards'
                     }}
@@ -148,10 +147,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                 </div>
                 <div className="flex-1 bg-gray-700 rounded h-4 relative overflow-hidden">
                   <div
-                    className={`h-full rounded transition-all duration-700 ${
-                      i === 0 ? 'bg-orange-400' : 'bg-gray-500'
-                    }`}
+                    className="h-full rounded transition-all duration-700"
                     style={{
+                      background: i === 0 ? getGradientStyle('bg-orange-400') : getGradientStyle('bg-gray-500'),
                       width: `${Math.min(100, member.percentage)}%`,
                       animationDelay: `${i * 200}ms`,
                       animation: 'slideInLeft 0.8s ease-out forwards'
@@ -217,10 +215,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                   <div className="w-full bg-gray-700 rounded h-6 relative overflow-hidden">
                     {/* Filled bar */}
                     <div 
-                      className={`h-full rounded transition-all duration-700 ${
-                        isTop ? 'bg-orange-400' : 'bg-gray-500'
-                      }`}
+                      className="h-full rounded transition-all duration-700"
                       style={{ 
+                        background: isTop ? getGradientStyle('bg-orange-400') : getGradientStyle('bg-gray-500'),
                         width: `${Math.max(20, percentage)}%`,
                         animationDelay: `${i * 100}ms`,
                         animation: 'slideInLeft 0.8s ease-out forwards'
@@ -256,8 +253,11 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
       <div key={index} className={`relative bg-black rounded-lg ${layoutClasses} overflow-hidden`}>
         {/* Full rectangle progress background */}
         <div 
-          className="absolute left-0 top-0 bottom-0 bg-purple-400 transition-all duration-1000 ease-out"
-          style={{ width: `${progressPercentage}%` }}
+          className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
+          style={{ 
+            background: getGradientStyle('bg-purple-400'),
+            width: `${progressPercentage}%`
+          }}
         />
         
         {/* Content overlay */}
@@ -324,10 +324,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                 >
                   {/* Vertical bar */}
                   <div
-                    className={`w-0.5 transition-all duration-700 ${
-                      isRecord ? 'bg-orange-400' : 'bg-gray-500'
-                    }`}
+                    className="w-0.5 transition-all duration-700"
                     style={{ 
+                      background: isRecord ? getGradientStyle('bg-orange-400') : getGradientStyle('bg-gray-500'),
                       height: `${height}px`,
                       animationDelay: `${i * 20}ms`,
                       animation: 'slideUpScale 0.8s ease-out forwards',
@@ -337,8 +336,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
                   {/* Record highlight dot */}
                   {isRecord && (
                     <div 
-                      className="w-2 h-2 bg-orange-400 rounded-full -mt-1 animate-pulse"
-                      style={{
+                      className="w-2 h-2 rounded-full -mt-1 animate-pulse"
+                      style={{ 
+                        background: getGradientStyle('bg-orange-400'),
                         animationDelay: `${(i * 20) + 400}ms`
                       }}
                     />
@@ -428,6 +428,17 @@ export default function RectangularDashboard() {
   const [dayType, setDayType] = useState<'rest' | 'recovery' | 'normal'>('normal')
   const [timeLeft, setTimeLeft] = useState('')
   const [timeRemainingPercentage, setTimeRemainingPercentage] = useState(0)
+
+  // Helper function to convert Tailwind classes to gradient styles
+  const getGradientStyle = (colorClass: string) => {
+    const gradientMap: Record<string, string> = {
+      'bg-orange-400': 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
+      'bg-purple-400': 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)', 
+      'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
+      'bg-gray-700': 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)'
+    }
+    return gradientMap[colorClass] || colorClass
+  }
   const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
   const [accentColor, setAccentColor] = useState('blue') // Default blue
