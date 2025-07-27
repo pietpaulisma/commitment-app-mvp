@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
@@ -15,6 +15,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
   const pathname = usePathname()
+  const [hasRedirected, setHasRedirected] = useState(false)
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const createSupremeAdminProfile = async () => {
     try {
@@ -57,8 +59,14 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
   useEffect(() => {
     console.log('🔍 OnboardingGuard useEffect triggered')
-    console.log('📊 Auth state:', { authLoading, profileLoading, userEmail: user?.email, hasProfile: !!profile, pathname })
+    console.log('📊 Auth state:', { authLoading, profileLoading, userEmail: user?.email, hasProfile: !!profile, pathname, hasRedirected })
     
+    // Clear any existing timeout
+    if (redirectTimeoutRef.current) {
+      clearTimeout(redirectTimeoutRef.current)
+      redirectTimeoutRef.current = null
+    }
+
     // Don't redirect while loading - be more patient on refresh
     if (authLoading || profileLoading) {
       console.log('⏳ Still loading, waiting...')
@@ -68,6 +76,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     // Don't redirect if no user (let other auth guards handle this)
     if (!user) {
       console.log('👤 No user found, skipping...')
+      setHasRedirected(false) // Reset redirect flag if no user
       return
     }
 
@@ -76,6 +85,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     const isAuthPage = pathname === '/login' || pathname === '/signup'
     if (isOnboardingPage || isAuthPage) {
       console.log('📄 Already on onboarding/auth page, skipping redirect')
+      return
+    }
+
+    // Don't redirect if we've already redirected recently
+    if (hasRedirected) {
+      console.log('🚫 Already redirected recently, skipping...')
       return
     }
 
@@ -91,6 +106,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     // If user has profile and completed onboarding, allow access (no redirect needed)
     if (profile && profile.onboarding_completed) {
       console.log('✅ User has completed onboarding, allowing access')
+      setHasRedirected(false) // Reset redirect flag for successful access
       return
     }
 
@@ -98,27 +114,37 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     // Only redirect if we've been waiting for a reasonable time AND definitely have no onboarding
     if (profile && profile.onboarding_completed === false) {
       console.log('⚠️  User has not completed onboarding, redirecting to welcome page')
+      setHasRedirected(true)
       router.push('/onboarding/welcome')
       return
     }
 
-    // CRITICAL FIX: Don't immediately redirect if no profile - give time for it to load
+    // CRITICAL FIX: Only redirect if no profile after a significant delay
     // This prevents redirect loops on page refresh when profile is temporarily null
-    // Only redirect to onboarding if we're certain there's no profile after sufficient loading time
-    if (user && !profile && !profileLoading) {
-      // Add a delay to prevent immediate redirects on refresh
-      const hasWaitedEnough = !authLoading && !profileLoading
-      if (hasWaitedEnough) {
-        console.log('🆕 User exists but no profile found after waiting, redirecting to welcome page')
-        // Add a small delay to prevent race conditions
-        setTimeout(() => {
+    if (user && !profile && !profileLoading && !authLoading) {
+      console.log('⚠️  Scheduling potential redirect for missing profile...')
+      // Set a longer timeout to wait for profile to load
+      redirectTimeoutRef.current = setTimeout(() => {
+        // Double-check conditions before redirecting
+        if (!profile && user && !profileLoading && !authLoading && !hasRedirected) {
+          console.log('🆕 User exists but no profile found after extended wait, redirecting to welcome page')
+          setHasRedirected(true)
           router.push('/onboarding/welcome')
-        }, 500)
-        return
-      }
+        }
+      }, 2000) // Increased delay to 2 seconds
+      return
     }
 
-  }, [user, profile, authLoading, profileLoading, pathname, router])
+  }, [user, profile, authLoading, profileLoading, pathname, router, hasRedirected])
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Show loading state while checking onboarding status
   if (authLoading || profileLoading) {
