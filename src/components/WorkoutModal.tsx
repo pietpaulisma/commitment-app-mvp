@@ -823,34 +823,31 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     if (!profile?.group_id) return
     
     try {
-      // First try to update existing record
-      const { data: updateData, error: updateError } = await supabase
+      // Use upsert to handle both insert and update in one operation
+      const { error } = await supabase
         .from('group_settings')
-        .update({ week_mode: mode })
-        .eq('group_id', profile.group_id)
+        .upsert({
+          group_id: profile.group_id,
+          week_mode: mode,
+          rest_days: [1],
+          recovery_days: [5],
+          accent_color: 'blue'
+        }, {
+          onConflict: 'group_id'
+        })
       
-      // If no rows were updated, create a new record
-      if (updateError?.code === 'PGRST116' || (updateData && Array.isArray(updateData) && updateData.length === 0)) {
-        const { error: insertError } = await supabase
-          .from('group_settings')
-          .insert({
-            group_id: profile.group_id,
-            week_mode: mode,
-            rest_days: [1],
-            recovery_days: [5],
-            accent_color: 'blue'
-          })
-        
-        if (insertError) {
-          console.error('Error inserting week mode:', insertError)
-        }
-      } else if (updateError) {
-        console.error('Error updating week mode:', updateError)
+      if (error) {
+        console.error('Error saving week mode:', error)
+        throw error
       }
       
       console.log('Week mode saved to database:', mode)
+      
+      // Small delay to ensure database update is complete
+      await new Promise(resolve => setTimeout(resolve, 100))
     } catch (error) {
       console.error('Error saving week mode:', error)
+      throw error
     }
   }
 
@@ -1267,12 +1264,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       <div className="relative flex">
                         <button
                           onClick={async () => {
-                            setWeekMode('sane')
-                            await saveWeekMode('sane')
-                            // Manually recalculate target without full reload
-                            if (groupDaysSinceStart >= 448) {
-                              const newTarget = 448 + Math.floor((groupDaysSinceStart - 448) / 7)
-                              setDailyTarget(newTarget)
+                            try {
+                              setWeekMode('sane')
+                              await saveWeekMode('sane')
+                              // Manually recalculate target without full reload
+                              if (groupDaysSinceStart >= 448) {
+                                const newTarget = 448 + Math.floor((groupDaysSinceStart - 448) / 7)
+                                setDailyTarget(newTarget)
+                              }
+                            } catch (error) {
+                              console.error('Failed to save sane mode:', error)
+                              // Revert if save failed
+                              setWeekMode(weekMode)
                             }
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
@@ -1285,12 +1288,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         
                         <button
                           onClick={async () => {
-                            setWeekMode('insane')
-                            await saveWeekMode('insane')
-                            // Manually recalculate target without full reload
-                            if (groupDaysSinceStart >= 448) {
-                              const newTarget = 1 + groupDaysSinceStart
-                              setDailyTarget(newTarget)
+                            try {
+                              setWeekMode('insane')
+                              await saveWeekMode('insane')
+                              // Manually recalculate target without full reload
+                              if (groupDaysSinceStart >= 448) {
+                                const newTarget = 1 + groupDaysSinceStart
+                                setDailyTarget(newTarget)
+                              }
+                            } catch (error) {
+                              console.error('Failed to save insane mode:', error)
+                              // Revert if save failed
+                              setWeekMode(weekMode)
                             }
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
