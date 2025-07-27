@@ -655,6 +655,26 @@ export default function RectangularDashboard() {
 
       if (!allMembers) return
 
+      // Get group settings and start date for target calculation
+      const { data: groupSettings } = await supabase
+        .from('group_settings')
+        .select('daily_target_base, daily_increment')
+        .eq('group_id', profile.group_id)
+        .maybeSingle()
+
+      const { data: group } = await supabase
+        .from('groups')
+        .select('start_date')
+        .eq('id', profile.group_id)
+        .single()
+
+      // Calculate today's target
+      let dailyTarget = 100 // Default fallback
+      if (groupSettings && group?.start_date) {
+        const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+        dailyTarget = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+      }
+
       // Get today's logs for all members in one query
       const memberIds = allMembers.map(m => m.id)
       const { data: todayLogs } = await supabase
@@ -673,11 +693,10 @@ export default function RectangularDashboard() {
       })
 
       // Create final member objects with their points
-      const currentDayOfMonth = new Date().getDate()
       const membersWithProgress = allMembers.map(member => ({
         ...member,
         todayPoints: memberPointsMap.get(member.id) || 0,
-        dailyTarget: currentDayOfMonth,
+        dailyTarget: dailyTarget,
         isCurrentUser: member.id === user?.id
       }))
       
@@ -969,11 +988,11 @@ export default function RectangularDashboard() {
         // Load group members and stats
         await Promise.all([loadGroupMembers(), loadGroupStats()])
 
-        // Try to load group settings for rest/recovery days
+        // Try to load group settings for rest/recovery days and target calculation
         try {
           const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
-            .select('rest_days, recovery_days, accent_color')
+            .select('rest_days, recovery_days, accent_color, daily_target_base, daily_increment')
             .eq('group_id', profile.group_id)
             .maybeSingle()
 
@@ -1156,7 +1175,7 @@ export default function RectangularDashboard() {
                 {Array.from({ length: Math.ceil(groupMembers.length / 2) }, (_, rowIndex) => (
                   <div key={rowIndex} className="grid grid-cols-2 gap-0">
                     {groupMembers.slice(rowIndex * 2, rowIndex * 2 + 2).map((member, colIndex) => {
-                      const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || new Date().getDate())) * 100)
+                      const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
                       
                       // Default to purple, user can define their own color later
                       const userColor = member.preferredColor || 'bg-purple-400'

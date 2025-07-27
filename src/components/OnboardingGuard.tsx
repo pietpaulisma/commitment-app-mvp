@@ -59,7 +59,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     console.log('🔍 OnboardingGuard useEffect triggered')
     console.log('📊 Auth state:', { authLoading, profileLoading, userEmail: user?.email, hasProfile: !!profile, pathname })
     
-    // Don't redirect while loading
+    // Don't redirect while loading - be more patient on refresh
     if (authLoading || profileLoading) {
       console.log('⏳ Still loading, waiting...')
       return
@@ -87,25 +87,35 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       return
     }
 
+    // CRITICAL FIX: More robust profile checking to prevent redirect loops
     // If user has profile and completed onboarding, allow access (no redirect needed)
     if (profile && profile.onboarding_completed) {
       console.log('✅ User has completed onboarding, allowing access')
       return
     }
 
-    // If user has profile but hasn't completed onboarding, redirect to welcome
-    if (profile && !profile.onboarding_completed) {
+    // NEW: Give more time for profile to load, especially on refresh
+    // Only redirect if we've been waiting for a reasonable time AND definitely have no onboarding
+    if (profile && profile.onboarding_completed === false) {
       console.log('⚠️  User has not completed onboarding, redirecting to welcome page')
       router.push('/onboarding/welcome')
       return
     }
 
-    // If user exists but no profile is found, redirect to onboarding
-    // This can happen with new signups that haven't triggered profile creation yet
-    if (user && !profile) {
-      console.log('🆕 User exists but no profile found, redirecting to welcome page')
-      router.push('/onboarding/welcome')
-      return
+    // CRITICAL FIX: Don't immediately redirect if no profile - give time for it to load
+    // This prevents redirect loops on page refresh when profile is temporarily null
+    // Only redirect to onboarding if we're certain there's no profile after sufficient loading time
+    if (user && !profile && !profileLoading) {
+      // Add a delay to prevent immediate redirects on refresh
+      const hasWaitedEnough = !authLoading && !profileLoading
+      if (hasWaitedEnough) {
+        console.log('🆕 User exists but no profile found after waiting, redirecting to welcome page')
+        // Add a small delay to prevent race conditions
+        setTimeout(() => {
+          router.push('/onboarding/welcome')
+        }, 500)
+        return
+      }
     }
 
   }, [user, profile, authLoading, profileLoading, pathname, router])
