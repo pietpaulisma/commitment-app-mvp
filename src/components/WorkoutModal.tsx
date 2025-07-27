@@ -781,8 +781,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           group_id: profile.group_id,
           message: `🎯 Workout completed! ${totalPoints} points achieved`,
           message_type: 'workout_completion',
-          workout_data: workoutData,
-          timestamp: Date.now()
+          workout_data: workoutData
         })
 
       if (error) {
@@ -1002,15 +1001,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
               {/* Regular Progress Background */}
               <div 
-                className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-                style={{ width: `${Math.min(100, Math.max(0, regularPercentage))}%` }}
+                className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-300 ease-out"
+                style={{ 
+                  width: `${Math.min(100, Math.max(0, regularPercentage))}%`,
+                  opacity: isClosing ? 0 : 1
+                }}
               />
               {/* Recovery Progress Background - positioned adjacent to regular progress */}
               <div 
-                className="absolute top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
+                className="absolute top-0 bottom-0 bg-blue-700 transition-all duration-300 ease-out"
                 style={{ 
                   left: `${Math.min(100, Math.max(0, regularPercentage))}%`,
-                  width: `${Math.min(100 - Math.max(0, regularPercentage), recoveryPercentage)}%`
+                  width: `${Math.min(100 - Math.max(0, regularPercentage), recoveryPercentage)}%`,
+                  opacity: isClosing ? 0 : 1
                 }}
               />
               
