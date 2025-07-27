@@ -245,6 +245,40 @@ export default function WorkoutLogger() {
     return total > 0 ? Math.round((recovery / total) * 100) : 0
   }
 
+  // Group and merge duplicate exercises with same weight
+  const getGroupedWorkouts = () => {
+    const grouped = todaysLogs.reduce((acc, log) => {
+      const key = `${log.exercise_id}-${log.weight || 0}`
+      if (!acc[key]) {
+        acc[key] = {
+          ...log,
+          totalCount: log.count || log.duration,
+          totalPoints: log.points,
+          logs: [log]
+        }
+      } else {
+        acc[key].totalCount += (log.count || log.duration)
+        acc[key].totalPoints += log.points
+        acc[key].logs.push(log)
+      }
+      return acc
+    }, {} as Record<string, any>)
+    
+    return Object.values(grouped)
+  }
+
+  const handleWorkoutClick = (workout: any) => {
+    // Find the exercise and set it as selected
+    const exercise = exercises.find(ex => ex.id === workout.exercise_id)
+    if (exercise) {
+      setSelectedExercise(exercise)
+      setQuantity('')
+      setWeight(workout.weight ? workout.weight.toString() : '')
+      // Scroll to top of form
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -264,7 +298,7 @@ export default function WorkoutLogger() {
                 >
                   <option value="">Select an exercise...</option>
                   <optgroup label="Regular Exercises">
-                    {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
+                    {exercises.filter(ex => ex.type !== 'recovery' && ex.type !== 'sports').map(exercise => (
                       <option key={exercise.id} value={exercise.id}>
                         {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
                       </option>
@@ -272,6 +306,13 @@ export default function WorkoutLogger() {
                   </optgroup>
                   <optgroup label="Recovery Exercises">
                     {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
+                      <option key={exercise.id} value={exercise.id}>
+                        {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Sports">
+                    {exercises.filter(ex => ex.type === 'sports').map(exercise => (
                       <option key={exercise.id} value={exercise.id}>
                         {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
                       </option>
@@ -450,18 +491,27 @@ export default function WorkoutLogger() {
               {todaysLogs.length === 0 ? (
                 <p className="text-gray-500 text-sm">No workouts logged yet today</p>
               ) : (
-                todaysLogs.map(log => (
-                  <div key={log.id} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                getGroupedWorkouts().map(workout => (
+                  <div 
+                    key={`${workout.exercise_id}-${workout.weight || 0}`} 
+                    className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 transition-colors rounded px-2"
+                    onClick={() => handleWorkoutClick(workout)}
+                  >
                     <div>
-                      <span className="font-medium">{log.exercises?.name || 'Unknown'}</span>
+                      <span className="font-medium">{workout.exercises?.name || 'Unknown'}</span>
                       <span className="text-sm text-gray-500 ml-2">
-                        {log.count || log.duration} {log.exercises?.unit || ''}
+                        {workout.totalCount} {workout.exercises?.unit || ''}
                       </span>
-                      {log.exercises?.type === 'recovery' && (
+                      {workout.weight > 0 && (
+                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded ml-1">
+                          {workout.weight} kg
+                        </span>
+                      )}
+                      {workout.exercises?.type === 'recovery' && (
                         <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded ml-1">Recovery</span>
                       )}
                     </div>
-                    <span className="font-bold text-green-600">{log.points} pts</span>
+                    <span className="font-bold text-green-600">{workout.totalPoints} pts</span>
                   </div>
                 ))
               )}
