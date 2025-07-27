@@ -7,7 +7,6 @@ import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
-import TimeGradient from './TimeGradient'
 
 // Helper function to convert Tailwind classes to organic gradient styles
 const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'linear') => {
@@ -1132,9 +1131,6 @@ export default function RectangularDashboard() {
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div className="relative overflow-hidden">
-          {/* Dynamic Time Gradient Background */}
-          <TimeGradient className="z-0" />
-          
           {/* Content with more vertical padding */}
           <div className="relative px-4 py-10 z-10">
             <div className="flex items-end justify-between">

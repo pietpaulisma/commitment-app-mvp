@@ -231,7 +231,7 @@ export default function RectangularNavigation() {
       </div>
 
       {/* Mobile Navigation Header */}
-      <nav className="lg:hidden sticky top-0 z-50 relative overflow-hidden shadow-lg">
+      <nav className="lg:hidden sticky top-0 z-50 relative overflow-hidden">
         <TimeGradient className="z-0" />
         <div className="px-4 relative z-10">
           <div className="flex justify-between items-center py-4">
