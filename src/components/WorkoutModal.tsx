@@ -228,6 +228,44 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }
 
+  // Group and merge duplicate exercises with same weight
+  const getGroupedWorkouts = () => {
+    const grouped = todaysWorkouts.reduce((acc, log) => {
+      const key = `${log.exercise_id}-${log.weight || 0}`
+      if (!acc[key]) {
+        acc[key] = {
+          ...log,
+          totalCount: log.count || log.duration,
+          totalPoints: log.points,
+          logs: [log]
+        }
+      } else {
+        acc[key].totalCount += (log.count || log.duration)
+        acc[key].totalPoints += log.points
+        acc[key].logs.push(log)
+      }
+      return acc
+    }, {} as Record<string, any>)
+    
+    return Object.values(grouped)
+  }
+
+  const handleWorkoutClick = (workout: any) => {
+    // Find the exercise and set it as selected
+    const exercise = exercises.find(ex => ex.id === workout.exercise_id)
+    if (exercise) {
+      setSelectedWorkoutExercise(exercise)
+      setWorkoutCount('')
+      setSelectedWeight(workout.weight || 0)
+      setWorkoutInputOpen(true)
+      // Scroll to top of modal
+      const modalElement = document.querySelector('[role="dialog"]')
+      if (modalElement) {
+        modalElement.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+  }
+
   const loadFavoriteExercises = async () => {
     if (!user) return
 
@@ -1061,10 +1099,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 ) : (
                   <>
                     <div className="space-y-0">
-                      {todaysWorkouts.map((workout) => {
+                      {getGroupedWorkouts().map((workout) => {
                           const exerciseProgress = getExerciseProgress(workout.exercise_id)
                           return (
-                            <div key={workout.id} className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
+                            <div 
+                              key={`${workout.exercise_id}-${workout.weight || 0}`} 
+                              className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden cursor-pointer hover:bg-gray-800/30 transition-colors duration-200"
+                              onClick={() => handleWorkoutClick(workout)}
+                            >
                               <div className="flex">
                                 {/* Main content area with progress bar - matches header layout */}
                                 <div className="flex-1 relative overflow-hidden">
@@ -1080,13 +1122,26 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                         {getExerciseIcon(workout.exercises)}
                                         <div>
                                           <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
+                                          <div className="flex items-center space-x-2 mt-1">
+                                            <span className="text-sm text-gray-400">
+                                              {workout.totalCount} {workout.exercises?.unit || ''}
+                                            </span>
+                                            {workout.weight > 0 && (
+                                              <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                                {workout.weight} kg
+                                              </span>
+                                            )}
+                                            {workout.exercises?.type === 'recovery' && (
+                                              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Recovery</span>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
                                       <div className="text-right">
                                         <span className="font-medium text-white">
-                                          {workout.points % 1 === 0 
-                                            ? workout.points 
-                                            : workout.points.toFixed(2)
+                                          {workout.totalPoints % 1 === 0 
+                                            ? workout.totalPoints 
+                                            : workout.totalPoints.toFixed(2)
                                           }
                                         </span>
                                         <span className="font-thin text-white ml-1">pts</span>
@@ -1097,7 +1152,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                                 {/* Delete button - matches header X button layout */}
                                 <button
-                                  onClick={() => handleDeleteWorkout(workout.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    // Delete all logs in this group
+                                    workout.logs.forEach((log: any) => handleDeleteWorkout(log.id))
+                                  }}
                                   className="w-16 flex items-center justify-center hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors duration-200"
                                   aria-label="Delete workout"
                                 >
@@ -1155,58 +1214,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               )}
 
-              {/* Sports List - Collapsible */}
-              <div className="py-3">
-                <button
-                  onClick={() => setSportsExpanded(!sportsExpanded)}
-                  className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
-                >
-                  <div className="flex items-center space-x-3">
-                    <BoltIcon className="w-6 h-6 text-purple-400" />
-                    <h4 className="text-2xl font-bold text-white">Sports</h4>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-400">({sportTypes.length})</span>
-                    <ChevronDownIcon 
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                        sportsExpanded ? 'rotate-180' : ''
-                      }`} 
-                    />
-                  </div>
-                </button>
-                {sportsExpanded && (
-                  <div className="space-y-0 border-t border-gray-800">
-                    {sportTypes.map((sport) => (
-                      <button
-                        key={sport}
-                        onClick={() => {
-                          setSelectedSportType(sport)
-                          setShowSportSelection(true)
-                        }}
-                        className="w-full transition-colors duration-200 relative bg-gray-900/30 border-b border-gray-800 overflow-hidden"
-                      >
-                        <div className="flex">
-                          <div className="flex-1 relative overflow-hidden">
-                            <div className="relative p-4 flex items-center justify-between text-left">
-                              <div className="flex items-center space-x-3">
-                                <span className="text-lg">🏃</span>
-                                <div>
-                                  <div className="font-medium text-white">{sport}</div>
-                                  <div className="text-xs text-gray-400">Tap to log workout</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <button className="w-16 flex items-center justify-center">
-                            <StarIcon className="w-5 h-5 text-gray-500" />
-                          </button>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* All Main Exercises - Collapsible */}
               {allExercises.length > 0 && (
                 <div className="py-3">
@@ -1262,6 +1269,58 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   )}
                 </div>
               )}
+
+              {/* Sports List - Collapsible */}
+              <div className="py-3">
+                <button
+                  onClick={() => setSportsExpanded(!sportsExpanded)}
+                  className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                >
+                  <div className="flex items-center space-x-3">
+                    <BoltIcon className="w-6 h-6 text-purple-400" />
+                    <h4 className="text-2xl font-bold text-white">Sports</h4>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-400">({sportTypes.length})</span>
+                    <ChevronDownIcon 
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                        sportsExpanded ? 'rotate-180' : ''
+                      }`} 
+                    />
+                  </div>
+                </button>
+                {sportsExpanded && (
+                  <div className="space-y-0 border-t border-gray-800">
+                    {sportTypes.map((sport) => (
+                      <button
+                        key={sport}
+                        onClick={() => {
+                          setSelectedSportType(sport)
+                          setShowSportSelection(true)
+                        }}
+                        className="w-full transition-colors duration-200 relative bg-gray-900/30 border-b border-gray-800 overflow-hidden"
+                      >
+                        <div className="flex">
+                          <div className="flex-1 relative overflow-hidden">
+                            <div className="relative p-4 flex items-center justify-between text-left">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-lg">🏃</span>
+                                <div>
+                                  <div className="font-medium text-white">{sport}</div>
+                                  <div className="text-xs text-gray-400">Tap to log workout</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <button className="w-16 flex items-center justify-center">
+                            <StarIcon className="w-5 h-5 text-gray-500" />
+                          </button>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Week Mode Toggle - Bottom Section */}
               {isWeekModeAvailable(groupDaysSinceStart) && (
