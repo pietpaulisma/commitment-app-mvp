@@ -153,22 +153,23 @@ export default function RectangularNavigation() {
   return (
     <>
       {/* Bottom Navigation - Modern Clean Design */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm border-t border-white/10 z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-700 z-50">
         <div className="flex">
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={handleWorkoutButtonClick}
-            className={`flex-1 relative h-16 bg-gray-900/50 border-r border-white/10 overflow-hidden group hover:opacity-90 transition-all duration-500 ease-out ${
+            className={`flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-all duration-500 ease-out ${
               isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
           >
-            {/* Subtle gradient progress indicators */}
+            {/* Regular Progress Background */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-blue-500 to-blue-300 opacity-30 transition-all duration-500 ease-out"
+              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
               style={{ width: `${Math.min(100, Math.max(0, regularPercentage))}%` }}
             />
+            {/* Recovery Progress Background - positioned adjacent to regular progress */}
             <div 
-              className="absolute top-0 bottom-0 bg-gradient-to-r from-blue-400 to-blue-200 opacity-20 transition-all duration-500 ease-out"
+              className="absolute top-0 bottom-0 bg-blue-700 transition-all duration-500 ease-out"
               style={{ 
                 left: `${Math.min(100, Math.max(0, regularPercentage))}%`,
                 width: `${Math.min(100 - Math.max(0, regularPercentage), recoveryPercentage)}%`
@@ -178,22 +179,18 @@ export default function RectangularNavigation() {
             {/* Button Content */}
             <div className="relative h-full flex items-center justify-between px-6 text-white">
               <div className="flex flex-col items-start">
-                <div className="flex items-center space-x-3 bg-black/40 rounded-lg px-3 py-1">
-                  <span className="font-bold text-sm tracking-tight">
-                    {isComplete ? 'Complete!' : 'Log Workout'}
-                  </span>
-                  <span className="text-xs opacity-75 font-medium">
-                    {dailyProgress}/{dailyTarget} pts
-                  </span>
-                </div>
+                <span className="font-bold text-sm tracking-tight uppercase">
+                  {isComplete ? 'Complete!' : 'Log Workout'}
+                </span>
+                <span className="text-xs opacity-75 font-medium">
+                  {dailyProgress}/{dailyTarget} pts
+                </span>
               </div>
               
               <div className="flex flex-col items-end justify-center h-full">
-                <div className="bg-black/40 rounded-lg px-3 py-1">
-                  <span className="text-2xl font-black tracking-tight leading-none">
-                    {Math.round(progressPercentage)}%
-                  </span>
-                </div>
+                <span className="text-3xl font-black tracking-tight leading-none">
+                  {Math.round(progressPercentage)}%
+                </span>
               </div>
             </div>
 
@@ -209,8 +206,8 @@ export default function RectangularNavigation() {
             disabled={!profile.group_id}
             className={`w-16 h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none ${
               profile.group_id 
-                ? 'bg-gray-900/50 hover:bg-gray-800/70 text-gray-300 hover:text-white' 
-                : 'bg-gray-950/50 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
+                : 'bg-gray-950 text-gray-500 cursor-not-allowed'
             } ${
               isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
