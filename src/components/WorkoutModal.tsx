@@ -59,6 +59,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
   const [exercisesLoading, setExercisesLoading] = useState(false)
+  const [isAnimatedIn, setIsAnimatedIn] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(1)
   const [recoveryProgress, setRecoveryProgress] = useState(0)
@@ -86,6 +87,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       loadDailyProgress()
       loadTodaysWorkouts()
       loadFavoriteExercises()
+      
+      // Trigger slide-up animation after component mounts
+      setTimeout(() => {
+        setIsAnimatedIn(true)
+      }, 50)
+    } else if (!isOpen) {
+      setIsAnimatedIn(false)
     }
   }, [isOpen, user, profile?.group_id])
 
@@ -911,10 +919,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const recoveryPercentage = dailyTarget > 0 ? Math.min(25, (recoveryProgress / dailyTarget) * 100) : 0
   const regularPercentage = Math.max(0, progressPercentage - recoveryPercentage)
 
+  if (!isOpen) return null
+
   return (
     <div 
       className={`fixed inset-0 bg-black z-[100] flex flex-col transition-transform duration-500 ease-out ${
-        isOpen ? 'transform translate-y-0' : 'transform translate-y-full'
+        isAnimatedIn ? 'transform translate-y-0' : 'transform translate-y-full'
       }`} 
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
@@ -970,7 +980,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* Chat Icon (slides up and out) */}
               <div 
                 className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out ${
-                  isOpen ? 'transform -translate-y-full' : 'transform translate-y-0'
+                  isAnimatedIn ? 'transform -translate-y-full' : 'transform translate-y-0'
                 }`}
               >
                 <ChatBubbleLeftRightIcon className="w-6 h-6" />
@@ -979,7 +989,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* X Icon (slides up from below) */}
               <div 
                 className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out ${
-                  isOpen ? 'transform translate-y-0' : 'transform translate-y-full'
+                  isAnimatedIn ? 'transform translate-y-0' : 'transform translate-y-full'
                 }`}
               >
                 <XMarkIcon className="w-6 h-6" />
