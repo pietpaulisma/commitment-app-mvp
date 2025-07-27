@@ -15,7 +15,11 @@ import {
   StarIcon,
   RectangleStackIcon,
   FaceSmileIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  ClockIcon,
+  PlayIcon,
+  StopIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
@@ -777,7 +781,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const regularPercentage = Math.max(0, progressPercentage - recoveryPercentage)
 
   return (
-    <div className="fixed inset-0 bg-black z-60 flex flex-col fixed-fullscreen">
+    <div className="fixed inset-0 bg-black z-[100] flex flex-col">
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
         <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex">
@@ -857,77 +861,90 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           
           {!exercisesLoading && exercises.length > 0 && !showSportSelection && (
             <>
-              {/* Week Mode & Stopwatch Section - Only for 300+ day groups */}
-              {weekMode && groupDaysSinceStart >= 300 && (
-                <div className="py-4 border-b border-gray-800">
-                  <div className="px-4 grid grid-cols-2 gap-4">
-                    {/* Week Mode Toggle */}
-                    <div className="bg-gray-900/30 p-4 rounded-lg">
-                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Week Mode</div>
-                      <div className={`text-lg font-bold uppercase ${
-                        weekMode === 'insane' ? 'text-red-400' : 'text-green-400'
-                      }`}>
-                        {weekMode}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {weekMode === 'insane' ? 'Maximum intensity' : 'Balanced approach'}
-                      </div>
-                    </div>
-
-                    {/* Stopwatch */}
-                    <div className="bg-gray-900/30 p-4 rounded-lg">
-                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Stopwatch</div>
-                      <div className="text-lg font-bold text-white font-mono">
-                        00:00
-                      </div>
-                      <button className="text-xs text-orange-400 mt-1 hover:text-orange-300 transition-colors">
-                        Start Timer
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Week Mode and Stopwatch Section */}
               {weekMode && groupDaysSinceStart >= 300 && (
-                <div className="py-4 border-b border-gray-800">
-                  <div className="px-4 grid grid-cols-2 gap-4">
+                <div className="py-6 border-b border-gray-800">
+                  <div className="px-4 space-y-6">
                     {/* Week Mode Toggle */}
                     <div className="bg-gray-900/30 p-4 rounded-lg">
-                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Week Mode</div>
-                      <div className={`text-lg font-bold uppercase ${
-                        weekMode === 'insane' ? 'text-red-400' : 'text-green-400'
-                      }`}>
-                        {weekMode}
+                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
+                      
+                      {/* Horizontal Toggle */}
+                      <div className="relative bg-gray-800 rounded-full p-1 w-full">
+                        <div 
+                          className={`absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out ${
+                            weekMode === 'sane' ? 'left-1 right-1/2' : 'left-1/2 right-1'
+                          } ${
+                            weekMode === 'sane' ? 'bg-green-500' : 'bg-red-500'
+                          }`}
+                        />
+                        
+                        <div className="relative flex">
+                          <button
+                            onClick={() => setWeekMode('sane')}
+                            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
+                              weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                            }`}
+                          >
+                            <MoonIcon className="w-4 h-4" />
+                            <span className="font-medium">Sane</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => setWeekMode('insane')}
+                            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
+                              weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                            }`}
+                          >
+                            <FireIcon className="w-4 h-4" />
+                            <span className="font-medium">Insane</span>
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => setWeekMode(weekMode === 'sane' ? 'insane' : 'sane')}
-                        className="text-xs text-blue-400 mt-1 hover:text-blue-300 transition-colors"
-                      >
-                        Switch to {weekMode === 'sane' ? 'Insane' : 'Sane'}
-                      </button>
                     </div>
                     
                     {/* Stopwatch */}
                     <div className="bg-gray-900/30 p-4 rounded-lg">
-                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Stopwatch</div>
-                      <div className="text-lg font-bold text-white font-mono">{formatStopwatchTime(stopwatchTime)}</div>
-                      <div className="flex space-x-2 mt-2">
+                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-3 flex items-center space-x-2">
+                        <ClockIcon className="w-4 h-4" />
+                        <span>Workout Timer</span>
+                      </div>
+                      
+                      {/* Large Timer Display */}
+                      <div className="text-center mb-4">
+                        <div className="text-4xl font-bold text-white tracking-wide">
+                          {formatStopwatchTime(stopwatchTime)}
+                        </div>
+                      </div>
+                      
+                      {/* Control Buttons */}
+                      <div className="flex space-x-3">
                         <button 
                           onClick={startStopwatch}
-                          className={`text-xs px-2 py-1 rounded transition-colors ${
+                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
                             stopwatchRunning 
-                              ? 'text-red-400 hover:text-red-300' 
-                              : 'text-green-400 hover:text-green-300'
+                              ? 'bg-red-500 hover:bg-red-600 text-white' 
+                              : 'bg-green-500 hover:bg-green-600 text-white'
                           }`}
                         >
-                          {stopwatchRunning ? 'Stop' : 'Start'}
+                          {stopwatchRunning ? (
+                            <>
+                              <StopIcon className="w-4 h-4" />
+                              <span>Stop</span>
+                            </>
+                          ) : (
+                            <>
+                              <PlayIcon className="w-4 h-4" />
+                              <span>Start</span>
+                            </>
+                          )}
                         </button>
+                        
                         <button 
                           onClick={resetStopwatch}
-                          className="text-xs text-gray-400 hover:text-gray-300 transition-colors px-2 py-1 rounded"
+                          className="flex items-center justify-center px-4 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
                         >
-                          Reset
+                          <ArrowPathIcon className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -1293,7 +1310,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
         {/* Workout Input Overlay */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-70 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
             <div className="bg-black border border-gray-800 rounded-lg max-w-sm w-full max-h-[90vh] overflow-y-auto">
               
               {/* Header Section - similar to dashboard style */}
