@@ -187,7 +187,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         `)
         .eq('user_id', user.id)
         .eq('date', today)
-        .order('timestamp', { ascending: false })
+        .order('points', { ascending: false })
 
       setTodaysWorkouts(workouts || [])
     } catch (error) {
