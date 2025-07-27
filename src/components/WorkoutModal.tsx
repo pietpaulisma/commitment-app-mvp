@@ -1121,11 +1121,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                       <div className="flex items-center space-x-3">
                                         {getExerciseIcon(workout.exercises)}
                                         <div>
-                                          <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
-                                          <div className="flex items-center space-x-2 mt-1">
-                                            <span className="text-sm text-gray-400">
-                                              {workout.totalCount} {workout.exercises?.unit || ''}
-                                            </span>
+                                          <div className="font-medium text-white flex items-center space-x-2">
+                                            <span>{workout.exercises?.name || 'Unknown Exercise'}</span>
                                             {workout.weight > 0 && (
                                               <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
                                                 {workout.weight} kg
