@@ -61,6 +61,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [exercisesLoading, setExercisesLoading] = useState(false)
   const [isAnimatedIn, setIsAnimatedIn] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [showIconTransition, setShowIconTransition] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
   const [dailyTarget, setDailyTarget] = useState(1)
   const [recoveryProgress, setRecoveryProgress] = useState(0)
@@ -94,17 +95,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       setTimeout(() => {
         console.log('Setting isAnimatedIn to true')
         setIsAnimatedIn(true)
+        
+        // Delay icon transition until modal reaches the top (cherry on the cake!)
+        setTimeout(() => {
+          console.log('Starting icon transition - chat pushed out by X')
+          setShowIconTransition(true)
+        }, 400) // Start icon transition near end of modal slide-up
       }, 100) // Increased delay to be more visible
     } else if (!isOpen) {
       console.log('Setting isAnimatedIn to false')
       setIsAnimatedIn(false)
       setIsClosing(false)
+      setShowIconTransition(false)
     }
   }, [isOpen, user, profile?.group_id])
 
   const handleClose = () => {
     console.log('Starting close animation')
     setIsClosing(true)
+    setShowIconTransition(false) // Reset icons first
     setIsAnimatedIn(false)
     
     // Wait for animation to complete, then actually close
@@ -997,21 +1006,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
               aria-label="Close workout log"
             >
-              {/* Chat Icon (slides up and out on open, slides down on close) */}
+              {/* Chat Icon (slides up and out when modal reaches top) */}
               <div 
-                className="absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out"
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
                 style={{
-                  transform: isAnimatedIn && !isClosing ? 'translateY(-64px)' : 'translateY(0px)'
+                  transform: showIconTransition ? 'translateY(-64px)' : 'translateY(0px)'
                 }}
               >
                 <ChatBubbleLeftRightIcon className="w-6 h-6" />
               </div>
               
-              {/* X Icon (slides up from below on open, slides down on close) */}
+              {/* X Icon (slides up from below when modal reaches top) */}
               <div 
-                className="absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out"
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
                 style={{
-                  transform: isAnimatedIn && !isClosing ? 'translateY(0px)' : 'translateY(64px)'
+                  transform: showIconTransition ? 'translateY(0px)' : 'translateY(64px)'
                 }}
               >
                 <XMarkIcon className="w-6 h-6" />
