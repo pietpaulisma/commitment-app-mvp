@@ -27,8 +27,25 @@ export default function RectangularNavigation() {
   const [recoveryProgress, setRecoveryProgress] = useState(0)
   const [accentColor, setAccentColor] = useState('blue')
   const [groupName, setGroupName] = useState('')
+  const [isAnimating, setIsAnimating] = useState(false)
 
   const isOnProfilePage = pathname === '/profile'
+
+  const handleWorkoutButtonClick = () => {
+    setIsAnimating(true)
+    // Small delay to ensure animation state is set before opening modal
+    setTimeout(() => {
+      setIsWorkoutOpen(true)
+    }, 50)
+  }
+
+  const handleWorkoutClose = () => {
+    setIsWorkoutOpen(false)
+    // Reset animation state after modal closes
+    setTimeout(() => {
+      setIsAnimating(false)
+    }, 300)
+  }
 
   useEffect(() => {
     if (user && profile) {
@@ -139,8 +156,10 @@ export default function RectangularNavigation() {
         <div className="flex">
           {/* Progress Bar Button (80% width) */}
           <button
-            onClick={() => setIsWorkoutOpen(true)}
-            className={`flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-opacity duration-200`}
+            onClick={handleWorkoutButtonClick}
+            className={`flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-all duration-500 ease-out ${
+              isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
+            }`}
           >
             {/* Regular Progress Background */}
             <div 
@@ -184,10 +203,12 @@ export default function RectangularNavigation() {
           <button
             onClick={() => setIsChatOpen(true)}
             disabled={!profile.group_id}
-            className={`w-16 h-16 flex items-center justify-center transition-colors duration-200 rounded-none ${
+            className={`w-16 h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none ${
               profile.group_id 
                 ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
                 : 'bg-gray-950 text-gray-500 cursor-not-allowed'
+            } ${
+              isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
           >
             <ChatBubbleLeftRightIcon className="w-6 h-6" />
@@ -256,8 +277,9 @@ export default function RectangularNavigation() {
       {/* Workout Modal */}
       <WorkoutModal 
         isOpen={isWorkoutOpen} 
-        onClose={() => setIsWorkoutOpen(false)}
+        onClose={handleWorkoutClose}
         onWorkoutAdded={loadDailyProgress}
+        isAnimating={isAnimating}
       />
     </>
   )

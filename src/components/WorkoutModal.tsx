@@ -19,7 +19,8 @@ import {
   FaceSmileIcon,
   CalendarDaysIcon,
   TrashIcon,
-  Bars3Icon
+  Bars3Icon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
@@ -45,9 +46,10 @@ type WorkoutModalProps = {
   isOpen: boolean
   onClose: () => void
   onWorkoutAdded?: () => void
+  isAnimating?: boolean
 }
 
-export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: WorkoutModalProps) {
+export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimating = false }: WorkoutModalProps) {
   const { user } = useAuth()
   const { profile } = useProfile()
   const { weekMode, setWeekMode, isWeekModeAvailable } = useWeekMode()
@@ -910,7 +912,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const regularPercentage = Math.max(0, progressPercentage - recoveryPercentage)
 
   return (
-    <div className="fixed inset-0 bg-black z-[100] flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div 
+      className={`fixed inset-0 bg-black z-[100] flex flex-col transition-transform duration-500 ease-out ${
+        isOpen ? 'transform translate-y-0' : 'transform translate-y-full'
+      }`} 
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
         <div className="sticky top-0">
           <div className="flex">
@@ -954,13 +961,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
               )}
             </div>
 
-            {/* X Button */}
+            {/* Chat → X Button Transition */}
             <button
               onClick={onClose}
-              className="w-16 h-16 bg-gray-900 border-l border-gray-700 flex items-center justify-center hover:bg-gray-800 text-gray-400 hover:text-white transition-colors duration-200"
+              className="w-16 h-16 bg-gray-900 border-l border-gray-700 flex items-center justify-center hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
               aria-label="Close workout log"
             >
-              <XMarkIcon className="w-6 h-6" />
+              {/* Chat Icon (slides up and out) */}
+              <div 
+                className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out ${
+                  isOpen ? 'transform -translate-y-full' : 'transform translate-y-0'
+                }`}
+              >
+                <ChatBubbleLeftRightIcon className="w-6 h-6" />
+              </div>
+              
+              {/* X Icon (slides up from below) */}
+              <div 
+                className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out ${
+                  isOpen ? 'transform translate-y-0' : 'transform translate-y-full'
+                }`}
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </div>
             </button>
           </div>
         </div>
