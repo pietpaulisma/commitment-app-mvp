@@ -669,10 +669,14 @@ export default function RectangularDashboard() {
         .single()
 
       // Calculate today's target
-      let dailyTarget = 100 // Default fallback
+      let dailyTarget = 1 // Default fallback (base target = 1)
       if (groupSettings && group?.start_date) {
         const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
         dailyTarget = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+      } else if (group?.start_date) {
+        // Use correct formula even without group settings
+        const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+        dailyTarget = 1 + Math.max(0, daysSinceStart)
       }
 
       // Get today's logs for all members in one query

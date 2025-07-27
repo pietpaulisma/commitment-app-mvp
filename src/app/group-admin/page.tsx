@@ -45,6 +45,7 @@ type GroupSettings = {
   rest_days: number[]
   recovery_days: number[]
   accent_color: string
+  week_mode?: 'sane' | 'insane'
 }
 
 export default function GroupAdminDashboard() {
@@ -60,7 +61,7 @@ export default function GroupAdminDashboard() {
   const [settingsLoading, setSettingsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
   const [editingSettings, setEditingSettings] = useState(false)
-  const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string }>>({})
+  const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string; week_mode?: 'sane' | 'insane' }>>({})
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -196,7 +197,8 @@ export default function GroupAdminDashboard() {
   const startEditingSettings = () => {
     if (group) {
       setSettingsForm({
-        start_date: group.start_date
+        start_date: group.start_date,
+        week_mode: groupSettings?.week_mode || 'sane' // Default to sane mode
       })
     }
     setEditingSettings(true)
@@ -223,12 +225,52 @@ export default function GroupAdminDashboard() {
 
       if (groupError) throw groupError
 
-      // Reload group data to get updated values
-      await loadGroupData()
+      // Update or create group_settings for week_mode (if applicable)
+      if (settingsForm.week_mode) {
+        // Check if group_settings exists
+        const { data: existingSettings } = await supabase
+          .from('group_settings')
+          .select('id')
+          .eq('group_id', group.id)
+          .maybeSingle()
+
+        if (existingSettings) {
+          // Update existing settings
+          const { error: settingsError } = await supabase
+            .from('group_settings')
+            .update({
+              week_mode: settingsForm.week_mode,
+              updated_at: new Date().toISOString()
+            })
+            .eq('group_id', group.id)
+
+          if (settingsError) throw settingsError
+        } else {
+          // Create new settings record
+          const { error: createError } = await supabase
+            .from('group_settings')
+            .insert({
+              group_id: group.id,
+              daily_target_base: 1,
+              daily_increment: 1,
+              penalty_amount: 10,
+              recovery_percentage: 25,
+              rest_days: [1], // Monday
+              recovery_days: [5], // Friday
+              accent_color: 'blue',
+              week_mode: settingsForm.week_mode
+            })
+
+          if (createError) throw createError
+        }
+      }
+
+      // Reload group data and settings to get updated values
+      await Promise.all([loadGroupData(), loadGroupSettings()])
       setEditingSettings(false)
       setSettingsForm({})
       
-      alert('Group start date updated successfully!')
+      alert('Group settings updated successfully!')
     } catch (error) {
       console.error('Error saving group settings:', error)
       alert('Failed to save settings: ' + (error instanceof Error ? error.message : 'Unknown error'))
@@ -535,34 +577,45 @@ export default function GroupAdminDashboard() {
                             <div className="text-gray-400 uppercase tracking-wide">Members</div>
                             <div className="font-semibold text-lg text-white">{members.length} members</div>
                           </div>
+                          {(() => {
+                            const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
+                            return daysSinceStart >= 300;
+                          })() && (
+                            <div>
+                              <div className="text-gray-400 uppercase tracking-wide">Week Mode</div>
+                              <div className={`font-semibold text-lg ${
+                                groupSettings?.week_mode === 'insane' ? 'text-red-400' : 'text-green-400'
+                              }`}>
+                                {(groupSettings?.week_mode || 'sane').toUpperCase()}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
 
                     {/* Current Target Information */}
-                    {groupSettings && group && (
+                    {group && (
                       <div className="bg-blue-900/50 border border-blue-700 p-4">
-                        <h4 className="text-md font-medium text-white mb-3">Current Target Information</h4>
+                        <h4 className="text-md font-medium text-white mb-3">Target System</h4>
                         <div className="text-sm text-gray-400 mb-3">
-                          Target calculation is based on the group start date and daily progression
+                          Daily targets increase by 1 point each day since group start date
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
                             <div className="text-xs text-gray-400 uppercase tracking-wide">Today's Target</div>
                             <div className="font-bold text-xl text-white">
                               {(() => {
                                 const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
-                                return groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart));
+                                return 1 + Math.max(0, daysSinceStart);
                               })()}pts
                             </div>
                           </div>
                           <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Base Target</div>
-                            <div className="font-bold text-xl text-white">{groupSettings.daily_target_base}pts</div>
-                          </div>
-                          <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Daily Increase</div>
-                            <div className="font-bold text-xl text-white">+{groupSettings.daily_increment}pts</div>
+                            <div className="text-xs text-gray-400 uppercase tracking-wide">Challenge Day</div>
+                            <div className="font-bold text-xl text-white">
+                              Day {Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -600,7 +653,7 @@ export default function GroupAdminDashboard() {
                         </div>
 
                         {editingSettings ? (
-                          <div className="max-w-md">
+                          <div className="space-y-6 max-w-md">
                             <div>
                               <label className="block text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">
                                 Group Start Date
@@ -618,6 +671,49 @@ export default function GroupAdminDashboard() {
                                 Changing this will affect the challenge day calculation and daily targets for all members
                               </p>
                             </div>
+
+                            {/* Week Mode Toggle for 300+ day groups */}
+                            {group && (() => {
+                              const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
+                              return daysSinceStart >= 300;
+                            })() && (
+                              <div>
+                                <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wide">
+                                  Week Mode (Unlocked after 300 days)
+                                </label>
+                                <div className="bg-gray-800/50 border border-gray-700 p-4 rounded">
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSettingsForm(prev => ({ ...prev, week_mode: 'sane' }))}
+                                      className={`p-3 text-center border transition-colors ${
+                                        (settingsForm.week_mode || 'sane') === 'sane'
+                                          ? 'border-green-500 bg-green-900/30 text-green-400'
+                                          : 'border-gray-600 bg-gray-800/30 text-gray-400 hover:border-gray-500'
+                                      }`}
+                                    >
+                                      <div className="font-bold text-lg">SANE</div>
+                                      <div className="text-xs mt-1">Balanced approach</div>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setSettingsForm(prev => ({ ...prev, week_mode: 'insane' }))}
+                                      className={`p-3 text-center border transition-colors ${
+                                        (settingsForm.week_mode || 'sane') === 'insane'
+                                          ? 'border-red-500 bg-red-900/30 text-red-400'
+                                          : 'border-gray-600 bg-gray-800/30 text-gray-400 hover:border-gray-500'
+                                      }`}
+                                    >
+                                      <div className="font-bold text-lg">INSANE</div>
+                                      <div className="text-xs mt-1">Maximum intensity</div>
+                                    </button>
+                                  </div>
+                                  <p className="text-xs text-gray-500 mt-3">
+                                    Week mode affects how targets are calculated and progress is tracked for experienced groups
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="text-center py-8 text-gray-400">

@@ -111,7 +111,7 @@ export default function MobileTargets() {
 
         // Use group start date instead of profile creation date
         const daysSinceStart = Math.floor((date.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
-        const target = settings ? settings.daily_target_base + (settings.daily_increment * Math.max(0, daysSinceStart)) : 100
+        const target = settings ? settings.daily_target_base + (settings.daily_increment * Math.max(0, daysSinceStart)) : 1 + Math.max(0, daysSinceStart)
 
         const checkin = checkins?.find(c => c.date === dateString)
         

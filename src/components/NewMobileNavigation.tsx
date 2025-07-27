@@ -27,7 +27,7 @@ export default function NewMobileNavigation() {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
-  const [dailyTarget, setDailyTarget] = useState(100)
+  const [dailyTarget, setDailyTarget] = useState(1)
 
   useEffect(() => {
     if (user && profile) {
@@ -50,8 +50,8 @@ export default function NewMobileNavigation() {
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target
-      let target = 100
+      // Get today's target using correct formula
+      let target = 1 // Default base target
       if (profile.group_id) {
         const { data: groupSettings, error: settingsError } = await supabase
           .from('group_settings')
@@ -63,19 +63,22 @@ export default function NewMobileNavigation() {
           console.log('Error loading group settings:', settingsError)
         }
 
-        if (groupSettings) {
-          // Get group start date for proper target calculation
-          const { data: group, error: groupError } = await supabase
-            .from('groups')
-            .select('start_date')
-            .eq('id', profile.group_id)
-            .single()
+        // Get group start date for proper target calculation
+        const { data: group, error: groupError } = await supabase
+          .from('groups')
+          .select('start_date')
+          .eq('id', profile.group_id)
+          .single()
 
-          const daysSinceStart = group?.start_date 
-            ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-            : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
+        if (group?.start_date) {
+          const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
           
-          target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+          if (groupSettings) {
+            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+          } else {
+            // Use correct formula even without group settings
+            target = 1 + Math.max(0, daysSinceStart)
+          }
         }
       }
 
