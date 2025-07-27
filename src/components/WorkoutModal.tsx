@@ -820,36 +820,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   }
 
   const saveWeekMode = async (mode: 'sane' | 'insane') => {
-    if (!profile?.group_id) return
-    
-    try {
-      // First try to update existing record
-      const { error: updateError } = await supabase
-        .from('group_settings')
-        .update({ week_mode: mode })
-        .eq('group_id', profile.group_id)
-      
-      // If no rows were updated, create a new record
-      if (updateError || updateError?.code === 'PGRST116') {
-        const { error: insertError } = await supabase
-          .from('group_settings')
-          .insert({
-            group_id: profile.group_id,
-            week_mode: mode,
-            rest_days: [1],
-            recovery_days: [5],
-            accent_color: 'blue'
-          })
-        
-        if (insertError) {
-          console.error('Error inserting week mode:', insertError)
-        }
-      } else if (updateError) {
-        console.error('Error updating week mode:', updateError)
-      }
-    } catch (error) {
-      console.error('Error saving week mode:', error)
-    }
+    // Temporarily disabled database save until week_mode column is added
+    // Just use local state for now
+    console.log('Week mode changed to:', mode)
   }
 
   const handleSportSubmit = async (e: React.FormEvent) => {
