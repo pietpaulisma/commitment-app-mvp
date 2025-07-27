@@ -11,7 +11,10 @@ import {
   ChatBubbleLeftRightIcon,
   FaceSmileIcon,
   HeartIcon,
-  HandThumbUpIcon
+  HandThumbUpIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  TrophyIcon
 } from '@heroicons/react/24/outline'
 import { 
   HeartIcon as HeartIconSolid,
@@ -24,8 +27,9 @@ type ChatMessage = {
   group_id: string
   user_id: string
   message: string
-  message_type?: 'text' | 'image'
+  message_type?: 'text' | 'image' | 'workout_completion'
   image_url?: string
+  workout_data?: any
   created_at: string
   user_email?: string
   user_role?: string
@@ -50,6 +54,104 @@ type EmojiOption = {
 type GroupChatProps = {
   isOpen: boolean
   onClose: () => void
+}
+
+type WorkoutCompletionMessageProps = {
+  message: ChatMessage
+  workoutData: any
+}
+
+const WorkoutCompletionMessage = ({ message, workoutData }: WorkoutCompletionMessageProps) => {
+  const [isExpanded, setIsExpanded] = useState(false)
+  
+  if (!workoutData) return null
+  
+  const progressPercentage = workoutData.target_points > 0 
+    ? Math.min(100, (workoutData.total_points / workoutData.target_points) * 100)
+    : 0
+
+  return (
+    <div className="workout-completion-message">
+      {/* Main completion header */}
+      <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-lg p-4 border border-green-500/30">
+        <div className="flex items-center space-x-3 mb-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+            <TrophyIcon className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-green-400 text-sm">Workout Completed! 🎉</div>
+            <div className="text-xs text-gray-400">
+              {workoutData.user_email?.split('@')[0] || 'User'} crushed their target
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-bold text-white">{workoutData.total_points}</div>
+            <div className="text-xs text-gray-400">points</div>
+          </div>
+        </div>
+        
+        {/* Progress bar */}
+        <div className="w-full bg-gray-700 rounded-full h-2 mb-3">
+          <div 
+            className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+            style={{ width: `${Math.min(100, progressPercentage)}%` }}
+          />
+        </div>
+        
+        <div className="flex items-center justify-between text-xs text-gray-300">
+          <span>Target: {workoutData.target_points} pts</span>
+          <span>{Math.round(progressPercentage)}% completed</span>
+        </div>
+        
+        {/* Expand/collapse button */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full mt-3 flex items-center justify-center space-x-2 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+        >
+          <span>{isExpanded ? 'Hide' : 'Show'} workout details</span>
+          {isExpanded ? (
+            <ChevronUpIcon className="w-4 h-4" />
+          ) : (
+            <ChevronDownIcon className="w-4 h-4" />
+          )}
+        </button>
+      </div>
+      
+      {/* Expanded details */}
+      {isExpanded && (
+        <div className="mt-3 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+          <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Exercises Completed</div>
+          <div className="space-y-2">
+            {Object.entries(workoutData.exercises || {}).map(([exerciseName, exerciseData]: [string, any]) => (
+              <div key={exerciseName} className="flex items-center justify-between py-2 px-3 bg-gray-900/50 rounded">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-sm text-white font-medium">{exerciseName}</span>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-white">
+                    {exerciseData.count} {exerciseData.unit}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {exerciseData.points} pts
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-4 pt-3 border-t border-gray-700">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-400">Completed at</span>
+              <span className="text-sm text-white">
+                {new Date(workoutData.completed_at).toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
@@ -605,9 +707,17 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                         />
                       </div>
                     )}
+
+                    {/* Workout Completion Message */}
+                    {message.message_type === 'workout_completion' && message.workout_data && (
+                      <WorkoutCompletionMessage 
+                        message={message}
+                        workoutData={message.workout_data}
+                      />
+                    )}
                     
                     {/* Text content */}
-                    {message.message && (
+                    {message.message && message.message_type !== 'workout_completion' && (
                       <div className="text-sm whitespace-pre-wrap break-words">
                         {message.message}
                       </div>

@@ -602,6 +602,80 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
+  const handleSubmitToGroup = async () => {
+    if (!user || !profile?.group_id || !todaysWorkouts.length) return
+
+    try {
+      setLoading(true)
+      
+      // Calculate total points
+      const totalPoints = todaysWorkouts.reduce((sum, workout) => sum + workout.points, 0)
+      
+      // Group exercises by type for better presentation
+      const exercisesSummary = todaysWorkouts.reduce((acc: any, workout) => {
+        const exerciseName = workout.exercises?.name || 'Unknown Exercise'
+        if (acc[exerciseName]) {
+          acc[exerciseName].count += workout.count || workout.duration || 1
+          acc[exerciseName].points += workout.points
+        } else {
+          acc[exerciseName] = {
+            count: workout.count || workout.duration || 1,
+            points: workout.points,
+            unit: workout.exercises?.unit || 'rep',
+            isTimeBased: workout.exercises?.is_time_based || false
+          }
+        }
+        return acc
+      }, {})
+      
+      // Create workout completion message
+      const workoutData = {
+        user_id: user.id,
+        user_email: profile.email,
+        total_points: totalPoints,
+        target_points: dailyTarget,
+        exercises: exercisesSummary,
+        workout_date: new Date().toISOString().split('T')[0],
+        completed_at: new Date().toISOString()
+      }
+      
+      // Insert into chat as a special workout completion message
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          user_id: user.id,
+          group_id: profile.group_id,
+          message: `🎯 Workout completed! ${totalPoints} points achieved`,
+          message_type: 'workout_completion',
+          workout_data: workoutData,
+          timestamp: Date.now()
+        })
+
+      if (error) {
+        console.error('Error submitting to group:', error)
+        alert('Error submitting workout to group chat')
+      } else {
+        // Success feedback
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100])
+        }
+        
+        // Show success message
+        alert('🎉 Workout submitted to group chat!')
+        
+        // Optionally close modal after submission
+        setTimeout(() => {
+          onClose()
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Error submitting workout:', error)
+      alert('An error occurred while submitting your workout.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const quickAddExercise = (exercise: ExerciseWithProgress, defaultQuantity: number = 10) => {
     // Check if exercise is a sport type (Light Sport, Medium Sport, Intense Sport) for sport selection
     if (exercise.type === 'sport' || exercise.name.toLowerCase().includes('sport')) {
@@ -819,41 +893,58 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-0 border-t border-gray-800">
-                    {todaysWorkouts.map((workout) => {
-                        const exerciseProgress = getExerciseProgress(workout.exercise_id)
-                        return (
-                          <div key={workout.id} className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
-                            {/* Progress bar background */}
-                            <div 
-                              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-                              style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
-                            />
-                            
-                            <div className="relative p-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                  {getExerciseIcon(workout.exercises)}
-                                  <div>
-                                    <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
+                  <>
+                    <div className="space-y-0 border-t border-gray-800">
+                      {todaysWorkouts.map((workout) => {
+                          const exerciseProgress = getExerciseProgress(workout.exercise_id)
+                          return (
+                            <div key={workout.id} className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
+                              {/* Progress bar background */}
+                              <div 
+                                className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+                                style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+                              />
+                              
+                              <div className="relative p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    {getExerciseIcon(workout.exercises)}
+                                    <div>
+                                      <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="text-right min-w-[80px]">
-                                  <span className="font-medium text-white">
-                                    {workout.points % 1 === 0 
-                                      ? workout.points 
-                                      : workout.points.toFixed(2)
-                                    }
-                                  </span>
-                                  <span className="font-thin text-white ml-1">pts</span>
+                                  <div className="text-right min-w-[80px]">
+                                    <span className="font-medium text-white">
+                                      {workout.points % 1 === 0 
+                                        ? workout.points 
+                                        : workout.points.toFixed(2)
+                                      }
+                                    </span>
+                                    <span className="font-thin text-white ml-1">pts</span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
                     </div>
-                  )}
+
+                    {/* Submit to Group Button - appears when target is reached */}
+                    {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && (
+                      <div className="px-4 py-4">
+                        <button
+                          onClick={handleSubmitToGroup}
+                          className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                        >
+                          🎉 Submit to Group Chat
+                        </button>
+                        <p className="text-center text-sm text-gray-400 mt-2">
+                          Share your completed workout with the group!
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* Favorites Section - Collapsible */}
