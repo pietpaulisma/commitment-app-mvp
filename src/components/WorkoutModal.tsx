@@ -128,8 +128,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             
             // Apply week mode logic for groups 448+ days old
             if (daysSinceStart >= 448 && weekMode === 'sane') {
-              // Sane mode: reduced target (roughly -108 from insane mode)
-              target = Math.max(1, target - 108)
+              // Sane mode: weekly progression starting from day 448
+              target = 448 + Math.floor((daysSinceStart - 448) / 7)
             }
             // Insane mode continues with daily progression (current behavior)
             
