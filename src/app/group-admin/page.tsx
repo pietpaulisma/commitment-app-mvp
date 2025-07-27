@@ -60,7 +60,7 @@ export default function GroupAdminDashboard() {
   const [settingsLoading, setSettingsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
   const [editingSettings, setEditingSettings] = useState(false)
-  const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings>>({})
+  const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string }>>({})
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -194,12 +194,9 @@ export default function GroupAdminDashboard() {
   }
 
   const startEditingSettings = () => {
-    if (groupSettings) {
+    if (group) {
       setSettingsForm({
-        daily_target_base: groupSettings.daily_target_base,
-        daily_increment: groupSettings.daily_increment,
-        penalty_amount: groupSettings.penalty_amount,
-        recovery_percentage: groupSettings.recovery_percentage
+        start_date: group.start_date
       })
     }
     setEditingSettings(true)
@@ -216,25 +213,22 @@ export default function GroupAdminDashboard() {
     try {
       setSettingsLoading(true)
       
-      const { error } = await supabase
-        .from('group_settings')
+      // Update the group's start_date
+      const { error: groupError } = await supabase
+        .from('groups')
         .update({
-          daily_target_base: settingsForm.daily_target_base,
-          daily_increment: settingsForm.daily_increment,
-          penalty_amount: settingsForm.penalty_amount,
-          recovery_percentage: settingsForm.recovery_percentage,
-          updated_at: new Date().toISOString()
+          start_date: settingsForm.start_date
         })
-        .eq('group_id', group.id)
+        .eq('id', group.id)
 
-      if (error) throw error
+      if (groupError) throw groupError
 
-      // Reload settings to get updated values
-      await loadGroupSettings()
+      // Reload group data to get updated values
+      await loadGroupData()
       setEditingSettings(false)
       setSettingsForm({})
       
-      alert('Group settings updated successfully!')
+      alert('Group start date updated successfully!')
     } catch (error) {
       console.error('Error saving group settings:', error)
       alert('Failed to save settings: ' + (error instanceof Error ? error.message : 'Unknown error'))
@@ -518,95 +512,73 @@ export default function GroupAdminDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Current Settings Display */}
-                    {groupSettings ? (
+                    {/* Current Group Information */}
+                    {group && (
                       <div className="bg-gray-800/50 border border-gray-700 p-4">
-                        <h4 className="text-md font-medium text-white mb-3">Current Settings</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                        <h4 className="text-md font-medium text-white mb-3">Group Information</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                           <div>
-                            <div className="text-gray-400 uppercase tracking-wide">Base Target</div>
-                            <div className="font-semibold text-lg text-white">{groupSettings.daily_target_base} pts</div>
+                            <div className="text-gray-400 uppercase tracking-wide">Group Name</div>
+                            <div className="font-semibold text-lg text-white">{group.name}</div>
                           </div>
                           <div>
-                            <div className="text-gray-400 uppercase tracking-wide">Daily Increment</div>
-                            <div className="font-semibold text-lg text-white">+{groupSettings.daily_increment} pts/day</div>
+                            <div className="text-gray-400 uppercase tracking-wide">Start Date</div>
+                            <div className="font-semibold text-lg text-white">{new Date(group.start_date).toLocaleDateString()}</div>
                           </div>
                           <div>
-                            <div className="text-gray-400 uppercase tracking-wide">Penalty Amount</div>
-                            <div className="font-semibold text-lg text-white">${groupSettings.penalty_amount}</div>
-                          </div>
-                          <div>
-                            <div className="text-gray-400 uppercase tracking-wide">Recovery Percentage</div>
-                            <div className="font-semibold text-lg text-white">{groupSettings.recovery_percentage}%</div>
-                          </div>
-                          <div>
-                            <div className="text-gray-400 uppercase tracking-wide">Rest Days</div>
+                            <div className="text-gray-400 uppercase tracking-wide">Challenge Day</div>
                             <div className="font-semibold text-lg text-white">
-                              {groupSettings.rest_days?.length > 0 
-                                ? groupSettings.rest_days.map(day => {
-                                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                                    return days[day];
-                                  }).join(', ')
-                                : 'None'
-                              }
+                              Day {Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1}
                             </div>
                           </div>
                           <div>
-                            <div className="text-gray-400 uppercase tracking-wide">Accent Color</div>
-                            <div className="flex items-center space-x-2">
-                              <div 
-                                className="w-4 h-4"
-                                style={{ backgroundColor: groupSettings.accent_color }}
-                              ></div>
-                              <div className="font-semibold text-white">{groupSettings.accent_color}</div>
-                            </div>
+                            <div className="text-gray-400 uppercase tracking-wide">Members</div>
+                            <div className="font-semibold text-lg text-white">{members.length} members</div>
                           </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-yellow-900/50 border border-yellow-700 p-4">
-                        <div className="text-yellow-400">
-                          <h4 className="font-medium">No Group Settings Found</h4>
-                          <p className="text-sm mt-1">
-                            Default settings will be used. You can create custom settings below.
-                          </p>
                         </div>
                       </div>
                     )}
 
-                    {/* Target Preview */}
-                    {groupSettings && (
+                    {/* Current Target Information */}
+                    {groupSettings && group && (
                       <div className="bg-blue-900/50 border border-blue-700 p-4">
-                        <h4 className="text-md font-medium text-white mb-3">Target Progression Preview</h4>
+                        <h4 className="text-md font-medium text-white mb-3">Current Target Information</h4>
                         <div className="text-sm text-gray-400 mb-3">
-                          Shows how daily targets increase over the first 10 days:
+                          Target calculation is based on the group start date and daily progression
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                          {Array.from({ length: 10 }, (_, i) => {
-                            const day = i + 1;
-                            const target = groupSettings.daily_target_base + (groupSettings.daily_increment * i);
-                            return (
-                              <div key={day} className="text-center p-2 bg-gray-800/50 border border-gray-700">
-                                <div className="text-xs text-gray-400">Day {day}</div>
-                                <div className="font-medium text-white">{target}pts</div>
-                              </div>
-                            );
-                          })}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
+                            <div className="text-xs text-gray-400 uppercase tracking-wide">Today's Target</div>
+                            <div className="font-bold text-xl text-white">
+                              {(() => {
+                                const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
+                                return groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart));
+                              })()}pts
+                            </div>
+                          </div>
+                          <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
+                            <div className="text-xs text-gray-400 uppercase tracking-wide">Base Target</div>
+                            <div className="font-bold text-xl text-white">{groupSettings.daily_target_base}pts</div>
+                          </div>
+                          <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
+                            <div className="text-xs text-gray-400 uppercase tracking-wide">Daily Increase</div>
+                            <div className="font-bold text-xl text-white">+{groupSettings.daily_increment}pts</div>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {/* Edit Settings Form */}
-                    {groupSettings && (
+                    {group && (
                       <div className="space-y-6">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                          <h4 className="text-lg font-semibold text-white">Edit Settings</h4>
+                          <h4 className="text-lg font-semibold text-white">Edit Group Start Date</h4>
                           {!editingSettings ? (
                             <button
                               onClick={startEditingSettings}
                               className="bg-orange-600 text-white px-4 py-2 hover:bg-orange-700 transition-colors"
                             >
-                              Edit Settings
+                              Edit Start Date
                             </button>
                           ) : (
                             <div className="flex space-x-2">
@@ -628,84 +600,29 @@ export default function GroupAdminDashboard() {
                         </div>
 
                         {editingSettings ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="max-w-md">
                             <div>
                               <label className="block text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">
-                                Base Target (points)
+                                Group Start Date
                               </label>
                               <input
-                                type="number"
-                                min="0"
-                                value={settingsForm.daily_target_base || ''}
+                                type="date"
+                                value={settingsForm.start_date || ''}
                                 onChange={(e) => setSettingsForm(prev => ({
                                   ...prev,
-                                  daily_target_base: parseInt(e.target.value) || 0
+                                  start_date: e.target.value
                                 }))}
                                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                placeholder="e.g., 100"
                               />
-                              <p className="text-sm text-gray-400 mt-1">Starting target for Day 1</p>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">
-                                Daily Increment (points)
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                value={settingsForm.daily_increment || ''}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  daily_increment: parseInt(e.target.value) || 0
-                                }))}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                placeholder="e.g., 25"
-                              />
-                              <p className="text-sm text-gray-400 mt-1">Points added each day</p>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">
-                                Penalty Amount ($)
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={settingsForm.penalty_amount || ''}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  penalty_amount: parseFloat(e.target.value) || 0
-                                }))}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                placeholder="e.g., 10.00"
-                              />
-                              <p className="text-sm text-gray-400 mt-1">Penalty for missing daily target</p>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">
-                                Recovery Percentage (%)
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={settingsForm.recovery_percentage || ''}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  recovery_percentage: parseInt(e.target.value) || 0
-                                }))}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                placeholder="e.g., 25"
-                              />
-                              <p className="text-sm text-gray-400 mt-1">Recovery exercise bonus percentage</p>
+                              <p className="text-sm text-gray-400 mt-1">
+                                Changing this will affect the challenge day calculation and daily targets for all members
+                              </p>
                             </div>
                           </div>
                         ) : (
                           <div className="text-center py-8 text-gray-400">
-                            <p>Click "Edit Settings" to modify group settings</p>
+                            <p>Click "Edit Start Date" to modify when your group's challenge began</p>
+                            <p className="text-sm mt-2">Note: This will affect daily target calculations for all members</p>
                           </div>
                         )}
                       </div>
