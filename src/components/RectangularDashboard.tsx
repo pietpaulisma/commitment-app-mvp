@@ -7,6 +7,7 @@ import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
+import TimeGradient from './TimeGradient'
 
 type RecentChat = {
   id: string
@@ -1107,17 +1108,12 @@ export default function RectangularDashboard() {
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="bg-black border-b border-gray-800 relative overflow-hidden">
-          {/* Full-width Bar Chart Background */}
-          <div 
-            className={`absolute right-0 top-0 bottom-0 transition-all duration-1000 ease-out ${getTimeBasedBarColor()}`}
-            style={{ 
-              width: `${Math.max(0, 100 - timeRemainingPercentage)}%`
-            }}
-          />
+        <div className="relative overflow-hidden border-b border-gray-800">
+          {/* Dynamic Time Gradient Background */}
+          <TimeGradient className="z-0" />
           
           {/* Content with more vertical padding */}
-          <div className="relative px-4 py-10">
+          <div className="relative px-4 py-10 z-10">
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
