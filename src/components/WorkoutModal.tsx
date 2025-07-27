@@ -876,7 +876,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             <>
 
               {/* Current Workouts Section */}
-              <div className="py-3 border-b border-gray-800">
+              <div className="pb-3 border-b border-gray-800">
                 
                 {todaysWorkouts.length === 0 ? (
                   <div className="px-4">
@@ -887,7 +887,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-0 border-t border-gray-800">
+                    <div className="space-y-0">
                       {todaysWorkouts.map((workout) => {
                           const exerciseProgress = getExerciseProgress(workout.exercise_id)
                           return (
