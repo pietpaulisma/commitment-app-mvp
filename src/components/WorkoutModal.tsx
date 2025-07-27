@@ -53,11 +53,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [loading, setLoading] = useState(false)
   const [exercisesLoading, setExercisesLoading] = useState(false)
   const [dailyProgress, setDailyProgress] = useState(0)
-  const [dailyTarget, setDailyTarget] = useState(100)
+  const [dailyTarget, setDailyTarget] = useState(1)
   const [recoveryProgress, setRecoveryProgress] = useState(0)
   const [showSportSelection, setShowSportSelection] = useState(false)
   const [selectedSportType, setSelectedSportType] = useState('')
   const [selectedIntensity, setSelectedIntensity] = useState('medium')
+  const [weekMode, setWeekMode] = useState<'sane' | 'insane' | null>(null)
+  const [groupDaysSinceStart, setGroupDaysSinceStart] = useState(0)
   const [workoutInputOpen, setWorkoutInputOpen] = useState(false)
   const [selectedWorkoutExercise, setSelectedWorkoutExercise] = useState<ExerciseWithProgress | null>(null)
   const [workoutCount, setWorkoutCount] = useState(0)
@@ -102,8 +104,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target based on day type
-      let target = 100
+      // Get today's target using correct formula
+      let target = 1 // Default base target
       let restDays = [1] // Default Monday
       let recoveryDays = [5] // Default Friday
       
@@ -116,7 +118,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             .eq('id', profile.group_id)
             .single()
 
-          // Try direct query first, then with RPC if needed
+          if (group?.start_date) {
+            // Calculate target using correct formula
+            const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+            target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+            setGroupDaysSinceStart(daysSinceStart)
+          }
+
+          // Load group settings for other features (rest days, etc.) but don't use for target calculation
           let groupSettingsQuery = supabase
             .from('group_settings')
             .select('*')
@@ -132,12 +141,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           if (groupSettings) {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
-            
-            const daysSinceStart = group?.start_date 
-              ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-              : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
-            
-            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+            setWeekMode(groupSettings.week_mode || 'sane')
           }
         }
       } catch (error) {
@@ -742,6 +746,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   <span className="text-xs opacity-75 font-medium">
                     {dailyProgress}/{dailyTarget} pts
                   </span>
+                  {weekMode && groupDaysSinceStart >= 300 && (
+                    <span className={`text-xs font-bold uppercase tracking-wide ${
+                      weekMode === 'insane' ? 'text-red-300' : 'text-green-300'
+                    }`}>
+                      {weekMode} MODE
+                    </span>
+                  )}
                 </div>
                 
                 <div className="flex flex-col items-end justify-center h-full">

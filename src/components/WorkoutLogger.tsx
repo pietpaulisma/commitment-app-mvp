@@ -102,29 +102,27 @@ export default function WorkoutLogger() {
 
   async function loadDailyTarget(userId: string, profile: any) {
     try {
-      // Get group settings
-      const { data: groupSettings } = await supabase
-        .from('group_settings')
-        .select('*')
-        .eq('group_id', profile.group_id)
+      // Get group start date first
+      const { data: group } = await supabase
+        .from('groups')
+        .select('start_date')
+        .eq('id', profile.group_id)
         .single()
 
-      if (groupSettings) {
-        // Get group start date for proper target calculation
-        const { data: group } = await supabase
-          .from('groups')
-          .select('start_date')
-          .eq('id', profile.group_id)
-          .single()
-
-        // Calculate today's target
+      if (group?.start_date) {
+        // Calculate today's target using correct formula
         const today = new Date()
-        const daysSinceStart = group?.start_date 
-          ? Math.floor((today.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-          : Math.floor((today.getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
-        const target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
+        const daysSinceStart = Math.floor((today.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+        const target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
         
         setDailyTarget(target)
+
+        // Get group settings for other features (week mode, etc.) but don't use for target calculation
+        const { data: groupSettings } = await supabase
+          .from('group_settings')
+          .select('*')
+          .eq('group_id', profile.group_id)
+          .maybeSingle()
 
         // Check if today's checkin exists, if not create it
         const todayString = today.toISOString().split('T')[0]
@@ -147,9 +145,12 @@ export default function WorkoutLogger() {
               recovery_points: 0,
               is_complete: false,
               penalty_paid: false,
-              penalty_amount: 0
+              penalty_amount: groupSettings?.penalty_amount || 10
             })
         }
+      } else {
+        // Fallback if no group start date
+        setDailyTarget(1)
       }
     } catch (error) {
       console.error('Error loading daily target:', error)
