@@ -830,13 +830,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   <span className="text-xs opacity-75 font-medium">
                     {dailyProgress}/{dailyTarget} pts
                   </span>
-                  {weekMode && groupDaysSinceStart >= 300 && (
-                    <span className={`text-xs font-bold uppercase tracking-wide ${
-                      weekMode === 'insane' ? 'text-red-300' : 'text-green-300'
-                    }`}>
-                      {weekMode} MODE
-                    </span>
-                  )}
                 </div>
                 
                 <div className="flex flex-col items-end justify-center h-full">
