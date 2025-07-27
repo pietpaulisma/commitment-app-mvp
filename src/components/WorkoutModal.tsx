@@ -823,12 +823,30 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     if (!profile?.group_id) return
     
     try {
-      await supabase
+      // First try to update existing record
+      const { error: updateError } = await supabase
         .from('group_settings')
-        .upsert({
-          group_id: profile.group_id,
-          week_mode: mode
-        })
+        .update({ week_mode: mode })
+        .eq('group_id', profile.group_id)
+      
+      // If no rows were updated, create a new record
+      if (updateError || updateError?.code === 'PGRST116') {
+        const { error: insertError } = await supabase
+          .from('group_settings')
+          .insert({
+            group_id: profile.group_id,
+            week_mode: mode,
+            rest_days: [1],
+            recovery_days: [5],
+            accent_color: 'blue'
+          })
+        
+        if (insertError) {
+          console.error('Error inserting week mode:', insertError)
+        }
+      } else if (updateError) {
+        console.error('Error updating week mode:', updateError)
+      }
     } catch (error) {
       console.error('Error saving week mode:', error)
     }
@@ -1249,7 +1267,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           onClick={async () => {
                             setWeekMode('sane')
                             await saveWeekMode('sane')
-                            loadDailyProgress()
+                            // Manually recalculate target without full reload
+                            if (groupDaysSinceStart >= 448) {
+                              const newTarget = 448 + Math.floor((groupDaysSinceStart - 448) / 7)
+                              setDailyTarget(newTarget)
+                            }
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
@@ -1263,7 +1285,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           onClick={async () => {
                             setWeekMode('insane')
                             await saveWeekMode('insane')
-                            loadDailyProgress()
+                            // Manually recalculate target without full reload
+                            if (groupDaysSinceStart >= 448) {
+                              const newTarget = 1 + groupDaysSinceStart
+                              setDailyTarget(newTarget)
+                            }
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
