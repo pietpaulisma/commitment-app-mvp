@@ -94,13 +94,13 @@ export default function RectangularNavigation() {
             setAccentColor(groupSettings.accent_color || 'blue')
             
             // Apply week mode logic if group is 448+ days old
-            // For now, default to sane mode until we can persist week mode properly
             if (group?.start_date) {
               const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-              if (daysSinceStart >= 448) {
-                // Default to sane mode (weekly progression)
+              if (daysSinceStart >= 448 && groupSettings.week_mode === 'sane') {
+                // Sane mode: weekly progression starting from day 448
                 target = 448 + Math.floor((daysSinceStart - 448) / 7)
               }
+              // Insane mode continues with daily progression (no change needed)
             }
           }
         }
