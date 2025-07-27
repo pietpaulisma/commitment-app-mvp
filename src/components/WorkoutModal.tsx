@@ -15,7 +15,9 @@ import {
   StarIcon,
   RectangleStackIcon,
   FaceSmileIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  TrashIcon,
+  Bars3Icon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
@@ -341,6 +343,66 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
+  const renderFavoriteExerciseButton = (exercise: ExerciseWithProgress) => {
+    const exerciseProgress = getExerciseProgress(exercise.id)
+    
+    return (
+      <div
+        key={exercise.id}
+        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 ${
+          exercise.todayCount > 0
+            ? 'bg-gray-900/40 hover:bg-gray-900/50'
+            : 'bg-gray-900/30 hover:bg-gray-900/40'
+        }`}
+      >
+        <div className="flex">
+          {/* Main content area with progress bar - matches header layout */}
+          <div className="flex-1 relative overflow-hidden">
+            {/* Progress bar background */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+              style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+            />
+            
+            {/* Main exercise button */}
+            <button
+              onClick={() => quickAddExercise(exercise)}
+              className="w-full p-3 hover:scale-105 transition-transform duration-300 relative"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {getExerciseIcon(exercise)}
+                  <div>
+                    <div className="font-medium text-white text-left">{exercise.name}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="font-medium text-gray-500">
+                    {exercise.points_per_unit % 1 === 0 
+                      ? exercise.points_per_unit 
+                      : exercise.points_per_unit.toFixed(2)
+                    }
+                  </span>
+                  <span className="font-thin text-gray-500 ml-1">
+                    /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                  </span>
+                </div>
+              </div>
+            </button>
+          </div>
+          
+          {/* Reorder icon for favorites - matches header X button layout */}
+          <button
+            className="w-16 flex items-center justify-center text-gray-500 cursor-grab active:cursor-grabbing"
+            aria-label="Reorder favorite"
+          >
+            <Bars3Icon className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const getExerciseProgress = (exerciseId: string) => {
     const exercisePoints = todaysWorkouts
       .filter(workout => workout.exercise_id === exerciseId)
@@ -368,47 +430,50 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             : 'bg-gray-900/30 hover:bg-gray-900/40'
         }`}
       >
-        {/* Progress bar background */}
-        <div 
-          className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-          style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
-        />
-        
-        <div className="relative flex">
-          {/* Main exercise button */}
-          <button
-            onClick={() => quickAddExercise(exercise)}
-            className="flex-1 p-3 hover:scale-105 transition-transform duration-300"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {getExerciseIcon(exercise)}
-                <div>
-                  <div className="font-medium text-white text-left">{exercise.name}</div>
+        <div className="flex">
+          {/* Main content area with progress bar - matches header layout */}
+          <div className="flex-1 relative overflow-hidden">
+            {/* Progress bar background */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+              style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+            />
+            
+            {/* Main exercise button */}
+            <button
+              onClick={() => quickAddExercise(exercise)}
+              className="w-full p-3 hover:scale-105 transition-transform duration-300 relative"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {getExerciseIcon(exercise)}
+                  <div>
+                    <div className="font-medium text-white text-left">{exercise.name}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="font-medium text-gray-500">
+                    {exercise.points_per_unit % 1 === 0 
+                      ? exercise.points_per_unit 
+                      : exercise.points_per_unit.toFixed(2)
+                    }
+                  </span>
+                  <span className="font-thin text-gray-500 ml-1">
+                    /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                  </span>
                 </div>
               </div>
-              <div className="text-right min-w-[80px]">
-                <span className="font-medium text-gray-500">
-                  {exercise.points_per_unit % 1 === 0 
-                    ? exercise.points_per_unit 
-                    : exercise.points_per_unit.toFixed(2)
-                  }
-                </span>
-                <span className="font-thin text-gray-500 ml-1">
-                  /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
-                </span>
-              </div>
-            </div>
-          </button>
+            </button>
+          </div>
           
-          {/* Favorite button */}
+          {/* Right icon button - matches header X button layout */}
           {showFavorite && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 toggleFavorite(exercise.id)
               }}
-              className="w-12 flex items-center justify-center hover:bg-gray-800/50 transition-colors duration-200"
+              className="w-16 flex items-center justify-center hover:bg-gray-800/50 transition-colors duration-200"
             >
               {isFavorite ? (
                 <StarIconSolid className="w-5 h-5 text-yellow-400" />
@@ -676,6 +741,43 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
+  const handleDeleteWorkout = async (workoutId: string) => {
+    if (!user) return
+
+    try {
+      setLoading(true)
+      
+      const { error } = await supabase
+        .from('logs')
+        .delete()
+        .eq('id', workoutId)
+        .eq('user_id', user.id) // Security check
+
+      if (error) {
+        console.error('Error deleting workout:', error)
+        alert('Error deleting workout')
+      } else {
+        // Refresh data after deletion
+        loadDailyProgress()
+        loadTodaysWorkouts()
+        
+        if (onWorkoutAdded) {
+          onWorkoutAdded()
+        }
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50)
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting workout:', error)
+      alert('An error occurred while deleting the workout.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const quickAddExercise = (exercise: ExerciseWithProgress, defaultQuantity: number = 10) => {
     // Check if exercise is a sport type (Light Sport, Medium Sport, Intense Sport) for sport selection
     if (exercise.type === 'sport' || exercise.name.toLowerCase().includes('sport')) {
@@ -892,30 +994,44 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                           const exerciseProgress = getExerciseProgress(workout.exercise_id)
                           return (
                             <div key={workout.id} className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
-                              {/* Progress bar background */}
-                              <div 
-                                className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-                                style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
-                              />
-                              
-                              <div className="relative p-3">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center space-x-3">
-                                    {getExerciseIcon(workout.exercises)}
-                                    <div>
-                                      <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
+                              <div className="flex">
+                                {/* Main content area with progress bar - matches header layout */}
+                                <div className="flex-1 relative overflow-hidden">
+                                  {/* Progress bar background */}
+                                  <div 
+                                    className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
+                                    style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+                                  />
+                                  
+                                  <div className="relative p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-3">
+                                        {getExerciseIcon(workout.exercises)}
+                                        <div>
+                                          <div className="font-medium text-white">{workout.exercises?.name || 'Unknown Exercise'}</div>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <span className="font-medium text-white">
+                                          {workout.points % 1 === 0 
+                                            ? workout.points 
+                                            : workout.points.toFixed(2)
+                                          }
+                                        </span>
+                                        <span className="font-thin text-white ml-1">pts</span>
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="text-right min-w-[80px]">
-                                    <span className="font-medium text-white">
-                                      {workout.points % 1 === 0 
-                                        ? workout.points 
-                                        : workout.points.toFixed(2)
-                                      }
-                                    </span>
-                                    <span className="font-thin text-white ml-1">pts</span>
-                                  </div>
                                 </div>
+
+                                {/* Delete button - matches header X button layout */}
+                                <button
+                                  onClick={() => handleDeleteWorkout(workout.id)}
+                                  className="w-16 flex items-center justify-center hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors duration-200"
+                                  aria-label="Delete workout"
+                                >
+                                  <TrashIcon className="w-5 h-5" />
+                                </button>
                               </div>
                             </div>
                           )
@@ -962,7 +1078,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                   </button>
                   {favoritesExpanded && (
                     <div className="space-y-0 border-t border-gray-800">
-                      {favoriteExercises.map((exercise) => renderExerciseButton(exercise, false))}
+                      {favoriteExercises.map((exercise) => renderFavoriteExerciseButton(exercise))}
                     </div>
                   )}
                 </div>
