@@ -73,6 +73,12 @@ export default function RectangularNavigation() {
           if (group?.start_date) {
             const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
             target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+            
+            // Apply week mode logic for groups 448+ days old
+            if (daysSinceStart >= 448) {
+              // Will load week mode from group settings below
+              const tempTarget = target // Store for potential week mode calculation
+            }
           }
 
           // Load group settings for other features (rest days, etc.) but don't use for target calculation
@@ -86,6 +92,15 @@ export default function RectangularNavigation() {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
             setAccentColor(groupSettings.accent_color || 'blue')
+            
+            // Apply week mode logic if group is 448+ days old
+            if (group?.start_date) {
+              const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+              if (daysSinceStart >= 448 && groupSettings.week_mode === 'sane') {
+                // Sane mode: weekly progression starting from day 448
+                target = 448 + Math.floor((daysSinceStart - 448) / 7)
+              }
+            }
           }
         }
       } catch (error) {

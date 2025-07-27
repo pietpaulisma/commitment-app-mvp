@@ -159,7 +159,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           if (groupSettings) {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
-            setWeekMode(groupSettings.week_mode || 'sane')
+            // Only set week mode from database on initial load, not on toggle updates
+            if (weekMode === null) {
+              setWeekMode(groupSettings.week_mode || 'sane')
+            }
           }
         }
       } catch (error) {
@@ -816,6 +819,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     return Math.round(parseFloat(quantity) * pointsPerMinute)
   }
 
+  const saveWeekMode = async (mode: 'sane' | 'insane') => {
+    if (!profile?.group_id) return
+    
+    try {
+      await supabase
+        .from('group_settings')
+        .upsert({
+          group_id: profile.group_id,
+          week_mode: mode
+        })
+    } catch (error) {
+      console.error('Error saving week mode:', error)
+    }
+  }
+
   const handleSportSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !selectedSportType || !quantity) return
@@ -1228,8 +1246,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       
                       <div className="relative flex">
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setWeekMode('sane')
+                            await saveWeekMode('sane')
                             loadDailyProgress()
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
@@ -1241,8 +1260,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         </button>
                         
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setWeekMode('insane')
+                            await saveWeekMode('insane')
                             loadDailyProgress()
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${

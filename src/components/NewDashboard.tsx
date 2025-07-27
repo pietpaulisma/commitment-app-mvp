@@ -88,6 +88,23 @@ export default function NewDashboard() {
         if (group?.start_date) {
           const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
           todayTarget = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+          
+          // Apply week mode logic for groups 448+ days old
+          if (daysSinceStart >= 448) {
+            // Load week mode from group settings
+            const { data: groupSettings } = await supabase
+              .from('group_settings')
+              .select('week_mode')
+              .eq('group_id', profile.group_id)
+              .maybeSingle()
+            
+            const weekMode = groupSettings?.week_mode || 'sane'
+            if (weekMode === 'sane') {
+              // Sane mode: weekly progression starting from day 448
+              todayTarget = 448 + Math.floor((daysSinceStart - 448) / 7)
+            }
+            // Insane mode continues with daily progression (current behavior)
+          }
         }
       }
 
