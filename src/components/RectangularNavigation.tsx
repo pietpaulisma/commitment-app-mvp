@@ -54,8 +54,8 @@ export default function RectangularNavigation() {
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target based on day type
-      let target = 100
+      // Get target using correct formula
+      let target = 1 // Default base target
       let restDays = [1] // Default Monday
       let recoveryDays = [5] // Default Friday
       
@@ -70,6 +70,12 @@ export default function RectangularNavigation() {
           
           setGroupName(group?.name || '')
 
+          if (group?.start_date) {
+            const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+            target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+          }
+
+          // Load group settings for other features (rest days, etc.) but don't use for target calculation
           const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
             .select('*')
@@ -80,12 +86,6 @@ export default function RectangularNavigation() {
             restDays = groupSettings.rest_days || [1]
             recoveryDays = groupSettings.recovery_days || [5]
             setAccentColor(groupSettings.accent_color || 'blue')
-            
-            const daysSinceStart = group?.start_date 
-              ? Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-              : Math.floor((new Date().getTime() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24))
-            
-            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
           }
         }
       } catch (error) {

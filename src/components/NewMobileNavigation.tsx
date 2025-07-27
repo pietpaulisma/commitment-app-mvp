@@ -50,21 +50,11 @@ export default function NewMobileNavigation() {
 
       const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Get today's target using correct formula
+      // Get target using correct formula
       let target = 1 // Default base target
       if (profile.group_id) {
-        const { data: groupSettings, error: settingsError } = await supabase
-          .from('group_settings')
-          .select('*')
-          .eq('group_id', profile.group_id)
-          .maybeSingle()
-        
-        if (settingsError) {
-          console.log('Error loading group settings:', settingsError)
-        }
-
         // Get group start date for proper target calculation
-        const { data: group, error: groupError } = await supabase
+        const { data: group } = await supabase
           .from('groups')
           .select('start_date')
           .eq('id', profile.group_id)
@@ -72,13 +62,7 @@ export default function NewMobileNavigation() {
 
         if (group?.start_date) {
           const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-          
-          if (groupSettings) {
-            target = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
-          } else {
-            // Use correct formula even without group settings
-            target = 1 + Math.max(0, daysSinceStart)
-          }
+          target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
         }
       }
 
