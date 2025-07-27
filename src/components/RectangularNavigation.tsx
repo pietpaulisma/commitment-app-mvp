@@ -222,8 +222,12 @@ export default function RectangularNavigation() {
         <TimeGradient className="z-0" />
         <div className="px-4 relative z-10">
           <div className="flex justify-between items-center py-4">
-            <div className="text-lg text-white">
-              <div className="text-3xl font-bold drop-shadow-lg">The Commitment</div>
+            <div className="flex items-center">
+              <img 
+                src="/logo.png" 
+                alt="The Commitment" 
+                className="h-8 w-auto drop-shadow-lg"
+              />
             </div>
 
             <Link 
@@ -247,8 +251,12 @@ export default function RectangularNavigation() {
         <TimeGradient className="z-0" />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex justify-between items-center py-6">
-            <div className="text-xl text-white">
-              <div className="text-3xl font-bold drop-shadow-lg">The Commitment</div>
+            <div className="flex items-center">
+              <img 
+                src="/logo.png" 
+                alt="The Commitment" 
+                className="h-10 w-auto drop-shadow-lg"
+              />
             </div>
 
             <div className="flex items-center space-x-4">
