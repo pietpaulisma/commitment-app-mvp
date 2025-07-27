@@ -655,28 +655,18 @@ export default function RectangularDashboard() {
 
       if (!allMembers) return
 
-      // Get group settings and start date for target calculation
-      const { data: groupSettings } = await supabase
-        .from('group_settings')
-        .select('daily_target_base, daily_increment')
-        .eq('group_id', profile.group_id)
-        .maybeSingle()
-
+      // Get group start date for target calculation
       const { data: group } = await supabase
         .from('groups')
         .select('start_date')
         .eq('id', profile.group_id)
         .single()
 
-      // Calculate today's target
+      // Calculate today's target using correct formula
       let dailyTarget = 1 // Default fallback (base target = 1)
-      if (groupSettings && group?.start_date) {
+      if (group?.start_date) {
         const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-        dailyTarget = groupSettings.daily_target_base + (groupSettings.daily_increment * Math.max(0, daysSinceStart))
-      } else if (group?.start_date) {
-        // Use correct formula even without group settings
-        const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-        dailyTarget = 1 + Math.max(0, daysSinceStart)
+        dailyTarget = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
       }
 
       // Get today's logs for all members in one query
@@ -992,11 +982,11 @@ export default function RectangularDashboard() {
         // Load group members and stats
         await Promise.all([loadGroupMembers(), loadGroupStats()])
 
-        // Try to load group settings for rest/recovery days and target calculation
+        // Try to load group settings for rest/recovery days and UI configuration
         try {
           const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
-            .select('rest_days, recovery_days, accent_color, daily_target_base, daily_increment')
+            .select('rest_days, recovery_days, accent_color')
             .eq('group_id', profile.group_id)
             .maybeSingle()
 

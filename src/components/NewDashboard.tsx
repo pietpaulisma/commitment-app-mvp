@@ -176,13 +176,8 @@ export default function NewDashboard() {
         groupMembers = groupMembersData?.map(member => {
           const memberPoints = memberPointsMap.get(member.id) || 0
           
-          // Calculate member's target
-          let memberTarget = todayTarget // Use same base logic
-          if (profile.group_id) {
-            const daysSinceStart = Math.floor((new Date().getTime() - new Date(member.created_at).getTime()) / (1000 * 60 * 60 * 24))
-            // You can adjust this if members should have different targets
-            memberTarget = todayTarget // For now, same target for all
-          }
+          // All members should have the same target based on group start date
+          let memberTarget = todayTarget // Use same target for all members
 
           return {
             id: member.id,
