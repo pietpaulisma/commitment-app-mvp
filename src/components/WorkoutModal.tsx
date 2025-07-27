@@ -1051,7 +1051,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
 
                     {/* Submit to Group Button - appears when target is reached */}
                     {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && (
-                      <div className="px-4 py-4">
+                      <div className="px-4 py-6 mt-4 border-t border-gray-800">
                         <button
                           onClick={handleSubmitToGroup}
                           className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
