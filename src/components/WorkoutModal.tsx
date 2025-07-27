@@ -60,6 +60,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [selectedIntensity, setSelectedIntensity] = useState('medium')
   const [weekMode, setWeekMode] = useState<'sane' | 'insane' | null>(null)
   const [groupDaysSinceStart, setGroupDaysSinceStart] = useState(0)
+  const [stopwatchTime, setStopwatchTime] = useState(0)
+  const [stopwatchRunning, setStopwatchRunning] = useState(false)
+  const [stopwatchInterval, setStopwatchInterval] = useState<NodeJS.Timeout | null>(null)
   const [workoutInputOpen, setWorkoutInputOpen] = useState(false)
   const [selectedWorkoutExercise, setSelectedWorkoutExercise] = useState<ExerciseWithProgress | null>(null)
   const [workoutCount, setWorkoutCount] = useState(0)
@@ -123,6 +126,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
             const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
             target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
             setGroupDaysSinceStart(daysSinceStart)
+            
+            // Set week mode for groups that are 300+ days old
+            if (daysSinceStart >= 300) {
+              // Determine week mode based on current week performance or default to 'sane'
+              // For now, we'll start with 'sane' mode. Later this could be determined by actual performance
+              setWeekMode('sane')
+            } else {
+              setWeekMode(null)
+            }
           }
 
           // Load group settings for other features (rest days, etc.) but don't use for target calculation
@@ -246,6 +258,54 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
       console.error('Error toggling favorite:', error)
     }
   }
+
+  // Stopwatch functions
+  const startStopwatch = () => {
+    if (stopwatchRunning) {
+      // Stop the stopwatch
+      if (stopwatchInterval) {
+        clearInterval(stopwatchInterval)
+        setStopwatchInterval(null)
+      }
+      setStopwatchRunning(false)
+    } else {
+      // Start the stopwatch
+      setStopwatchRunning(true)
+      const interval = setInterval(() => {
+        setStopwatchTime(prev => prev + 1)
+      }, 1000)
+      setStopwatchInterval(interval)
+    }
+  }
+
+  const resetStopwatch = () => {
+    if (stopwatchInterval) {
+      clearInterval(stopwatchInterval)
+      setStopwatchInterval(null)
+    }
+    setStopwatchTime(0)
+    setStopwatchRunning(false)
+  }
+
+  const formatStopwatchTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    }
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Clean up stopwatch interval on unmount
+  useEffect(() => {
+    return () => {
+      if (stopwatchInterval) {
+        clearInterval(stopwatchInterval)
+      }
+    }
+  }, [stopwatchInterval])
 
   const getExerciseIcon = (exercise: Exercise) => {
     const name = exercise.name.toLowerCase()
@@ -797,6 +857,84 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           
           {!exercisesLoading && exercises.length > 0 && !showSportSelection && (
             <>
+              {/* Week Mode & Stopwatch Section - Only for 300+ day groups */}
+              {weekMode && groupDaysSinceStart >= 300 && (
+                <div className="py-4 border-b border-gray-800">
+                  <div className="px-4 grid grid-cols-2 gap-4">
+                    {/* Week Mode Toggle */}
+                    <div className="bg-gray-900/30 p-4 rounded-lg">
+                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Week Mode</div>
+                      <div className={`text-lg font-bold uppercase ${
+                        weekMode === 'insane' ? 'text-red-400' : 'text-green-400'
+                      }`}>
+                        {weekMode}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {weekMode === 'insane' ? 'Maximum intensity' : 'Balanced approach'}
+                      </div>
+                    </div>
+
+                    {/* Stopwatch */}
+                    <div className="bg-gray-900/30 p-4 rounded-lg">
+                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Stopwatch</div>
+                      <div className="text-lg font-bold text-white font-mono">
+                        00:00
+                      </div>
+                      <button className="text-xs text-orange-400 mt-1 hover:text-orange-300 transition-colors">
+                        Start Timer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Week Mode and Stopwatch Section */}
+              {weekMode && groupDaysSinceStart >= 300 && (
+                <div className="py-4 border-b border-gray-800">
+                  <div className="px-4 grid grid-cols-2 gap-4">
+                    {/* Week Mode Toggle */}
+                    <div className="bg-gray-900/30 p-4 rounded-lg">
+                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Week Mode</div>
+                      <div className={`text-lg font-bold uppercase ${
+                        weekMode === 'insane' ? 'text-red-400' : 'text-green-400'
+                      }`}>
+                        {weekMode}
+                      </div>
+                      <button
+                        onClick={() => setWeekMode(weekMode === 'sane' ? 'insane' : 'sane')}
+                        className="text-xs text-blue-400 mt-1 hover:text-blue-300 transition-colors"
+                      >
+                        Switch to {weekMode === 'sane' ? 'Insane' : 'Sane'}
+                      </button>
+                    </div>
+                    
+                    {/* Stopwatch */}
+                    <div className="bg-gray-900/30 p-4 rounded-lg">
+                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Stopwatch</div>
+                      <div className="text-lg font-bold text-white font-mono">{formatStopwatchTime(stopwatchTime)}</div>
+                      <div className="flex space-x-2 mt-2">
+                        <button 
+                          onClick={startStopwatch}
+                          className={`text-xs px-2 py-1 rounded transition-colors ${
+                            stopwatchRunning 
+                              ? 'text-red-400 hover:text-red-300' 
+                              : 'text-green-400 hover:text-green-300'
+                          }`}
+                        >
+                          {stopwatchRunning ? 'Stop' : 'Start'}
+                        </button>
+                        <button 
+                          onClick={resetStopwatch}
+                          className="text-xs text-gray-400 hover:text-gray-300 transition-colors px-2 py-1 rounded"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Current Workouts Section */}
               <div className="py-6 border-b border-gray-800">
                 <div className="flex items-center space-x-3 mb-6 px-4">
