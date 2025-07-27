@@ -15,11 +15,7 @@ import {
   StarIcon,
   RectangleStackIcon,
   FaceSmileIcon,
-  CalendarDaysIcon,
-  ClockIcon,
-  PlayIcon,
-  StopIcon,
-  ArrowPathIcon
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
@@ -64,9 +60,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
   const [selectedIntensity, setSelectedIntensity] = useState('medium')
   const [weekMode, setWeekMode] = useState<'sane' | 'insane' | null>(null)
   const [groupDaysSinceStart, setGroupDaysSinceStart] = useState(0)
-  const [stopwatchTime, setStopwatchTime] = useState(0)
-  const [stopwatchRunning, setStopwatchRunning] = useState(false)
-  const [stopwatchInterval, setStopwatchInterval] = useState<NodeJS.Timeout | null>(null)
   const [workoutInputOpen, setWorkoutInputOpen] = useState(false)
   const [selectedWorkoutExercise, setSelectedWorkoutExercise] = useState<ExerciseWithProgress | null>(null)
   const [workoutCount, setWorkoutCount] = useState(0)
@@ -263,53 +256,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }
 
-  // Stopwatch functions
-  const startStopwatch = () => {
-    if (stopwatchRunning) {
-      // Stop the stopwatch
-      if (stopwatchInterval) {
-        clearInterval(stopwatchInterval)
-        setStopwatchInterval(null)
-      }
-      setStopwatchRunning(false)
-    } else {
-      // Start the stopwatch
-      setStopwatchRunning(true)
-      const interval = setInterval(() => {
-        setStopwatchTime(prev => prev + 1)
-      }, 1000)
-      setStopwatchInterval(interval)
-    }
-  }
-
-  const resetStopwatch = () => {
-    if (stopwatchInterval) {
-      clearInterval(stopwatchInterval)
-      setStopwatchInterval(null)
-    }
-    setStopwatchTime(0)
-    setStopwatchRunning(false)
-  }
-
-  const formatStopwatchTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-    }
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-
-  // Clean up stopwatch interval on unmount
-  useEffect(() => {
-    return () => {
-      if (stopwatchInterval) {
-        clearInterval(stopwatchInterval)
-      }
-    }
-  }, [stopwatchInterval])
 
   const getExerciseIcon = (exercise: Exercise) => {
     const name = exercise.name.toLowerCase()
@@ -861,103 +807,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
           
           {!exercisesLoading && exercises.length > 0 && !showSportSelection && (
             <>
-              {/* Week Mode and Stopwatch Section */}
-              {weekMode && groupDaysSinceStart >= 300 && (
-                <div className="py-6 border-b border-gray-800">
-                  <div className="px-4 space-y-6">
-                    {/* Week Mode Toggle */}
-                    <div className="bg-gray-900/30 p-4 rounded-lg">
-                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
-                      
-                      {/* Horizontal Toggle */}
-                      <div className="relative bg-gray-800 rounded-full p-1 w-full">
-                        <div 
-                          className={`absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out ${
-                            weekMode === 'sane' ? 'left-1 right-1/2' : 'left-1/2 right-1'
-                          } ${
-                            weekMode === 'sane' ? 'bg-green-500' : 'bg-red-500'
-                          }`}
-                        />
-                        
-                        <div className="relative flex">
-                          <button
-                            onClick={() => setWeekMode('sane')}
-                            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
-                              weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                          >
-                            <MoonIcon className="w-4 h-4" />
-                            <span className="font-medium">Sane</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => setWeekMode('insane')}
-                            className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
-                              weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
-                            }`}
-                          >
-                            <FireIcon className="w-4 h-4" />
-                            <span className="font-medium">Insane</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Stopwatch */}
-                    <div className="bg-gray-900/30 p-4 rounded-lg">
-                      <div className="text-xs text-gray-400 uppercase tracking-wide mb-3 flex items-center space-x-2">
-                        <ClockIcon className="w-4 h-4" />
-                        <span>Workout Timer</span>
-                      </div>
-                      
-                      {/* Large Timer Display */}
-                      <div className="text-center mb-4">
-                        <div className="text-4xl font-bold text-white tracking-wide">
-                          {formatStopwatchTime(stopwatchTime)}
-                        </div>
-                      </div>
-                      
-                      {/* Control Buttons */}
-                      <div className="flex space-x-3">
-                        <button 
-                          onClick={startStopwatch}
-                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-                            stopwatchRunning 
-                              ? 'bg-red-500 hover:bg-red-600 text-white' 
-                              : 'bg-green-500 hover:bg-green-600 text-white'
-                          }`}
-                        >
-                          {stopwatchRunning ? (
-                            <>
-                              <StopIcon className="w-4 h-4" />
-                              <span>Stop</span>
-                            </>
-                          ) : (
-                            <>
-                              <PlayIcon className="w-4 h-4" />
-                              <span>Start</span>
-                            </>
-                          )}
-                        </button>
-                        
-                        <button 
-                          onClick={resetStopwatch}
-                          className="flex items-center justify-center px-4 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
-                        >
-                          <ArrowPathIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Current Workouts Section */}
-              <div className="py-6 border-b border-gray-800">
-                <div className="flex items-center space-x-3 mb-6 px-4">
-                  <CalendarDaysIcon className="w-6 h-6 text-purple-400" />
-                  <h4 className="text-2xl font-bold text-white">Today's Workouts</h4>
-                </div>
+              <div className="py-3 border-b border-gray-800">
                 
                 {todaysWorkouts.length === 0 ? (
                   <div className="px-4">
@@ -1113,6 +965,48 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       {recoveryExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Week Mode Toggle - Bottom Section */}
+              {weekMode && groupDaysSinceStart >= 300 && (
+                <div className="py-6 px-4">
+                  <div className="bg-gray-900/30 p-4 rounded-lg">
+                    <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
+                    
+                    {/* Horizontal Toggle */}
+                    <div className="relative bg-gray-800 rounded-full p-1 w-full">
+                      <div 
+                        className={`absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out ${
+                          weekMode === 'sane' ? 'left-1 right-1/2' : 'left-1/2 right-1'
+                        } ${
+                          weekMode === 'sane' ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                      />
+                      
+                      <div className="relative flex">
+                        <button
+                          onClick={() => setWeekMode('sane')}
+                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
+                            weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                          }`}
+                        >
+                          <MoonIcon className="w-4 h-4" />
+                          <span className="font-medium">Sane</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => setWeekMode('insane')}
+                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
+                            weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                          }`}
+                        >
+                          <FireIcon className="w-4 h-4" />
+                          <span className="font-medium">Insane</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
               
