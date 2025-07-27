@@ -87,95 +87,83 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
     }
   }, [isOpen, user, profile?.group_id])
 
+  // Shared function to load group data and calculate target
+  const loadGroupDataAndCalculateTarget = async (modeOverride?: 'sane' | 'insane') => {
+    if (!profile?.group_id) return { target: 1, daysSinceStart: 0 }
+
+    try {
+      // Get group start date and settings in parallel
+      const [groupResult, settingsResult] = await Promise.all([
+        supabase
+          .from('groups')
+          .select('start_date')
+          .eq('id', profile.group_id)
+          .single(),
+        supabase
+          .from('group_settings')
+          .select('rest_days, recovery_days')
+          .eq('group_id', profile.group_id)
+          .maybeSingle()
+      ])
+
+      if (groupResult.data?.start_date) {
+        const daysSinceStart = getDaysSinceStart(groupResult.data.start_date)
+        const restDays = settingsResult.data?.rest_days || [1]
+        const recoveryDays = settingsResult.data?.recovery_days || [5]
+
+        // Use override mode if provided, otherwise use current context mode
+        const targetMode = modeOverride || weekMode
+
+        const target = calculateDailyTarget({
+          daysSinceStart,
+          weekMode: targetMode,
+          restDays,
+          recoveryDays
+        })
+
+        return { target, daysSinceStart }
+      }
+    } catch (error) {
+      console.error('Error loading group data:', error)
+    }
+
+    return { target: 1, daysSinceStart: 0 }
+  }
+
+  const recalculateTargetWithMode = async (newMode: 'sane' | 'insane') => {
+    const { target, daysSinceStart } = await loadGroupDataAndCalculateTarget(newMode)
+    setDailyTarget(target)
+    setGroupDaysSinceStart(daysSinceStart)
+    console.log(`Target recalculated for ${newMode} mode:`, target)
+  }
+
   const loadDailyProgress = async () => {
     if (!user || !profile) return
 
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Get today's points with exercise types
-      const { data: todayLogs } = await supabase
-        .from('logs')
-        .select(`
-          points,
-          exercises (type)
-        `)
-        .eq('user_id', user.id)
-        .eq('date', today)
+      // Load points and target data in parallel
+      const [pointsResult, targetData] = await Promise.all([
+        supabase
+          .from('logs')
+          .select(`
+            points,
+            exercises (type)
+          `)
+          .eq('user_id', user.id)
+          .eq('date', today),
+        loadGroupDataAndCalculateTarget()
+      ])
 
-      const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
-      const recoveryPoints = todayLogs
+      const todayPoints = pointsResult.data?.reduce((sum, log) => sum + log.points, 0) || 0
+      const recoveryPoints = pointsResult.data
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      // Calculate target using centralized utility
-      let target = 1 // Default base target
-      let restDays = [1] // Default Monday
-      let recoveryDays = [5] // Default Friday
-      
-      try {
-        if (profile.group_id) {
-          // Load group and group settings
-          const { data: group } = await supabase
-            .from('groups')
-            .select('start_date')
-            .eq('id', profile.group_id)
-            .single()
-
-          if (group?.start_date) {
-            const daysSinceStart = getDaysSinceStart(group.start_date)
-            setGroupDaysSinceStart(daysSinceStart)
-            
-            // Load group settings for rest/recovery days
-            const { data: groupSettings } = await supabase
-              .from('group_settings')
-              .select('rest_days, recovery_days')
-              .eq('group_id', profile.group_id)
-              .maybeSingle()
-
-            if (groupSettings) {
-              restDays = groupSettings.rest_days || [1]
-              recoveryDays = groupSettings.recovery_days || [5]
-            }
-
-            // Calculate target using centralized utility
-            target = calculateDailyTarget({
-              daysSinceStart,
-              weekMode,
-              restDays,
-              recoveryDays
-            })
-          }
-        }
-      } catch (error) {
-        console.log('Group settings not available, using defaults')
-        // Still calculate target with defaults if group info fails
-        if (profile.group_id) {
-          try {
-            const { data: group } = await supabase
-              .from('groups')
-              .select('start_date')
-              .eq('id', profile.group_id)
-              .single()
-            
-            if (group?.start_date) {
-              const daysSinceStart = getDaysSinceStart(group.start_date)
-              setGroupDaysSinceStart(daysSinceStart)
-              target = calculateDailyTarget({
-                daysSinceStart,
-                weekMode,
-                restDays,
-                recoveryDays
-              })
-            }
-          } catch (fallbackError) {
-            console.log('Unable to load group start date, using default target')
-          }
-        }
-      }
-
       setDailyProgress(todayPoints)
-      setDailyTarget(target)
+      setDailyTarget(targetData.target)
+      setGroupDaysSinceStart(targetData.daysSinceStart)
       setRecoveryProgress(recoveryPoints)
     } catch (error) {
       console.error('Error loading daily progress:', error)
@@ -1229,10 +1217,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                       
                       <div className="relative flex">
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setWeekMode('sane')
-                            // Recalculate target immediately
-                            loadDailyProgress()
+                            // Recalculate target immediately with the new mode
+                            await recalculateTargetWithMode('sane')
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
@@ -1243,10 +1231,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded }: Workou
                         </button>
                         
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setWeekMode('insane')
-                            // Recalculate target immediately
-                            loadDailyProgress()
+                            // Recalculate target immediately with the new mode
+                            await recalculateTargetWithMode('insane')
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
                             weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'

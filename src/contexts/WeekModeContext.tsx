@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, ReactNode } from 'react'
 
 type WeekMode = 'sane' | 'insane'
 
@@ -17,19 +17,22 @@ interface WeekModeProviderProps {
 }
 
 export function WeekModeProvider({ children }: WeekModeProviderProps) {
-  const [weekMode, setWeekModeState] = useState<WeekMode>('insane')
-
-  // Load from sessionStorage on mount
-  useEffect(() => {
-    const savedMode = sessionStorage.getItem('weekMode') as WeekMode
-    if (savedMode === 'sane' || savedMode === 'insane') {
-      setWeekModeState(savedMode)
+  // Initialize with sessionStorage value immediately to avoid loading delay
+  const [weekMode, setWeekModeState] = useState<WeekMode>(() => {
+    if (typeof window !== 'undefined') {
+      const savedMode = sessionStorage.getItem('weekMode') as WeekMode
+      if (savedMode === 'sane' || savedMode === 'insane') {
+        return savedMode
+      }
     }
-  }, [])
+    return 'insane' // Default fallback
+  })
 
   const setWeekMode = (mode: WeekMode) => {
     setWeekModeState(mode)
-    sessionStorage.setItem('weekMode', mode)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('weekMode', mode)
+    }
     console.log('Week mode set to:', mode, '(session storage)')
   }
 
