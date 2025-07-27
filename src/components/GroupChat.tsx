@@ -609,6 +609,37 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
     }
   }
 
+  const getUserColor = (email: string, role: string) => {
+    // Use role color for admins, hash-based color for regular users
+    if (role === 'supreme_admin') return 'text-purple-400'
+    if (role === 'group_admin') return 'text-blue-400'
+    
+    // Generate consistent color based on email hash for regular users
+    const colors = [
+      'text-red-400',
+      'text-orange-400', 
+      'text-yellow-400',
+      'text-green-400',
+      'text-teal-400',
+      'text-cyan-400',
+      'text-blue-400',
+      'text-indigo-400',
+      'text-purple-400',
+      'text-pink-400',
+      'text-rose-400',
+      'text-emerald-400'
+    ]
+    
+    // Simple hash function for consistent color assignment
+    let hash = 0
+    for (let i = 0; i < email.length; i++) {
+      hash = ((hash << 5) - hash) + email.charCodeAt(i)
+      hash = hash & hash // Convert to 32bit integer
+    }
+    
+    return colors[Math.abs(hash) % colors.length]
+  }
+
   if (!isOpen) return null
 
   if (!profile?.group_id) {
@@ -680,7 +711,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                   {/* User name (for others' messages) */}
                   {message.user_id !== user?.id && (
                     <div className="text-xs mb-1 px-2">
-                      <span className={getRoleColor(message.user_role || 'user')}>
+                      <span className={getUserColor(message.user_email || '', message.user_role || 'user')}>
                         {message.user_email?.split('@')[0] || 'Unknown'}
                       </span>
                     </div>
@@ -688,7 +719,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                   
                   {/* Message bubble */}
                   <div
-                    className={`relative px-4 py-3 rounded-2xl shadow-sm ${
+                    className={`relative px-4 py-3 rounded-full shadow-sm ${
                       message.user_id === user?.id
                         ? message.id.startsWith('temp-') 
                           ? 'bg-blue-600 text-white opacity-70' 
@@ -702,7 +733,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                         <img 
                           src={message.image_url} 
                           alt="Shared image" 
-                          className="rounded-lg max-w-full h-auto"
+                          className="rounded-2xl max-w-full h-auto"
                           style={{ maxHeight: '300px' }}
                         />
                       </div>
