@@ -95,7 +95,7 @@ export default function GroupMembersPage() {
       const membersWithPoints = await Promise.all(
         (membersData || []).map(async (member) => {
           const { data: pointsData } = await supabase
-            .from('workout_logs')
+            .from('logs')
             .select('points')
             .eq('user_id', member.id)
 

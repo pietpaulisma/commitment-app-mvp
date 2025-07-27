@@ -85,20 +85,8 @@ export default function CreateGroupPage() {
 
       if (profileError) throw profileError
 
-      // Create initial invite code for the group
-      const { error: inviteError } = await supabase
-        .from('group_invites')
-        .insert({
-          group_id: groupData.id,
-          created_by: user?.id,
-          max_uses: 10,
-          is_active: true
-        })
-
-      if (inviteError) {
-        console.error('Error creating invite code:', inviteError)
-        // Don't fail the whole process for this
-      }
+      // Note: Initial invite code creation skipped - feature not yet implemented
+      console.log('Group created successfully. Invite codes feature coming soon.')
 
       // Success! Now go to profile setup with group context
       router.push('/onboarding/profile')

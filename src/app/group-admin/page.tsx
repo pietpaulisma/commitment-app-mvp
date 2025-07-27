@@ -108,7 +108,7 @@ export default function GroupAdminDashboard() {
         (membersData || []).map(async (member) => {
           // Get total points
           const { data: pointsData } = await supabase
-            .from('workout_logs')
+            .from('logs')
             .select('points, created_at')
             .eq('user_id', member.id)
 
@@ -132,7 +132,7 @@ export default function GroupAdminDashboard() {
 
       // Calculate group workout summary
       const { data: allWorkouts } = await supabase
-        .from('workout_logs')
+        .from('logs')
         .select('points, created_at')
         .in('user_id', membersData.map(m => m.id))
 

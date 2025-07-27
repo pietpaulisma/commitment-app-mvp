@@ -88,7 +88,7 @@ export default function UserManagementPage() {
         (usersData || []).map(async (userData) => {
           // Get workout stats
           const { data: workouts } = await supabase
-            .from('workout_logs')
+            .from('logs')
             .select('points, created_at')
             .eq('user_id', userData.id)
 
@@ -163,7 +163,7 @@ export default function UserManagementPage() {
     try {
       // Delete workout logs first
       const { error: workoutError } = await supabase
-        .from('workout_logs')
+        .from('logs')
         .delete()
         .eq('user_id', userId)
 

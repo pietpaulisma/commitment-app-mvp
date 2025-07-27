@@ -74,7 +74,7 @@ export default function MobileLeaderboard() {
       const leaderboardData = await Promise.all(
         profiles.map(async (profile) => {
           let query = supabase
-            .from('workout_logs')
+            .from('logs')
             .select('points, created_at')
             .eq('user_id', profile.id)
 

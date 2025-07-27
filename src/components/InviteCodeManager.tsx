@@ -34,14 +34,10 @@ export default function InviteCodeManager() {
     if (!profile?.group_id) return
 
     try {
-      const { data, error } = await supabase
-        .from('group_invites')
-        .select('*')
-        .eq('group_id', profile.group_id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setInvites(data || [])
+      // Note: group_invites table doesn't exist yet - this is a future feature
+      // For now, just set empty invites to prevent 404 errors
+      console.log('Invite codes feature not yet implemented')
+      setInvites([])
     } catch (error) {
       console.error('Error loading invites:', error)
       setError('Failed to load invite codes')
@@ -57,17 +53,9 @@ export default function InviteCodeManager() {
     setError('')
 
     try {
-      const { error } = await supabase
-        .from('group_invites')
-        .insert({
-          group_id: profile.group_id,
-          created_by: user?.id,
-          max_uses: 10,
-          is_active: true
-        })
-
-      if (error) throw error
-      await loadInvites()
+      // Note: group_invites feature not yet implemented
+      console.log('Create invite feature not yet available')
+      setError('Invite codes feature coming soon')
     } catch (error) {
       console.error('Error creating invite:', error)
       setError('Failed to create invite code')
@@ -78,13 +66,9 @@ export default function InviteCodeManager() {
 
   const toggleInvite = async (inviteId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('group_invites')
-        .update({ is_active: !isActive })
-        .eq('id', inviteId)
-
-      if (error) throw error
-      await loadInvites()
+      // Note: group_invites feature not yet implemented
+      console.log('Toggle invite feature not yet available')
+      setError('Invite codes feature coming soon')
     } catch (error) {
       console.error('Error toggling invite:', error)
       setError('Failed to update invite code')

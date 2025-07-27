@@ -95,33 +95,8 @@ export default function GroupSelectionPage() {
 
       // If using invite code, validate it first
       if (inviteCode.trim()) {
-        const { data: inviteData, error: inviteError } = await supabase
-          .from('group_invites')
-          .select('group_id, max_uses, current_uses, is_active, expires_at')
-          .eq('invite_code', inviteCode.trim().toUpperCase())
-          .eq('is_active', true)
-          .single()
-
-        if (inviteError || !inviteData) {
-          throw new Error('Invalid or expired invite code.')
-        }
-
-        // Check if invite is still valid
-        if (inviteData.current_uses >= inviteData.max_uses) {
-          throw new Error('This invite code has reached its usage limit.')
-        }
-
-        if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
-          throw new Error('This invite code has expired.')
-        }
-
-        groupIdToJoin = inviteData.group_id
-
-        // Increment usage count
-        await supabase
-          .from('group_invites')
-          .update({ current_uses: inviteData.current_uses + 1 })
-          .eq('invite_code', inviteCode.trim().toUpperCase())
+        // Note: group_invites feature not yet implemented
+        throw new Error('Invite codes feature not yet available. Please contact an admin to be added to a group.')
       }
 
       // Join the group

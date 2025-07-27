@@ -62,7 +62,7 @@ export default function MobileProfile() {
     setLoading(true)
     try {
       const { data: workouts } = await supabase
-        .from('workout_logs')
+        .from('logs')
         .select('points, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true })
