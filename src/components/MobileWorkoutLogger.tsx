@@ -34,10 +34,112 @@ export default function MobileWorkoutLogger() {
   const [loading, setLoading] = useState(true)
   const [dailyTarget, setDailyTarget] = useState(0)
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [hasFlexibleRestDay, setHasFlexibleRestDay] = useState(false)
+  const [weekStartDate, setWeekStartDate] = useState<Date | null>(null)
 
   useEffect(() => {
     loadData()
   }, [])
+
+  const checkFlexibleRestDay = async (userId: string) => {
+    try {
+      // Get current week's Monday
+      const today = new Date()
+      const currentDay = today.getDay()
+      const daysToMonday = currentDay === 0 ? 6 : currentDay - 1 // 0 = Sunday, 1 = Monday
+      const monday = new Date(today)
+      monday.setDate(today.getDate() - daysToMonday)
+      monday.setHours(0, 0, 0, 0)
+      setWeekStartDate(monday)
+
+      const mondayString = monday.toISOString().split('T')[0]
+
+      // Check if flexible rest day has been used this week
+      const { data: usedRestDay } = await supabase
+        .from('flexible_rest_days')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('week_start_date', mondayString)
+        .maybeSingle()
+
+      // If already used this week, don't show button
+      if (usedRestDay) {
+        setHasFlexibleRestDay(false)
+        return
+      }
+
+      // Check if user achieved double target on Monday
+      const { data: mondayLogs } = await supabase
+        .from('logs')
+        .select('points')
+        .eq('user_id', userId)
+        .eq('date', mondayString)
+
+      const mondayPoints = mondayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+      
+      // Get Monday's target (which is now double the normal amount)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('group_id')
+        .eq('id', userId)
+        .single()
+
+      if (profile?.group_id) {
+        const { data: group } = await supabase
+          .from('groups')
+          .select('start_date')
+          .eq('id', profile.group_id)
+          .single()
+
+        if (group?.start_date) {
+          const daysSinceStart = Math.floor((monday.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+          const baseTarget = 1 + Math.max(0, daysSinceStart)
+          const mondayTarget = baseTarget * 2 // Monday target is double
+
+          if (mondayPoints >= mondayTarget) {
+            setHasFlexibleRestDay(true)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking flexible rest day:', error)
+    }
+  }
+
+  const useFlexibleRestDay = async () => {
+    if (!user || !weekStartDate) return
+
+    try {
+      const mondayString = weekStartDate.toISOString().split('T')[0]
+      const today = new Date().toISOString().split('T')[0]
+
+      // Record that the flexible rest day was used
+      const { error } = await supabase
+        .from('flexible_rest_days')
+        .insert({
+          user_id: user.id,
+          week_start_date: mondayString,
+          used_date: today,
+          earned_date: mondayString
+        })
+
+      if (error) {
+        console.error('Error using flexible rest day:', error)
+        alert('Error using flexible rest day. Please try again.')
+        return
+      }
+
+      // Hide the button
+      setHasFlexibleRestDay(false)
+      
+      // Show success message
+      alert('🎉 Flexible rest day activated! You can skip today\'s workout without penalty.')
+      
+    } catch (error) {
+      console.error('Error using flexible rest day:', error)
+      alert('Error using flexible rest day. Please try again.')
+    }
+  }
 
   async function loadData() {
     try {
@@ -67,6 +169,7 @@ export default function MobileWorkoutLogger() {
 
       if (user) {
         await loadTodaysLogs(user.id)
+        await checkFlexibleRestDay(user.id)
       }
     } catch (error) {
       console.error('Error loading data:', error)
@@ -301,6 +404,28 @@ export default function MobileWorkoutLogger() {
                 <div className="text-sm font-medium -mt-1 text-white">
                   complete
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Flexible Rest Day Section */}
+      {hasFlexibleRestDay && (
+        <div className="bg-black border-t border-gray-800">
+          <div className="px-4 py-6">
+            <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-600/30 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold text-green-400 mb-1">🎉 Flexible Rest Day Earned!</div>
+                  <div className="text-xs text-gray-300">You crushed Monday's double target. Use this to skip any day this week.</div>
+                </div>
+                <button 
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  onClick={useFlexibleRestDay}
+                >
+                  Use Rest Day
+                </button>
               </div>
             </div>
           </div>

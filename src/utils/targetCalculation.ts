@@ -27,7 +27,7 @@ export function calculateDailyTarget({
   
   // Adjust target based on day type
   if (restDays.includes(currentDayOfWeek)) {
-    target = 0 // Rest day - no points required
+    target = target * 2 // Rest day - double points to earn flexible rest day
   } else if (recoveryDays.includes(currentDayOfWeek)) {
     target = 375 // Recovery day - 15 minutes of recovery (25 points/min * 15 min)
   }
