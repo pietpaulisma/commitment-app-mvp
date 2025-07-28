@@ -1043,20 +1043,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           <div className="flex">
             {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
-              {/* Regular Progress Background */}
+              {/* Liquid gradient progress background */}
               <div 
-                className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-300 ease-out"
+                className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
                 style={{ 
-                  width: `${Math.min(100, Math.max(0, regularPercentage))}%`,
-                  opacity: isClosing ? 0 : 1
-                }}
-              />
-              {/* Recovery Progress Background - positioned adjacent to regular progress */}
-              <div 
-                className="absolute top-0 bottom-0 bg-blue-700 transition-all duration-300 ease-out"
-                style={{ 
-                  left: `${Math.min(100, Math.max(0, regularPercentage))}%`,
-                  width: `${Math.min(100 - Math.max(0, regularPercentage), recoveryPercentage)}%`,
+                  width: '100%',
+                  background: `linear-gradient(to right, 
+                    #3b82f6 0%, 
+                    #3b82f6dd ${Math.max(0, regularPercentage - 15)}%, 
+                    #3b82f666 ${regularPercentage}%, 
+                    ${recoveryPercentage > 0 
+                      ? `#1d4ed8aa ${regularPercentage + 5}%, #1d4ed866 ${Math.min(100, regularPercentage + recoveryPercentage)}%, #000000 ${Math.min(100, regularPercentage + recoveryPercentage + 20)}%`
+                      : `#000000 ${Math.min(100, regularPercentage + 20)}%`
+                    })`,
                   opacity: isClosing ? 0 : 1
                 }}
               />
@@ -1157,10 +1156,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               <div className="flex">
                                 {/* Main content area with progress bar - matches header layout */}
                                 <div className="flex-1 relative overflow-hidden">
-                                  {/* Progress bar background */}
+                                  {/* Liquid gradient progress bar background */}
                                   <div 
-                                    className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-                                    style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+                                    className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                                    style={{ 
+                                      width: '100%',
+                                      background: `linear-gradient(to right, 
+                                        ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
+                                        ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
+                                        ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}66 ${exerciseProgress.percentage}%, 
+                                        #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                                    }}
                                   />
                                   
                                   <div className="relative p-3">
