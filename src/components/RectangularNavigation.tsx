@@ -242,7 +242,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
           {isOnProfilePage ? (
             <span className="text-white text-2xl font-bold drop-shadow-lg">×</span>
           ) : (
-            <span className="text-2xl drop-shadow-lg">👤</span>
+            <span className="text-2xl drop-shadow-lg">{profile?.custom_icon || '👤'}</span>
           )}
         </Link>
       </div>
@@ -272,7 +272,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
             {isOnProfilePage ? (
               <span className="text-white text-xl font-bold drop-shadow-lg">×</span>
             ) : (
-              <span className="text-xl drop-shadow-lg">👤</span>
+              <span className="text-xl drop-shadow-lg">{profile?.custom_icon || '👤'}</span>
             )}
           </div>
         </Link>
