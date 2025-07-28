@@ -255,9 +255,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                 <div className="w-12 text-xs text-gray-300 font-medium truncate">
                   {member.name}
                 </div>
-                <div className="flex-1 bg-gray-700 rounded h-4 relative overflow-hidden">
+                <div className="flex-1 bg-gray-700 h-4 relative overflow-hidden">
                   <div
-                    className="h-full rounded transition-all duration-700"
+                    className="h-full transition-all duration-700"
                     style={{
                       background: i === 0 ? getUserColorGradient(userProfile?.personal_color, 'organic') : getGradientStyle('bg-gray-500', 'organic'),
                       width: `${Math.min(100, member.percentage)}%`,
@@ -322,10 +322,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
               return (
                 <div key={i} className="relative">
                   {/* Background bar */}
-                  <div className="w-full bg-gray-700 rounded h-6 relative overflow-hidden">
+                  <div className="w-full bg-gray-700 h-6 relative overflow-hidden">
                     {/* Filled bar */}
                     <div 
-                      className="h-full rounded transition-all duration-700"
+                      className="h-full transition-all duration-700"
                       style={{ 
                         background: isTop ? getUserColorGradient(userProfile?.personal_color, 'organic') : getGradientStyle('bg-gray-500', 'organic'),
                         width: `${Math.max(20, percentage)}%`,
@@ -1391,23 +1391,30 @@ export default function RectangularDashboard() {
                     {groupMembers.slice(rowIndex * 2, rowIndex * 2 + 2).map((member, colIndex) => {
                       const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
                       
-                      // Default to purple, user can define their own color later
-                      const userColor = member.preferredColor || 'bg-purple-400'
+                      // Use user's personal color gradient
+                      const isCurrentUser = member.id === userProfile?.id
                       
                       // Use chat background color (gray-900/30) when no progress
                       const backgroundColor = progressPercentage === 0 ? 'bg-gray-900/30' : 'bg-gray-800'
                       
                       // Left member: center to left edge, Right member: center to right edge
                       const isLeftColumn = colIndex === 0
-                      const borderRadius = isLeftColumn ? 'rounded-l-lg' : 'rounded-r-lg'
+                      const borderRadius = isLeftColumn ? '' : '' // Remove rounded corners
                       
                       return (
                         <div key={member.id} className={`relative h-12 ${backgroundColor} overflow-hidden ${borderRadius}`}>
-                          {/* Progress bar - always fills from left to right */}
+                          {/* Progress bar - always fills from left to right with gradient */}
                           <div 
-                            className={`absolute left-0 top-0 bottom-0 ${userColor} transition-all duration-500 ease-out`}
+                            className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
                             style={{ 
-                              width: `${Math.min(100, progressPercentage)}%`
+                              width: `${Math.min(100, progressPercentage)}%`,
+                              background: isCurrentUser 
+                                ? getUserColorGradient(userProfile?.personal_color, 'organic')
+                                : progressPercentage >= 100 
+                                  ? getUserColorGradient('#22c55e', 'organic')
+                                  : progressPercentage >= 75 
+                                    ? getUserColorGradient('#eab308', 'organic') 
+                                    : getUserColorGradient('#3b82f6', 'organic')
                             }}
                           />
                           
