@@ -35,49 +35,50 @@ export default function Dashboard() {
         <TimeGradient />
       </div>
       
-      {/* Landing Logo - Only show on dashboard, positioned relative to DAY text when not scrolled */}
-      {!isScrolled && pathname === '/dashboard' && (
+      {/* Landing Logo - Only show on dashboard route, positioned near DAY text */}
+      {pathname === '/dashboard' && (
         <>
-          {/* Mobile Landing Logo - Very close to DAY text */}
-          <div className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
-               style={{ top: `calc(50vh - 60px)` }}>
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-6 w-auto drop-shadow-lg"
-            />
-          </div>
-          {/* Desktop Landing Logo - Very close to DAY text */}
-          <div className="hidden lg:block absolute left-8 z-[70] transition-all duration-500"
-               style={{ top: `calc(50vh - 80px)` }}>
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-7 w-auto drop-shadow-lg"
-            />
-          </div>
-        </>
-      )}
-      
-      {/* Scrolled Logo - Move to top, only on dashboard when scrolled */}
-      {isScrolled && pathname === '/dashboard' && (
-        <>
-          {/* Mobile Scrolled Logo - Move to top, only on dashboard */}
-          <div className="lg:hidden fixed top-3 left-4 z-[70] transition-all duration-500">
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-5 w-auto drop-shadow-lg"
-            />
-          </div>
-          {/* Desktop Scrolled Logo - Move to top, only on dashboard */}
-          <div className="hidden lg:block fixed top-5 left-8 z-[70] transition-all duration-500">
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-6 w-auto drop-shadow-lg"
-            />
-          </div>
+          {!isScrolled ? (
+            <>
+              {/* Mobile Landing Logo - Positioned near DAY text */}
+              <div className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
+                   style={{ top: '140px' }}>
+                <img 
+                  src="/logo.png" 
+                  alt="The Commitment" 
+                  className="h-6 w-auto drop-shadow-lg"
+                />
+              </div>
+              {/* Desktop Landing Logo - Positioned near DAY text */}
+              <div className="hidden lg:block absolute left-8 z-[70] transition-all duration-500"
+                   style={{ top: '140px' }}>
+                <img 
+                  src="/logo.png" 
+                  alt="The Commitment" 
+                  className="h-7 w-auto drop-shadow-lg"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Mobile Scrolled Logo - Move to top when scrolled */}
+              <div className="lg:hidden fixed top-3 left-4 z-[70] transition-all duration-500">
+                <img 
+                  src="/logo.png" 
+                  alt="The Commitment" 
+                  className="h-5 w-auto drop-shadow-lg"
+                />
+              </div>
+              {/* Desktop Scrolled Logo - Move to top when scrolled */}
+              <div className="hidden lg:block fixed top-5 left-8 z-[70] transition-all duration-500">
+                <img 
+                  src="/logo.png" 
+                  alt="The Commitment" 
+                  className="h-6 w-auto drop-shadow-lg"
+                />
+              </div>
+            </>
+          )}
         </>
       )}
       
