@@ -248,6 +248,32 @@ export default function NewDashboard() {
 
   const progressPercentage = stats.todayTarget > 0 ? (stats.todayPoints / stats.todayTarget) * 100 : 0
 
+  // Helper function to create gradient from user's personal color
+  const getUserColorGradient = (personalColor: string, type: 'organic' | 'linear' = 'organic') => {
+    if (!personalColor) return 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)'
+    
+    // Convert hex to RGB for gradient calculation
+    const hex = personalColor.replace('#', '')
+    const r = parseInt(hex.substr(0, 2), 16)
+    const g = parseInt(hex.substr(2, 2), 16)
+    const b = parseInt(hex.substr(4, 2), 16)
+    
+    if (type === 'organic') {
+      // Create organic radial gradient with darker variations
+      const darker1 = `rgb(${Math.max(0, r - 30)}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)})`
+      const darker2 = `rgb(${Math.max(0, r - 60)}, ${Math.max(0, g - 60)}, ${Math.max(0, b - 60)})`
+      const darker3 = `rgb(${Math.max(0, r - 90)}, ${Math.max(0, g - 90)}, ${Math.max(0, b - 90)})`
+      
+      return `radial-gradient(ellipse 200% 100% at 50% 0%, ${personalColor} 0%, ${darker1} 30%, ${darker2} 60%, ${darker3} 100%)`
+    } else {
+      // Create linear gradient
+      const darker1 = `rgb(${Math.max(0, r - 40)}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)})`
+      const darker2 = `rgb(${Math.max(0, r - 80)}, ${Math.max(0, g - 80)}, ${Math.max(0, b - 80)})`
+      
+      return `linear-gradient(135deg, ${personalColor} 0%, ${darker1} 50%, ${darker2} 100%)`
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 pb-24">
       {/* Personal Stats Hero */}
@@ -372,13 +398,15 @@ export default function NewDashboard() {
                           {Math.round(memberProgress)}%
                         </div>
                       </div>
-                      <div className="w-12 h-2 bg-gray-600 rounded-full">
+                      <div className="w-12 h-2 bg-gray-600">
                         <div 
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            memberProgress >= 100 ? 'bg-green-400' : 
-                            memberProgress >= 75 ? 'bg-yellow-400' : 'bg-blue-400'
-                          }`}
-                          style={{ width: `${Math.min(100, memberProgress)}%` }}
+                          className="h-2 transition-all duration-500"
+                          style={{ 
+                            width: `${Math.min(100, memberProgress)}%`,
+                            background: isCurrentUser ? getUserColorGradient(profile.personal_color) : 
+                                       memberProgress >= 100 ? getUserColorGradient('#22c55e') : 
+                                       memberProgress >= 75 ? getUserColorGradient('#eab308') : getUserColorGradient('#3b82f6')
+                          }}
                         ></div>
                       </div>
                     </div>
