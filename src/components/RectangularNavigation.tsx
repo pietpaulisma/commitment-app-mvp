@@ -254,7 +254,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
             <img 
               src="/logo.png" 
               alt="The Commitment" 
-              className="h-16 w-auto drop-shadow-lg"
+              className="h-11 w-auto drop-shadow-lg"
             />
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
             <img 
               src="/logo.png" 
               alt="The Commitment" 
-              className="h-8 w-auto drop-shadow-lg"
+              className="h-6 w-auto drop-shadow-lg"
             />
           </div>
         </nav>
@@ -297,7 +297,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
             <img 
               src="/logo.png" 
               alt="The Commitment" 
-              className="h-20 w-auto drop-shadow-lg"
+              className="h-14 w-auto drop-shadow-lg"
             />
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
             <img 
               src="/logo.png" 
               alt="The Commitment" 
-              className="h-10 w-auto drop-shadow-lg"
+              className="h-7 w-auto drop-shadow-lg"
             />
           </div>
         </nav>

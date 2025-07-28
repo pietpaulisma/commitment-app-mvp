@@ -8,6 +8,37 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 
+// Helper function to get hilarious hourly commitment messages
+const getHourlyMessage = (hour: number): string => {
+  const messages = [
+    "Still up? That's commitment... or insomnia", // 12AM
+    "3AM thoughts: 'I should be working out right now'", // 1AM
+    "Night owl or fitness vampire? Either way, you're here", // 2AM
+    "The dedication is real... or you have a sleeping problem", // 3AM
+    "Rise and grind? More like rise and why am I awake?", // 4AM
+    "Early bird gets the gains... and questionable life choices", // 5AM
+    "Morning champion! Coffee first, then conquer the world", // 6AM
+    "Another day, another chance to pretend you like burpees", // 7AM
+    "Breakfast of champions: protein and pure determination", // 8AM
+    "9-to-5 warrior reporting for duty (and squats)", // 9AM
+    "Mid-morning motivation: you're crushing it, literally", // 10AM
+    "Pre-lunch power hour - fuel up that commitment engine", // 11AM
+    "Lunch break legend! Time to digest your goals", // 12PM
+    "Post-lunch commitment: fighting the food coma like a champ", // 1PM
+    "Afternoon achiever! When others nap, you attack", // 2PM
+    "3PM slump? More like 3PM pump - let's go!", // 3PM
+    "Almost there warrior - the finish line tastes like victory", // 4PM
+    "5 o'clock somewhere, commitment o'clock everywhere", // 5PM
+    "Evening excellence! When others Netflix, you commit", // 6PM
+    "Dinner and dedication - the perfect recipe for success", // 7PM
+    "Prime time performer! Your commitment show is rated #1", // 8PM
+    "Night shift ninja - slaying goals in the darkness", // 9PM
+    "Late-night legend! When the world sleeps, you sweep", // 10PM
+    "Almost midnight warrior - tomorrow's gains start tonight" // 11PM
+  ]
+  return messages[hour] || messages[0]
+}
+
 // Helper function to convert Tailwind classes to organic gradient styles
 const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'linear') => {
   if (type === 'organic') {
@@ -1163,10 +1194,7 @@ export default function RectangularDashboard() {
             <div className="px-4 pb-12 pt-8">
               <div className="text-center">
                 <p className="text-sm text-white/80 font-medium">
-                  Good {
-                    currentTime.getHours() < 12 ? 'morning' :
-                    currentTime.getHours() < 18 ? 'afternoon' : 'evening'
-                  } {user?.email?.split('@')[0] || 'champion'},
+                  {getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
                 </p>
                 <p className="text-xs text-white/60 mt-1 font-medium">
                   {dayType === 'rest' ? 'Rest well, tomorrow we continue the journey' :
