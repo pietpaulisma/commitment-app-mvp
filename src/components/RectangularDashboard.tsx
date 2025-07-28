@@ -473,7 +473,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
 const MemoizedChartComponent = memo(ChartComponent)
 
 export default function RectangularDashboard() {
-  // Add keyframe animations for enhanced chart effects
+  // Add keyframe animations for enhanced chart effects and header animations
   const chartAnimationStyles = `
     @keyframes slideUpScale {
       0% { transform: scaleY(0); opacity: 0.8; }
@@ -499,6 +499,51 @@ export default function RectangularDashboard() {
       0% { transform: translateY(10px); opacity: 0; }
       100% { transform: translateY(0); opacity: 1; }
     }
+    
+    /* Header Animation Keyframes */
+    @keyframes slideDownFromTop {
+      0% { transform: translateY(-100px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes foldOutDown {
+      0% { transform: translateY(-20px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes slideInFromLeft {
+      0% { transform: translateX(-100px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes fadeInSmooth {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    
+    /* Animation utility classes */
+    .animate-day-enter {
+      animation: slideDownFromTop 0.4s ease-out forwards;
+      animation-delay: 0.1s;
+      opacity: 0;
+    }
+    .animate-day-name-enter {
+      animation: foldOutDown 0.3s ease-out forwards;
+      animation-delay: 0.3s;
+      opacity: 0;
+    }
+    .animate-time-enter {
+      animation: slideInFromLeft 0.4s ease-out forwards;
+      animation-delay: 0.5s;
+      opacity: 0;
+    }
+    .animate-remaining-enter {
+      animation: foldOutDown 0.3s ease-out forwards;
+      animation-delay: 0.7s;
+      opacity: 0;
+    }
+    .animate-sentence-enter {
+      animation: fadeInSmooth 0.5s ease-out forwards;
+      animation-delay: 0.9s;
+      opacity: 0;
+    }
   `
   const { user, loading: authLoading, isDemoMode, exitDemoMode } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
@@ -519,6 +564,7 @@ export default function RectangularDashboard() {
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
+  const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -534,6 +580,17 @@ export default function RectangularDashboard() {
       return () => clearInterval(interval)
     }
   }, [user, profile])
+
+  // Trigger animations after component mounts and data loads
+  useEffect(() => {
+    if (user && profile && groupStartDate) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        setIsAnimationLoaded(true)
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [user, profile, groupStartDate])
 
 
   // Countdown timer effect
@@ -1199,23 +1256,23 @@ export default function RectangularDashboard() {
           <div className="relative px-4 py-8 z-10">
             <div className="flex items-end justify-between">
               <div>
-                <div className="flex items-baseline space-x-1">
+                <div className={`flex items-baseline space-x-1 ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
                   <span className="text-5xl font-thin uppercase tracking-wide text-white">DAY</span>
                   <span className="text-5xl font-black text-white">{challengeDay}</span>
                 </div>
-                <p className="text-sm font-medium -mt-1 text-white">
+                <p className={`text-sm font-medium -mt-1 text-white ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
                   {getCurrentDayName()}
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-black text-white">
+                <div className={`text-3xl font-black text-white ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
                   {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
                     <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
                       {char}
                     </span>
                   ))}
                 </div>
-                <div className="text-sm font-medium -mt-1 text-white">
+                <div className={`text-sm font-medium -mt-1 text-white ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
                   remaining
                 </div>
               </div>
@@ -1223,7 +1280,7 @@ export default function RectangularDashboard() {
             
             {/* Greeting with username and motivational text */}
             <div className="px-4 py-10">
-              <div className="text-center">
+              <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                 {(() => {
                   // Find current user's progress
                   const currentUserMember = groupMembers.find(member => member.isCurrentUser)
