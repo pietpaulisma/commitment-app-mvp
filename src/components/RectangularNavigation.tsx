@@ -247,26 +247,29 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
         </Link>
       </div>
 
-      {/* Mobile Landing Logo - Centered for landing, left-aligned header when scrolled */}
-      <nav className={`lg:hidden transition-all duration-500 ${
-        isScrolled 
-          ? 'fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800' 
-          : 'absolute top-[8vh] left-1/2 transform -translate-x-1/2 z-50'
-      }`}>
-        <div className={`transition-all duration-500 ${
-          isScrolled 
-            ? 'flex justify-start items-center py-3 px-4' 
-            : 'flex justify-center items-center py-0'
-        }`}>
+      {/* Mobile Landing Logo - Completely separate positioning */}
+      {!isScrolled && (
+        <div className="lg:hidden fixed top-[10vh] left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-500">
           <img 
             src="/logo.png" 
             alt="The Commitment" 
-            className={`drop-shadow-lg transition-all duration-500 ${
-              isScrolled ? 'h-8 w-auto opacity-90' : 'h-12 w-auto opacity-100'
-            }`}
+            className="h-14 w-auto drop-shadow-lg"
           />
         </div>
-      </nav>
+      )}
+      
+      {/* Mobile Sticky Header - Only appears when scrolled */}
+      {isScrolled && (
+        <nav className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
+          <div className="flex justify-start items-center py-3 px-4 pr-20">
+            <img 
+              src="/logo.png" 
+              alt="The Commitment" 
+              className="h-8 w-auto drop-shadow-lg"
+            />
+          </div>
+        </nav>
+      )}
 
       {/* Fixed Profile Icon - Desktop */}
       <div className="hidden lg:block fixed top-8 right-8 z-[60]">
@@ -285,26 +288,29 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
         </Link>
       </div>
 
-      {/* Desktop Landing Logo - Centered for landing, left-aligned header when scrolled */}
-      <nav className={`hidden lg:block transition-all duration-500 ${
-        isScrolled 
-          ? 'fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800' 
-          : 'absolute top-[8vh] left-1/2 transform -translate-x-1/2 z-50'
-      }`}>
-        <div className={`transition-all duration-500 ${
-          isScrolled 
-            ? 'flex justify-start items-center py-4 px-8 max-w-7xl mx-auto' 
-            : 'flex justify-center items-center py-0'
-        }`}>
+      {/* Desktop Landing Logo - Completely separate positioning */}
+      {!isScrolled && (
+        <div className="hidden lg:block fixed top-[10vh] left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-500">
           <img 
             src="/logo.png" 
             alt="The Commitment" 
-            className={`drop-shadow-lg transition-all duration-500 ${
-              isScrolled ? 'h-10 w-auto opacity-90' : 'h-16 w-auto opacity-100'
-            }`}
+            className="h-16 w-auto drop-shadow-lg"
           />
         </div>
-      </nav>
+      )}
+      
+      {/* Desktop Sticky Header - Only appears when scrolled */}
+      {isScrolled && (
+        <nav className="hidden lg:block fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
+          <div className="flex justify-start items-center py-4 px-8 pr-32 max-w-7xl mx-auto">
+            <img 
+              src="/logo.png" 
+              alt="The Commitment" 
+              className="h-10 w-auto drop-shadow-lg"
+            />
+          </div>
+        </nav>
+      )}
 
 
       {/* Group Chat Modal */}

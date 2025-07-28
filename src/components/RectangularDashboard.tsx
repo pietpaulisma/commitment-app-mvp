@@ -1132,7 +1132,7 @@ export default function RectangularDashboard() {
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="relative overflow-hidden mt-32">
+        <div className="relative overflow-hidden mt-40">
           {/* Content with more vertical padding */}
           <div className="relative px-4 py-8 z-10">
             <div className="flex items-end justify-between">
