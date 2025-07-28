@@ -40,7 +40,7 @@ export default function Dashboard() {
         <>
           {/* Mobile Landing Logo - Positioned above DAY text */}
           <div className="lg:hidden absolute left-4 z-10 transition-all duration-500" 
-               style={{ top: `calc(50vh - 160px)` }}>
+               style={{ top: `calc(50vh - 280px)` }}>
             <img 
               src="/logo.png" 
               alt="The Commitment" 
@@ -49,7 +49,7 @@ export default function Dashboard() {
           </div>
           {/* Desktop Landing Logo - Positioned above DAY text */}
           <div className="hidden lg:block absolute left-8 z-10 transition-all duration-500"
-               style={{ top: `calc(50vh - 180px)` }}>
+               style={{ top: `calc(50vh - 320px)` }}>
             <img 
               src="/logo.png" 
               alt="The Commitment" 
