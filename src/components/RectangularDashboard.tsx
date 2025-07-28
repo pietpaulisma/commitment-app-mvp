@@ -1392,7 +1392,7 @@ export default function RectangularDashboard() {
                       const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
                       
                       // Use user's personal color gradient
-                      const isCurrentUser = member.id === userProfile?.id
+                      const isCurrentUser = member.id === profile?.id
                       
                       // Use chat background color (gray-900/30) when no progress
                       const backgroundColor = progressPercentage === 0 ? 'bg-gray-900/30' : 'bg-gray-800'
@@ -1409,7 +1409,7 @@ export default function RectangularDashboard() {
                             style={{ 
                               width: `${Math.min(100, progressPercentage)}%`,
                               background: isCurrentUser 
-                                ? getUserColorGradient(userProfile?.personal_color, 'organic')
+                                ? getUserColorGradient(profile?.personal_color, 'organic')
                                 : progressPercentage >= 100 
                                   ? getUserColorGradient('#22c55e', 'organic')
                                   : progressPercentage >= 75 
