@@ -426,12 +426,17 @@ export default function WorkoutLogger() {
                     <span>Progress</span>
                     <span>{Math.round((getTotalPoints() / dailyTarget) * 100)}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="w-full bg-gray-200 h-3">
                     <div 
-                      className={`h-3 rounded-full transition-all duration-300 ${
-                        getTotalPoints() >= dailyTarget ? 'bg-green-500' : 'bg-blue-500'
-                      }`}
-                      style={{ width: `${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%` }}
+                      className="h-3 transition-all duration-300"
+                      style={{ 
+                        width: '100%',
+                        background: `linear-gradient(to right, 
+                          ${getTotalPoints() >= dailyTarget ? '#22c55e' : '#3b82f6'} 0%, 
+                          ${getTotalPoints() >= dailyTarget ? '#22c55e' : '#3b82f6'}dd ${Math.max(0, Math.min(100, (getTotalPoints() / dailyTarget) * 100) - 15)}%, 
+                          ${getTotalPoints() >= dailyTarget ? '#22c55e' : '#3b82f6'}66 ${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%, 
+                          #e5e7eb ${Math.min(100, Math.min(100, (getTotalPoints() / dailyTarget) * 100) + 20)}%)`
+                      }}
                     ></div>
                   </div>
                 </div>

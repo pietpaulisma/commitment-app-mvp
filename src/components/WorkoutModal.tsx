@@ -53,6 +53,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const { user } = useAuth()
   const { profile } = useProfile()
   const { weekMode, setWeekMode, isWeekModeAvailable } = useWeekMode()
+
+  // Get category colors for exercises with variations
+  const getCategoryColor = (type: string, exerciseId: string) => {
+    const variations = {
+      'all': ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'], // Blue variations
+      'recovery': ['#22c55e', '#16a34a', '#15803d', '#166534'], // Green variations  
+      'sports': ['#a855f7', '#9333ea', '#7c3aed', '#6d28d9'], // Purple variations
+    }
+    
+    const colorArray = variations[type as keyof typeof variations] || variations['all']
+    // Use exercise ID to consistently pick a color variation
+    const colorIndex = exerciseId.charCodeAt(0) % colorArray.length
+    return colorArray[colorIndex]
+  }
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [selectedExercise, setSelectedExercise] = useState<ExerciseWithProgress | null>(null)
   const [quantity, setQuantity] = useState('')
@@ -443,10 +457,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         <div className="flex">
           {/* Main content area with progress bar - matches header layout */}
           <div className="flex-1 relative overflow-hidden">
-            {/* Progress bar background */}
+            {/* Liquid gradient progress bar background */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-              style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+              style={{ 
+                width: '100%',
+                background: `linear-gradient(to right, 
+                  ${getCategoryColor(exercise.type, exercise.id)} 0%, 
+                  ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
+                  ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
+                  #111827 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+              }}
             />
             
             {/* Main exercise button */}
@@ -518,10 +539,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         <div className="flex">
           {/* Main content area with progress bar - matches header layout */}
           <div className="flex-1 relative overflow-hidden">
-            {/* Progress bar background */}
+            {/* Liquid gradient progress bar background */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-blue-500 transition-all duration-500 ease-out"
-              style={{ width: `${Math.min(100, exerciseProgress.percentage)}%` }}
+              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+              style={{ 
+                width: '100%',
+                background: `linear-gradient(to right, 
+                  ${getCategoryColor(exercise.type, exercise.id)} 0%, 
+                  ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
+                  ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
+                  #111827 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+              }}
             />
             
             {/* Main exercise button */}
