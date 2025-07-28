@@ -249,7 +249,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
 
       {/* Mobile Landing Logo - Left aligned above DAY content */}
       {!isScrolled && (
-        <div className="lg:hidden absolute top-[8vh] left-4 z-50 transition-opacity duration-500">
+        <div className="lg:hidden absolute top-[4vh] left-4 z-50 transition-opacity duration-500">
           <img 
             src="/logo.png" 
             alt="The Commitment" 
@@ -290,7 +290,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
 
       {/* Desktop Landing Logo - Left aligned above DAY content */}
       {!isScrolled && (
-        <div className="hidden lg:block absolute top-[8vh] left-8 z-50 transition-opacity duration-500">
+        <div className="hidden lg:block absolute top-[4vh] left-8 z-50 transition-opacity duration-500">
           <img 
             src="/logo.png" 
             alt="The Commitment" 
