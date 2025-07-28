@@ -565,6 +565,7 @@ export default function RectangularDashboard() {
   const [groupStats, setGroupStats] = useState<any>(null)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -591,6 +592,16 @@ export default function RectangularDashboard() {
       return () => clearTimeout(timer)
     }
   }, [user, profile, groupStartDate])
+
+  // Parallax scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
 
   // Countdown timer effect
@@ -1301,14 +1312,24 @@ export default function RectangularDashboard() {
       )}
 
 
-      {/* Today's Activity Header */}
-      <div className="bg-black pt-8 rounded-t-3xl">
-        <div className="px-4 pb-6">
-          <h2 className="text-3xl font-bold text-white text-center">Today's Activity</h2>
+      {/* Today's Activity Header with Parallax */}
+      <div 
+        className="bg-black pt-6 rounded-t-3xl relative z-10"
+        style={{
+          transform: `translateY(${scrollY * 0.1}px)`
+        }}
+      >
+        <div className="px-4 pb-4">
+          <h2 className="text-2xl font-bold text-white">Today's Activity</h2>
         </div>
       </div>
 
-      <div className="space-y-0">
+      <div 
+        className="space-y-0 relative z-10"
+        style={{
+          transform: `translateY(${scrollY * 0.1}px)`
+        }}
+      >
         {/* Group Status */}
         <div id="group-status" className="bg-black">
           <div className="py-8">

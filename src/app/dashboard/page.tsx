@@ -7,22 +7,29 @@ import TimeGradient from '@/components/TimeGradient'
 
 export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY
+      const currentScrollY = window.scrollY
       const threshold = window.innerHeight * 0.3 // 30% of viewport height
-      setIsScrolled(scrollY > threshold)
+      setIsScrolled(currentScrollY > threshold)
+      setScrollY(currentScrollY)
     }
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   return (
     <div className="relative min-h-screen bg-black">
-      {/* Unified gradient background covering 50% landing area */}
-      <div className="absolute inset-0 h-[50vh] z-0">
+      {/* Unified gradient background covering 50% landing area with parallax */}
+      <div 
+        className="absolute inset-0 h-[50vh] z-0"
+        style={{
+          transform: `translateY(${scrollY * 0.05}px)`
+        }}
+      >
         <TimeGradient />
       </div>
       
