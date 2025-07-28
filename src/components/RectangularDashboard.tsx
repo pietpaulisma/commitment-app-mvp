@@ -1212,7 +1212,7 @@ export default function RectangularDashboard() {
 
       <div className="space-y-0">
         {/* Group Status */}
-        <div id="group-status" className="bg-black">
+        <div id="group-status" className="bg-black rounded-t-3xl">
           <div className="py-3">
             <h3 className="text-2xl font-bold text-white mb-6 px-4">Status</h3>
             
