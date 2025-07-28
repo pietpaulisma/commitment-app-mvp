@@ -251,7 +251,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       <nav className={`lg:hidden transition-all duration-500 ${
         isScrolled 
           ? 'fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800' 
-          : 'absolute top-[15vh] left-1/2 transform -translate-x-1/2 z-50'
+          : 'absolute top-[8vh] left-1/2 transform -translate-x-1/2 z-50'
       }`}>
         <div className={`transition-all duration-500 ${
           isScrolled 
@@ -289,7 +289,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       <nav className={`hidden lg:block transition-all duration-500 ${
         isScrolled 
           ? 'fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800' 
-          : 'absolute top-[15vh] left-1/2 transform -translate-x-1/2 z-50'
+          : 'absolute top-[8vh] left-1/2 transform -translate-x-1/2 z-50'
       }`}>
         <div className={`transition-all duration-500 ${
           isScrolled 

@@ -11,7 +11,7 @@ export default function Dashboard() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
-      const threshold = window.innerHeight * 0.4 // 40% of viewport height
+      const threshold = window.innerHeight * 0.25 // 25% of viewport height
       setIsScrolled(scrollY > threshold)
     }
 
