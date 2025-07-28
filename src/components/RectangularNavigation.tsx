@@ -248,15 +248,11 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       </div>
 
       
-      {/* Mobile Sticky Header - Only appears when scrolled */}
+      {/* Mobile Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
       {isScrolled && (
-        <nav className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
+        <nav className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
           <div className="flex justify-start items-center py-3 px-4 pr-20">
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-6 w-auto drop-shadow-lg"
-            />
+            {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
         </nav>
       )}
@@ -279,15 +275,11 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       </div>
 
       
-      {/* Desktop Sticky Header - Only appears when scrolled */}
+      {/* Desktop Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
       {isScrolled && (
-        <nav className="hidden lg:block fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
+        <nav className="hidden lg:block fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
           <div className="flex justify-start items-center py-4 px-8 pr-32 max-w-7xl mx-auto">
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-7 w-auto drop-shadow-lg"
-            />
+            {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
         </nav>
       )}

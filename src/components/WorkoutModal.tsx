@@ -58,6 +58,22 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [quantity, setQuantity] = useState('')
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Helper function to get user's personal color or default
+  const getUserColor = () => {
+    return profile?.personal_color || '#f97316' // Default to orange
+  }
+
+  // Helper function to get darker version of user's color for hover states
+  const getUserColorHover = () => {
+    const color = getUserColor()
+    // Convert hex to RGB and darken it
+    const hex = color.replace('#', '')
+    const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - 20)
+    const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - 20)
+    const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - 20)
+    return `rgb(${r}, ${g}, ${b})`
+  }
   const [exercisesLoading, setExercisesLoading] = useState(false)
   const [isAnimatedIn, setIsAnimatedIn] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -1380,7 +1396,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       {selectedExercise.emoji} {selectedExercise.name}
                     </h4>
                     <div className="flex justify-center items-baseline space-x-1">
-                      <span className="text-2xl font-black text-orange-400">{selectedExercise.points_per_unit}</span>
+                      <span className="text-2xl font-black" style={{ color: getUserColor() }}>{selectedExercise.points_per_unit}</span>
                       <span className="text-sm text-gray-400">pts per {selectedExercise.unit}</span>
                     </div>
                   </div>
@@ -1440,7 +1456,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       min="0" 
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
-                      className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                      className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
                       placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
                       required
                     />
@@ -1456,7 +1472,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         min="0" 
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                        className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
                         placeholder="Enter weight (optional)"
                       />
                     </div>
@@ -1471,7 +1487,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           <div className="text-sm text-white">This workout</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-4xl font-black text-orange-400">{calculatePoints()}</div>
+                          <div className="text-4xl font-black" style={{ color: getUserColor() }}>{calculatePoints()}</div>
                           <div className="text-xs text-gray-400">points</div>
                         </div>
                       </div>
@@ -1482,7 +1498,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button 
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-orange-400 text-black py-4 px-4 rounded-lg hover:bg-orange-500 transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="w-full text-black py-4 px-4 rounded-lg transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    style={{ backgroundColor: getUserColor() }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = getUserColorHover()}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = getUserColor()}
                   >
                     {loading ? 'LOGGING...' : 'LOG WORKOUT'}
                   </button>
@@ -1692,11 +1711,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <div className="grid grid-cols-4 gap-2 mb-4">
                       <button
                         onClick={() => setSelectedWeight(0)}
-                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors border ${
                           selectedWeight === 0 
-                            ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
-                            : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                            ? 'text-white' 
+                            : 'bg-gray-900/30 border-gray-800 text-white hover:bg-gray-900/50'
                         }`}
+                        style={selectedWeight === 0 ? { 
+                          backgroundColor: getUserColor() + '33', 
+                          borderColor: getUserColor() + '4D', 
+                          color: getUserColor() 
+                        } : {}}
                       >
                         0kg
                       </button>
@@ -1704,11 +1728,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         <button
                           key={weight}
                           onClick={() => setSelectedWeight(weight)}
-                          className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                          className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors border ${
                             selectedWeight === weight 
-                              ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
-                              : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                              ? 'text-white' 
+                              : 'bg-gray-900/30 border-gray-800 text-white hover:bg-gray-900/50'
                           }`}
+                          style={selectedWeight === weight ? { 
+                            backgroundColor: getUserColor() + '33', 
+                            borderColor: getUserColor() + '4D', 
+                            color: getUserColor() 
+                          } : {}}
                         >
                           {weight}kg
                         </button>
@@ -1724,21 +1753,31 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <div className="grid grid-cols-2 gap-2 mb-4">
                       <button
                         onClick={() => setIsDecreasedExercise(false)}
-                        className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors border ${
                           !isDecreasedExercise 
-                            ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
-                            : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                            ? 'text-white' 
+                            : 'bg-gray-900/30 border-gray-800 text-white hover:bg-gray-900/50'
                         }`}
+                        style={!isDecreasedExercise ? { 
+                          backgroundColor: getUserColor() + '33', 
+                          borderColor: getUserColor() + '4D', 
+                          color: getUserColor() 
+                        } : {}}
                       >
                         Regular
                       </button>
                       <button
                         onClick={() => setIsDecreasedExercise(true)}
-                        className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
+                        className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors border ${
                           isDecreasedExercise 
-                            ? 'bg-orange-400/20 border border-orange-400/30 text-orange-400' 
-                            : 'bg-gray-900/30 border border-gray-800 text-white hover:bg-gray-900/50'
+                            ? 'text-white' 
+                            : 'bg-gray-900/30 border-gray-800 text-white hover:bg-gray-900/50'
                         }`}
+                        style={isDecreasedExercise ? { 
+                          backgroundColor: getUserColor() + '33', 
+                          borderColor: getUserColor() + '4D', 
+                          color: getUserColor() 
+                        } : {}}
                       >
                         Decreased
                         <div className="text-xs opacity-75">+1.5x points</div>
@@ -1755,7 +1794,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="text-sm text-gray-400">
                     points earned
                     {selectedWeight > 0 && (
-                      <span className="ml-2 text-orange-400">• +{selectedWeight}kg</span>
+                      <span className="ml-2" style={{ color: getUserColor() }}>• +{selectedWeight}kg</span>
                     )}
                     {isDecreasedExercise && (
                       <span className="ml-2 text-orange-400">• Decreased</span>

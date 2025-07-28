@@ -35,19 +35,40 @@ export default function Dashboard() {
         <TimeGradient />
       </div>
       
-      {/* Landing Logo - Contained within dashboard */}
-      {!isScrolled && (
+      {/* Landing Logo - Positioned relative to DAY text when not scrolled */}
+      {!isScrolled ? (
         <>
-          {/* Mobile Landing Logo */}
-          <div className="lg:hidden absolute top-2 left-4 z-10 transition-opacity duration-500">
+          {/* Mobile Landing Logo - Above DAY text */}
+          <div className="lg:hidden absolute left-4 z-10 transition-all duration-500" 
+               style={{ top: `calc(50vh - 120px)` }}>
             <img 
               src="/logo.png" 
               alt="The Commitment" 
               className="h-6 w-auto drop-shadow-lg"
             />
           </div>
-          {/* Desktop Landing Logo */}
-          <div className="hidden lg:block absolute top-4 left-8 z-10 transition-opacity duration-500">
+          {/* Desktop Landing Logo - Above DAY text */}
+          <div className="hidden lg:block absolute left-8 z-10 transition-all duration-500"
+               style={{ top: `calc(50vh - 140px)` }}>
+            <img 
+              src="/logo.png" 
+              alt="The Commitment" 
+              className="h-7 w-auto drop-shadow-lg"
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Mobile Scrolled Logo - Move to top */}
+          <div className="lg:hidden fixed top-2 left-4 z-50 transition-all duration-500">
+            <img 
+              src="/logo.png" 
+              alt="The Commitment" 
+              className="h-6 w-auto drop-shadow-lg"
+            />
+          </div>
+          {/* Desktop Scrolled Logo - Move to top */}
+          <div className="hidden lg:block fixed top-4 left-8 z-50 transition-all duration-500">
             <img 
               src="/logo.png" 
               alt="The Commitment" 

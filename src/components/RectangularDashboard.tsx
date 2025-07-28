@@ -220,7 +220,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                     key={i}
                     className="aspect-square rounded transition-all duration-500"
                     style={{
-                      background: isHigh ? getGradientStyle('bg-orange-400') : 
+                      background: isHigh ? getUserColorGradient(userProfile?.personal_color) : 
                                  intensity > 30 ? getGradientStyle('bg-gray-500') : getGradientStyle('bg-gray-700'),
                       animationDelay: `${i * 30}ms`,
                       animation: 'fadeInScale 0.6s ease-out forwards'
@@ -259,7 +259,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                   <div
                     className="h-full rounded transition-all duration-700"
                     style={{
-                      background: i === 0 ? getGradientStyle('bg-orange-400', 'organic') : getGradientStyle('bg-gray-500', 'organic'),
+                      background: i === 0 ? getUserColorGradient(userProfile?.personal_color, 'organic') : getGradientStyle('bg-gray-500', 'organic'),
                       width: `${Math.min(100, member.percentage)}%`,
                       animationDelay: `${i * 200}ms`,
                       animation: 'slideInLeft 0.8s ease-out forwards'
@@ -327,7 +327,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                     <div 
                       className="h-full rounded transition-all duration-700"
                       style={{ 
-                        background: isTop ? getGradientStyle('bg-orange-400', 'organic') : getGradientStyle('bg-gray-500', 'organic'),
+                        background: isTop ? getUserColorGradient(userProfile?.personal_color, 'organic') : getGradientStyle('bg-gray-500', 'organic'),
                         width: `${Math.max(20, percentage)}%`,
                         animationDelay: `${i * 100}ms`,
                         animation: 'slideInLeft 0.8s ease-out forwards'
@@ -439,7 +439,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                   <div
                     className="w-0.5 transition-all duration-700"
                     style={{ 
-                      background: isRecord ? getGradientStyle('bg-orange-400') : getGradientStyle('bg-gray-500'),
+                      background: isRecord ? getUserColorGradient(userProfile?.personal_color, 'linear') : getGradientStyle('bg-gray-500'),
                       height: `${height}px`,
                       animationDelay: `${i * 20}ms`,
                       animation: 'slideUpScale 0.8s ease-out forwards',
@@ -451,7 +451,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                     <div 
                       className="w-2 h-2 rounded-full -mt-1 animate-pulse"
                       style={{ 
-                        background: getGradientStyle('bg-orange-400'),
+                        background: getUserColorGradient(userProfile?.personal_color, 'linear'),
                         animationDelay: `${(i * 20) + 400}ms`
                       }}
                     />

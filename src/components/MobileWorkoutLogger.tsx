@@ -37,6 +37,22 @@ export default function MobileWorkoutLogger() {
   const [hasFlexibleRestDay, setHasFlexibleRestDay] = useState(false)
   const [weekStartDate, setWeekStartDate] = useState<Date | null>(null)
 
+  // Helper function to get user's personal color or default
+  const getUserColor = () => {
+    return userProfile?.personal_color || '#f97316' // Default to orange
+  }
+
+  // Helper function to get darker version of user's color for hover states
+  const getUserColorHover = () => {
+    const color = getUserColor()
+    // Convert hex to RGB and darken it
+    const hex = color.replace('#', '')
+    const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - 20)
+    const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - 20)
+    const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - 20)
+    return `rgb(${r}, ${g}, ${b})`
+  }
+
   useEffect(() => {
     loadData()
   }, [])
@@ -353,7 +369,7 @@ export default function MobileWorkoutLogger() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-2 border-gray-800 border-t-orange-400 mx-auto"></div>
+          <div className="animate-spin h-8 w-8 border-2 border-gray-800 mx-auto" style={{ borderTopColor: getUserColor() }}></div>
           <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
@@ -375,13 +391,23 @@ export default function MobileWorkoutLogger() {
   const recoveryExercises = exercises.filter(ex => ex.type === 'recovery').slice(0, 3)
 
   return (
-    <div className="min-h-screen bg-black pb-20">
+    <>
+      <style jsx>{`
+        .focus-ring:focus {
+          ring-color: ${getUserColor()};
+        }
+        .btn-hover:hover {
+          background-color: ${getUserColorHover()} !important;
+        }
+      `}</style>
+      <div className="min-h-screen bg-black pb-20">
       {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
         <div className="bg-black border-b border-gray-800 relative overflow-hidden">
           {/* Progress bar background */}
           <div 
-            className="absolute right-0 top-0 bottom-0 bg-orange-400 transition-all duration-1000 ease-out"
+            className="absolute right-0 top-0 bottom-0 transition-all duration-1000 ease-out"
+            style={{ backgroundColor: getUserColor() }}
             style={{ width: `${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%` }}
           />
           
@@ -447,7 +473,7 @@ export default function MobileWorkoutLogger() {
                     className="bg-gray-900/30 hover:bg-gray-900/40 text-white p-4 rounded-lg transition-all duration-300 hover:scale-105"
                   >
                     <div className="text-center">
-                      <div className="text-lg font-black text-orange-400 mb-1">{exercise.points_per_unit}</div>
+                      <div className="text-lg font-black mb-1" style={{ color: getUserColor() }}>{exercise.points_per_unit}</div>
                       <div className="text-sm font-medium mb-1">{exercise.name}</div>
                       <div className="text-xs text-gray-400 uppercase tracking-wide">per {exercise.unit}</div>
                     </div>
@@ -473,7 +499,7 @@ export default function MobileWorkoutLogger() {
                             <div className="text-xs text-gray-400">Recovery Exercise</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-black text-orange-400">{exercise.points_per_unit}</div>
+                            <div className="text-lg font-black" style={{ color: getUserColor() }}>{exercise.points_per_unit}</div>
                             <div className="text-xs text-gray-400">per {exercise.unit}</div>
                           </div>
                         </div>
@@ -499,7 +525,7 @@ export default function MobileWorkoutLogger() {
                   <select 
                     value={selectedExercise?.id || ''} 
                     onChange={(e) => handleExerciseChange(e.target.value)}
-                    className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                    className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
                   >
                     <option value="">Select an exercise...</option>
                     <optgroup label="Regular Exercises">
@@ -531,7 +557,7 @@ export default function MobileWorkoutLogger() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-black text-orange-400">{selectedExercise.points_per_unit}</div>
+                          <div className="text-2xl font-black" style={{ color: getUserColor() }}>{selectedExercise.points_per_unit}</div>
                           <div className="text-xs text-gray-400">per {selectedExercise.unit}</div>
                         </div>
                       </div>
@@ -553,7 +579,7 @@ export default function MobileWorkoutLogger() {
                         min="0" 
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                        className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
                         placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
                         required
                       />
@@ -569,7 +595,7 @@ export default function MobileWorkoutLogger() {
                           min="0" 
                           value={weight}
                           onChange={(e) => setWeight(e.target.value)}
-                          className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-base bg-gray-900/30 text-white"
+                          className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
                           placeholder="Enter weight (optional)"
                         />
                       </div>
@@ -584,7 +610,7 @@ export default function MobileWorkoutLogger() {
                             <div className="text-sm text-white">This workout</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-4xl font-black text-orange-400">{calculatePoints()}</div>
+                            <div className="text-4xl font-black" style={{ color: getUserColor() }}>{calculatePoints()}</div>
                             <div className="text-xs text-gray-400">points</div>
                           </div>
                         </div>
@@ -594,7 +620,8 @@ export default function MobileWorkoutLogger() {
                     {/* Submit Button */}
                     <button 
                       type="submit"
-                      className="w-full bg-orange-400 text-black py-4 px-4 rounded-lg hover:bg-orange-500 transition-all duration-300 font-black text-lg shadow-sm hover:scale-105"
+                      className="w-full text-black py-4 px-4 rounded-lg transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 btn-hover"
+                      style={{ backgroundColor: getUserColor() }}
                     >
                       LOG WORKOUT
                     </button>
@@ -615,13 +642,13 @@ export default function MobileWorkoutLogger() {
               <div className="grid grid-cols-2 gap-0 mb-6 border border-gray-800 rounded-lg overflow-hidden">
                 <div className="bg-gray-900/30 p-4 border-r border-gray-800">
                   <div className="text-center">
-                    <div className="text-3xl font-black text-orange-400 mb-1">{getTotalPoints()}</div>
+                    <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getTotalPoints()}</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Total Points</div>
                   </div>
                 </div>
                 <div className="bg-gray-900/30 p-4">
                   <div className="text-center">
-                    <div className="text-3xl font-black text-orange-400 mb-1">{getRecoveryPercentage()}%</div>
+                    <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getRecoveryPercentage()}%</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Recovery</div>
                   </div>
                 </div>
@@ -631,7 +658,7 @@ export default function MobileWorkoutLogger() {
               {getRecoveryPercentage() > 25 && (
                 <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-4 mb-6">
                   <div className="text-center">
-                    <div className="text-sm font-medium text-orange-400 mb-1">Recovery Notice</div>
+                    <div className="text-sm font-medium mb-1" style={{ color: getUserColor() }}>Recovery Notice</div>
                     <div className="text-xs text-gray-400">
                       Recovery exercises exceed 25% of your daily total
                     </div>
@@ -666,7 +693,7 @@ export default function MobileWorkoutLogger() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-black text-orange-400">{log.points}</div>
+                            <div className="text-lg font-black" style={{ color: getUserColor() }}>{log.points}</div>
                             <div className="text-xs text-gray-400">pts</div>
                           </div>
                         </div>
@@ -684,6 +711,7 @@ export default function MobileWorkoutLogger() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

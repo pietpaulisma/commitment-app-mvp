@@ -29,41 +29,70 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
   const getTimeBasedColors = () => {
     const hour = currentTime.getHours()
+    const minute = currentTime.getMinutes()
     
-    if (hour >= 5 && hour < 8) {
-      // Dawn/Sunrise: Orange and yellow tones
+    if (hour >= 2 && hour < 5) {
+      // Pre-Dawn (2:00–5:00): "Blue Hour Ghost" / "Steel Bloom"
       return {
-        primary: '#ff7b00',
-        secondary: '#ffb800', 
-        accent: '#ffd700'
+        primary: '#4a5568',  // Desaturated indigo
+        secondary: '#6b7280', // Ice grey
+        accent: '#9ca3af'    // Cold mauve
       }
-    } else if (hour >= 8 && hour < 12) {
-      // Morning: Yellow to light blue
+    } else if (hour >= 5 && hour < 6 || (hour === 6 && minute < 30)) {
+      // Early Morning (5:00–6:30): "Mist Quartz" / "Frostlight"
       return {
-        primary: '#ffd700',
-        secondary: '#87ceeb',
-        accent: '#b6e5ff'
+        primary: '#6366f1',  // Slate blue
+        secondary: '#c4b5fd', // Brighter smoky lavender
+        accent: '#fecaca'    // Warmer silver-pink
       }
-    } else if (hour >= 12 && hour < 18) {
-      // Afternoon: Blues
+    } else if ((hour === 6 && minute >= 30) || hour === 7 || (hour === 8 && minute === 0)) {
+      // Sunrise (6:30–8:00): "Peach Ember" / "Aurora Bloom" 
       return {
-        primary: '#4682b4',
-        secondary: '#2e86de',
-        accent: '#54a0ff'
+        primary: '#f87171',  // Warmer dusky rose
+        secondary: '#f59e0b', // Richer golden apricot
+        accent: '#22d3ee'    // Brighter sky cyan
       }
-    } else if (hour >= 18 && hour < 21) {
-      // Evening/Sunset: Warm sunset colors
+    } else if (hour >= 8 && hour < 11) {
+      // Late Morning (8:00–11:00): "Lemon Sky" / "Daybreak Linen"
       return {
-        primary: '#ff6b6b',
-        secondary: '#ff8e53',
-        accent: '#ff6b9d'
+        primary: '#fde047',  // Brighter buttercream yellow
+        secondary: '#93c5fd', // Clearer powder blue
+        accent: '#86efac'    // Fresh pale mint
+      }
+    } else if (hour >= 11 && hour < 14) {
+      // Noon (11:00–14:00): "Zenith Chrome" / "Solar Pulse"
+      return {
+        primary: '#0284c7',  // Vivid cerulean
+        secondary: '#f8fafc', // Searing white
+        accent: '#f59e0b'    // White-hot amber
+      }
+    } else if (hour >= 14 && hour < 17) {
+      // Late Afternoon (14:00–17:00): "Copper Fade" / "Sunlow Drift"
+      return {
+        primary: '#fb923c',  // Faded tangerine
+        secondary: '#94a3b8', // Better light denim
+        accent: '#eab308'    // Richer creamy gold
+      }
+    } else if (hour >= 17 && hour < 19 || (hour === 19 && minute < 30)) {
+      // Sunset (17:00–19:30): "Saffron Mirage" / "Crimson Dusk"
+      return {
+        primary: '#dc2626',  // Deep crimson
+        secondary: '#ea580c', // Burnt orange
+        accent: '#f97316'    // Saffron/hot pink
+      }
+    } else if ((hour === 19 && minute >= 30) || hour === 20 || (hour === 21 && minute === 0)) {
+      // Nightfall (19:30–21:00): "Indigo Spill" / "Twilight Velvet"
+      return {
+        primary: '#1e3a8a',  // Deep cobalt
+        secondary: '#581c87', // Deep purple (wine-black)
+        accent: '#f59e0b'    // Rose gold
       }
     } else {
-      // Night: Deep blues and purples
+      // Night (21:00–2:00): "Obsidian Echo" / "Midnight Petrol"
       return {
-        primary: '#3742fa',
-        secondary: '#5f27cd',
-        accent: '#341f97'
+        primary: '#1f2937',  // Graphite blue
+        secondary: '#111827', // Ink violet
+        accent: '#374151'    // Ultramarine fog
       }
     }
   }
