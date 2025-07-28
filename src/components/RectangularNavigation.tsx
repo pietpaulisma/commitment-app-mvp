@@ -247,16 +247,6 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
         </Link>
       </div>
 
-      {/* Mobile Landing Logo - Left aligned above DAY content */}
-      {!isScrolled && (
-        <div className="lg:hidden absolute top-20 left-4 z-50 transition-opacity duration-500">
-          <img 
-            src="/logo.png" 
-            alt="The Commitment" 
-            className="h-6 w-auto drop-shadow-lg"
-          />
-        </div>
-      )}
       
       {/* Mobile Sticky Header - Only appears when scrolled */}
       {isScrolled && (
@@ -288,16 +278,6 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
         </Link>
       </div>
 
-      {/* Desktop Landing Logo - Left aligned above DAY content */}
-      {!isScrolled && (
-        <div className="hidden lg:block absolute top-20 left-8 z-50 transition-opacity duration-500">
-          <img 
-            src="/logo.png" 
-            alt="The Commitment" 
-            className="h-7 w-auto drop-shadow-lg"
-          />
-        </div>
-      )}
       
       {/* Desktop Sticky Header - Only appears when scrolled */}
       {isScrolled && (

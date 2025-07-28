@@ -26,6 +26,28 @@ export default function Dashboard() {
         <TimeGradient />
       </div>
       
+      {/* Landing Logo - Positioned above all content */}
+      {!isScrolled && (
+        <>
+          {/* Mobile Landing Logo */}
+          <div className="lg:hidden absolute top-16 left-4 z-50 transition-opacity duration-500">
+            <img 
+              src="/logo.png" 
+              alt="The Commitment" 
+              className="h-6 w-auto drop-shadow-lg"
+            />
+          </div>
+          {/* Desktop Landing Logo */}
+          <div className="hidden lg:block absolute top-16 left-8 z-50 transition-opacity duration-500">
+            <img 
+              src="/logo.png" 
+              alt="The Commitment" 
+              className="h-7 w-auto drop-shadow-lg"
+            />
+          </div>
+        </>
+      )}
+      
       {/* Components with transparent/relative positioning */}
       <div className="relative z-10">
         <RectangularNavigation isScrolled={isScrolled} />
