@@ -7,9 +7,9 @@ import TimeGradient from '@/components/TimeGradient'
 export default function Dashboard() {
   return (
     <div className="relative min-h-screen bg-black">
-      {/* Unified gradient background covering entire landing area */}
-      <div className="absolute inset-0 top-0 h-[60vh] overflow-hidden">
-        <TimeGradient className="z-0" />
+      {/* Unified gradient background covering entire landing area until Status section */}
+      <div className="fixed inset-x-0 top-0 h-[85vh] overflow-hidden z-0">
+        <TimeGradient />
       </div>
       
       {/* Components with relative positioning */}
