@@ -1134,7 +1134,7 @@ export default function RectangularDashboard() {
       {groupStartDate && (
         <div className="relative overflow-hidden">
           {/* Content with more vertical padding */}
-          <div className="relative px-4 py-6 z-10">
+          <div className="relative px-4 py-8 z-10">
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
@@ -1160,7 +1160,7 @@ export default function RectangularDashboard() {
             </div>
             
             {/* Greeting with username and motivational text */}
-            <div className="px-4 pb-8 pt-4">
+            <div className="px-4 pb-12 pt-8">
               <div className="text-center">
                 <p className="text-sm text-white/80 font-medium">
                   Good {

@@ -232,12 +232,12 @@ export default function RectangularNavigation() {
       {/* Mobile Navigation Header */}
       <nav className="lg:hidden sticky top-0 z-50 relative overflow-hidden">
         <div className="px-4 relative z-10">
-          <div className="flex justify-between items-center py-2">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <img 
                 src="/logo.png" 
                 alt="The Commitment" 
-                className="h-12 w-auto drop-shadow-lg"
+                className="h-10 w-auto drop-shadow-lg"
               />
             </div>
 
@@ -260,12 +260,12 @@ export default function RectangularNavigation() {
       {/* Desktop Navigation (Modern Clean) */}
       <nav className="hidden lg:block sticky top-0 z-40 relative overflow-hidden shadow-lg">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex justify-between items-center py-2">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <img 
                 src="/logo.png" 
                 alt="The Commitment" 
-                className="h-14 w-auto drop-shadow-lg"
+                className="h-12 w-auto drop-shadow-lg"
               />
             </div>
 
