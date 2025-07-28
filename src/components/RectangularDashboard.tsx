@@ -1262,7 +1262,12 @@ export default function RectangularDashboard() {
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="relative overflow-hidden mt-24">
+        <div 
+          className="relative overflow-hidden mt-24"
+          style={{
+            transform: `translateY(${scrollY * 0.1}px)`
+          }}
+        >
           {/* Content with more vertical padding */}
           <div className="relative px-4 py-8 z-10">
             <div className="flex items-end justify-between">
@@ -1316,7 +1321,7 @@ export default function RectangularDashboard() {
       <div 
         className="bg-black pt-6 rounded-t-3xl relative z-10"
         style={{
-          transform: `translateY(${scrollY * 0.1}px)`
+          transform: `translateY(${scrollY * -0.05}px)`
         }}
       >
         <div className="px-4 pb-4">
@@ -1327,7 +1332,7 @@ export default function RectangularDashboard() {
       <div 
         className="space-y-0 relative z-10"
         style={{
-          transform: `translateY(${scrollY * 0.1}px)`
+          transform: `translateY(${scrollY * -0.05}px)`
         }}
       >
         {/* Group Status */}
