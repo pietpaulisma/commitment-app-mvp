@@ -234,7 +234,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       </div>
 
       {/* Fixed Profile Icon - Always in top right */}
-      <div className="lg:hidden fixed top-6 right-4 z-[60]">
+      <div className="lg:hidden fixed top-4 right-4 z-[60]">
         <Link 
           href={isOnProfilePage ? "/dashboard" : "/profile"} 
           className="flex items-center justify-center p-2.5 bg-black/40 backdrop-blur-sm hover:bg-black/60 rounded-lg border border-white/20 transition-all duration-200 hover:border-white/30 shadow-lg"
@@ -262,7 +262,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       )}
 
       {/* Fixed Profile Icon - Desktop */}
-      <div className="hidden lg:block fixed top-8 right-8 z-[60]">
+      <div className="hidden lg:block fixed top-6 right-8 z-[60]">
         <Link 
           href={isOnProfilePage ? "/dashboard" : "/profile"} 
           className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium bg-black/40 backdrop-blur-sm hover:bg-black/60 border border-white/20 hover:border-white/30 px-4 py-3 rounded-lg transition-all duration-200 shadow-lg"
