@@ -75,17 +75,13 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
   const minute = currentTime.getMinutes()
   const dayProgress = (hour * 60 + minute) / (24 * 60) // 0 to 1
   
-  // Calculate gradient position based on day progress
-  // More black area, smaller gradient blobs
-  const gradientWidth = 30 // Even thinner gradient, more black
+  // Calculate gradient center position based on time of day
+  // 3am (0.125) = left (15%), 11am (0.458) = center (50%), 11pm (0.958) = right (85%)
+  // Map time of day to horizontal position
+  const blobPositionX = 15 + (dayProgress * 70) // Linear progression from 15% to 85%
   
-  // Position main organic blob based on day progress
-  // Keep gradient much smaller and more to the edges
-  const blobPositionX = dayProgress < 0.3 
-    ? 10 + (dayProgress * 20) // Early morning: small blob on left
-    : dayProgress < 0.7
-    ? 80 + ((dayProgress - 0.3) * 15) // Midday: small blob on right  
-    : 85 + ((dayProgress - 0.7) * 10) // Evening/night: small blob far right
+  // Position gradient center closer to bottom (around 70-80% down)
+  const blobPositionY = 75
 
   return (
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
@@ -94,7 +90,7 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0 opacity-85"
         style={{
           background: `
-            radial-gradient(circle 1200px at ${blobPositionX + Math.sin(animationOffset * 0.008) * 20}% ${80 + Math.cos(animationOffset * 0.006) * 25}%, 
+            radial-gradient(circle 1200px at ${blobPositionX + Math.sin(animationOffset * 0.008) * 20}% ${blobPositionY + Math.cos(animationOffset * 0.006) * 15}%, 
               ${colors.primary}60 0%, 
               ${colors.secondary}45 20%, 
               ${colors.accent}35 35%, 
@@ -112,7 +108,7 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0 opacity-65"
         style={{
           background: `
-            radial-gradient(circle 800px at ${blobPositionX + 50 + Math.cos(animationOffset * 0.009) * 25}% ${65 + Math.sin(animationOffset * 0.007) * 30}%, 
+            radial-gradient(circle 800px at ${blobPositionX + 30 + Math.cos(animationOffset * 0.009) * 25}% ${blobPositionY - 10 + Math.sin(animationOffset * 0.007) * 20}%, 
               ${colors.secondary}40 0%, 
               ${colors.accent}30 25%, 
               ${colors.primary}20 45%, 
@@ -129,11 +125,11 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0 opacity-55"
         style={{
           background: `
-            radial-gradient(circle 600px at ${blobPositionX - 30 + Math.sin(animationOffset * 0.012) * 30}% ${90 + Math.cos(animationOffset * 0.009) * 20}%, 
+            radial-gradient(circle 600px at ${blobPositionX - 20 + Math.sin(animationOffset * 0.012) * 30}% ${blobPositionY + 15 + Math.cos(animationOffset * 0.009) * 15}%, 
               ${colors.accent}35 0%, 
               ${colors.secondary}25 30%, 
               transparent 55%),
-            radial-gradient(circle 450px at ${blobPositionX + 80 + Math.cos(animationOffset * 0.011) * 25}% ${45 + Math.sin(animationOffset * 0.008) * 30}%, 
+            radial-gradient(circle 450px at ${blobPositionX + 40 + Math.cos(animationOffset * 0.011) * 25}% ${blobPositionY - 30 + Math.sin(animationOffset * 0.008) * 20}%, 
               ${colors.primary}30 0%, 
               ${colors.accent}20 35%, 
               transparent 60%)
@@ -149,7 +145,7 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0 opacity-45"
         style={{
           background: `
-            radial-gradient(circle 500px at ${blobPositionX + 20 + Math.sin(animationOffset * 0.007) * 15}% ${70 + Math.cos(animationOffset * 0.005) * 25}%, 
+            radial-gradient(circle 500px at ${blobPositionX + 10 + Math.sin(animationOffset * 0.007) * 15}% ${blobPositionY + Math.cos(animationOffset * 0.005) * 20}%, 
               ${colors.secondary}25 0%, 
               ${colors.primary}18 40%, 
               transparent 65%)

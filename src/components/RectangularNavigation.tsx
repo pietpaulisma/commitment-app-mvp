@@ -10,7 +10,6 @@ import {
 } from '@heroicons/react/24/outline'
 import GroupChat from '@/components/GroupChat'
 import WorkoutModal from '@/components/WorkoutModal'
-import TimeGradient from '@/components/TimeGradient'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useWeekMode } from '@/contexts/WeekModeContext'
@@ -232,9 +231,8 @@ export default function RectangularNavigation() {
 
       {/* Mobile Navigation Header */}
       <nav className="lg:hidden sticky top-0 z-50 relative overflow-hidden">
-        <TimeGradient className="z-0" />
         <div className="px-4 relative z-10">
-          <div className="flex justify-between items-center py-3">
+          <div className="flex justify-between items-center py-2">
             <div className="flex items-center">
               <img 
                 src="/logo.png" 
@@ -261,9 +259,8 @@ export default function RectangularNavigation() {
 
       {/* Desktop Navigation (Modern Clean) */}
       <nav className="hidden lg:block sticky top-0 z-40 relative overflow-hidden shadow-lg">
-        <TimeGradient className="z-0" />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-2">
             <div className="flex items-center">
               <img 
                 src="/logo.png" 

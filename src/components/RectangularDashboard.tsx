@@ -7,7 +7,6 @@ import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
-import TimeGradient from './TimeGradient'
 
 // Helper function to convert Tailwind classes to organic gradient styles
 const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'linear') => {
@@ -451,6 +450,7 @@ export default function RectangularDashboard() {
   const [dayType, setDayType] = useState<'rest' | 'recovery' | 'normal'>('normal')
   const [timeLeft, setTimeLeft] = useState('')
   const [timeRemainingPercentage, setTimeRemainingPercentage] = useState(0)
+  const [currentTime, setCurrentTime] = useState(new Date())
   const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
   const [accentColor, setAccentColor] = useState('blue') // Default blue
@@ -478,6 +478,7 @@ export default function RectangularDashboard() {
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date()
+      setCurrentTime(now) // Update currentTime state
       const startOfDay = new Date(now)
       startOfDay.setHours(0, 0, 0, 0)
       const endOfDay = new Date(now)
@@ -1132,11 +1133,8 @@ export default function RectangularDashboard() {
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div className="relative overflow-hidden">
-          {/* Dynamic Time Gradient Background */}
-          <TimeGradient className="z-0" />
-          
           {/* Content with more vertical padding */}
-          <div className="relative px-4 py-6 z-10">
+          <div className="relative px-4 py-1 z-10">
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
@@ -1158,6 +1156,25 @@ export default function RectangularDashboard() {
                 <div className="text-sm font-medium -mt-1 text-white">
                   remaining
                 </div>
+              </div>
+            </div>
+            
+            {/* Greeting with username and motivational text */}
+            <div className="px-4 pb-4 pt-2">
+              <div className="text-center">
+                <p className="text-sm text-white/80 font-medium">
+                  Good {
+                    currentTime.getHours() < 12 ? 'morning' :
+                    currentTime.getHours() < 18 ? 'afternoon' : 'evening'
+                  } {user?.email?.split('@')[0] || 'champion'},
+                </p>
+                <p className="text-xs text-white/60 mt-1 font-medium">
+                  {dayType === 'rest' ? 'Rest well, tomorrow we continue the journey' :
+                   dayType === 'recovery' ? 'Recovery is where the magic happens' :
+                   challengeDay <= 7 ? 'Every champion started with day one' :
+                   challengeDay <= 30 ? 'Consistency is your superpower' :
+                   'You\'re unstoppable, keep going'}
+                </p>
               </div>
             </div>
           </div>
