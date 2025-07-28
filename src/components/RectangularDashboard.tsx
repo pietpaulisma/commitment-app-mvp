@@ -1287,19 +1287,11 @@ export default function RectangularDashboard() {
                   const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
                   
                   return (
-                    <>
-                      <p className="text-sm text-white/80 font-medium">
-                        {hasAchievedTarget 
-                          ? getTargetAchievedMessage(currentTime.getHours())
-                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
-                      </p>
-                      <p className="text-xs text-white/60 mt-1 font-medium">
-                        {dayType === 'recovery' ? 'Recovery is where the magic happens' :
-                         challengeDay <= 7 ? 'Every champion started with day one' :
-                         challengeDay <= 30 ? 'Consistency is your superpower' :
-                         'You\'re unstoppable, keep going'}
-                      </p>
-                    </>
+                    <p className="text-sm text-white/80 font-medium">
+                      {hasAchievedTarget 
+                        ? getTargetAchievedMessage(currentTime.getHours())
+                        : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
+                    </p>
                   )
                 })()}
               </div>
