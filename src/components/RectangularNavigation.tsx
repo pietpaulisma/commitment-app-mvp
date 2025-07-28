@@ -174,21 +174,19 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
               isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
           >
-            {/* Regular Progress Background */}
+            {/* Liquid gradient progress background */}
             <div 
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
               style={{ 
-                background: getOrganicGradient('bg-blue-500'),
-                width: `${Math.min(100, Math.max(0, regularPercentage))}%` 
-              }}
-            />
-            {/* Recovery Progress Background - positioned adjacent to regular progress */}
-            <div 
-              className="absolute top-0 bottom-0 transition-all duration-500 ease-out"
-              style={{ 
-                background: getOrganicGradient('bg-blue-700'),
-                left: `${Math.min(100, Math.max(0, regularPercentage))}%`,
-                width: `${Math.min(100 - Math.max(0, regularPercentage), recoveryPercentage)}%`
+                width: '100%',
+                background: `linear-gradient(to right, 
+                  #3b82f6 0%, 
+                  #3b82f6dd ${Math.max(0, regularPercentage - 15)}%, 
+                  #3b82f666 ${regularPercentage}%, 
+                  ${recoveryPercentage > 0 
+                    ? `#1d4ed8aa ${regularPercentage + 5}%, #1d4ed866 ${Math.min(100, regularPercentage + recoveryPercentage)}%, transparent ${Math.min(100, regularPercentage + recoveryPercentage + 20)}%`
+                    : `transparent ${Math.min(100, regularPercentage + 20)}%`
+                  })`
               }}
             />
             

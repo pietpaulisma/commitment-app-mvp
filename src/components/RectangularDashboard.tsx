@@ -259,8 +259,15 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                   <div
                     className="h-full transition-all duration-700"
                     style={{
-                      background: i === 0 ? getUserColorGradient(userProfile?.personal_color, 'organic') : getGradientStyle('bg-gray-500', 'organic'),
-                      width: `${Math.min(100, member.percentage)}%`,
+                      width: '100%',
+                      background: `linear-gradient(to right, 
+                        ${i === 0 
+                          ? `${userProfile?.personal_color || '#c084fc'} 0%, 
+                             ${userProfile?.personal_color || '#c084fc'}dd ${Math.max(0, member.percentage - 15)}%, 
+                             ${userProfile?.personal_color || '#c084fc'}66 ${member.percentage}%, 
+                             transparent ${Math.min(100, member.percentage + 20)}%`
+                          : `#6b7280 0%, #6b7280dd ${Math.max(0, member.percentage - 15)}%, #6b728066 ${member.percentage}%, transparent ${Math.min(100, member.percentage + 20)}%`
+                        })`,
                       animationDelay: `${i * 200}ms`,
                       animation: 'slideInLeft 0.8s ease-out forwards'
                     }}
@@ -323,12 +330,19 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                 <div key={i} className="relative">
                   {/* Background bar */}
                   <div className="w-full bg-gray-700 h-6 relative overflow-hidden">
-                    {/* Filled bar */}
+                    {/* Liquid gradient filled bar */}
                     <div 
                       className="h-full transition-all duration-700"
                       style={{ 
-                        background: isTop ? getUserColorGradient(userProfile?.personal_color, 'organic') : getGradientStyle('bg-gray-500', 'organic'),
-                        width: `${Math.max(20, percentage)}%`,
+                        width: '100%',
+                        background: `linear-gradient(to right, 
+                          ${isTop 
+                            ? `${userProfile?.personal_color || '#c084fc'} 0%, 
+                               ${userProfile?.personal_color || '#c084fc'}dd ${Math.max(0, percentage - 15)}%, 
+                               ${userProfile?.personal_color || '#c084fc'}66 ${percentage}%, 
+                               transparent ${Math.min(100, percentage + 20)}%`
+                            : `#6b7280 0%, #6b7280dd ${Math.max(0, percentage - 15)}%, #6b728066 ${percentage}%, transparent ${Math.min(100, percentage + 20)}%`
+                          })`,
                         animationDelay: `${i * 100}ms`,
                         animation: 'slideInLeft 0.8s ease-out forwards'
                       }}
@@ -1403,18 +1417,23 @@ export default function RectangularDashboard() {
                       
                       return (
                         <div key={member.id} className={`relative h-12 ${backgroundColor} overflow-hidden ${borderRadius}`}>
-                          {/* Progress bar - always fills from left to right with gradient */}
+                          {/* Liquid gradient progress bar with soft edges */}
                           <div 
                             className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
                             style={{ 
-                              width: `${Math.min(100, progressPercentage)}%`,
-                              background: isCurrentUser 
-                                ? getUserColorGradient(profile?.personal_color, 'organic')
-                                : progressPercentage >= 100 
-                                  ? getUserColorGradient('#22c55e', 'organic')
-                                  : progressPercentage >= 75 
-                                    ? getUserColorGradient('#eab308', 'organic') 
-                                    : getUserColorGradient('#3b82f6', 'organic')
+                              width: '100%',
+                              background: `linear-gradient(to right, 
+                                ${isCurrentUser 
+                                  ? `${profile?.personal_color || '#c084fc'} 0%, 
+                                     ${profile?.personal_color || '#c084fc'}dd ${Math.max(0, progressPercentage - 15)}%, 
+                                     ${profile?.personal_color || '#c084fc'}66 ${progressPercentage}%, 
+                                     transparent ${Math.min(100, progressPercentage + 20)}%`
+                                  : progressPercentage >= 100 
+                                    ? `#22c55e 0%, #22c55edd ${Math.max(0, progressPercentage - 15)}%, #22c55e66 ${progressPercentage}%, transparent ${Math.min(100, progressPercentage + 20)}%`
+                                    : progressPercentage >= 75 
+                                      ? `#eab308 0%, #eab308dd ${Math.max(0, progressPercentage - 15)}%, #eab30866 ${progressPercentage}%, transparent ${Math.min(100, progressPercentage + 20)}%`
+                                      : `#3b82f6 0%, #3b82f6dd ${Math.max(0, progressPercentage - 15)}%, #3b82f666 ${progressPercentage}%, transparent ${Math.min(100, progressPercentage + 20)}%`
+                                })`
                             }}
                           />
                           
