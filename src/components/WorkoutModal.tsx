@@ -1383,9 +1383,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <div 
                         className={`absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out ${
                           weekMode === 'sane' ? 'left-1 right-1/2' : 'left-1/2 right-1'
-                        } ${
-                          weekMode === 'sane' ? 'bg-green-500' : 'bg-red-500'
                         }`}
+                        style={{
+                          background: weekMode === 'sane' 
+                            ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)'
+                            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)'
+                        }}
                       />
                       
                       <div className="relative flex">

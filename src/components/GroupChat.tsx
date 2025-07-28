@@ -703,7 +703,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                         ? message.id.startsWith('temp-') 
                           ? 'bg-green-600 text-white opacity-70' 
                           : 'bg-green-600 text-white'
-                        : 'bg-gray-800 text-white'
+                        : 'bg-gray-700 text-white'
                     }`}
                   >
                     {/* User name inside bubble (for others' messages) - WhatsApp style */}
@@ -759,7 +759,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                       onClick={() => setShowReactionPicker(
                         showReactionPicker === message.id ? null : message.id
                       )}
-                      className="absolute -bottom-2 right-2 w-6 h-6 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center transition-colors border border-gray-600"
+                      className="absolute -bottom-1 right-1 w-5 h-5 bg-gray-800/80 hover:bg-gray-700/80 rounded-full flex items-center justify-center transition-colors opacity-70 hover:opacity-100"
                     >
                       <FaceSmileIcon className="w-3 h-3 text-gray-300" />
                     </button>

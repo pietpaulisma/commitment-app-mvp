@@ -41,6 +41,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
   const [accentColor, setAccentColor] = useState('blue')
   const [groupName, setGroupName] = useState('')
   const [isAnimating, setIsAnimating] = useState(false)
+  const [todayLogs, setTodayLogs] = useState<any[]>([])
 
   const isOnProfilePage = pathname === '/profile'
 
@@ -66,17 +67,111 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
     }
   }, [user, profile, weekMode])
 
+  // Get exercise segments for stacked gradient progress bar
+  const getExerciseSegments = (todayLogs: any[]) => {
+    const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+    const overallProgress = Math.min(100, (total / dailyTarget) * 100)
+    
+    if (total === 0 || !todayLogs || todayLogs.length === 0) {
+      return []
+    }
+
+    let currentPosition = 0
+    const segments = todayLogs.map(log => {
+      const exercisePercentage = (log.points / total) * overallProgress
+      const segment = {
+        color: getCategoryColor(log.exercises?.type || 'all', log.exercise_id),
+        start: currentPosition,
+        end: currentPosition + exercisePercentage,
+        points: log.points,
+        exerciseId: log.exercise_id,
+        type: log.exercises?.type || 'all'
+      }
+      currentPosition += exercisePercentage
+      return segment
+    })
+
+    return segments
+  }
+
+  // Get category colors for exercises with variations
+  const getCategoryColor = (type: string, exerciseId: string) => {
+    const variations = {
+      'all': ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'], // Blue variations
+      'recovery': ['#22c55e', '#16a34a', '#15803d', '#166534'], // Green variations  
+      'sports': ['#a855f7', '#9333ea', '#7c3aed', '#6d28d9'], // Purple variations
+    }
+    
+    const colorArray = variations[type as keyof typeof variations] || variations['all']
+    // Use exercise ID to consistently pick a color variation
+    const colorIndex = exerciseId.charCodeAt(0) % colorArray.length
+    return colorArray[colorIndex]
+  }
+
+  // Create stacked gradient from exercise segments
+  const createStackedGradient = (todayLogs: any[]) => {
+    const segments = getExerciseSegments(todayLogs)
+    const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+    const overallProgress = Math.min(100, (total / dailyTarget) * 100)
+    
+    if (segments.length === 0) {
+      // No exercises logged - show empty state
+      return `linear-gradient(to right, #000000 0%, #000000 100%)`
+    }
+
+    if (segments.length === 1) {
+      // Single exercise - maintain liquid fade effect
+      const color = segments[0].color
+      return `linear-gradient(to right, 
+        #000000 0%, 
+        #000000 ${Math.max(0, 100 - overallProgress - 20)}%, 
+        ${color}66 ${Math.max(0, 100 - overallProgress)}%, 
+        ${color}dd ${Math.min(100, 100 - Math.max(0, overallProgress - 15))}%, 
+        ${color} 100%)`
+    }
+
+    // Multiple exercises - create stacked segments
+    const gradientStops = []
+    
+    // Start with black background
+    gradientStops.push('#000000 0%')
+    
+    // Add the unfilled portion leading up to progress
+    if (overallProgress < 100) {
+      gradientStops.push(`#000000 ${Math.max(0, 100 - overallProgress - 10)}%`)
+    }
+
+    // Add each exercise segment with liquid fade transitions
+    segments.forEach((segment, index) => {
+      const isLast = index === segments.length - 1
+      const fadeStart = Math.max(0, 100 - segment.end - 5)
+      const fadeEnd = 100 - segment.end
+      const solidEnd = 100 - segment.start
+      
+      // Soft fade-in for the segment
+      if (fadeStart < fadeEnd) {
+        gradientStops.push(`${segment.color}33 ${fadeStart}%`)
+      }
+      gradientStops.push(`${segment.color}66 ${fadeEnd}%`)
+      gradientStops.push(`${segment.color}dd ${Math.max(fadeEnd, solidEnd - 5)}%`)
+      gradientStops.push(`${segment.color} ${solidEnd}%`)
+    })
+
+    return `linear-gradient(to right, ${gradientStops.join(', ')})`
+  }
+
   const loadDailyProgress = async () => {
     if (!user || !profile) return
 
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Get today's points with exercise types
+      // Get today's points with exercise types and exercise_id
       const { data: todayLogs } = await supabase
         .from('logs')
         .select(`
           points,
+          exercise_id,
           exercises (type)
         `)
         .eq('user_id', user.id)
@@ -135,6 +230,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       setDailyProgress(todayPoints)
       setDailyTarget(target)
       setRecoveryProgress(recoveryPoints)
+      setTodayLogs(todayLogs || [])
     } catch (error) {
       console.error('Error loading daily progress:', error)
     }
@@ -174,19 +270,12 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
               isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
           >
-            {/* Liquid gradient progress background */}
+            {/* Stacked gradient progress background */}
             <div 
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
               style={{ 
                 width: '100%',
-                background: `linear-gradient(to right, 
-                  #3b82f6 0%, 
-                  #3b82f6dd ${Math.max(0, regularPercentage - 15)}%, 
-                  #3b82f666 ${regularPercentage}%, 
-                  ${recoveryPercentage > 0 
-                    ? `#1d4ed8aa ${regularPercentage + 5}%, #1d4ed866 ${Math.min(100, regularPercentage + recoveryPercentage)}%, transparent ${Math.min(100, regularPercentage + recoveryPercentage + 20)}%`
-                    : `transparent ${Math.min(100, regularPercentage + 20)}%`
-                  })`
+                background: createStackedGradient(todayLogs)
               }}
             />
             
@@ -253,7 +342,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
             {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
           {/* Border positioned below logo area */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-16 lg:ml-20"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-28 lg:ml-32"></div>
         </nav>
       )}
 
@@ -282,7 +371,7 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
             {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
           {/* Border positioned below logo area */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-20 lg:ml-24"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-28 lg:ml-32"></div>
         </nav>
       )}
 

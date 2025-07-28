@@ -860,11 +860,16 @@ export default function RectangularDashboard() {
         .eq('id', profile.group_id)
         .single()
 
-      // Calculate today's target using correct formula
+      // Calculate today's target using correct formula (with Monday doubling)
       let dailyTarget = 1 // Default fallback (base target = 1)
       if (group?.start_date) {
         const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-        dailyTarget = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+        const baseTarget = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
+        
+        // Check if today is Monday (1) - if so, double the target
+        const today = new Date()
+        const isMonday = today.getDay() === 1
+        dailyTarget = isMonday ? baseTarget * 2 : baseTarget
       }
 
       // Get today's logs for all members in one query
