@@ -42,6 +42,20 @@ export default function MobileWorkoutLogger() {
     return userProfile?.personal_color || '#f97316' // Default to orange
   }
 
+  // Get category colors for exercises with variations
+  const getCategoryColor = (type: string, exerciseId: string) => {
+    const variations = {
+      'all': ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'], // Blue variations
+      'recovery': ['#22c55e', '#16a34a', '#15803d', '#166534'], // Green variations  
+      'sports': ['#a855f7', '#9333ea', '#7c3aed', '#6d28d9'], // Purple variations
+    }
+    
+    const colorArray = variations[type as keyof typeof variations] || variations['all']
+    // Use exercise ID to consistently pick a color variation
+    const colorIndex = exerciseId.charCodeAt(0) % colorArray.length
+    return colorArray[colorIndex]
+  }
+
   // Helper function to get darker version of user's color for hover states
   const getUserColorHover = () => {
     const color = getUserColor()
@@ -409,11 +423,12 @@ export default function MobileWorkoutLogger() {
             className="absolute right-0 top-0 bottom-0 transition-all duration-1000 ease-out"
             style={{ 
               width: '100%',
-              background: `linear-gradient(to left, 
-                ${getUserColor()} 0%, 
-                ${getUserColor()}dd ${Math.max(0, Math.min(100, (getTotalPoints() / dailyTarget) * 100) - 15)}%, 
-                ${getUserColor()}66 ${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%, 
-                #000000 ${Math.min(100, Math.min(100, (getTotalPoints() / dailyTarget) * 100) + 20)}%)`
+              background: `linear-gradient(to right, 
+                #000000 0%, 
+                #000000 ${Math.max(0, 100 - Math.min(100, (getTotalPoints() / dailyTarget) * 100) - 20)}%, 
+                ${getUserColor()}66 ${Math.max(0, 100 - Math.min(100, (getTotalPoints() / dailyTarget) * 100))}%, 
+                ${getUserColor()}dd ${Math.min(100, 100 - Math.max(0, Math.min(100, (getTotalPoints() / dailyTarget) * 100) - 15))}%, 
+                ${getUserColor()} 100%)`
             }}
           />
           
@@ -686,25 +701,46 @@ export default function MobileWorkoutLogger() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {todaysLogs.slice(0, 5).map(log => (
-                      <div key={log.id} className="bg-gray-900/30 rounded-lg p-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <div className="text-sm font-medium text-white">{log.exercises?.name || 'Unknown'}</div>
-                            <div className="text-xs text-gray-400">
-                              {log.count || log.duration} {log.exercises?.unit || ''}
-                              {log.exercises?.type === 'recovery' && (
-                                <span className="ml-2 text-xs text-gray-500">• Recovery</span>
-                              )}
+                    {todaysLogs.slice(0, 5).map(log => {
+                      const exerciseColor = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
+                      const progressPercentage = Math.min(100, (log.points / Math.max(1, log.points)) * 100) // Always 100% for logged exercises
+                      
+                      return (
+                        <div key={log.id} className="bg-gray-900/30 relative overflow-hidden">
+                          {/* Liquid gradient background for logged exercise */}
+                          <div 
+                            className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                            style={{ 
+                              width: '100%',
+                              background: `linear-gradient(to right, 
+                                ${exerciseColor} 0%, 
+                                ${exerciseColor}dd ${Math.max(0, progressPercentage - 15)}%, 
+                                ${exerciseColor}66 ${progressPercentage}%, 
+                                #000000 ${Math.min(100, progressPercentage + 20)}%)`
+                            }}
+                          />
+                          
+                          {/* Content */}
+                          <div className="relative p-3">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <div className="text-sm font-medium text-white">{log.exercises?.name || 'Unknown'}</div>
+                                <div className="text-xs text-gray-400">
+                                  {log.count || log.duration} {log.exercises?.unit || ''}
+                                  {log.exercises?.type === 'recovery' && (
+                                    <span className="ml-2 text-xs text-gray-500">• Recovery</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-black text-white">{log.points}</div>
+                                <div className="text-xs text-gray-400">pts</div>
+                              </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-lg font-black" style={{ color: getUserColor() }}>{log.points}</div>
-                            <div className="text-xs text-gray-400">pts</div>
-                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                     {todaysLogs.length > 5 && (
                       <div className="text-center text-xs text-gray-500 py-2">
                         +{todaysLogs.length - 5} more workouts
