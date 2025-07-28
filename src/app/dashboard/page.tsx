@@ -36,10 +36,10 @@ export default function Dashboard() {
       </div>
       
       {/* Landing Logo - Only show on dashboard, positioned relative to DAY text when not scrolled */}
-      {!isScrolled && pathname === '/dashboard' ? (
+      {!isScrolled && pathname === '/dashboard' && (
         <>
           {/* Mobile Landing Logo - Very close to DAY text */}
-          <div className="lg:hidden absolute left-4 z-10 transition-all duration-500" 
+          <div className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
                style={{ top: `calc(50vh - 60px)` }}>
             <img 
               src="/logo.png" 
@@ -48,7 +48,7 @@ export default function Dashboard() {
             />
           </div>
           {/* Desktop Landing Logo - Very close to DAY text */}
-          <div className="hidden lg:block absolute left-8 z-10 transition-all duration-500"
+          <div className="hidden lg:block absolute left-8 z-[70] transition-all duration-500"
                style={{ top: `calc(50vh - 80px)` }}>
             <img 
               src="/logo.png" 
@@ -57,26 +57,29 @@ export default function Dashboard() {
             />
           </div>
         </>
-      ) : pathname === '/dashboard' ? (
+      )}
+      
+      {/* Scrolled Logo - Move to top, only on dashboard when scrolled */}
+      {isScrolled && pathname === '/dashboard' && (
         <>
           {/* Mobile Scrolled Logo - Move to top, only on dashboard */}
-          <div className="lg:hidden fixed top-2 left-4 z-50 transition-all duration-500">
+          <div className="lg:hidden fixed top-3 left-4 z-[70] transition-all duration-500">
+            <img 
+              src="/logo.png" 
+              alt="The Commitment" 
+              className="h-5 w-auto drop-shadow-lg"
+            />
+          </div>
+          {/* Desktop Scrolled Logo - Move to top, only on dashboard */}
+          <div className="hidden lg:block fixed top-5 left-8 z-[70] transition-all duration-500">
             <img 
               src="/logo.png" 
               alt="The Commitment" 
               className="h-6 w-auto drop-shadow-lg"
             />
           </div>
-          {/* Desktop Scrolled Logo - Move to top, only on dashboard */}
-          <div className="hidden lg:block fixed top-4 left-8 z-50 transition-all duration-500">
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-7 w-auto drop-shadow-lg"
-            />
-          </div>
         </>
-      ) : null}
+      )}
       
       {/* Components with transparent/relative positioning */}
       <div className="relative z-10">

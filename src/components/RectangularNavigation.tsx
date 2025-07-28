@@ -248,10 +248,12 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       
       {/* Mobile Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
       {isScrolled && (
-        <nav className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
+        <nav className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500">
           <div className="flex justify-start items-center py-3 px-4 pr-20">
             {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
+          {/* Border positioned below logo area */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-16 lg:ml-20"></div>
         </nav>
       )}
 
@@ -275,10 +277,12 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       
       {/* Desktop Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
       {isScrolled && (
-        <nav className="hidden lg:block fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md border-b border-gray-800 transition-opacity duration-500">
+        <nav className="hidden lg:block fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500">
           <div className="flex justify-start items-center py-4 px-8 pr-32 max-w-7xl mx-auto">
             {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
+          {/* Border positioned below logo area */}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-20 lg:ml-24"></div>
         </nav>
       )}
 
