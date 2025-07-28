@@ -93,6 +93,32 @@ const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'line
   return gradientMap[colorClass] || colorClass
 }
 
+// Helper function to create gradient from user's personal color
+const getUserColorGradient = (personalColor: string, type: 'organic' | 'linear' = 'organic') => {
+  if (!personalColor) return getGradientStyle('bg-purple-400', type)
+  
+  // Convert hex to RGB for gradient calculation
+  const hex = personalColor.replace('#', '')
+  const r = parseInt(hex.substr(0, 2), 16)
+  const g = parseInt(hex.substr(2, 2), 16)
+  const b = parseInt(hex.substr(4, 2), 16)
+  
+  if (type === 'organic') {
+    // Create organic radial gradient with darker variations
+    const darker1 = `rgb(${Math.max(0, r - 30)}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)})`
+    const darker2 = `rgb(${Math.max(0, r - 60)}, ${Math.max(0, g - 60)}, ${Math.max(0, b - 60)})`
+    const darker3 = `rgb(${Math.max(0, r - 90)}, ${Math.max(0, g - 90)}, ${Math.max(0, b - 90)})`
+    
+    return `radial-gradient(ellipse 200% 100% at 50% 0%, ${personalColor} 0%, ${darker1} 30%, ${darker2} 60%, ${darker3} 100%)`
+  } else {
+    // Create linear gradient
+    const darker1 = `rgb(${Math.max(0, r - 40)}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)})`
+    const darker2 = `rgb(${Math.max(0, r - 80)}, ${Math.max(0, g - 80)}, ${Math.max(0, b - 80)})`
+    
+    return `linear-gradient(135deg, ${personalColor} 0%, ${darker1} 50%, ${darker2} 100%)`
+  }
+}
+
 type RecentChat = {
   id: string
   message: string
@@ -122,7 +148,7 @@ const CHART_COLORS = [
 ]
 
 // Memoized chart component for performance
-const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string }) => {
+const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string, userProfile: any }) => {
   // Simple color selection without useMemo to avoid circular dependencies
   const accentColor = CHART_COLORS[index % CHART_COLORS.length] || 'text-blue-400'
 
@@ -176,7 +202,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     const maxActivity = Math.max(...data.map((d: any) => d.activity), 1)
     
     return (
-      <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
+      <div key={index} className={`relative bg-gray-900/20 ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
           <div className="mb-3">
             <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
@@ -334,12 +360,12 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
     const progressPercentage = Math.max(0, ((maxDays - daysUntil) / maxDays) * 100)
     
     return (
-      <div key={index} className={`relative bg-black rounded-lg ${layoutClasses} overflow-hidden`}>
+      <div key={index} className={`relative bg-black ${layoutClasses} overflow-hidden`}>
         {/* Full rectangle progress background */}
         <div 
           className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
           style={{ 
-            background: getGradientStyle('bg-purple-400', 'organic'),
+            background: getUserColorGradient(userProfile?.personal_color, 'organic'),
             width: `${progressPercentage}%`
           }}
         />
@@ -359,7 +385,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses }: { stat: any, index: n
             {/* Person name with birthday icon */}
             <div className="flex items-center gap-1 text-white">
               <div className="w-3 h-3 bg-white rounded-full relative">
-                <div className="absolute top-0.5 left-0.5 w-2 h-1.5 bg-purple-400 rounded-t-full"></div>
+                <div 
+                  className="absolute top-0.5 left-0.5 w-2 h-1.5 rounded-t-full"
+                  style={{ backgroundColor: userProfile?.personal_color || '#c084fc' }}
+                ></div>
               </div>
               <span className="text-sm font-bold">{stat.subtitle}</span>
             </div>
@@ -1459,6 +1488,7 @@ export default function RectangularDashboard() {
                     stat={groupStats.interestingStats[0]} 
                     index={0} 
                     getLayoutClasses={getLayoutClasses}
+                    userProfile={profile}
                   />
                 </div>
                 
@@ -1470,6 +1500,7 @@ export default function RectangularDashboard() {
                       stat={groupStats.interestingStats[1]} 
                       index={1} 
                       getLayoutClasses={getLayoutClasses}
+                      userProfile={profile}
                     />
                   </div>
                   <MemoizedChartComponent 
@@ -1477,6 +1508,7 @@ export default function RectangularDashboard() {
                     stat={groupStats.interestingStats[2]} 
                     index={2} 
                     getLayoutClasses={getLayoutClasses}
+                    userProfile={profile}
                   />
                 </div>
                 
@@ -1487,6 +1519,7 @@ export default function RectangularDashboard() {
                     stat={groupStats.interestingStats[3]} 
                     index={3} 
                     getLayoutClasses={getLayoutClasses}
+                    userProfile={profile}
                   />
                 </div>
               </div>
