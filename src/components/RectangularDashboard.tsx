@@ -39,6 +39,37 @@ const getHourlyMessage = (hour: number): string => {
   return messages[hour] || messages[0]
 }
 
+// Helper function to get hourly messages for when daily target is achieved
+const getTargetAchievedMessage = (hour: number): string => {
+  const messages = [
+    "Midnight warrior! Target crushed while others dream", // 12AM
+    "1AM legend! Your dedication knows no bedtime", // 1AM
+    "2AM champion! Even the night shift is impressed", // 2AM
+    "3AM victor! This is what peak commitment looks like", // 3AM
+    "4AM conqueror! Dawn hasn't even thought about breaking", // 4AM
+    "5AM destroyer! You've already won before sunrise", // 5AM
+    "6AM dominator! Morning coffee tastes like victory", // 6AM
+    "7AM crusher! Started strong, staying stronger", // 7AM
+    "8AM annihilator! Breakfast of champions, indeed", // 8AM
+    "9AM terminator! Work day? More like victory lap", // 9AM
+    "10AM obliterator! Mid-morning and you're unstoppable", // 10AM
+    "11AM devastator! Pre-lunch power move complete", // 11AM
+    "12PM eliminator! Lunch tastes better when you've won", // 12PM
+    "1PM liquidator! Post-lunch slump? Not for legends", // 1PM
+    "2PM eradicator! Afternoon energy of a champion", // 2PM
+    "3PM pulverizer! 3PM and still crushing dreams", // 3PM
+    "4PM vaporizer! Almost evening, already victorious", // 4PM
+    "5PM atomizer! 5 o'clock champion reporting for duty", // 5PM
+    "6PM disintegrator! Evening excellence achieved", // 6PM
+    "7PM demolisher! Dinner and total domination", // 7PM
+    "8PM exterminator! Prime time belongs to you", // 8PM
+    "9PM annihilator! Night shift ninja strikes again", // 9PM
+    "10PM destroyer! Late night legend status confirmed", // 10PM
+    "11PM obliterator! Almost midnight and still winning" // 11PM
+  ]
+  return messages[hour] || messages[0]
+}
+
 // Helper function to convert Tailwind classes to organic gradient styles
 const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'linear') => {
   if (type === 'organic') {
@@ -1193,16 +1224,27 @@ export default function RectangularDashboard() {
             {/* Greeting with username and motivational text */}
             <div className="px-4 py-10">
               <div className="text-center">
-                <p className="text-sm text-white/80 font-medium">
-                  {getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
-                </p>
-                <p className="text-xs text-white/60 mt-1 font-medium">
-                  {dayType === 'rest' ? 'Rest well, tomorrow we continue the journey' :
-                   dayType === 'recovery' ? 'Recovery is where the magic happens' :
-                   challengeDay <= 7 ? 'Every champion started with day one' :
-                   challengeDay <= 30 ? 'Consistency is your superpower' :
-                   'You\'re unstoppable, keep going'}
-                </p>
+                {(() => {
+                  // Find current user's progress
+                  const currentUserMember = groupMembers.find(member => member.isCurrentUser)
+                  const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+                  
+                  return (
+                    <>
+                      <p className="text-sm text-white/80 font-medium">
+                        {hasAchievedTarget 
+                          ? getTargetAchievedMessage(currentTime.getHours())
+                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
+                      </p>
+                      <p className="text-xs text-white/60 mt-1 font-medium">
+                        {dayType === 'recovery' ? 'Recovery is where the magic happens' :
+                         challengeDay <= 7 ? 'Every champion started with day one' :
+                         challengeDay <= 30 ? 'Consistency is your superpower' :
+                         'You\'re unstoppable, keep going'}
+                      </p>
+                    </>
+                  )
+                })()}
               </div>
             </div>
           </div>
