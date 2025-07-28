@@ -520,28 +520,28 @@ export default function RectangularDashboard() {
     
     /* Animation utility classes */
     .animate-day-enter {
-      animation: slideDownFromTop 0.4s ease-out forwards;
-      animation-delay: 0.1s;
+      animation: slideDownFromTop 0.8s ease-out forwards;
+      animation-delay: 0.2s;
       opacity: 0;
     }
     .animate-day-name-enter {
-      animation: foldOutDown 0.3s ease-out forwards;
-      animation-delay: 0.3s;
+      animation: foldOutDown 0.6s ease-out forwards;
+      animation-delay: 0.6s;
       opacity: 0;
     }
     .animate-time-enter {
-      animation: slideInFromLeft 0.4s ease-out forwards;
-      animation-delay: 0.5s;
+      animation: slideInFromLeft 0.8s ease-out forwards;
+      animation-delay: 1.0s;
       opacity: 0;
     }
     .animate-remaining-enter {
-      animation: foldOutDown 0.3s ease-out forwards;
-      animation-delay: 0.7s;
+      animation: foldOutDown 0.6s ease-out forwards;
+      animation-delay: 1.4s;
       opacity: 0;
     }
     .animate-sentence-enter {
-      animation: fadeInSmooth 0.5s ease-out forwards;
-      animation-delay: 0.9s;
+      animation: fadeInSmooth 1.0s ease-out forwards;
+      animation-delay: 1.8s;
       opacity: 0;
     }
   `
