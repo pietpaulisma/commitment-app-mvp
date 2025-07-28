@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
+import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon } from '@heroicons/react/24/outline'
 
 // Helper function to get hilarious hourly commitment messages
 const getHourlyMessage = (hour: number): string => {
@@ -1301,11 +1301,21 @@ export default function RectangularDashboard() {
       )}
 
 
+      {/* Today's Activity Header */}
+      <div className="bg-black pt-8 rounded-t-3xl">
+        <div className="px-4 pb-6">
+          <h2 className="text-3xl font-bold text-white text-center">Today's Activity</h2>
+        </div>
+      </div>
+
       <div className="space-y-0">
         {/* Group Status */}
-        <div id="group-status" className="bg-black rounded-t-3xl">
-          <div className="py-3">
-            <h3 className="text-2xl font-bold text-white mb-6 px-4">Status</h3>
+        <div id="group-status" className="bg-black">
+          <div className="py-8">
+            <h3 className="text-lg font-semibold text-white mb-6 px-4 flex items-center gap-2">
+              <ChartBarIcon className="w-5 h-5 text-gray-400" />
+              Status
+            </h3>
             
             {groupMembers.length === 0 ? (
               <div className="grid grid-cols-2 gap-3">
@@ -1373,8 +1383,11 @@ export default function RectangularDashboard() {
 
         {/* Chats Section */}
         <div id="chats" className="bg-black">
-          <div className="py-6">
-            <h3 className="text-2xl font-bold text-white mb-6 px-4">Chats</h3>
+          <div className="py-8">
+            <h3 className="text-lg font-semibold text-white mb-6 px-4 flex items-center gap-2">
+              <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400" />
+              Chats
+            </h3>
             
             {recentChats.length === 0 ? (
               <div className="text-center py-8 px-4">
@@ -1405,8 +1418,11 @@ export default function RectangularDashboard() {
 
         {/* Essential Stats */}
         <div id="group-stats" className="bg-black">
-          <div className="py-3">
-            <h3 className="text-2xl font-bold text-white mb-6 px-4">Stats</h3>
+          <div className="py-8">
+            <h3 className="text-lg font-semibold text-white mb-6 px-4 flex items-center gap-2">
+              <ChartPieIcon className="w-5 h-5 text-gray-400" />
+              Stats
+            </h3>
             
             {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
               <div className="space-y-0 border-t border-b border-gray-800">
