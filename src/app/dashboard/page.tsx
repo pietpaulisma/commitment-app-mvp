@@ -35,8 +35,8 @@ export default function Dashboard() {
         <TimeGradient />
       </div>
       
-      {/* Landing Logo - Positioned relative to DAY text when not scrolled */}
-      {!isScrolled ? (
+      {/* Landing Logo - Only show on dashboard, positioned relative to DAY text when not scrolled */}
+      {!isScrolled && pathname === '/dashboard' ? (
         <>
           {/* Mobile Landing Logo - Very close to DAY text */}
           <div className="lg:hidden absolute left-4 z-10 transition-all duration-500" 
@@ -57,9 +57,9 @@ export default function Dashboard() {
             />
           </div>
         </>
-      ) : (
+      ) : pathname === '/dashboard' ? (
         <>
-          {/* Mobile Scrolled Logo - Move to top */}
+          {/* Mobile Scrolled Logo - Move to top, only on dashboard */}
           <div className="lg:hidden fixed top-2 left-4 z-50 transition-all duration-500">
             <img 
               src="/logo.png" 
@@ -67,7 +67,7 @@ export default function Dashboard() {
               className="h-6 w-auto drop-shadow-lg"
             />
           </div>
-          {/* Desktop Scrolled Logo - Move to top */}
+          {/* Desktop Scrolled Logo - Move to top, only on dashboard */}
           <div className="hidden lg:block fixed top-4 left-8 z-50 transition-all duration-500">
             <img 
               src="/logo.png" 
@@ -76,7 +76,7 @@ export default function Dashboard() {
             />
           </div>
         </>
-      )}
+      ) : null}
       
       {/* Components with transparent/relative positioning */}
       <div className="relative z-10">
