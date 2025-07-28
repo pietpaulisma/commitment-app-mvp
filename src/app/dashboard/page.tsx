@@ -30,7 +30,7 @@ export default function Dashboard() {
       {!isScrolled && (
         <>
           {/* Mobile Landing Logo */}
-          <div className="lg:hidden absolute top-16 left-4 z-50 transition-opacity duration-500">
+          <div className="lg:hidden absolute top-6 left-4 z-50 transition-opacity duration-500">
             <img 
               src="/logo.png" 
               alt="The Commitment" 
@@ -38,7 +38,7 @@ export default function Dashboard() {
             />
           </div>
           {/* Desktop Landing Logo */}
-          <div className="hidden lg:block absolute top-16 left-8 z-50 transition-opacity duration-500">
+          <div className="hidden lg:block absolute top-8 left-8 z-50 transition-opacity duration-500">
             <img 
               src="/logo.png" 
               alt="The Commitment" 
