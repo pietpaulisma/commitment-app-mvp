@@ -24,7 +24,11 @@ const getOrganicGradient = (colorClass: string) => {
   return gradientMap[colorClass] || colorClass
 }
 
-export default function RectangularNavigation() {
+interface RectangularNavigationProps {
+  isScrolled?: boolean
+}
+
+export default function RectangularNavigation({ isScrolled = false }: RectangularNavigationProps) {
   const { profile, loading } = useProfile()
   const { user } = useAuth()
   const { weekMode } = useWeekMode()
@@ -229,62 +233,74 @@ export default function RectangularNavigation() {
         </div>
       </div>
 
-      {/* Mobile Navigation Header */}
-      <nav className="lg:hidden sticky top-0 z-50 relative overflow-hidden">
-        <div className="px-4 relative z-10">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <img 
-                src="/logo.png" 
-                alt="The Commitment" 
-                className="h-10 w-auto drop-shadow-lg"
-              />
-            </div>
-
-            <Link 
-              href={isOnProfilePage ? "/dashboard" : "/profile"} 
-              className="p-3 bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-xl border border-white/10 transition-all duration-200 hover:border-white/20"
-            >
-              <div className="w-6 h-6 flex items-center justify-center">
-                {isOnProfilePage ? (
-                  <span className="text-white text-lg font-bold">×</span>
-                ) : (
-                  <UserIcon className="w-6 h-6 text-white" />
-                )}
-              </div>
-            </Link>
+      {/* Fixed Profile Icon - Always in top right */}
+      <div className="lg:hidden fixed top-4 right-4 z-50">
+        <Link 
+          href={isOnProfilePage ? "/dashboard" : "/profile"} 
+          className="p-3 bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-xl border border-white/10 transition-all duration-200 hover:border-white/20"
+        >
+          <div className="w-6 h-6 flex items-center justify-center">
+            {isOnProfilePage ? (
+              <span className="text-white text-lg font-bold">×</span>
+            ) : (
+              <UserIcon className="w-6 h-6 text-white" />
+            )}
           </div>
+        </Link>
+      </div>
+
+      {/* Mobile Landing Logo - Centered for landing, sticky header when scrolled */}
+      <nav className={`lg:hidden transition-all duration-300 ${
+        isScrolled 
+          ? 'fixed top-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-sm border-b border-gray-800' 
+          : 'absolute top-[25vh] left-1/2 transform -translate-x-1/2 z-50'
+      }`}>
+        <div className={`flex justify-center items-center transition-all duration-300 ${
+          isScrolled ? 'py-3 px-4' : 'py-0'
+        }`}>
+          <img 
+            src="/logo.png" 
+            alt="The Commitment" 
+            className={`drop-shadow-lg transition-all duration-300 ${
+              isScrolled ? 'h-7 w-auto' : 'h-16 w-auto'
+            }`}
+          />
         </div>
       </nav>
 
-      {/* Desktop Navigation (Modern Clean) */}
-      <nav className="hidden lg:block sticky top-0 z-40 relative overflow-hidden shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <img 
-                src="/logo.png" 
-                alt="The Commitment" 
-                className="h-12 w-auto drop-shadow-lg"
-              />
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Link 
-                href={isOnProfilePage ? "/dashboard" : "/profile"} 
-                className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium bg-black/30 backdrop-blur-sm hover:bg-black/50 border border-white/10 hover:border-white/20 px-4 py-3 rounded-xl transition-all duration-200"
-              >
-                <span>{isOnProfilePage ? "Back to Dashboard" : "Profile"}</span>
-                <div className="w-6 h-6 flex items-center justify-center">
-                  {isOnProfilePage ? (
-                    <span className="text-white text-lg font-bold">×</span>
-                  ) : (
-                    <UserIcon className="w-4 h-4 text-white" />
-                  )}
-                </div>
-              </Link>
-            </div>
+      {/* Fixed Profile Icon - Desktop */}
+      <div className="hidden lg:block fixed top-6 right-6 z-50">
+        <Link 
+          href={isOnProfilePage ? "/dashboard" : "/profile"} 
+          className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium bg-black/30 backdrop-blur-sm hover:bg-black/50 border border-white/10 hover:border-white/20 px-4 py-3 rounded-xl transition-all duration-200"
+        >
+          <span>{isOnProfilePage ? "Back to Dashboard" : "Profile"}</span>
+          <div className="w-6 h-6 flex items-center justify-center">
+            {isOnProfilePage ? (
+              <span className="text-white text-lg font-bold">×</span>
+            ) : (
+              <UserIcon className="w-4 h-4 text-white" />
+            )}
           </div>
+        </Link>
+      </div>
+
+      {/* Desktop Landing Logo - Centered for landing, sticky header when scrolled */}
+      <nav className={`hidden lg:block transition-all duration-300 ${
+        isScrolled 
+          ? 'fixed top-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-sm border-b border-gray-800' 
+          : 'absolute top-[25vh] left-1/2 transform -translate-x-1/2 z-50'
+      }`}>
+        <div className={`flex justify-center items-center transition-all duration-300 ${
+          isScrolled ? 'py-4 px-6' : 'py-0'
+        }`}>
+          <img 
+            src="/logo.png" 
+            alt="The Commitment" 
+            className={`drop-shadow-lg transition-all duration-300 ${
+              isScrolled ? 'h-8 w-auto' : 'h-20 w-auto'
+            }`}
+          />
         </div>
       </nav>
 
