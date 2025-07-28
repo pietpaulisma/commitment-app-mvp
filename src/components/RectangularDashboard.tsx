@@ -265,8 +265,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                           ? `${userProfile?.personal_color || '#c084fc'} 0%, 
                              ${userProfile?.personal_color || '#c084fc'}dd ${Math.max(0, member.percentage - 15)}%, 
                              ${userProfile?.personal_color || '#c084fc'}66 ${member.percentage}%, 
-                             transparent ${Math.min(100, member.percentage + 20)}%`
-                          : `#6b7280 0%, #6b7280dd ${Math.max(0, member.percentage - 15)}%, #6b728066 ${member.percentage}%, transparent ${Math.min(100, member.percentage + 20)}%`
+                             #374151 ${Math.min(100, member.percentage + 20)}%`
+                          : `#6b7280 0%, #6b7280dd ${Math.max(0, member.percentage - 15)}%, #6b728066 ${member.percentage}%, #374151 ${Math.min(100, member.percentage + 20)}%`
                         })`,
                       animationDelay: `${i * 200}ms`,
                       animation: 'slideInLeft 0.8s ease-out forwards'
@@ -340,8 +340,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                             ? `${userProfile?.personal_color || '#c084fc'} 0%, 
                                ${userProfile?.personal_color || '#c084fc'}dd ${Math.max(0, percentage - 15)}%, 
                                ${userProfile?.personal_color || '#c084fc'}66 ${percentage}%, 
-                               transparent ${Math.min(100, percentage + 20)}%`
-                            : `#6b7280 0%, #6b7280dd ${Math.max(0, percentage - 15)}%, #6b728066 ${percentage}%, transparent ${Math.min(100, percentage + 20)}%`
+                               #374151 ${Math.min(100, percentage + 20)}%`
+                            : `#6b7280 0%, #6b7280dd ${Math.max(0, percentage - 15)}%, #6b728066 ${percentage}%, #374151 ${Math.min(100, percentage + 20)}%`
                           })`,
                         animationDelay: `${i * 100}ms`,
                         animation: 'slideInLeft 0.8s ease-out forwards'
@@ -1427,12 +1427,12 @@ export default function RectangularDashboard() {
                                   ? `${profile?.personal_color || '#c084fc'} 0%, 
                                      ${profile?.personal_color || '#c084fc'}dd ${Math.max(0, progressPercentage - 15)}%, 
                                      ${profile?.personal_color || '#c084fc'}66 ${progressPercentage}%, 
-                                     transparent ${Math.min(100, progressPercentage + 20)}%`
+                                     #000000 ${Math.min(100, progressPercentage + 20)}%`
                                   : progressPercentage >= 100 
-                                    ? `#22c55e 0%, #22c55edd ${Math.max(0, progressPercentage - 15)}%, #22c55e66 ${progressPercentage}%, transparent ${Math.min(100, progressPercentage + 20)}%`
+                                    ? `#22c55e 0%, #22c55edd ${Math.max(0, progressPercentage - 15)}%, #22c55e66 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
                                     : progressPercentage >= 75 
-                                      ? `#eab308 0%, #eab308dd ${Math.max(0, progressPercentage - 15)}%, #eab30866 ${progressPercentage}%, transparent ${Math.min(100, progressPercentage + 20)}%`
-                                      : `#3b82f6 0%, #3b82f6dd ${Math.max(0, progressPercentage - 15)}%, #3b82f666 ${progressPercentage}%, transparent ${Math.min(100, progressPercentage + 20)}%`
+                                      ? `#eab308 0%, #eab308dd ${Math.max(0, progressPercentage - 15)}%, #eab30866 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
+                                      : `#3b82f6 0%, #3b82f6dd ${Math.max(0, progressPercentage - 15)}%, #3b82f666 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
                                 })`
                             }}
                           />

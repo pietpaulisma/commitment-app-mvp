@@ -38,18 +38,18 @@ export default function Dashboard() {
       {/* Landing Logo - Positioned relative to DAY text when not scrolled */}
       {!isScrolled ? (
         <>
-          {/* Mobile Landing Logo - Positioned above DAY text */}
+          {/* Mobile Landing Logo - Very close to DAY text */}
           <div className="lg:hidden absolute left-4 z-10 transition-all duration-500" 
-               style={{ top: `calc(50vh - 380px)` }}>
+               style={{ top: `calc(50vh - 60px)` }}>
             <img 
               src="/logo.png" 
               alt="The Commitment" 
               className="h-6 w-auto drop-shadow-lg"
             />
           </div>
-          {/* Desktop Landing Logo - Positioned above DAY text */}
+          {/* Desktop Landing Logo - Very close to DAY text */}
           <div className="hidden lg:block absolute left-8 z-10 transition-all duration-500"
-               style={{ top: `calc(50vh - 420px)` }}>
+               style={{ top: `calc(50vh - 80px)` }}>
             <img 
               src="/logo.png" 
               alt="The Commitment" 
