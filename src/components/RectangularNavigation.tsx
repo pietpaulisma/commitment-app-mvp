@@ -234,48 +234,48 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
       </div>
 
       {/* Fixed Profile Icon - Always in top right */}
-      <div className="lg:hidden fixed top-4 right-4 z-50">
+      <div className="lg:hidden fixed top-6 right-4 z-[60]">
         <Link 
           href={isOnProfilePage ? "/dashboard" : "/profile"} 
-          className="p-3 bg-black/30 backdrop-blur-sm hover:bg-black/50 rounded-xl border border-white/10 transition-all duration-200 hover:border-white/20"
+          className="flex items-center justify-center p-2.5 bg-black/40 backdrop-blur-sm hover:bg-black/60 rounded-lg border border-white/20 transition-all duration-200 hover:border-white/30 shadow-lg"
         >
-          <div className="w-6 h-6 flex items-center justify-center">
-            {isOnProfilePage ? (
-              <span className="text-white text-lg font-bold">×</span>
-            ) : (
-              <UserIcon className="w-6 h-6 text-white" />
-            )}
-          </div>
+          {isOnProfilePage ? (
+            <span className="text-white text-lg font-bold">×</span>
+          ) : (
+            <UserIcon className="w-5 h-5 text-white" />
+          )}
         </Link>
       </div>
 
-      {/* Mobile Landing Logo - Centered for landing, sticky header when scrolled */}
-      <nav className={`lg:hidden transition-all duration-300 ${
+      {/* Mobile Landing Logo - Centered for landing, left-aligned header when scrolled */}
+      <nav className={`lg:hidden transition-all duration-500 ${
         isScrolled 
-          ? 'fixed top-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-sm border-b border-gray-800' 
-          : 'absolute top-[25vh] left-1/2 transform -translate-x-1/2 z-50'
+          ? 'fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800' 
+          : 'absolute top-[15vh] left-1/2 transform -translate-x-1/2 z-50'
       }`}>
-        <div className={`flex justify-center items-center transition-all duration-300 ${
-          isScrolled ? 'py-3 px-4' : 'py-0'
+        <div className={`transition-all duration-500 ${
+          isScrolled 
+            ? 'flex justify-start items-center py-3 px-4' 
+            : 'flex justify-center items-center py-0'
         }`}>
           <img 
             src="/logo.png" 
             alt="The Commitment" 
-            className={`drop-shadow-lg transition-all duration-300 ${
-              isScrolled ? 'h-7 w-auto' : 'h-16 w-auto'
+            className={`drop-shadow-lg transition-all duration-500 ${
+              isScrolled ? 'h-8 w-auto opacity-90' : 'h-12 w-auto opacity-100'
             }`}
           />
         </div>
       </nav>
 
       {/* Fixed Profile Icon - Desktop */}
-      <div className="hidden lg:block fixed top-6 right-6 z-50">
+      <div className="hidden lg:block fixed top-8 right-8 z-[60]">
         <Link 
           href={isOnProfilePage ? "/dashboard" : "/profile"} 
-          className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium bg-black/30 backdrop-blur-sm hover:bg-black/50 border border-white/10 hover:border-white/20 px-4 py-3 rounded-xl transition-all duration-200"
+          className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium bg-black/40 backdrop-blur-sm hover:bg-black/60 border border-white/20 hover:border-white/30 px-4 py-3 rounded-lg transition-all duration-200 shadow-lg"
         >
           <span>{isOnProfilePage ? "Back to Dashboard" : "Profile"}</span>
-          <div className="w-6 h-6 flex items-center justify-center">
+          <div className="w-5 h-5 flex items-center justify-center">
             {isOnProfilePage ? (
               <span className="text-white text-lg font-bold">×</span>
             ) : (
@@ -285,20 +285,22 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
         </Link>
       </div>
 
-      {/* Desktop Landing Logo - Centered for landing, sticky header when scrolled */}
-      <nav className={`hidden lg:block transition-all duration-300 ${
+      {/* Desktop Landing Logo - Centered for landing, left-aligned header when scrolled */}
+      <nav className={`hidden lg:block transition-all duration-500 ${
         isScrolled 
-          ? 'fixed top-0 left-0 right-0 z-40 bg-black/90 backdrop-blur-sm border-b border-gray-800' 
-          : 'absolute top-[25vh] left-1/2 transform -translate-x-1/2 z-50'
+          ? 'fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-gray-800' 
+          : 'absolute top-[15vh] left-1/2 transform -translate-x-1/2 z-50'
       }`}>
-        <div className={`flex justify-center items-center transition-all duration-300 ${
-          isScrolled ? 'py-4 px-6' : 'py-0'
+        <div className={`transition-all duration-500 ${
+          isScrolled 
+            ? 'flex justify-start items-center py-4 px-8 max-w-7xl mx-auto' 
+            : 'flex justify-center items-center py-0'
         }`}>
           <img 
             src="/logo.png" 
             alt="The Commitment" 
-            className={`drop-shadow-lg transition-all duration-300 ${
-              isScrolled ? 'h-8 w-auto' : 'h-20 w-auto'
+            className={`drop-shadow-lg transition-all duration-500 ${
+              isScrolled ? 'h-10 w-auto opacity-90' : 'h-16 w-auto opacity-100'
             }`}
           />
         </div>
