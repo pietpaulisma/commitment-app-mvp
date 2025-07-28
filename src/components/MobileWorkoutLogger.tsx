@@ -404,11 +404,17 @@ export default function MobileWorkoutLogger() {
       {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
         <div className="bg-black border-b border-gray-800 relative overflow-hidden">
-          {/* Progress bar background */}
+          {/* Liquid gradient progress bar background */}
           <div 
             className="absolute right-0 top-0 bottom-0 transition-all duration-1000 ease-out"
-            style={{ backgroundColor: getUserColor() }}
-            style={{ width: `${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%` }}
+            style={{ 
+              width: '100%',
+              background: `linear-gradient(to left, 
+                ${getUserColor()} 0%, 
+                ${getUserColor()}dd ${Math.max(0, Math.min(100, (getTotalPoints() / dailyTarget) * 100) - 15)}%, 
+                ${getUserColor()}66 ${Math.min(100, (getTotalPoints() / dailyTarget) * 100)}%, 
+                #000000 ${Math.min(100, Math.min(100, (getTotalPoints() / dailyTarget) * 100) + 20)}%)`
+            }}
           />
           
           {/* Content */}

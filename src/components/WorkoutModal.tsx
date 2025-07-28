@@ -466,7 +466,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   ${getCategoryColor(exercise.type, exercise.id)} 0%, 
                   ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
                   ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
-                  #111827 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                  #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
               }}
             />
             
@@ -548,7 +548,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   ${getCategoryColor(exercise.type, exercise.id)} 0%, 
                   ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
                   ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
-                  #111827 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                  #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
               }}
             />
             
