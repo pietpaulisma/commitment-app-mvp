@@ -247,16 +247,14 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
         </Link>
       </div>
 
-      {/* Mobile Landing Logo - Completely separate positioning */}
+      {/* Mobile Landing Logo - Left aligned above DAY content */}
       {!isScrolled && (
-        <div className="lg:hidden fixed top-[12vh] left-0 right-0 z-50 transition-opacity duration-500">
-          <div className="flex justify-center">
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-11 w-auto drop-shadow-lg"
-            />
-          </div>
+        <div className="lg:hidden absolute top-[15vh] left-4 z-50 transition-opacity duration-500">
+          <img 
+            src="/logo.png" 
+            alt="The Commitment" 
+            className="h-6 w-auto drop-shadow-lg"
+          />
         </div>
       )}
       
@@ -290,16 +288,14 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
         </Link>
       </div>
 
-      {/* Desktop Landing Logo - Completely separate positioning */}
+      {/* Desktop Landing Logo - Left aligned above DAY content */}
       {!isScrolled && (
-        <div className="hidden lg:block fixed top-[12vh] left-0 right-0 z-50 transition-opacity duration-500">
-          <div className="flex justify-center">
-            <img 
-              src="/logo.png" 
-              alt="The Commitment" 
-              className="h-14 w-auto drop-shadow-lg"
-            />
-          </div>
+        <div className="hidden lg:block absolute top-[15vh] left-8 z-50 transition-opacity duration-500">
+          <img 
+            src="/logo.png" 
+            alt="The Commitment" 
+            className="h-7 w-auto drop-shadow-lg"
+          />
         </div>
       )}
       

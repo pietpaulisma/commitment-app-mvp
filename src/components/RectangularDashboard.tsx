@@ -1163,7 +1163,7 @@ export default function RectangularDashboard() {
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
-        <div className="relative overflow-hidden mt-40">
+        <div className="relative overflow-hidden mt-24">
           {/* Content with more vertical padding */}
           <div className="relative px-4 py-8 z-10">
             <div className="flex items-end justify-between">
@@ -1191,7 +1191,7 @@ export default function RectangularDashboard() {
             </div>
             
             {/* Greeting with username and motivational text */}
-            <div className="px-4 pb-12 pt-8">
+            <div className="px-4 py-10">
               <div className="text-center">
                 <p className="text-sm text-white/80 font-medium">
                   {getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
