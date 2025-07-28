@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import RectangularNavigation from '@/components/RectangularNavigation'
 import RectangularDashboard from '@/components/RectangularDashboard'
 import TimeGradient from '@/components/TimeGradient'
@@ -8,6 +9,7 @@ import TimeGradient from '@/components/TimeGradient'
 export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,7 +24,7 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-black">
+    <div className="relative min-h-screen bg-black overflow-hidden">
       {/* Unified gradient background covering 50% landing area with parallax */}
       <div 
         className="absolute inset-0 h-[50vh] z-0"
@@ -33,11 +35,11 @@ export default function Dashboard() {
         <TimeGradient />
       </div>
       
-      {/* Landing Logo - Positioned above all content */}
+      {/* Landing Logo - Contained within dashboard */}
       {!isScrolled && (
         <>
           {/* Mobile Landing Logo */}
-          <div className="lg:hidden absolute top-2 left-4 z-50 transition-opacity duration-500">
+          <div className="lg:hidden absolute top-2 left-4 z-10 transition-opacity duration-500">
             <img 
               src="/logo.png" 
               alt="The Commitment" 
@@ -45,7 +47,7 @@ export default function Dashboard() {
             />
           </div>
           {/* Desktop Landing Logo */}
-          <div className="hidden lg:block absolute top-4 left-8 z-50 transition-opacity duration-500">
+          <div className="hidden lg:block absolute top-4 left-8 z-10 transition-opacity duration-500">
             <img 
               src="/logo.png" 
               alt="The Commitment" 

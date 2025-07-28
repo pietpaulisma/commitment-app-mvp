@@ -34,9 +34,9 @@ export default function WorkoutPage() {
   }
 
   return (
-    <>
+    <div className="relative min-h-screen bg-black">
       <MobileNavigation />
       <MobileWorkoutLogger />
-    </>
+    </div>
   )
 }
