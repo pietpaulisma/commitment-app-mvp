@@ -95,7 +95,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create single flowing gradient with pronounced organic edges and rounded shapes
+  // Create single flowing gradient with clean transitions
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
@@ -107,7 +107,7 @@ export default function MobileWorkoutLogger() {
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops with pronounced organic variation
+    // Create gradient stops based on exercise proportions within the progress area
     const gradientStops = []
     let cumulativePercent = 0
     
@@ -115,35 +115,16 @@ export default function MobileWorkoutLogger() {
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Much more pronounced organic variation for visible rounded/diagonal edges
-      const baseVariation = Math.sin(log.exercise_id.charCodeAt(0) * 0.5) * 8 // -8 to +8% variation
-      const startPercent = Math.max(0, cumulativePercent + baseVariation)
-      const endPercent = cumulativePercent + exercisePercent
-      
-      // Create organic shape with multiple transition points
-      const organicMid = endPercent + Math.cos(log.exercise_id.charCodeAt(1) * 0.3) * 6 // More variation
-      
-      gradientStops.push(`${color} ${startPercent}%`)
-      gradientStops.push(`${color}ee ${Math.max(startPercent, endPercent - 3)}%`)
-      gradientStops.push(`${color}aa ${organicMid}%`)
-      gradientStops.push(`${color}44 ${Math.min(100, organicMid + 8)}%`)
+      // Add color stop at the center of this exercise's portion
+      const centerPercent = cumulativePercent + (exercisePercent / 2)
+      gradientStops.push(`${color} ${centerPercent}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Create very organic, rounded transition to black
+    // Add black for remaining space if not at 100%
     if (totalProgress < 100) {
-      // Multiple organic variation points for curved/diagonal effect
-      const organicPoint1 = totalProgress + Math.sin(total * 0.2) * 12 // Large variation
-      const organicPoint2 = totalProgress + Math.cos(total * 0.15) * 8
-      const organicPoint3 = totalProgress + Math.sin(total * 0.25) * 15
-      
-      // Create multiple transition points for organic bulb shape
-      gradientStops.push(`transparent ${Math.max(0, totalProgress - 5)}%`)
-      gradientStops.push(`#00000033 ${Math.max(0, organicPoint2)}%`)
-      gradientStops.push(`#00000066 ${Math.max(0, organicPoint1)}%`)
-      gradientStops.push(`#000000aa ${Math.max(0, organicPoint3)}%`)
-      gradientStops.push(`#000000 ${Math.min(100, Math.max(totalProgress + 10, organicPoint3 + 5))}%`)
+      gradientStops.push(`#000000 100%`)
     }
 
     return `linear-gradient(to right, ${gradientStops.join(', ')})`
