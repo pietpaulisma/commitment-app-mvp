@@ -165,7 +165,9 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       gradientStops.push(`#000000 100%`)
     }
 
-    return `linear-gradient(to right, ${gradientStops.join(', ')})`
+    const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
+    console.log('Dashboard gradient:', gradient)
+    return gradient
   }
 
   const loadDailyProgress = async () => {
@@ -286,7 +288,9 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
               className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
               style={{ 
                 width: progressAnimated ? '100%' : '80%',
-                background: createCumulativeGradient(todayLogs)
+                background: createCumulativeGradient(todayLogs),
+                // Force cache invalidation
+                transform: `translateZ(${Date.now() % 1000}px)`
               }}
             />
             

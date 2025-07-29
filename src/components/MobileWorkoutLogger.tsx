@@ -147,7 +147,9 @@ export default function MobileWorkoutLogger() {
       gradientStops.push(`#000000 100%`)
     }
 
-    return `linear-gradient(to right, ${gradientStops.join(', ')})`
+    const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
+    console.log('Workout page gradient:', gradient)
+    return gradient
   }
 
   useEffect(() => {
@@ -509,7 +511,9 @@ export default function MobileWorkoutLogger() {
             className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
             style={{ 
               width: progressAnimated ? '100%' : '80%',
-              background: createCumulativeGradient()
+              background: createCumulativeGradient(),
+              // Force cache invalidation
+              transform: `translateZ(${Date.now() % 1000}px)`
             }}
           />
           
