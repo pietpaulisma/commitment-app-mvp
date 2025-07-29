@@ -94,7 +94,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create cumulative gradient with liquid fade transitions
+  // Create single flowing gradient with multiple exercise color points
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
@@ -103,35 +103,26 @@ export default function MobileWorkoutLogger() {
       return `linear-gradient(to right, #000000 0%, #000000 100%)`
     }
 
-    // Calculate cumulative percentages for each exercise
+    // Calculate the total progress percentage
+    const totalProgress = Math.min(100, (total / dailyTarget) * 100)
+    
+    // Create gradient stops based on exercise proportions within the progress area
     const gradientStops = []
     let cumulativePercent = 0
     
     todaysLogs.forEach((log, index) => {
-      const exercisePercent = (log.points / total) * Math.min(100, (total / dailyTarget) * 100)
+      const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Add liquid fade-in at start of segment
-      if (cumulativePercent > 0) {
-        // Soft transition from previous color
-        gradientStops.push(`${color}66 ${Math.max(0, cumulativePercent - 2)}%`)
-      }
+      // Add color stop at the center of this exercise's portion
+      const centerPercent = cumulativePercent + (exercisePercent / 2)
+      gradientStops.push(`${color} ${centerPercent}%`)
       
-      // Main color for this exercise segment
-      gradientStops.push(`${color} ${cumulativePercent}%`)
-      
-      // Add liquid fade-out at end of segment
-      const endPercent = cumulativePercent + exercisePercent
-      gradientStops.push(`${color}dd ${Math.max(cumulativePercent, endPercent - 3)}%`)
-      gradientStops.push(`${color}66 ${endPercent}%`)
-      
-      cumulativePercent = endPercent
+      cumulativePercent += exercisePercent
     })
     
-    // Fill remaining space with black if not at 100%
-    const totalProgress = Math.min(100, (total / dailyTarget) * 100)
+    // Add black for remaining space if not at 100%
     if (totalProgress < 100) {
-      gradientStops.push(`#000000 ${Math.max(0, totalProgress - 5)}%`)
       gradientStops.push(`#000000 100%`)
     }
 
