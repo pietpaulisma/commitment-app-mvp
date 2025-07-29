@@ -105,7 +105,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create smooth flowing gradient with proportional colors
+  // Create gradient showing actual exercise distribution with small fade
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
@@ -116,42 +116,47 @@ export default function MobileWorkoutLogger() {
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Calculate proportions by exercise type
+    // Calculate actual exercise type percentages within the completed portion
     const regularPoints = todaysLogs?.filter(log => log.exercises?.type === 'all' || !log.exercises?.type)?.reduce((sum, log) => sum + log.points, 0) || 0
     const recoveryPoints = todaysLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + log.points, 0) || 0
     const sportsPoints = todaysLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + log.points, 0) || 0
     
-    // Create gradient stops based on proportions
     const gradientStops = []
-    let currentPos = 0
+    let currentPercent = 0
     
+    // Blue section (regular exercises)
     if (regularPoints > 0) {
-      const regularPercent = (regularPoints / total) * totalProgress
-      gradientStops.push(`#3b82f6 ${currentPos}%`)
-      gradientStops.push(`#3b82f6dd ${currentPos + regularPercent * 0.7}%`)
-      gradientStops.push(`#3b82f666 ${currentPos + regularPercent}%`)
-      currentPos += regularPercent
+      const blueWidth = (regularPoints / total) * totalProgress
+      gradientStops.push(`#3b82f6 ${currentPercent}%`)
+      gradientStops.push(`#3b82f6dd ${currentPercent + blueWidth * 0.8}%`)
+      gradientStops.push(`#3b82f666 ${currentPercent + blueWidth}%`)
+      currentPercent += blueWidth
     }
     
+    // Green section (recovery)
     if (recoveryPoints > 0) {
-      const recoveryPercent = (recoveryPoints / total) * totalProgress
-      gradientStops.push(`#22c55e ${currentPos}%`)
-      gradientStops.push(`#22c55edd ${currentPos + recoveryPercent * 0.7}%`)
-      gradientStops.push(`#22c55e66 ${currentPos + recoveryPercent}%`)
-      currentPos += recoveryPercent
+      const greenWidth = (recoveryPoints / total) * totalProgress
+      gradientStops.push(`#22c55e ${currentPercent}%`)
+      gradientStops.push(`#22c55edd ${currentPercent + greenWidth * 0.8}%`)
+      gradientStops.push(`#22c55e66 ${currentPercent + greenWidth}%`)
+      currentPercent += greenWidth
     }
     
+    // Purple section (sports)
     if (sportsPoints > 0) {
-      const sportsPercent = (sportsPoints / total) * totalProgress
-      gradientStops.push(`#a855f7 ${currentPos}%`)
-      gradientStops.push(`#a855f7dd ${currentPos + sportsPercent * 0.7}%`)
-      gradientStops.push(`#a855f766 ${currentPos + sportsPercent}%`)
+      const purpleWidth = (sportsPoints / total) * totalProgress
+      gradientStops.push(`#a855f7 ${currentPercent}%`)
+      gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.8}%`)
+      gradientStops.push(`#a855f766 ${currentPercent + purpleWidth}%`)
+      currentPercent += purpleWidth
     }
     
-    // Fix fade position - end closer to actual percentage
-    const fadeStart = Math.max(0, totalProgress - 8) // Start fade 8% earlier
-    gradientStops.push(`#00000044 ${fadeStart}%`)
-    gradientStops.push(`#000000 ${totalProgress + 5}%`) // End just 5% after actual progress
+    // Small 10% fade to black
+    const fadeStart = totalProgress - 5  // Start fade 5% before end
+    if (fadeStart > 0) {
+      gradientStops.push(`#00000066 ${fadeStart}%`)
+    }
+    gradientStops.push(`#000000 ${totalProgress}%`)
     gradientStops.push(`#000000 100%`)
     
     const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
