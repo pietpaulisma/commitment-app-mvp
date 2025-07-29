@@ -128,7 +128,7 @@ export default function MobileWorkoutLogger() {
     if (regularPoints > 0) {
       const blueWidth = (regularPoints / total) * totalProgress
       gradientStops.push(`#3b82f6 ${currentPercent}%`)
-      gradientStops.push(`#3b82f6dd ${currentPercent + blueWidth * 0.8}%`)
+      gradientStops.push(`#3b82f6dd ${currentPercent + blueWidth * 0.5}%`)
       gradientStops.push(`#3b82f666 ${currentPercent + blueWidth}%`)
       currentPercent += blueWidth
     }
@@ -137,7 +137,7 @@ export default function MobileWorkoutLogger() {
     if (recoveryPoints > 0) {
       const greenWidth = (recoveryPoints / total) * totalProgress
       gradientStops.push(`#22c55e ${currentPercent}%`)
-      gradientStops.push(`#22c55edd ${currentPercent + greenWidth * 0.8}%`)
+      gradientStops.push(`#22c55edd ${currentPercent + greenWidth * 0.5}%`)
       gradientStops.push(`#22c55e66 ${currentPercent + greenWidth}%`)
       currentPercent += greenWidth
     }
@@ -146,13 +146,13 @@ export default function MobileWorkoutLogger() {
     if (sportsPoints > 0) {
       const purpleWidth = (sportsPoints / total) * totalProgress
       gradientStops.push(`#a855f7 ${currentPercent}%`)
-      gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.8}%`)
+      gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.5}%`)
       gradientStops.push(`#a855f766 ${currentPercent + purpleWidth}%`)
       currentPercent += purpleWidth
     }
     
     // Small 10% fade to black
-    const fadeStart = totalProgress - 5  // Start fade 5% before end
+    const fadeStart = totalProgress - 10  // Start fade 10% before end (was 5%)
     if (fadeStart > 0) {
       gradientStops.push(`#00000066 ${fadeStart}%`)
     }

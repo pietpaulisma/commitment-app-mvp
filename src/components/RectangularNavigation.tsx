@@ -123,11 +123,18 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     return colorArray[colorIndex]
   }
 
-  // Create gradient showing actual exercise distribution with small fade
+  // Create gradient showing actual exercise distribution with extended fade
   const createCumulativeGradient = (todayLogs: any[]) => {
     const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
     
+    // Debug logging
+    console.log('=== Gradient Debug ===')
+    console.log('todayLogs:', todayLogs)
+    console.log('total points:', total)
+    console.log('dailyTarget:', dailyTarget)
+    
     if (total === 0 || !todayLogs || todayLogs.length === 0) {
+      console.log('No progress - returning black gradient')
       return `linear-gradient(to right, #000000 0%, #000000 100%)`
     }
 
@@ -139,38 +146,48 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     const recoveryPoints = todayLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + log.points, 0) || 0
     const sportsPoints = todayLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + log.points, 0) || 0
     
+    // Debug exercise type breakdown
+    console.log('Exercise breakdown:')
+    console.log('- Regular points:', regularPoints)
+    console.log('- Recovery points:', recoveryPoints) 
+    console.log('- Sports points:', sportsPoints)
+    console.log('- Total progress:', totalProgress + '%')
+    
     const gradientStops = []
     let currentPercent = 0
     
-    // Blue section (regular exercises)
+    // Blue section (regular exercises) - Extended fade from 0.8 to 0.5
     if (regularPoints > 0) {
       const blueWidth = (regularPoints / total) * totalProgress
       gradientStops.push(`#3b82f6 ${currentPercent}%`)
-      gradientStops.push(`#3b82f6dd ${currentPercent + blueWidth * 0.8}%`)
+      gradientStops.push(`#3b82f6dd ${currentPercent + blueWidth * 0.5}%`)
       gradientStops.push(`#3b82f666 ${currentPercent + blueWidth}%`)
       currentPercent += blueWidth
+      console.log('- Blue section width:', blueWidth + '%')
     }
     
-    // Green section (recovery)
+    // Green section (recovery) - Extended fade from 0.8 to 0.5
     if (recoveryPoints > 0) {
       const greenWidth = (recoveryPoints / total) * totalProgress
       gradientStops.push(`#22c55e ${currentPercent}%`)
-      gradientStops.push(`#22c55edd ${currentPercent + greenWidth * 0.8}%`)
+      gradientStops.push(`#22c55edd ${currentPercent + greenWidth * 0.5}%`)
       gradientStops.push(`#22c55e66 ${currentPercent + greenWidth}%`)
       currentPercent += greenWidth
+      console.log('- Green section width:', greenWidth + '%')
     }
     
-    // Purple section (sports)
+    // Purple section (sports) - Extended fade from 0.8 to 0.5
     if (sportsPoints > 0) {
       const purpleWidth = (sportsPoints / total) * totalProgress
       gradientStops.push(`#a855f7 ${currentPercent}%`)
-      gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.8}%`)
+      gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.5}%`)
       gradientStops.push(`#a855f766 ${currentPercent + purpleWidth}%`)
       currentPercent += purpleWidth
+      console.log('- Purple section width:', purpleWidth + '%')
     }
     
-    // Small 10% fade to black
-    const fadeStart = totalProgress - 5  // Start fade 5% before end
+    // Extended fade to black - increased from 5% to 10%
+    const fadeStart = totalProgress - 10  // Start fade 10% before end (was 5%)
     if (fadeStart > 0) {
       gradientStops.push(`#00000066 ${fadeStart}%`)
     }
@@ -178,7 +195,8 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     gradientStops.push(`#000000 100%`)
     
     const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
-    console.log('Dashboard gradient:', gradient)
+    console.log('Final gradient:', gradient)
+    console.log('=== End Gradient Debug ===')
     return gradient
   }
 
