@@ -649,7 +649,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-950 z-60 flex flex-col fixed-fullscreen">
+    <div className="fixed inset-0 bg-black z-[9999] flex flex-col fixed-fullscreen">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
           <div>
@@ -701,9 +701,9 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                     className={`relative px-3 py-2 rounded-lg shadow-sm ${
                       message.user_id === user?.id
                         ? message.id.startsWith('temp-') 
-                          ? 'bg-green-600 text-white opacity-70' 
-                          : 'bg-green-600 text-white'
-                        : 'bg-gray-700 text-white'
+                          ? 'bg-gray-700 text-white opacity-70' 
+                          : 'bg-gray-700 text-white'
+                        : 'bg-gray-800 text-white'
                     }`}
                   >
                     {/* User name inside bubble (for others' messages) - WhatsApp style */}
@@ -754,14 +754,14 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                       )}
                     </div>
                     
-                    {/* Reaction button */}
+                    {/* Reaction button - WhatsApp style round button */}
                     <button
                       onClick={() => setShowReactionPicker(
                         showReactionPicker === message.id ? null : message.id
                       )}
-                      className="absolute -bottom-1 right-1 w-5 h-5 bg-gray-800/80 hover:bg-gray-700/80 rounded-full flex items-center justify-center transition-colors opacity-70 hover:opacity-100"
+                      className="absolute -bottom-2 -right-2 w-6 h-6 bg-gray-600 hover:bg-gray-500 rounded-full flex items-center justify-center transition-all duration-200 opacity-80 hover:opacity-100 shadow-lg border border-gray-700"
                     >
-                      <FaceSmileIcon className="w-3 h-3 text-gray-300" />
+                      <FaceSmileIcon className="w-3.5 h-3.5 text-gray-200" />
                     </button>
                   </div>
                   
@@ -819,7 +819,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
 
         {/* Image Preview */}
         {imagePreview && (
-          <div className="p-4 border-t border-gray-800 bg-gray-900">
+          <div className="p-4 border-t border-gray-800 bg-black">
             <div className="relative inline-block">
               <img 
                 src={imagePreview} 
@@ -840,15 +840,15 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
           </div>
         )}
 
-        {/* Message Input */}
-        <form onSubmit={sendMessage} className="p-4 pb-safe border-t border-gray-800 bg-gray-900" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
-          <div className="flex items-end space-x-3">
+        {/* Message Input - Modern aligned design */}
+        <form onSubmit={sendMessage} className="bg-black border-t border-gray-800" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="flex items-center space-x-2 p-4">
             {/* Image upload button */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="flex-shrink-0 w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors border border-gray-700"
+              className="flex-shrink-0 w-11 h-11 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors border border-gray-700"
               aria-label="Upload image"
             >
               <PhotoIcon className="w-5 h-5 text-gray-400" />
@@ -860,7 +860,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[2.75rem]"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent resize-none min-h-[2.75rem] max-h-[120px]"
                 disabled={sending || uploading}
                 maxLength={500}
                 rows={1}
@@ -876,7 +876,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
             <button
               type="submit"
               disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
-              className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              className="flex-shrink-0 w-11 h-11 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               aria-label="Send message"
             >
               {sending || uploading ? (

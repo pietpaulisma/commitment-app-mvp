@@ -41,9 +41,11 @@ export default function Dashboard() {
         <>
           {!isScrolled ? (
             <>
-              {/* Mobile Landing Logo - Positioned above DAY text with reduced spacing */}
-              <div className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
-                   style={{ top: '100px' }}>
+              {/* Mobile Landing Logo - Positioned above DAY text with safe area spacing */}
+              <div 
+                className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
+                style={{ top: 'calc(env(safe-area-inset-top) + 60px)' }}
+              >
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 
@@ -62,8 +64,11 @@ export default function Dashboard() {
             </>
           ) : (
             <>
-              {/* Mobile Scrolled Logo - Move to top when scrolled */}
-              <div className="lg:hidden fixed top-3 left-4 z-[70] transition-all duration-500">
+              {/* Mobile Scrolled Logo - Move to top when scrolled with safe area */}
+              <div 
+                className="lg:hidden fixed left-4 z-[70] transition-all duration-500"
+                style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
+              >
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 

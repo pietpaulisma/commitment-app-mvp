@@ -306,8 +306,11 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
         </div>
       </div>
 
-      {/* Fixed Profile Icon - Always in top right */}
-      <div className="lg:hidden fixed top-2 right-4 z-[60]">
+      {/* Fixed Profile Icon - Always in top right with safe area */}
+      <div 
+        className="lg:hidden fixed right-4 z-[60]"
+        style={{ top: 'calc(env(safe-area-inset-top) + 8px)' }}
+      >
         <Link 
           href={isOnProfilePage ? "/dashboard" : "/profile"} 
           className="flex items-center justify-center transition-all duration-200 hover:opacity-80"
@@ -323,8 +326,11 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       
       {/* Mobile Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
       {isScrolled && (
-        <nav className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500">
-          <div className="flex justify-start items-center py-3 px-4 pr-20">
+        <nav 
+          className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
+          <div className="flex justify-start items-center py-4 px-4 pr-20">
             {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
           {/* Border positioned below logo area */}
