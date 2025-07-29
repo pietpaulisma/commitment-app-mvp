@@ -137,8 +137,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         }, 400) // Start icon transition near end of modal slide-up
       }, 100) // Increased delay to be more visible
       
-      // Trigger progress animation after modal loads
-      setTimeout(() => setProgressAnimated(true), 500)
+      // Trigger subtle progress animation after modal loads
+      setTimeout(() => setProgressAnimated(true), 300)
     } else if (!isOpen) {
       console.log('Setting isAnimatedIn to false')
       setIsAnimatedIn(false)
@@ -1154,11 +1154,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           <div className="flex">
             {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
-              {/* Liquid gradient progress background with animation */}
+              {/* Liquid gradient progress background with subtle animation */}
               <div 
-                className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
+                className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
                 style={{ 
-                  width: progressAnimated ? '100%' : '0%',
+                  width: progressAnimated ? '100%' : '75%',
                   background: `linear-gradient(to right, 
                     #3b82f6 0%, 
                     #3b82f6 ${Math.max(0, regularPercentage - 5)}%, 

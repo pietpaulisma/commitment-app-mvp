@@ -112,7 +112,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     return colorArray[colorIndex]
   }
 
-  // Create single flowing gradient with multiple exercise color points and sharper transitions
+  // Create single flowing gradient with organic variation and moderate transitions
   const createCumulativeGradient = (todayLogs: any[]) => {
     const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
     
@@ -124,7 +124,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops with sharper transitions
+    // Create gradient stops with organic variation
     const gradientStops = []
     let cumulativePercent = 0
     
@@ -132,27 +132,25 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Create sharper transitions by reducing blend distance
-      const startPercent = cumulativePercent
+      // Add some organic variation to the positioning
+      const variation = Math.sin(log.exercise_id.charCodeAt(0)) * 2 // -2 to +2% variation
+      const startPercent = Math.max(0, cumulativePercent + variation)
       const endPercent = cumulativePercent + exercisePercent
       
-      // Add color with minimal blending (10% of exercise width)
-      const blendDistance = Math.min(exercisePercent * 0.1, 2)
+      // Moderate blending for organic feel
+      const blendDistance = Math.min(exercisePercent * 0.15, 5)
       
-      if (index === 0) {
-        gradientStops.push(`${color} ${startPercent}%`)
-      } else {
-        gradientStops.push(`${color} ${Math.max(0, startPercent - blendDistance)}%`)
-      }
-      
-      gradientStops.push(`${color} ${Math.min(100, endPercent - blendDistance)}%`)
+      gradientStops.push(`${color} ${startPercent}%`)
+      gradientStops.push(`${color}dd ${Math.max(startPercent, endPercent - blendDistance)}%`)
+      gradientStops.push(`${color}66 ${endPercent}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Sharp transition to black for remaining space
+    // Organic transition to black with slight variation
     if (totalProgress < 100) {
-      const blackStart = Math.max(0, totalProgress - 2)
+      const organicVariation = Math.cos(total * 0.1) * 3 // -3 to +3% variation
+      const blackStart = Math.max(0, totalProgress - 8 + organicVariation)
       gradientStops.push(`#000000 ${blackStart}%`)
       gradientStops.push(`#000000 100%`)
     }
@@ -232,8 +230,8 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       setRecoveryProgress(recoveryPoints)
       setTodayLogs(todayLogs || [])
       
-      // Trigger animation after data loads
-      setTimeout(() => setProgressAnimated(true), 100)
+      // Trigger subtle animation after data loads
+      setTimeout(() => setProgressAnimated(true), 200)
     } catch (error) {
       console.error('Error loading daily progress:', error)
     }
@@ -273,11 +271,11 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
               isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
           >
-            {/* Stacked gradient progress background with animation */}
+            {/* Stacked gradient progress background with subtle animation */}
             <div 
-              className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
+              className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
               style={{ 
-                width: progressAnimated ? '100%' : '0%',
+                width: progressAnimated ? '100%' : '80%',
                 background: createCumulativeGradient(todayLogs)
               }}
             />
