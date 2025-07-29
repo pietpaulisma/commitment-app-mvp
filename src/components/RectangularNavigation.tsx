@@ -143,13 +143,15 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id, true) // Use single tint
       
-      // Create smooth liquid gradient for each exercise with better blending
+      // Create smooth liquid gradient - no overlapping percentages
       const exerciseStart = cumulativePercent
       const exerciseEnd = cumulativePercent + exercisePercent
-      const exerciseMid = exerciseStart + (exercisePercent * 0.5)
+      const exerciseMid = exerciseStart + (exercisePercent * 0.6)
       
-      // Smooth blending similar to individual exercises
-      gradientStops.push(`${color} ${exerciseStart}%`)
+      // Only add start for first exercise or if different from previous
+      if (index === 0 || cumulativePercent > 0) {
+        gradientStops.push(`${color} ${exerciseStart}%`)
+      }
       gradientStops.push(`${color}dd ${exerciseMid}%`)
       gradientStops.push(`${color}66 ${exerciseEnd}%`)
       
