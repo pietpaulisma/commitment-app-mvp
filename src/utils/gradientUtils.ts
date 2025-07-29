@@ -52,30 +52,62 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
   const gradientStops = []
   let currentPercent = 0
   
-  // Blue section (regular exercises) - Extended fade from 0.8 to 0.5
+  // Blue section (regular exercises) - With 10% blend transition
   if (regularPoints > 0) {
     const blueWidth = (regularPoints / total) * totalProgress
+    const blendZone = Math.min(blueWidth * 0.1, 5) // 10% of section or max 5%
+    
     gradientStops.push(`#3b82f6 ${currentPercent}%`)
     gradientStops.push(`#3b82f6dd ${currentPercent + blueWidth * 0.5}%`)
-    gradientStops.push(`#3b82f666 ${currentPercent + blueWidth}%`)
+    
+    // If there's a next color, create blend zone
+    if (recoveryPoints > 0) {
+      gradientStops.push(`#3b82f666 ${currentPercent + blueWidth - blendZone}%`)
+      gradientStops.push(`#2ea370 ${currentPercent + blueWidth}%`) // Blue-green blend color
+    } else {
+      gradientStops.push(`#3b82f666 ${currentPercent + blueWidth}%`)
+    }
+    
     currentPercent += blueWidth
     console.log('- Blue section width:', blueWidth + '%')
   }
   
-  // Green section (recovery) - Extended fade from 0.8 to 0.5
+  // Green section (recovery) - With 10% blend transition
   if (recoveryPoints > 0) {
     const greenWidth = (recoveryPoints / total) * totalProgress
-    gradientStops.push(`#22c55e ${currentPercent}%`)
+    const blendZone = Math.min(greenWidth * 0.1, 5) // 10% of section or max 5%
+    
+    // Start with blend color if following blue
+    if (regularPoints > 0) {
+      gradientStops.push(`#2ea370 ${currentPercent}%`) // Blue-green blend
+    }
+    
+    gradientStops.push(`#22c55e ${currentPercent + (regularPoints > 0 ? blendZone : 0)}%`)
     gradientStops.push(`#22c55edd ${currentPercent + greenWidth * 0.5}%`)
-    gradientStops.push(`#22c55e66 ${currentPercent + greenWidth}%`)
+    
+    // If there's a next color, create blend zone
+    if (sportsPoints > 0) {
+      gradientStops.push(`#22c55e66 ${currentPercent + greenWidth - blendZone}%`)
+      gradientStops.push(`#6f4fb0 ${currentPercent + greenWidth}%`) // Green-purple blend color
+    } else {
+      gradientStops.push(`#22c55e66 ${currentPercent + greenWidth}%`)
+    }
+    
     currentPercent += greenWidth
     console.log('- Green section width:', greenWidth + '%')
   }
   
-  // Purple section (sports) - Extended fade from 0.8 to 0.5
+  // Purple section (sports) - With 10% blend transition
   if (sportsPoints > 0) {
     const purpleWidth = (sportsPoints / total) * totalProgress
-    gradientStops.push(`#a855f7 ${currentPercent}%`)
+    
+    // Start with blend color if following green
+    if (recoveryPoints > 0) {
+      gradientStops.push(`#6f4fb0 ${currentPercent}%`) // Green-purple blend
+    }
+    
+    const blendZone = Math.min(purpleWidth * 0.1, 5) // 10% of section or max 5%
+    gradientStops.push(`#a855f7 ${currentPercent + (recoveryPoints > 0 ? blendZone : 0)}%`)
     gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.5}%`)
     gradientStops.push(`#a855f766 ${currentPercent + purpleWidth}%`)
     currentPercent += purpleWidth
