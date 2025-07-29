@@ -45,7 +45,7 @@ export default function Dashboard() {
               {/* Mobile Landing Logo - Positioned above DAY text */}
               <div 
                 className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
-                style={{ top: 'calc(env(safe-area-inset-top) + 100px)' }}
+                style={{ top: 'calc(env(safe-area-inset-top) + 60px)' }}
               >
                 <img 
                   src="/logo.png" 
@@ -55,7 +55,7 @@ export default function Dashboard() {
               </div>
               {/* Desktop Landing Logo - Positioned above DAY text */}
               <div className="hidden lg:block absolute left-8 z-[70] transition-all duration-500"
-                   style={{ top: '140px' }}>
+                   style={{ top: '100px' }}>
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 
