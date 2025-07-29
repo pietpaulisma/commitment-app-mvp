@@ -112,7 +112,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     return colorArray[colorIndex]
   }
 
-  // Create single flowing gradient with organic variation and moderate transitions
+  // Create single flowing gradient with pronounced organic edges and rounded shapes
   const createCumulativeGradient = (todayLogs: any[]) => {
     const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
     
@@ -124,7 +124,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops with organic variation
+    // Create gradient stops with pronounced organic variation
     const gradientStops = []
     let cumulativePercent = 0
     
@@ -132,27 +132,35 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Add some organic variation to the positioning
-      const variation = Math.sin(log.exercise_id.charCodeAt(0)) * 2 // -2 to +2% variation
-      const startPercent = Math.max(0, cumulativePercent + variation)
+      // Much more pronounced organic variation for visible rounded/diagonal edges
+      const baseVariation = Math.sin(log.exercise_id.charCodeAt(0) * 0.5) * 8 // -8 to +8% variation
+      const startPercent = Math.max(0, cumulativePercent + baseVariation)
       const endPercent = cumulativePercent + exercisePercent
       
-      // Moderate blending for organic feel
-      const blendDistance = Math.min(exercisePercent * 0.15, 5)
+      // Create organic shape with multiple transition points
+      const organicMid = endPercent + Math.cos(log.exercise_id.charCodeAt(1) * 0.3) * 6 // More variation
       
       gradientStops.push(`${color} ${startPercent}%`)
-      gradientStops.push(`${color}dd ${Math.max(startPercent, endPercent - blendDistance)}%`)
-      gradientStops.push(`${color}66 ${endPercent}%`)
+      gradientStops.push(`${color}ee ${Math.max(startPercent, endPercent - 3)}%`)
+      gradientStops.push(`${color}aa ${organicMid}%`)
+      gradientStops.push(`${color}44 ${Math.min(100, organicMid + 8)}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Organic transition to black with slight variation
+    // Create very organic, rounded transition to black
     if (totalProgress < 100) {
-      const organicVariation = Math.cos(total * 0.1) * 3 // -3 to +3% variation
-      const blackStart = Math.max(0, totalProgress - 8 + organicVariation)
-      gradientStops.push(`#000000 ${blackStart}%`)
-      gradientStops.push(`#000000 100%`)
+      // Multiple organic variation points for curved/diagonal effect
+      const organicPoint1 = totalProgress + Math.sin(total * 0.2) * 12 // Large variation
+      const organicPoint2 = totalProgress + Math.cos(total * 0.15) * 8
+      const organicPoint3 = totalProgress + Math.sin(total * 0.25) * 15
+      
+      // Create multiple transition points for organic bulb shape
+      gradientStops.push(`transparent ${Math.max(0, totalProgress - 5)}%`)
+      gradientStops.push(`#00000033 ${Math.max(0, organicPoint2)}%`)
+      gradientStops.push(`#00000066 ${Math.max(0, organicPoint1)}%`)
+      gradientStops.push(`#000000aa ${Math.max(0, organicPoint3)}%`)
+      gradientStops.push(`#000000 ${Math.min(100, Math.max(totalProgress + 10, organicPoint3 + 5))}%`)
     }
 
     return `linear-gradient(to right, ${gradientStops.join(', ')})`
