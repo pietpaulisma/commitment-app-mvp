@@ -43,16 +43,26 @@ export default function MobileWorkoutLogger() {
     return userProfile?.personal_color || '#f97316' // Default to orange
   }
 
-  // Get category colors for exercises with variations
-  const getCategoryColor = (type: string, exerciseId: string) => {
+  // Get category colors - single tint for progress bar, variations for individual exercises
+  const getCategoryColor = (type: string, exerciseId: string, forProgressBar = false) => {
+    if (forProgressBar) {
+      // Single tint for total progress bar
+      const singleTints = {
+        'all': '#3b82f6', // Single blue
+        'recovery': '#22c55e', // Single green
+        'sports': '#a855f7', // Single purple
+      }
+      return singleTints[type as keyof typeof singleTints] || singleTints['all']
+    }
+    
+    // Variations for individual exercises
     const variations = {
-      'all': ['#3b82f6', '#4285f4', '#4f94ff', '#5ba3ff'], // More subtle blue variations
+      'all': ['#3b82f6', '#4285f4', '#4f94ff', '#5ba3ff'], // Blue variations
       'recovery': ['#22c55e', '#16a34a', '#15803d', '#166534'], // Green variations  
       'sports': ['#a855f7', '#9333ea', '#7c3aed', '#6d28d9'], // Purple variations
     }
     
     const colorArray = variations[type as keyof typeof variations] || variations['all']
-    // Use exercise ID to consistently pick a color variation
     const colorIndex = exerciseId.charCodeAt(0) % colorArray.length
     return colorArray[colorIndex]
   }
@@ -95,7 +105,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create single flowing gradient with proper black space proportions (identical to dashboard)
+  // Create smooth flowing gradient with proper blending and black transition (EXACTLY identical to dashboard)
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
@@ -107,25 +117,32 @@ export default function MobileWorkoutLogger() {
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops based on exercise proportions within the progress area
+    // Create smooth gradient stops with proper blending
     const gradientStops = []
     let cumulativePercent = 0
     
     todaysLogs.forEach((log, index) => {
       const exercisePercent = (log.points / total) * totalProgress
-      const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
+      const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id, true) // Use single tint
       
-      // Add color stop at the center of this exercise's portion for smooth flow
-      const centerPercent = cumulativePercent + (exercisePercent / 2)
-      gradientStops.push(`${color} ${centerPercent}%`)
+      // Create smooth liquid gradient for each exercise
+      const exerciseStart = cumulativePercent
+      const exerciseEnd = cumulativePercent + exercisePercent
+      
+      // Add multiple stops for smooth blending
+      gradientStops.push(`${color} ${exerciseStart}%`)
+      gradientStops.push(`${color}dd ${exerciseStart + exercisePercent * 0.7}%`)
+      gradientStops.push(`${color}88 ${exerciseEnd}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Add black transition earlier for proper proportions (start at 85% of progress)
+    // Smooth transition to black with proper proportions
     if (totalProgress < 100) {
-      const blackTransitionStart = totalProgress * 0.85
-      gradientStops.push(`#000000 ${blackTransitionStart}%`)
+      const blackStart = totalProgress * 0.8 // Start black transition at 80%
+      gradientStops.push(`#00000044 ${blackStart}%`)
+      gradientStops.push(`#000000aa ${totalProgress * 0.9}%`)
+      gradientStops.push(`#000000 ${totalProgress}%`)
       gradientStops.push(`#000000 100%`)
     }
 
