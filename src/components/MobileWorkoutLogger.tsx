@@ -94,7 +94,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create truly cumulative gradient - each exercise stacked left to right
+  // Create cumulative gradient with liquid fade transitions
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
@@ -111,18 +111,27 @@ export default function MobileWorkoutLogger() {
       const exercisePercent = (log.points / total) * Math.min(100, (total / dailyTarget) * 100)
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Add start of this exercise segment
+      // Add liquid fade-in at start of segment
+      if (cumulativePercent > 0) {
+        // Soft transition from previous color
+        gradientStops.push(`${color}66 ${Math.max(0, cumulativePercent - 2)}%`)
+      }
+      
+      // Main color for this exercise segment
       gradientStops.push(`${color} ${cumulativePercent}%`)
       
-      // Add end of this exercise segment
-      cumulativePercent += exercisePercent
-      gradientStops.push(`${color} ${cumulativePercent}%`)
+      // Add liquid fade-out at end of segment
+      const endPercent = cumulativePercent + exercisePercent
+      gradientStops.push(`${color}dd ${Math.max(cumulativePercent, endPercent - 3)}%`)
+      gradientStops.push(`${color}66 ${endPercent}%`)
+      
+      cumulativePercent = endPercent
     })
     
     // Fill remaining space with black if not at 100%
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     if (totalProgress < 100) {
-      gradientStops.push(`#000000 ${totalProgress}%`)
+      gradientStops.push(`#000000 ${Math.max(0, totalProgress - 5)}%`)
       gradientStops.push(`#000000 100%`)
     }
 
