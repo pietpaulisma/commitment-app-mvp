@@ -41,10 +41,10 @@ export default function Dashboard() {
         <>
           {!isScrolled ? (
             <>
-              {/* Mobile Landing Logo - Positioned above DAY text with proper spacing */}
+              {/* Mobile Landing Logo - Positioned above DAY text */}
               <div 
                 className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
-                style={{ top: 'calc(env(safe-area-inset-top) + 40px)' }}
+                style={{ top: 'calc(env(safe-area-inset-top) + 80px)' }}
               >
                 <img 
                   src="/logo.png" 
@@ -52,9 +52,9 @@ export default function Dashboard() {
                   className="h-6 w-auto drop-shadow-lg"
                 />
               </div>
-              {/* Desktop Landing Logo - Positioned above DAY text with proper spacing */}
+              {/* Desktop Landing Logo - Positioned above DAY text */}
               <div className="hidden lg:block absolute left-8 z-[70] transition-all duration-500"
-                   style={{ top: '80px' }}>
+                   style={{ top: '120px' }}>
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 
