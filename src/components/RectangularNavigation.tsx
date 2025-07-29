@@ -113,7 +113,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     return colorArray[colorIndex]
   }
 
-  // Create single flowing gradient with clean transitions
+  // Create single flowing gradient with proper proportions and reduced blending
   const createCumulativeGradient = (todayLogs: any[]) => {
     const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
     
@@ -125,7 +125,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops based on exercise proportions within the progress area
+    // Create gradient stops with proper spacing and reduced blending
     const gradientStops = []
     let cumulativePercent = 0
     
@@ -133,15 +133,23 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Add color stop at the center of this exercise's portion
-      const centerPercent = cumulativePercent + (exercisePercent / 2)
-      gradientStops.push(`${color} ${centerPercent}%`)
+      // Add exercise color with liquid fade effect but less blending
+      const exerciseStart = cumulativePercent
+      const exerciseEnd = cumulativePercent + exercisePercent
+      
+      // Create liquid gradient within exercise bounds
+      gradientStops.push(`${color} ${exerciseStart}%`)
+      gradientStops.push(`${color}dd ${Math.max(exerciseStart, exerciseEnd - exercisePercent * 0.3)}%`)
+      gradientStops.push(`${color}66 ${exerciseEnd}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Add black for remaining space if not at 100%
+    // Sharp transition to black for accurate representation
     if (totalProgress < 100) {
+      const blackStart = Math.max(0, totalProgress - 5) // Start black transition 5% earlier
+      gradientStops.push(`#00000066 ${blackStart}%`)
+      gradientStops.push(`#000000 ${totalProgress}%`)
       gradientStops.push(`#000000 100%`)
     }
 
@@ -338,7 +346,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
           className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
-          <div className="flex justify-start items-center py-4 px-4 pr-20">
+          <div className="flex justify-start items-center py-6 px-4 pr-20">
             {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
           {/* Border positioned below logo area */}
@@ -367,7 +375,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       {/* Desktop Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
       {isScrolled && (
         <nav className="hidden lg:block fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500">
-          <div className="flex justify-start items-center py-4 px-8 pr-32 max-w-7xl mx-auto">
+          <div className="flex justify-start items-center py-6 px-8 pr-32 max-w-7xl mx-auto">
             {/* Logo now handled by dashboard page for smooth transitions */}
           </div>
           {/* Border positioned below logo area */}
