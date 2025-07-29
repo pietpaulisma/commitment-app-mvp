@@ -69,7 +69,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [selectedExercise, setSelectedExercise] = useState<ExerciseWithProgress | null>(null)
-  const [quantity, setQuantity] = useState('')
+  const [quantity, setQuantity] = useState('0')
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -755,7 +755,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         alert('Error logging workout: ' + error.message)
       } else {
         // Reset form
-        setQuantity('')
+        setQuantity('0')
         setWeight('')
         setSelectedExercise(null)
         
@@ -894,7 +894,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }
 
-  const quickAddExercise = (exercise: ExerciseWithProgress, defaultQuantity: number = 10) => {
+  const quickAddExercise = (exercise: ExerciseWithProgress, defaultQuantity: number = 0) => {
     // Check if exercise is a sport type (Light Sport, Medium Sport, Intense Sport) for sport selection
     if (exercise.type === 'sport' || exercise.name.toLowerCase().includes('sport')) {
       // Set the intensity based on the exercise name
@@ -911,7 +911,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     
     // Reset state and open workout input popup
     setSelectedWorkoutExercise(exercise)
-    setWorkoutCount(defaultQuantity)
+    setWorkoutCount(defaultQuantity || 0)
     setSelectedWeight(0)
     setIsDecreasedExercise(false)
     setWorkoutInputOpen(true)
@@ -970,7 +970,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         // Reset form and close modal
         setShowSportSelection(false)
         setSelectedSportType('')
-        setQuantity('')
+        setQuantity('0')
         onClose()
         
         // Haptic feedback on mobile
@@ -1488,36 +1488,105 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   )}
 
-                  {/* Quantity Input */}
-                  <div>
-                    <label className="block text-xs text-gray-400 uppercase tracking-wide mb-3">
+                  {/* Quantity Input - Modern Counter Style */}
+                  <div className="bg-gray-900/30 rounded-lg p-6 border border-gray-800">
+                    <label className="block text-sm font-medium text-white mb-4 text-center">
                       {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} ({selectedExercise.unit})
                     </label>
-                    <input 
-                      type="number" 
-                      step="any" 
-                      min="0" 
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
-                      placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
-                      required
-                    />
-                  </div>
+                    
+                    <div className="text-center mb-6">
+                      <div className="text-6xl font-black text-white mb-2">
+                        {quantity || '0'}
+                      </div>
+                      <div className="text-sm text-gray-400 uppercase tracking-wide">
+                        {selectedExercise.unit}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity(Math.max(0, parseFloat(quantity || '0') - 1).toString())}
+                        className="w-14 h-14 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700 transition-colors"
+                      >
+                        −
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((parseFloat(quantity || '0') + 1).toString())}
+                        className="w-14 h-14 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700 transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
 
-                  {/* Weight Input */}
-                  {selectedExercise.is_weighted && (
-                    <div>
-                      <label className="block text-xs text-gray-400 uppercase tracking-wide mb-3">Weight (kg)</label>
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((parseFloat(quantity || '0') + 5).toString())}
+                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-medium hover:bg-gray-700 transition-colors text-sm"
+                      >
+                        +5
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((parseFloat(quantity || '0') + 10).toString())}
+                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-medium hover:bg-gray-700 transition-colors text-sm"
+                      >
+                        +10
+                      </button>
                       <input 
                         type="number" 
                         step="any" 
                         min="0" 
-                        value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
-                        placeholder="Enter weight (optional)"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-center text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="0"
                       />
+                    </div>
+                  </div>
+
+                  {/* Weight Input - Modern Button Style */}
+                  {selectedExercise.is_weighted && (
+                    <div className="bg-gray-900/30 rounded-lg p-6 border border-gray-800">
+                      <label className="block text-sm font-medium text-white mb-4 text-center">Weight (kg)</label>
+                      <div className="grid grid-cols-3 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setWeight('0')}
+                          className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors border ${
+                            weight === '0' || weight === '' 
+                              ? 'bg-blue-600 border-blue-500 text-white' 
+                              : 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
+                          }`}
+                        >
+                          Bodyweight
+                        </button>
+                        {[10, 15, 20, 25, 30, 35].map((w) => (
+                          <button
+                            key={w}
+                            type="button"
+                            onClick={() => setWeight(w.toString())}
+                            className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors border ${
+                              weight === w.toString() 
+                                ? 'bg-blue-600 border-blue-500 text-white' 
+                                : 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
+                            }`}
+                          >
+                            {w}kg
+                          </button>
+                        ))}
+                        <input 
+                          type="number" 
+                          step="any" 
+                          min="0" 
+                          value={weight}
+                          onChange={(e) => setWeight(e.target.value)}
+                          className="py-3 px-4 bg-gray-800 border border-gray-700 rounded-lg text-center text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Custom"
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -1602,21 +1671,70 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              {/* Duration Input */}
-              <div>
-                <label className="block text-xs text-gray-400 uppercase tracking-wide mb-3">
+              {/* Duration Input - Modern Counter Style */}
+              <div className="bg-gray-900/30 rounded-lg p-6 border border-gray-800">
+                <label className="block text-sm font-medium text-white mb-4 text-center">
                   Duration (minutes)
                 </label>
-                <input 
-                  type="number" 
-                  step="any" 
-                  min="0" 
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 text-base bg-gray-900/30 text-white"
-                  placeholder="Enter duration in minutes"
-                  required
-                />
+                
+                <div className="text-center mb-6">
+                  <div className="text-6xl font-black text-white mb-2">
+                    {quantity || '0'}
+                  </div>
+                  <div className="text-sm text-gray-400 uppercase tracking-wide">
+                    minutes
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-center gap-4 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity(Math.max(0, parseFloat(quantity || '0') - 5).toString())}
+                    className="w-14 h-14 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700 transition-colors"
+                  >
+                    −
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((parseFloat(quantity || '0') + 5).toString())}
+                    className="w-14 h-14 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700 transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <div className="flex justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((parseFloat(quantity || '0') + 15).toString())}
+                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-medium hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    +15
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((parseFloat(quantity || '0') + 30).toString())}
+                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-medium hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    +30
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((parseFloat(quantity || '0') + 60).toString())}
+                    className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-medium hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    +60
+                  </button>
+                  <input 
+                    type="number" 
+                    step="any" 
+                    min="0" 
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-center text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="0"
+                  />
+                </div>
               </div>
 
               {/* Points Preview */}
@@ -1650,7 +1768,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   onClick={() => {
                     setShowSportSelection(false)
                     setSelectedSportType('')
-                    setQuantity('')
+                    setQuantity('0')
                   }}
                   className="w-full bg-gray-700 text-white py-3 px-4 rounded-lg hover:bg-gray-600 transition-colors font-semibold border border-gray-600"
                 >
