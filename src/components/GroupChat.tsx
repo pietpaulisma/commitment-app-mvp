@@ -651,7 +651,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
   return (
     <div className="fixed inset-0 bg-black z-[9999] flex flex-col fixed-fullscreen">
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900" style={{ paddingTop: 'max(1rem, calc(env(safe-area-inset-top) + 0.5rem))' }}>
+        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
           <div>
             <h3 className="text-lg font-semibold text-white">{groupName} Chat</h3>
             <p className="text-sm text-gray-400">Group discussion</p>

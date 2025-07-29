@@ -1313,14 +1313,14 @@ export default function RectangularDashboard() {
         <div 
           className="relative overflow-hidden"
           style={{
-            marginTop: 'calc(env(safe-area-inset-top) + 140px)', // Mobile: safe area + logo + spacing
+            marginTop: 'calc(env(safe-area-inset-top) + 80px)', // Mobile: safe area + reduced spacing
             transform: `translateY(${scrollY * 0.1}px)`
           }}
         >
           <style jsx>{`
             @media (min-width: 1024px) {
               div {
-                margin-top: 6rem !important;
+                margin-top: 4rem !important;
               }
             }
           `}</style>
