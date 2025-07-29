@@ -105,6 +105,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [todaysWorkouts, setTodaysWorkouts] = useState<any[]>([])
   const [selectedWeight, setSelectedWeight] = useState(0)
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
+  const [sliderPosition, setSliderPosition] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isSliderComplete, setIsSliderComplete] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
   const [sportsExpanded, setSportsExpanded] = useState(false)
@@ -923,6 +926,91 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     const pointsPerHour = selectedIntensity === 'light' ? 125 : selectedIntensity === 'medium' ? 250 : 375
     const pointsPerMinute = pointsPerHour / 60
     return Math.round(parseFloat(quantity) * pointsPerMinute)
+  }
+
+  // Slider functions for iPhone-style slide-to-unlock
+  const handleSliderStart = (e: React.TouchEvent | React.MouseEvent) => {
+    setIsDragging(true)
+    setIsSliderComplete(false)
+  }
+
+  const handleSliderMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isDragging) return
+    
+    const slider = e.currentTarget as HTMLElement
+    const rect = slider.getBoundingClientRect()
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const position = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+    
+    setSliderPosition(position)
+    
+    // Complete if slider reaches 85% or more
+    if (position >= 85) {
+      setIsSliderComplete(true)
+    }
+  }
+
+  const handleSliderEnd = async () => {
+    setIsDragging(false)
+    
+    if (isSliderComplete) {
+      // Execute the workout save
+      if (!user || !selectedWorkoutExercise || workoutCount <= 0) return
+      
+      setLoading(true)
+      try {
+        const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+        
+        const { error } = await supabase
+          .from('logs')
+          .insert({
+            user_id: user.id,
+            group_id: profile?.group_id,
+            exercise_id: selectedWorkoutExercise.id,
+            count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
+            weight: selectedWeight,
+            duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
+            points: points,
+            date: new Date().toISOString().split('T')[0],
+            timestamp: Date.now(),
+            is_decreased: isDecreasedExercise
+          })
+
+        if (error) {
+          alert('Error logging workout: ' + error.message)
+        } else {
+          // Reset state
+          setWorkoutInputOpen(false)
+          setSelectedWorkoutExercise(null)
+          setWorkoutCount(0)
+          setSelectedWeight(0)
+          setIsDecreasedExercise(false)
+          setSliderPosition(0)
+          setIsSliderComplete(false)
+          
+          // Refresh data
+          if (onWorkoutAdded) {
+            onWorkoutAdded()
+          }
+          loadDailyProgress()
+          loadTodaysWorkouts()
+          
+          // Haptic feedback
+          if (navigator.vibrate) {
+            navigator.vibrate(100)
+          }
+        }
+      } catch (error) {
+        console.error('Error saving workout:', error)
+        alert('An error occurred while saving your workout.')
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      // Reset slider if not completed
+      setSliderPosition(0)
+      setIsSliderComplete(false)
+    }
   }
 
 
@@ -1990,31 +2078,46 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              {/* Points Display at Top */}
-              <div className="p-6 border-b border-gray-700/30">
-                <div className="text-center">
+              {/* Progress Bar Graph - Similar to Main App */}
+              <div className="p-4 border-b border-gray-700/30">
+                <div className="relative h-4 bg-gray-800 rounded-full overflow-hidden">
+                  {/* Progress Fill */}
                   <div 
-                    className="text-7xl font-black mb-2"
+                    className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out rounded-full"
+                    style={{ 
+                      width: `${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / selectedWorkoutExercise.points_per_unit / 50) * 100)}%`,
+                      background: `linear-gradient(to right, 
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} 0%, 
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}dd 70%, 
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}66 100%)`
+                    }}
+                  />
+                </div>
+                
+                {/* Points Display - Smaller and Closer */}
+                <div className="text-center mt-3">
+                  <div 
+                    className="text-4xl font-black mb-1"
                     style={{ 
                       color: getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id),
-                      textShadow: `0 0 30px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40`
+                      textShadow: `0 0 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30`
                     }}
                   >
                     {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)}
                   </div>
-                  <div className="text-white font-bold text-lg uppercase tracking-wider">
+                  <div className="text-white/80 font-medium text-sm uppercase tracking-wider">
                     POINTS EARNED
                   </div>
                   {(selectedWeight > 0 || isDecreasedExercise) && (
-                    <div className="flex justify-center gap-3 mt-2">
+                    <div className="flex justify-center gap-2 mt-1">
                       {selectedWeight > 0 && (
-                        <div className="px-3 py-1 rounded-full bg-white/10 text-white/80 text-sm">
+                        <div className="px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-xs">
                           +{selectedWeight}kg
                         </div>
                       )}
                       {isDecreasedExercise && (
-                        <div className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-300 text-sm">
-                          Decreased (+50%)
+                        <div className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs">
+                          +50%
                         </div>
                       )}
                     </div>
@@ -2022,80 +2125,80 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              <div className="p-6">
-                {/* Main Counter Section with Gradient */}
-                <div className="relative overflow-hidden rounded-2xl mb-6">
+              <div className="p-4">
+                {/* Compact Counter Section */}
+                <div className="relative overflow-hidden rounded-xl mb-4">
                   {/* Gradient Background */}
                   <div 
                     className="absolute inset-0"
                     style={{
-                      background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}20 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}05 100%)`
+                      background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}15 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}05 100%)`
                     }}
                   />
                   
-                  <div className="relative p-8 text-center">
-                    {/* Big counter display */}
-                    <div className="mb-8">
-                      <div className="text-8xl font-black text-white mb-3" style={{ textShadow: '0 0 30px rgba(255,255,255,0.3)' }}>
-                        {workoutCount}
-                      </div>
-                      <div className="text-xl text-white/80 font-medium uppercase tracking-wider">
-                        {selectedWorkoutExercise.unit}{selectedWorkoutExercise.unit !== 'rep' && 's'}
-                      </div>
-                    </div>
-                    
-                    {/* Control Buttons */}
-                    <div className="flex items-center justify-center gap-8 mb-8">
+                  <div className="relative p-6 text-center">
+                    {/* Counter with - and + on sides */}
+                    <div className="flex items-center justify-center gap-6 mb-4">
                       <button
                         onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
                         style={{
                           background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40 100%)`,
-                          boxShadow: `0 10px 30px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30`
+                          boxShadow: `0 6px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}25`
                         }}
                       >
                         −
                       </button>
+                      
+                      <div className="text-center">
+                        <div className="text-6xl font-black text-white mb-1" style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
+                          {workoutCount}
+                        </div>
+                        <div className="text-sm text-white/70 font-medium uppercase tracking-wider">
+                          {selectedWorkoutExercise.unit}{selectedWorkoutExercise.unit !== 'rep' && 's'}
+                        </div>
+                      </div>
+                      
                       <button
                         onClick={() => setWorkoutCount(workoutCount + 1)}
-                        className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
                         style={{
                           background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 100%)`,
-                          boxShadow: `0 10px 30px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40`
+                          boxShadow: `0 6px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30`
                         }}
                       >
                         +
                       </button>
                     </div>
 
-                    {/* Quick add buttons */}
-                    <div className="flex justify-center gap-3">
+                    {/* Compact Quick add buttons */}
+                    <div className="flex justify-center gap-2">
                       <button
                         onClick={() => setWorkoutCount(workoutCount + 1)}
-                        className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
+                        className="px-4 py-2 rounded-full text-white font-medium text-sm transition-all duration-300 hover:scale-105"
                         style={{
-                          background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}20 100%)`,
-                          border: `2px solid ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60`
+                          background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}15 100%)`,
+                          border: `1px solid ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}50`
                         }}
                       >
                         +1
                       </button>
                       <button
                         onClick={() => setWorkoutCount(workoutCount + 5)}
-                        className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
+                        className="px-4 py-2 rounded-full text-white font-medium text-sm transition-all duration-300 hover:scale-105"
                         style={{
-                          background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}20 100%)`,
-                          border: `2px solid ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60`
+                          background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}15 100%)`,
+                          border: `1px solid ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}50`
                         }}
                       >
                         +5
                       </button>
                       <button
                         onClick={() => setWorkoutCount(workoutCount + 10)}
-                        className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
+                        className="px-4 py-2 rounded-full text-white font-medium text-sm transition-all duration-300 hover:scale-105"
                         style={{
-                          background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}20 100%)`,
-                          border: `2px solid ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60`
+                          background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}15 100%)`,
+                          border: `1px solid ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}50`
                         }}
                       >
                         +10
@@ -2104,47 +2207,47 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 </div>
 
-                {/* Weight & Difficulty Options */}
+                {/* Compact Weight & Difficulty Options */}
                 {(selectedWorkoutExercise.is_weighted || selectedWorkoutExercise.supports_decreased) && (
-                  <div className="grid grid-cols-1 gap-4 mb-6">
+                  <div className="grid grid-cols-1 gap-3 mb-4">
                     {/* Weight Options */}
                     {selectedWorkoutExercise.is_weighted && (
-                      <div className="relative overflow-hidden rounded-xl">
+                      <div className="relative overflow-hidden rounded-lg">
                         <div 
-                          className="absolute inset-0 opacity-20"
+                          className="absolute inset-0 opacity-15"
                           style={{
-                            background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30 0%, transparent 100%)`
+                            background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}25 0%, transparent 100%)`
                           }}
                         />
-                        <div className="relative p-4">
-                          <h4 className="text-white font-bold text-center mb-4 uppercase tracking-wider">Weight (kg)</h4>
-                          <div className="grid grid-cols-3 gap-2">
+                        <div className="relative p-3">
+                          <h4 className="text-white font-semibold text-center mb-2 text-sm uppercase tracking-wide">Weight (kg)</h4>
+                          <div className="grid grid-cols-4 gap-1.5">
                             <button
                               onClick={() => setSelectedWeight(0)}
-                              className={`py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                              className={`py-2 px-2 rounded-lg text-xs font-bold transition-all duration-300 ${
                                 selectedWeight === 0 
-                                  ? 'text-black shadow-lg' 
-                                  : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                  ? 'text-black shadow-md' 
+                                  : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/40'
                               }`}
                               style={selectedWeight === 0 ? {
-                                background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}90 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}70 100%)`,
-                                boxShadow: `0 6px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40`
+                                background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}85 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}65 100%)`,
+                                boxShadow: `0 4px 15px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}35`
                               } : {}}
                             >
                               Body
                             </button>
-                            {[10, 15, 20, 25, 30].map((weight) => (
+                            {[10, 15, 20, 25, 30].slice(0, 3).map((weight) => (
                               <button
                                 key={weight}
                                 onClick={() => setSelectedWeight(weight)}
-                                className={`py-3 px-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                                className={`py-2 px-2 rounded-lg text-xs font-bold transition-all duration-300 ${
                                   selectedWeight === weight 
-                                    ? 'text-black shadow-lg' 
-                                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                    ? 'text-black shadow-md' 
+                                    : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/40'
                                 }`}
                                 style={selectedWeight === weight ? {
-                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}90 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}70 100%)`,
-                                  boxShadow: `0 6px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40`
+                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}85 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}65 100%)`,
+                                  boxShadow: `0 4px 15px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}35`
                                 } : {}}
                               >
                                 {weight}kg
@@ -2157,44 +2260,44 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                     {/* Decreased Exercise Option */}
                     {selectedWorkoutExercise.supports_decreased && (
-                      <div className="relative overflow-hidden rounded-xl">
+                      <div className="relative overflow-hidden rounded-lg">
                         <div 
-                          className="absolute inset-0 opacity-20"
+                          className="absolute inset-0 opacity-15"
                           style={{
-                            background: `linear-gradient(135deg, #f59e0b30 0%, transparent 100%)`
+                            background: `linear-gradient(135deg, #f59e0b25 0%, transparent 100%)`
                           }}
                         />
-                        <div className="relative p-4">
-                          <h4 className="text-white font-bold text-center mb-4 uppercase tracking-wider">Exercise Difficulty</h4>
-                          <div className="grid grid-cols-2 gap-3">
+                        <div className="relative p-3">
+                          <h4 className="text-white font-semibold text-center mb-2 text-sm uppercase tracking-wide">Difficulty</h4>
+                          <div className="grid grid-cols-2 gap-2">
                             <button
                               onClick={() => setIsDecreasedExercise(false)}
-                              className={`py-4 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+                              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all duration-300 ${
                                 !isDecreasedExercise 
-                                  ? 'text-black shadow-lg' 
-                                  : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                  ? 'text-black shadow-md' 
+                                  : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/40'
                               }`}
                               style={!isDecreasedExercise ? {
-                                background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}90 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}70 100%)`,
-                                boxShadow: `0 6px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40`
+                                background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}85 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}65 100%)`,
+                                boxShadow: `0 4px 15px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}35`
                               } : {}}
                             >
                               Regular
                             </button>
                             <button
                               onClick={() => setIsDecreasedExercise(true)}
-                              className={`py-4 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+                              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all duration-300 ${
                                 isDecreasedExercise 
-                                  ? 'text-black shadow-lg' 
-                                  : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                  ? 'text-black shadow-md' 
+                                  : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/40'
                               }`}
                               style={isDecreasedExercise ? {
-                                background: `linear-gradient(135deg, #f59e0b90 0%, #f59e0b70 100%)`,
-                                boxShadow: `0 6px 20px #f59e0b40`
+                                background: `linear-gradient(135deg, #f59e0b85 0%, #f59e0b65 100%)`,
+                                boxShadow: `0 4px 15px #f59e0b35`
                               } : {}}
                             >
                               <div>Decreased</div>
-                              <div className="text-xs opacity-75">+50% pts</div>
+                              <div className="text-xs opacity-75">+50%</div>
                             </button>
                           </div>
                         </div>
@@ -2203,95 +2306,63 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 )}
 
-                {/* Slide to Save Button */}
-                <div className="relative overflow-hidden rounded-2xl">
-                  {/* Gradient Background */}
+                {/* iPhone-style Slide to Save Slider */}
+                <div className="relative overflow-hidden rounded-2xl h-16">
+                  {/* Slider Track Background */}
                   <div 
-                    className="absolute inset-0"
+                    className="absolute inset-0 bg-gray-800 rounded-2xl"
                     style={{
-                      background: `linear-gradient(90deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}70 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}90 100%)`
+                      background: `linear-gradient(90deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}20 100%)`
                     }}
                   />
                   
-                  <button
-                    onClick={async () => {
-                      if (!user || !selectedWorkoutExercise || workoutCount <= 0) return
-                      
-                      setLoading(true)
-                      try {
-                        const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                        
-                        const { error } = await supabase
-                          .from('logs')
-                          .insert({
-                            user_id: user.id,
-                            group_id: profile?.group_id,
-                            exercise_id: selectedWorkoutExercise.id,
-                            count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
-                            weight: selectedWeight,
-                            duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
-                            points: points,
-                            date: new Date().toISOString().split('T')[0],
-                            timestamp: Date.now(),
-                            is_decreased: isDecreasedExercise
-                          })
-
-                        if (error) {
-                          alert('Error logging workout: ' + error.message)
-                        } else {
-                          // Reset state
-                          setWorkoutInputOpen(false)
-                          setSelectedWorkoutExercise(null)
-                          setWorkoutCount(0)
-                          setSelectedWeight(0)
-                          setIsDecreasedExercise(false)
-                          
-                          // Refresh data
-                          if (onWorkoutAdded) {
-                            onWorkoutAdded()
-                          }
-                          loadDailyProgress()
-                          loadTodaysWorkouts()
-                          
-                          // Haptic feedback
-                          if (navigator.vibrate) {
-                            navigator.vibrate(100)
-                          }
-                        }
-                      } catch (error) {
-                        console.error('Error saving workout:', error)
-                        alert('An error occurred while saving your workout.')
-                      } finally {
-                        setLoading(false)
-                      }
-                    }}
-                    disabled={loading || workoutCount <= 0}
-                    className="relative w-full py-6 px-8 text-black font-black text-xl tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  {/* Slider Progress Fill */}
+                  <div 
+                    className="absolute left-0 top-0 bottom-0 rounded-2xl transition-all duration-200 ease-out"
                     style={{
-                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      width: `${sliderPosition}%`,
+                      background: `linear-gradient(90deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 100%)`
                     }}
+                  />
+                  
+                  {/* Slider Text */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="text-white font-black text-lg tracking-wider">
+                      {isSliderComplete ? 'SAVING...' : loading ? 'SAVING...' : 'SLIDE TO SAVE'}
+                    </span>
+                  </div>
+                  
+                  {/* Draggable Slider Dot */}
+                  <div 
+                    className="absolute top-1 bottom-1 w-14 bg-white rounded-xl shadow-lg cursor-pointer transition-all duration-200 ease-out flex items-center justify-center"
+                    style={{
+                      left: `${Math.max(2, (sliderPosition / 100) * (100 - 14))}%`,
+                      transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+                      background: isSliderComplete ? getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id) : 'white'
+                    }}
+                    onMouseDown={handleSliderStart}
+                    onMouseMove={handleSliderMove}
+                    onMouseUp={handleSliderEnd}
+                    onMouseLeave={handleSliderEnd}
+                    onTouchStart={handleSliderStart}
+                    onTouchMove={handleSliderMove}
+                    onTouchEnd={handleSliderEnd}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center">
-                          <div className="w-0 h-0 border-l-[8px] border-l-black/60 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
-                        </div>
-                        <span>SLIDE TO SAVE</span>
-                      </div>
-                      <div className="text-2xl">
-                        {loading ? '⏳' : '💾'}
-                      </div>
+                    <div className="text-2xl">
+                      {loading ? '⏳' : isSliderComplete ? '✓' : '💾'}
                     </div>
-                    
-                    {/* Shimmer Effect */}
+                  </div>
+                  
+                  {/* Global mouse/touch event handlers for smooth dragging */}
+                  {isDragging && (
                     <div 
-                      className="absolute inset-0 opacity-30"
-                      style={{
-                        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
-                        animation: 'shimmer 2s infinite'
-                      }}
+                      className="fixed inset-0 z-50 cursor-pointer"
+                      onMouseMove={handleSliderMove}
+                      onMouseUp={handleSliderEnd}
+                      onTouchMove={handleSliderMove}
+                      onTouchEnd={handleSliderEnd}
                     />
-                  </button>
+                  )}
                 </div>
               </div>
             </div>
