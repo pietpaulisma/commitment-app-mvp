@@ -105,51 +105,25 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create smooth flowing gradient with proper blending and black transition (EXACTLY identical to dashboard)
+  // Create smooth flowing gradient - EXACTLY like individual exercises
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
     if (total === 0 || !todaysLogs || todaysLogs.length === 0) {
-      // No exercises logged - show empty state
       return `linear-gradient(to right, #000000 0%, #000000 100%)`
     }
 
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
+    const mainColor = '#3b82f6' // Single blue for all
     
-    // Create smooth gradient stops with proper blending
-    const gradientStops = []
-    let cumulativePercent = 0
+    // Use EXACT same pattern as individual exercises
+    const gradient = `linear-gradient(to right, 
+      ${mainColor} 0%, 
+      ${mainColor}dd ${Math.max(0, totalProgress - 15)}%, 
+      ${mainColor}66 ${totalProgress}%, 
+      #000000 ${Math.min(100, totalProgress + 20)}%)`
     
-    todaysLogs.forEach((log, index) => {
-      const exercisePercent = (log.points / total) * totalProgress
-      const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id, true) // Use single tint
-      
-      // Create smooth liquid gradient - no overlapping percentages
-      const exerciseStart = cumulativePercent
-      const exerciseEnd = cumulativePercent + exercisePercent
-      const exerciseMid = exerciseStart + (exercisePercent * 0.6)
-      
-      // Only add start for first exercise or if different from previous
-      if (index === 0 || cumulativePercent > 0) {
-        gradientStops.push(`${color} ${exerciseStart}%`)
-      }
-      gradientStops.push(`${color}dd ${exerciseMid}%`)
-      gradientStops.push(`${color}66 ${exerciseEnd}%`)
-      
-      cumulativePercent += exercisePercent
-    })
-    
-    // Smooth transition to black - very gradual like individual exercises
-    if (totalProgress < 100) {
-      const blackStart = Math.max(0, totalProgress - 10) // Start black transition earlier
-      gradientStops.push(`#00000044 ${blackStart}%`)
-      gradientStops.push(`#00000088 ${totalProgress}%`)
-      gradientStops.push(`#000000 ${Math.min(100, totalProgress + 10)}%`)
-      gradientStops.push(`#000000 100%`)
-    }
-
-    const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
     console.log('Workout page gradient:', gradient)
     return gradient
   }
