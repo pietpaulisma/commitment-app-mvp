@@ -225,7 +225,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .select(`
             points,
             exercise_id,
-            exercises (type)
+            count,
+            duration,
+            exercises (name, type, unit, is_time_based)
           `)
           .eq('user_id', user.id)
           .eq('date', today),
