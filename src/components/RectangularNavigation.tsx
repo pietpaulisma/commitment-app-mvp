@@ -123,7 +123,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     return colorArray[colorIndex]
   }
 
-  // Create smooth flowing gradient - EXACTLY like individual exercises
+  // Create smooth flowing gradient with proportional colors
   const createCumulativeGradient = (todayLogs: any[]) => {
     const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
     
@@ -133,15 +133,46 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
 
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
-    const mainColor = '#3b82f6' // Single blue for all
     
-    // Use EXACT same pattern as individual exercises
-    const gradient = `linear-gradient(to right, 
-      ${mainColor} 0%, 
-      ${mainColor}dd ${Math.max(0, totalProgress - 15)}%, 
-      ${mainColor}66 ${totalProgress}%, 
-      #000000 ${Math.min(100, totalProgress + 20)}%)`
+    // Calculate proportions by exercise type
+    const regularPoints = todayLogs?.filter(log => log.exercises?.type === 'all' || !log.exercises?.type)?.reduce((sum, log) => sum + log.points, 0) || 0
+    const recoveryPoints = todayLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + log.points, 0) || 0
+    const sportsPoints = todayLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + log.points, 0) || 0
     
+    // Create gradient stops based on proportions
+    const gradientStops = []
+    let currentPos = 0
+    
+    if (regularPoints > 0) {
+      const regularPercent = (regularPoints / total) * totalProgress
+      gradientStops.push(`#3b82f6 ${currentPos}%`)
+      gradientStops.push(`#3b82f6dd ${currentPos + regularPercent * 0.7}%`)
+      gradientStops.push(`#3b82f666 ${currentPos + regularPercent}%`)
+      currentPos += regularPercent
+    }
+    
+    if (recoveryPoints > 0) {
+      const recoveryPercent = (recoveryPoints / total) * totalProgress
+      gradientStops.push(`#22c55e ${currentPos}%`)
+      gradientStops.push(`#22c55edd ${currentPos + recoveryPercent * 0.7}%`)
+      gradientStops.push(`#22c55e66 ${currentPos + recoveryPercent}%`)
+      currentPos += recoveryPercent
+    }
+    
+    if (sportsPoints > 0) {
+      const sportsPercent = (sportsPoints / total) * totalProgress
+      gradientStops.push(`#a855f7 ${currentPos}%`)
+      gradientStops.push(`#a855f7dd ${currentPos + sportsPercent * 0.7}%`)
+      gradientStops.push(`#a855f766 ${currentPos + sportsPercent}%`)
+    }
+    
+    // Fix fade position - end closer to actual percentage
+    const fadeStart = Math.max(0, totalProgress - 8) // Start fade 8% earlier
+    gradientStops.push(`#00000044 ${fadeStart}%`)
+    gradientStops.push(`#000000 ${totalProgress + 5}%`) // End just 5% after actual progress
+    gradientStops.push(`#000000 100%`)
+    
+    const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
     console.log('Dashboard gradient:', gradient)
     return gradient
   }
