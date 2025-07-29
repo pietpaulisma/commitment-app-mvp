@@ -143,24 +143,25 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id, true) // Use single tint
       
-      // Create smooth liquid gradient for each exercise
+      // Create smooth liquid gradient for each exercise with better blending
       const exerciseStart = cumulativePercent
       const exerciseEnd = cumulativePercent + exercisePercent
+      const exerciseMid = exerciseStart + (exercisePercent * 0.5)
       
-      // Add multiple stops for smooth blending
+      // Smooth blending similar to individual exercises
       gradientStops.push(`${color} ${exerciseStart}%`)
-      gradientStops.push(`${color}dd ${exerciseStart + exercisePercent * 0.7}%`)
-      gradientStops.push(`${color}88 ${exerciseEnd}%`)
+      gradientStops.push(`${color}dd ${exerciseMid}%`)
+      gradientStops.push(`${color}66 ${exerciseEnd}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Smooth transition to black with better blending (similar to individual exercises)
+    // Smooth transition to black - very gradual like individual exercises
     if (totalProgress < 100) {
-      const blackStart = Math.max(0, totalProgress - 15) // Start black transition earlier
-      gradientStops.push(`#00000066 ${blackStart}%`)
-      gradientStops.push(`#000000aa ${totalProgress}%`)
-      gradientStops.push(`#000000 ${Math.min(100, totalProgress + 20)}%`)
+      const blackStart = Math.max(0, totalProgress - 10) // Start black transition earlier
+      gradientStops.push(`#00000044 ${blackStart}%`)
+      gradientStops.push(`#00000088 ${totalProgress}%`)
+      gradientStops.push(`#000000 ${Math.min(100, totalProgress + 10)}%`)
       gradientStops.push(`#000000 100%`)
     }
 
