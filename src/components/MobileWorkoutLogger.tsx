@@ -141,6 +141,7 @@ export default function MobileWorkoutLogger() {
     if (totalProgress < 100) {
       const blackStart = Math.max(0, totalProgress - 15) // Start black transition earlier
       gradientStops.push(`#00000066 ${blackStart}%`)
+      gradientStops.push(`#000000aa ${totalProgress}%`)
       gradientStops.push(`#000000 ${Math.min(100, totalProgress + 20)}%`)
       gradientStops.push(`#000000 100%`)
     }
