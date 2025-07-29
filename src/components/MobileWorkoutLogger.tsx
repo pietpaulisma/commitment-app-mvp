@@ -117,9 +117,10 @@ export default function MobileWorkoutLogger() {
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
     // Calculate actual exercise type percentages within the completed portion
-    const regularPoints = todaysLogs?.filter(log => log.exercises?.type === 'all' || !log.exercises?.type)?.reduce((sum, log) => sum + log.points, 0) || 0
+    // Regular = everything that's NOT recovery or sports
     const recoveryPoints = todaysLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + log.points, 0) || 0
     const sportsPoints = todaysLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + log.points, 0) || 0
+    const regularPoints = total - recoveryPoints - sportsPoints
     
     const gradientStops = []
     let currentPercent = 0

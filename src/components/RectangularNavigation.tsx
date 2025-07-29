@@ -152,9 +152,10 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
     // Calculate actual exercise type percentages within the completed portion
-    const regularPoints = todayLogs?.filter(log => log.exercises?.type === 'all' || !log.exercises?.type)?.reduce((sum, log) => sum + log.points, 0) || 0
+    // Regular = everything that's NOT recovery or sports
     const recoveryPoints = todayLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + log.points, 0) || 0
     const sportsPoints = todayLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + log.points, 0) || 0
+    const regularPoints = total - recoveryPoints - sportsPoints
     
     // Debug exercise type breakdown
     console.log('Exercise breakdown:')
