@@ -833,14 +833,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       }
       
       // Insert into chat as a special workout completion message
+      // Store workout data as JSON in the message field
+      const messageWithData = JSON.stringify({
+        text: `🎯 Workout completed! ${totalPoints} points achieved`,
+        workout_data: workoutData
+      })
+      
       const { error } = await supabase
         .from('chat_messages')
         .insert({
           user_id: user.id,
           group_id: profile.group_id,
-          message: `🎯 Workout completed! ${totalPoints} points achieved`,
-          message_type: 'workout_completion',
-          workout_data: workoutData
+          message: messageWithData,
+          message_type: 'workout_completion'
         })
 
       if (error) {

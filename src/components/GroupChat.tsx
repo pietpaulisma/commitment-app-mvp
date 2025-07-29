@@ -728,12 +728,22 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
                     )}
 
                     {/* Workout Completion Message */}
-                    {message.message_type === 'workout_completion' && message.workout_data && (
-                      <WorkoutCompletionMessage 
-                        message={message}
-                        workoutData={message.workout_data}
-                      />
-                    )}
+                    {message.message_type === 'workout_completion' && (() => {
+                      try {
+                        const parsedMessage = JSON.parse(message.message)
+                        if (parsedMessage.workout_data) {
+                          return (
+                            <WorkoutCompletionMessage 
+                              message={message}
+                              workoutData={parsedMessage.workout_data}
+                            />
+                          )
+                        }
+                      } catch (e) {
+                        console.log('Could not parse workout completion message:', e)
+                      }
+                      return null
+                    })()}
                     
                     {/* Text content with timestamp - WhatsApp style */}
                     {message.message && message.message_type !== 'workout_completion' && (
