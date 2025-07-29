@@ -95,7 +95,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create single flowing gradient with proper proportions and reduced blending (identical to dashboard)
+  // Create single flowing gradient with proper black space proportions (identical to dashboard)
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
@@ -107,7 +107,7 @@ export default function MobileWorkoutLogger() {
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops with proper spacing and reduced blending
+    // Create gradient stops based on exercise proportions within the progress area
     const gradientStops = []
     let cumulativePercent = 0
     
@@ -115,23 +115,17 @@ export default function MobileWorkoutLogger() {
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Add exercise color with liquid fade effect but less blending
-      const exerciseStart = cumulativePercent
-      const exerciseEnd = cumulativePercent + exercisePercent
-      
-      // Create liquid gradient within exercise bounds
-      gradientStops.push(`${color} ${exerciseStart}%`)
-      gradientStops.push(`${color}dd ${Math.max(exerciseStart, exerciseEnd - exercisePercent * 0.3)}%`)
-      gradientStops.push(`${color}66 ${exerciseEnd}%`)
+      // Add color stop at the center of this exercise's portion for smooth flow
+      const centerPercent = cumulativePercent + (exercisePercent / 2)
+      gradientStops.push(`${color} ${centerPercent}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Sharp transition to black for accurate representation
+    // Add black transition earlier for proper proportions (start at 85% of progress)
     if (totalProgress < 100) {
-      const blackStart = Math.max(0, totalProgress - 5) // Start black transition 5% earlier
-      gradientStops.push(`#00000066 ${blackStart}%`)
-      gradientStops.push(`#000000 ${totalProgress}%`)
+      const blackTransitionStart = totalProgress * 0.85
+      gradientStops.push(`#000000 ${blackTransitionStart}%`)
       gradientStops.push(`#000000 100%`)
     }
 
