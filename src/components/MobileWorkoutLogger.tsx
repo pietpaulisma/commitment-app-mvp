@@ -137,12 +137,11 @@ export default function MobileWorkoutLogger() {
       cumulativePercent += exercisePercent
     })
     
-    // Smooth transition to black with proper proportions
+    // Smooth transition to black with better blending (similar to individual exercises)
     if (totalProgress < 100) {
-      const blackStart = totalProgress * 0.8 // Start black transition at 80%
-      gradientStops.push(`#00000044 ${blackStart}%`)
-      gradientStops.push(`#000000aa ${totalProgress * 0.9}%`)
-      gradientStops.push(`#000000 ${totalProgress}%`)
+      const blackStart = Math.max(0, totalProgress - 15) // Start black transition earlier
+      gradientStops.push(`#00000066 ${blackStart}%`)
+      gradientStops.push(`#000000 ${Math.min(100, totalProgress + 20)}%`)
       gradientStops.push(`#000000 100%`)
     }
 
