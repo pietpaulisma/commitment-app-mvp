@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { createCumulativeGradient } from '@/utils/gradientUtils'
 
 type Exercise = {
   id: string
@@ -105,65 +106,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create gradient showing actual exercise distribution with small fade
-  const createCumulativeGradient = () => {
-    const total = getTotalPoints()
-    
-    if (total === 0 || !todaysLogs || todaysLogs.length === 0) {
-      return `linear-gradient(to right, #000000 0%, #000000 100%)`
-    }
-
-    // Calculate the total progress percentage
-    const totalProgress = Math.min(100, (total / dailyTarget) * 100)
-    
-    // Calculate actual exercise type percentages within the completed portion
-    // Regular = everything that's NOT recovery or sports
-    const recoveryPoints = todaysLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + log.points, 0) || 0
-    const sportsPoints = todaysLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + log.points, 0) || 0
-    const regularPoints = total - recoveryPoints - sportsPoints
-    
-    const gradientStops = []
-    let currentPercent = 0
-    
-    // Blue section (regular exercises)
-    if (regularPoints > 0) {
-      const blueWidth = (regularPoints / total) * totalProgress
-      gradientStops.push(`#3b82f6 ${currentPercent}%`)
-      gradientStops.push(`#3b82f6dd ${currentPercent + blueWidth * 0.5}%`)
-      gradientStops.push(`#3b82f666 ${currentPercent + blueWidth}%`)
-      currentPercent += blueWidth
-    }
-    
-    // Green section (recovery)
-    if (recoveryPoints > 0) {
-      const greenWidth = (recoveryPoints / total) * totalProgress
-      gradientStops.push(`#22c55e ${currentPercent}%`)
-      gradientStops.push(`#22c55edd ${currentPercent + greenWidth * 0.5}%`)
-      gradientStops.push(`#22c55e66 ${currentPercent + greenWidth}%`)
-      currentPercent += greenWidth
-    }
-    
-    // Purple section (sports)
-    if (sportsPoints > 0) {
-      const purpleWidth = (sportsPoints / total) * totalProgress
-      gradientStops.push(`#a855f7 ${currentPercent}%`)
-      gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.5}%`)
-      gradientStops.push(`#a855f766 ${currentPercent + purpleWidth}%`)
-      currentPercent += purpleWidth
-    }
-    
-    // Small 10% fade to black
-    const fadeStart = totalProgress - 10  // Start fade 10% before end (was 5%)
-    if (fadeStart > 0) {
-      gradientStops.push(`#00000066 ${fadeStart}%`)
-    }
-    gradientStops.push(`#000000 ${totalProgress}%`)
-    gradientStops.push(`#000000 100%`)
-    
-    const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
-    console.log('Workout page gradient:', gradient)
-    return gradient
-  }
+  // Now using shared gradient utility function
 
   useEffect(() => {
     loadData()
@@ -524,7 +467,7 @@ export default function MobileWorkoutLogger() {
             className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
             style={{ 
               width: progressAnimated ? '100%' : '80%',
-              background: createCumulativeGradient(),
+              background: createCumulativeGradient(todaysLogs || [], dailyTarget),
               // Force cache invalidation
               transform: `translateZ(${Date.now() % 1000}px)`
             }}

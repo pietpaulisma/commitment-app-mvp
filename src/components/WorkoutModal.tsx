@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { createCumulativeGradient } from '@/utils/gradientUtils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
@@ -103,6 +104,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [selectedWorkoutExercise, setSelectedWorkoutExercise] = useState<ExerciseWithProgress | null>(null)
   const [workoutCount, setWorkoutCount] = useState(0)
   const [todaysWorkouts, setTodaysWorkouts] = useState<any[]>([])
+  const [todayLogs, setTodayLogs] = useState<any[]>([])
   const [selectedWeight, setSelectedWeight] = useState(0)
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
   const [sliderPosition, setSliderPosition] = useState(0)
@@ -222,6 +224,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .from('logs')
           .select(`
             points,
+            exercise_id,
             exercises (type)
           `)
           .eq('user_id', user.id)
@@ -238,6 +241,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       setDailyTarget(targetData.target)
       setGroupDaysSinceStart(targetData.daysSinceStart)
       setRecoveryProgress(recoveryPoints)
+      setTodayLogs(pointsResult.data || [])
     } catch (error) {
       console.error('Error loading daily progress:', error)
     }
@@ -1159,14 +1163,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
                 style={{ 
                   width: progressAnimated ? '100%' : '75%',
-                  background: `linear-gradient(to right, 
-                    #3b82f6 0%, 
-                    #3b82f6 ${Math.max(0, regularPercentage - 5)}%, 
-                    #3b82f6dd ${regularPercentage}%, 
-                    ${recoveryPercentage > 0 
-                      ? `#22c55e ${regularPercentage + 2}%, #22c55edd ${Math.min(100, regularPercentage + recoveryPercentage)}%, #000000 ${Math.min(100, regularPercentage + recoveryPercentage + 3)}%`
-                      : `#000000 ${Math.min(100, regularPercentage + 3)}%`
-                    })`,
+                  background: createCumulativeGradient(todayLogs || [], dailyTarget),
                   opacity: isClosing ? 0 : 1
                 }}
               />
