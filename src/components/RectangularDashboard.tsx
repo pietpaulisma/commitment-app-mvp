@@ -1311,11 +1311,19 @@ export default function RectangularDashboard() {
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div 
-          className="relative overflow-hidden mt-24"
+          className="relative overflow-hidden"
           style={{
+            marginTop: 'calc(env(safe-area-inset-top) + 140px)', // Mobile: safe area + logo + spacing
             transform: `translateY(${scrollY * 0.1}px)`
           }}
         >
+          <style jsx>{`
+            @media (min-width: 1024px) {
+              div {
+                margin-top: 6rem !important;
+              }
+            }
+          `}</style>
           {/* Content with more vertical padding */}
           <div className="relative px-4 py-8 z-10">
             <div className="flex items-end justify-between">
