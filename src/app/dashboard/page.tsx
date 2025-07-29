@@ -9,6 +9,7 @@ import TimeGradient from '@/components/TimeGradient'
 export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -35,8 +36,8 @@ export default function Dashboard() {
         <TimeGradient />
       </div>
       
-      {/* Landing Logo - ONLY show on exact dashboard route, positioned near DAY text */}
-      {pathname === '/dashboard' && !pathname.includes('/workout') && !pathname.includes('/chat') && (
+      {/* Landing Logo - ONLY show on exact dashboard route, positioned near DAY text, hide when modal is open */}
+      {pathname === '/dashboard' && !pathname.includes('/workout') && !pathname.includes('/chat') && !isWorkoutModalOpen && (
         <>
           {!isScrolled ? (
             <>
@@ -84,7 +85,10 @@ export default function Dashboard() {
       
       {/* Components with transparent/relative positioning */}
       <div className="relative z-10">
-        <RectangularNavigation isScrolled={isScrolled} />
+        <RectangularNavigation 
+          isScrolled={isScrolled} 
+          onWorkoutModalStateChange={setIsWorkoutModalOpen}
+        />
         <RectangularDashboard />
       </div>
     </div>

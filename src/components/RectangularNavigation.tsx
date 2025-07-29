@@ -26,9 +26,10 @@ const getOrganicGradient = (colorClass: string) => {
 
 interface RectangularNavigationProps {
   isScrolled?: boolean
+  onWorkoutModalStateChange?: (isOpen: boolean) => void
 }
 
-export default function RectangularNavigation({ isScrolled = false }: RectangularNavigationProps) {
+export default function RectangularNavigation({ isScrolled = false, onWorkoutModalStateChange }: RectangularNavigationProps) {
   const { profile, loading } = useProfile()
   const { user } = useAuth()
   const { weekMode } = useWeekMode()
@@ -50,11 +51,13 @@ export default function RectangularNavigation({ isScrolled = false }: Rectangula
     // Small delay to ensure animation state is set before opening modal
     setTimeout(() => {
       setIsWorkoutOpen(true)
+      onWorkoutModalStateChange?.(true)
     }, 50)
   }
 
   const handleWorkoutClose = () => {
     setIsWorkoutOpen(false)
+    onWorkoutModalStateChange?.(false)
     // Reset animation state after modal closes
     setTimeout(() => {
       setIsAnimating(false)
