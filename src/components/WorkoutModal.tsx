@@ -57,7 +57,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   // Get category colors for exercises with variations
   const getCategoryColor = (type: string, exerciseId: string) => {
     const variations = {
-      'all': ['#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'], // Blue variations
+      'all': ['#3b82f6', '#4285f4', '#4f94ff', '#5ba3ff'], // More subtle blue variations
       'recovery': ['#22c55e', '#16a34a', '#15803d', '#166534'], // Green variations  
       'sports': ['#a855f7', '#9333ea', '#7c3aed', '#6d28d9'], // Purple variations
     }
