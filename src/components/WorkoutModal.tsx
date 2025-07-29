@@ -1036,7 +1036,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   return (
     <div 
-      className="fixed inset-0 bg-black z-[100] flex flex-col transition-transform duration-500 ease-out"
+      className="fixed inset-0 bg-black z-[9999] flex flex-col transition-transform duration-500 ease-out"
       style={{ 
         paddingTop: 'env(safe-area-inset-top)',
         transform: isAnimatedIn ? 'translateY(0)' : 'translateY(100vh)'

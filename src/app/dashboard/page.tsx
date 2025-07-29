@@ -40,18 +40,18 @@ export default function Dashboard() {
         <>
           {!isScrolled ? (
             <>
-              {/* Mobile Landing Logo - Positioned above DAY text with same spacing as Tuesday-DAY gap */}
+              {/* Mobile Landing Logo - Positioned above DAY text with reduced spacing */}
               <div className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
-                   style={{ top: '90px' }}>
+                   style={{ top: '100px' }}>
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 
                   className="h-6 w-auto drop-shadow-lg"
                 />
               </div>
-              {/* Desktop Landing Logo - Positioned above DAY text with same spacing as Tuesday-DAY gap */}
+              {/* Desktop Landing Logo - Positioned above DAY text with reduced spacing */}
               <div className="hidden lg:block absolute left-8 z-[70] transition-all duration-500"
-                   style={{ top: '90px' }}>
+                   style={{ top: '100px' }}>
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 
