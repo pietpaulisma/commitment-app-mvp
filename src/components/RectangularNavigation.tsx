@@ -133,6 +133,16 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     console.log('total points:', total)
     console.log('dailyTarget:', dailyTarget)
     
+    // Debug individual log entries to see exercise structure
+    todayLogs?.forEach((log, index) => {
+      console.log(`Log ${index}:`, {
+        points: log.points,
+        exercise_id: log.exercise_id,
+        exercises: log.exercises,
+        exerciseType: log.exercises?.type
+      })
+    })
+    
     if (total === 0 || !todayLogs || todayLogs.length === 0) {
       console.log('No progress - returning black gradient')
       return `linear-gradient(to right, #000000 0%, #000000 100%)`
