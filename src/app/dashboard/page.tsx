@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function Dashboard() {
       </div>
       
       {/* Landing Logo - ONLY show on exact dashboard route, positioned near DAY text, hide when modal is open */}
-      {pathname === '/dashboard' && !pathname.includes('/workout') && !pathname.includes('/chat') && !isWorkoutModalOpen && (
+      {pathname === '/dashboard' && !pathname.includes('/workout') && !pathname.includes('/chat') && !isWorkoutModalOpen && !isChatModalOpen && (
         <>
           {!isScrolled ? (
             <>
@@ -93,6 +94,7 @@ export default function Dashboard() {
         <RectangularNavigation 
           isScrolled={isScrolled} 
           onWorkoutModalStateChange={setIsWorkoutModalOpen}
+          onChatModalStateChange={setIsChatModalOpen}
         />
         <RectangularDashboard />
       </div>

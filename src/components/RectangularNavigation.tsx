@@ -27,9 +27,10 @@ const getOrganicGradient = (colorClass: string) => {
 interface RectangularNavigationProps {
   isScrolled?: boolean
   onWorkoutModalStateChange?: (isOpen: boolean) => void
+  onChatModalStateChange?: (isOpen: boolean) => void
 }
 
-export default function RectangularNavigation({ isScrolled = false, onWorkoutModalStateChange }: RectangularNavigationProps) {
+export default function RectangularNavigation({ isScrolled = false, onWorkoutModalStateChange, onChatModalStateChange }: RectangularNavigationProps) {
   const { profile, loading } = useProfile()
   const { user } = useAuth()
   const { weekMode } = useWeekMode()
@@ -295,7 +296,10 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
 
           {/* Chat Button (20% width) */}
           <button
-            onClick={() => setIsChatOpen(true)}
+            onClick={() => {
+              setIsChatOpen(true)
+              onChatModalStateChange?.(true)
+            }}
             disabled={!profile.group_id}
             className={`w-16 h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none ${
               profile.group_id 
@@ -375,7 +379,10 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       {/* Group Chat Modal */}
       <GroupChat 
         isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)} 
+        onClose={() => {
+          setIsChatOpen(false)
+          onChatModalStateChange?.(false)
+        }} 
       />
 
       {/* Workout Modal */}
