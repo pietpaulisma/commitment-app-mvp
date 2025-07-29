@@ -35,23 +35,23 @@ export default function Dashboard() {
         <TimeGradient />
       </div>
       
-      {/* Landing Logo - Only show on dashboard route, positioned near DAY text */}
-      {pathname === '/dashboard' && (
+      {/* Landing Logo - ONLY show on exact dashboard route, positioned near DAY text */}
+      {pathname === '/dashboard' && !pathname.includes('/workout') && !pathname.includes('/chat') && (
         <>
           {!isScrolled ? (
             <>
-              {/* Mobile Landing Logo - Positioned above DAY text */}
+              {/* Mobile Landing Logo - Positioned above DAY text with same spacing as Tuesday-DAY gap */}
               <div className="lg:hidden absolute left-4 z-[70] transition-all duration-500" 
-                   style={{ top: '110px' }}>
+                   style={{ top: '90px' }}>
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 
                   className="h-6 w-auto drop-shadow-lg"
                 />
               </div>
-              {/* Desktop Landing Logo - Positioned above DAY text */}
+              {/* Desktop Landing Logo - Positioned above DAY text with same spacing as Tuesday-DAY gap */}
               <div className="hidden lg:block absolute left-8 z-[70] transition-all duration-500"
-                   style={{ top: '110px' }}>
+                   style={{ top: '90px' }}>
                 <img 
                   src="/logo.png" 
                   alt="The Commitment" 

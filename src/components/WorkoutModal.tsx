@@ -462,11 +462,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
               style={{ 
                 width: '100%',
-                background: `linear-gradient(to right, 
-                  ${getCategoryColor(exercise.type, exercise.id)} 0%, 
-                  ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
-                  ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
-                  #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                background: exerciseProgress.percentage === 0 
+                  ? '#000000'
+                  : `linear-gradient(to right, 
+                    ${getCategoryColor(exercise.type, exercise.id)} 0%, 
+                    ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
+                    ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
+                    #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
               }}
             />
             
@@ -544,11 +546,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
               style={{ 
                 width: '100%',
-                background: `linear-gradient(to right, 
-                  ${getCategoryColor(exercise.type, exercise.id)} 0%, 
-                  ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
-                  ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
-                  #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                background: exerciseProgress.percentage === 0 
+                  ? '#000000'
+                  : `linear-gradient(to right, 
+                    ${getCategoryColor(exercise.type, exercise.id)} 0%, 
+                    ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
+                    ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
+                    #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
               }}
             />
             
@@ -1161,11 +1165,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                     className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
                                     style={{ 
                                       width: '100%',
-                                      background: `linear-gradient(to right, 
-                                        ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
-                                        ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
-                                        ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}66 ${exerciseProgress.percentage}%, 
-                                        #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                                      background: exerciseProgress.percentage === 0 
+                                        ? '#000000'
+                                        : `linear-gradient(to right, 
+                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
+                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
+                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}66 ${exerciseProgress.percentage}%, 
+                                          #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
                                     }}
                                   />
                                   
