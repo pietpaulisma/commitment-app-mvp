@@ -43,6 +43,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
   const [groupName, setGroupName] = useState('')
   const [isAnimating, setIsAnimating] = useState(false)
   const [todayLogs, setTodayLogs] = useState<any[]>([])
+  const [progressAnimated, setProgressAnimated] = useState(false)
 
   const isOnProfilePage = pathname === '/profile'
 
@@ -111,7 +112,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     return colorArray[colorIndex]
   }
 
-  // Create single flowing gradient with multiple exercise color points
+  // Create single flowing gradient with multiple exercise color points and sharper transitions
   const createCumulativeGradient = (todayLogs: any[]) => {
     const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
     
@@ -123,7 +124,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops based on exercise proportions within the progress area
+    // Create gradient stops with sharper transitions
     const gradientStops = []
     let cumulativePercent = 0
     
@@ -131,15 +132,28 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Add color stop at the center of this exercise's portion
-      const centerPercent = cumulativePercent + (exercisePercent / 2)
-      gradientStops.push(`${color} ${centerPercent}%`)
+      // Create sharper transitions by reducing blend distance
+      const startPercent = cumulativePercent
+      const endPercent = cumulativePercent + exercisePercent
+      
+      // Add color with minimal blending (10% of exercise width)
+      const blendDistance = Math.min(exercisePercent * 0.1, 2)
+      
+      if (index === 0) {
+        gradientStops.push(`${color} ${startPercent}%`)
+      } else {
+        gradientStops.push(`${color} ${Math.max(0, startPercent - blendDistance)}%`)
+      }
+      
+      gradientStops.push(`${color} ${Math.min(100, endPercent - blendDistance)}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Add black for remaining space if not at 100%
+    // Sharp transition to black for remaining space
     if (totalProgress < 100) {
+      const blackStart = Math.max(0, totalProgress - 2)
+      gradientStops.push(`#000000 ${blackStart}%`)
       gradientStops.push(`#000000 100%`)
     }
 
@@ -217,6 +231,9 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       setDailyTarget(target)
       setRecoveryProgress(recoveryPoints)
       setTodayLogs(todayLogs || [])
+      
+      // Trigger animation after data loads
+      setTimeout(() => setProgressAnimated(true), 100)
     } catch (error) {
       console.error('Error loading daily progress:', error)
     }
@@ -256,11 +273,11 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
               isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
           >
-            {/* Stacked gradient progress background */}
+            {/* Stacked gradient progress background with animation */}
             <div 
-              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+              className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
               style={{ 
-                width: '100%',
+                width: progressAnimated ? '100%' : '0%',
                 background: createCumulativeGradient(todayLogs)
               }}
             />

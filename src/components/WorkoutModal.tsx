@@ -108,6 +108,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [sliderPosition, setSliderPosition] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [isSliderComplete, setIsSliderComplete] = useState(false)
+  const [progressAnimated, setProgressAnimated] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
   const [sportsExpanded, setSportsExpanded] = useState(false)
@@ -135,6 +136,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           setShowIconTransition(true)
         }, 400) // Start icon transition near end of modal slide-up
       }, 100) // Increased delay to be more visible
+      
+      // Trigger progress animation after modal loads
+      setTimeout(() => setProgressAnimated(true), 500)
     } else if (!isOpen) {
       console.log('Setting isAnimatedIn to false')
       setIsAnimatedIn(false)
@@ -469,9 +473,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   ? '#000000'
                   : `linear-gradient(to right, 
                     ${getCategoryColor(exercise.type, exercise.id)} 0%, 
-                    ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
-                    ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
-                    #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                    ${getCategoryColor(exercise.type, exercise.id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
+                    ${getCategoryColor(exercise.type, exercise.id)}dd ${exerciseProgress.percentage}%, 
+                    #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
               }}
             />
             
@@ -553,9 +557,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   ? '#000000'
                   : `linear-gradient(to right, 
                     ${getCategoryColor(exercise.type, exercise.id)} 0%, 
-                    ${getCategoryColor(exercise.type, exercise.id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
-                    ${getCategoryColor(exercise.type, exercise.id)}66 ${exerciseProgress.percentage}%, 
-                    #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                    ${getCategoryColor(exercise.type, exercise.id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
+                    ${getCategoryColor(exercise.type, exercise.id)}dd ${exerciseProgress.percentage}%, 
+                    #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
               }}
             />
             
@@ -1150,18 +1154,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           <div className="flex">
             {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
-              {/* Liquid gradient progress background */}
+              {/* Liquid gradient progress background with animation */}
               <div 
-                className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
                 style={{ 
-                  width: '100%',
+                  width: progressAnimated ? '100%' : '0%',
                   background: `linear-gradient(to right, 
                     #3b82f6 0%, 
-                    #3b82f6dd ${Math.max(0, regularPercentage - 15)}%, 
-                    #3b82f666 ${regularPercentage}%, 
+                    #3b82f6 ${Math.max(0, regularPercentage - 5)}%, 
+                    #3b82f6dd ${regularPercentage}%, 
                     ${recoveryPercentage > 0 
-                      ? `#1d4ed8aa ${regularPercentage + 5}%, #1d4ed866 ${Math.min(100, regularPercentage + recoveryPercentage)}%, #000000 ${Math.min(100, regularPercentage + recoveryPercentage + 20)}%`
-                      : `#000000 ${Math.min(100, regularPercentage + 20)}%`
+                      ? `#22c55e ${regularPercentage + 2}%, #22c55edd ${Math.min(100, regularPercentage + recoveryPercentage)}%, #000000 ${Math.min(100, regularPercentage + recoveryPercentage + 3)}%`
+                      : `#000000 ${Math.min(100, regularPercentage + 3)}%`
                     })`,
                   opacity: isClosing ? 0 : 1
                 }}
@@ -1272,9 +1276,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                         ? '#000000'
                                         : `linear-gradient(to right, 
                                           ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
-                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${Math.max(0, exerciseProgress.percentage - 15)}%, 
-                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}66 ${exerciseProgress.percentage}%, 
-                                          #000000 ${Math.min(100, exerciseProgress.percentage + 20)}%)`
+                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
+                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${exerciseProgress.percentage}%, 
+                                          #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
                                     }}
                                   />
                                   
@@ -2088,8 +2092,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       width: `${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / selectedWorkoutExercise.points_per_unit / 50) * 100)}%`,
                       background: `linear-gradient(to right, 
                         ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} 0%, 
-                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}dd 70%, 
-                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}66 100%)`
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} 85%, 
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}dd 100%)`
                     }}
                   />
                 </div>

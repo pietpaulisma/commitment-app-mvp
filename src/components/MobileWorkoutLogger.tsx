@@ -36,6 +36,7 @@ export default function MobileWorkoutLogger() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [hasFlexibleRestDay, setHasFlexibleRestDay] = useState(false)
   const [weekStartDate, setWeekStartDate] = useState<Date | null>(null)
+  const [progressAnimated, setProgressAnimated] = useState(false)
 
   // Helper function to get user's personal color or default
   const getUserColor = () => {
@@ -94,7 +95,7 @@ export default function MobileWorkoutLogger() {
     return segments
   }
 
-  // Create single flowing gradient with multiple exercise color points
+  // Create single flowing gradient with multiple exercise color points and sharper transitions
   const createCumulativeGradient = () => {
     const total = getTotalPoints()
     
@@ -106,7 +107,7 @@ export default function MobileWorkoutLogger() {
     // Calculate the total progress percentage
     const totalProgress = Math.min(100, (total / dailyTarget) * 100)
     
-    // Create gradient stops based on exercise proportions within the progress area
+    // Create gradient stops with sharper transitions
     const gradientStops = []
     let cumulativePercent = 0
     
@@ -114,15 +115,28 @@ export default function MobileWorkoutLogger() {
       const exercisePercent = (log.points / total) * totalProgress
       const color = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
       
-      // Add color stop at the center of this exercise's portion
-      const centerPercent = cumulativePercent + (exercisePercent / 2)
-      gradientStops.push(`${color} ${centerPercent}%`)
+      // Create sharper transitions by reducing blend distance
+      const startPercent = cumulativePercent
+      const endPercent = cumulativePercent + exercisePercent
+      
+      // Add color with minimal blending (10% of exercise width)
+      const blendDistance = Math.min(exercisePercent * 0.1, 2)
+      
+      if (index === 0) {
+        gradientStops.push(`${color} ${startPercent}%`)
+      } else {
+        gradientStops.push(`${color} ${Math.max(0, startPercent - blendDistance)}%`)
+      }
+      
+      gradientStops.push(`${color} ${Math.min(100, endPercent - blendDistance)}%`)
       
       cumulativePercent += exercisePercent
     })
     
-    // Add black for remaining space if not at 100%
+    // Sharp transition to black for remaining space
     if (totalProgress < 100) {
+      const blackStart = Math.max(0, totalProgress - 2)
+      gradientStops.push(`#000000 ${blackStart}%`)
       gradientStops.push(`#000000 100%`)
     }
 
@@ -339,6 +353,9 @@ export default function MobileWorkoutLogger() {
         .order('timestamp', { ascending: false })
 
       setTodaysLogs(data || [])
+      
+      // Trigger animation after data loads
+      setTimeout(() => setProgressAnimated(true), 100)
     } catch (error) {
       console.error('Error loading logs:', error)
     }
@@ -480,11 +497,11 @@ export default function MobileWorkoutLogger() {
       {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
         <div className="bg-black border-b border-gray-800 relative overflow-hidden">
-          {/* Stacked gradient progress bar background */}
+          {/* Stacked gradient progress bar background with animation */}
           <div 
             className="absolute right-0 top-0 bottom-0 transition-all duration-1000 ease-out"
             style={{ 
-              width: '100%',
+              width: progressAnimated ? '100%' : '0%',
               background: createCumulativeGradient()
             }}
           />
