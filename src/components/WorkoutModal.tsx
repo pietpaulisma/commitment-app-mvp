@@ -796,26 +796,26 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   const handleSubmitToGroup = async () => {
-    if (!user || !profile?.group_id || !todaysWorkouts.length) return
+    if (!user || !profile?.group_id || dailyProgress <= 0) return
 
     try {
       setLoading(true)
       
-      // Calculate total points
-      const totalPoints = todaysWorkouts.reduce((sum, workout) => sum + workout.points, 0)
+      // Calculate total points from today's logs (same data as dailyProgress)
+      const totalPoints = dailyProgress
       
       // Group exercises by type for better presentation
-      const exercisesSummary = todaysWorkouts.reduce((acc: any, workout) => {
-        const exerciseName = workout.exercises?.name || 'Unknown Exercise'
+      const exercisesSummary = todayLogs.reduce((acc: any, log) => {
+        const exerciseName = log.exercises?.name || 'Unknown Exercise'
         if (acc[exerciseName]) {
-          acc[exerciseName].count += workout.count || workout.duration || 1
-          acc[exerciseName].points += workout.points
+          acc[exerciseName].count += log.count || log.duration || 1
+          acc[exerciseName].points += log.points
         } else {
           acc[exerciseName] = {
-            count: workout.count || workout.duration || 1,
-            points: workout.points,
-            unit: workout.exercises?.unit || 'rep',
-            isTimeBased: workout.exercises?.is_time_based || false
+            count: log.count || log.duration || 1,
+            points: log.points,
+            unit: log.exercises?.unit || 'rep',
+            isTimeBased: log.exercises?.is_time_based || false
           }
         }
         return acc
