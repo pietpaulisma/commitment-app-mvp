@@ -1035,13 +1035,28 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   console.log('Rendering modal with isAnimatedIn:', isAnimatedIn)
 
   return (
-    <div 
-      className="fixed inset-0 bg-black z-[9999] flex flex-col transition-transform duration-500 ease-out"
-      style={{ 
-        paddingTop: 'env(safe-area-inset-top)',
-        transform: isAnimatedIn ? 'translateY(0)' : 'translateY(100vh)'
-      }}
-    >
+    <>
+      {/* Shimmer Animation CSS */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .focus-ring:focus {
+          ring-color: ${getUserColor()};
+        }
+        .btn-hover:hover {
+          background-color: ${getUserColorHover()} !important;
+        }
+      `}</style>
+      
+      <div 
+        className="fixed inset-0 bg-black z-[9999] flex flex-col transition-transform duration-500 ease-out"
+        style={{ 
+          paddingTop: 'env(safe-area-inset-top)',
+          transform: isAnimatedIn ? 'translateY(0)' : 'translateY(100vh)'
+        }}
+      >
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
         <div className="sticky top-0">
           <div className="flex">
@@ -1431,16 +1446,34 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               )}
               
-              {/* Exercise Input Form */}
+              {/* Exercise Input Form - Completely Redesigned */}
               {selectedExercise && (
-                <form onSubmit={handleSubmit} className="p-4 space-y-6 bg-black border-t border-gray-800">
-                  <div className="text-center bg-gray-900/30 rounded-lg p-4">
-                    <h4 className="text-lg font-medium text-white mb-2">
-                      {selectedExercise.emoji} {selectedExercise.name}
-                    </h4>
-                    <div className="flex justify-center items-baseline space-x-1">
-                      <span className="text-2xl font-black" style={{ color: getUserColor() }}>{selectedExercise.points_per_unit}</span>
-                      <span className="text-sm text-gray-400">pts per {selectedExercise.unit}</span>
+                <div className="bg-black border-t border-gray-800">
+                  {/* Points Header with Gradient */}
+                  <div className="relative overflow-hidden">
+                    {/* Gradient Background */}
+                    <div 
+                      className="absolute inset-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 50%, transparent 100%)`
+                      }}
+                    />
+                    <div className="relative p-6">
+                      <div className="text-center">
+                        <div className="flex justify-center items-center space-x-3 mb-3">
+                          {getExerciseIcon(selectedExercise)}
+                          <h3 className="text-2xl font-bold text-white">{selectedExercise.name}</h3>
+                        </div>
+                        <div className="text-6xl font-black mb-2" style={{ color: getCategoryColor(selectedExercise.type, selectedExercise.id) }}>
+                          {calculatePoints()}
+                        </div>
+                        <div className="text-lg text-white font-medium">
+                          POINTS EARNED
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          {selectedExercise.points_per_unit} pts per {selectedExercise.unit}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
@@ -1488,136 +1521,263 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   )}
 
-                  {/* Quantity Input - Modern Counter Style */}
-                  <div className="bg-gray-900/30 rounded-lg p-6 border border-gray-800">
-                    <label className="block text-sm font-medium text-white mb-4 text-center">
-                      {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} ({selectedExercise.unit})
-                    </label>
-                    
-                    <div className="text-center mb-6">
-                      <div className="text-6xl font-black text-white mb-2">
-                        {quantity || '0'}
-                      </div>
-                      <div className="text-sm text-gray-400 uppercase tracking-wide">
-                        {selectedExercise.unit}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-4 mb-6">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(Math.max(0, parseFloat(quantity || '0') - 1).toString())}
-                        className="w-14 h-14 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700 transition-colors"
-                      >
-                        −
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((parseFloat(quantity || '0') + 1).toString())}
-                        className="w-14 h-14 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-white text-2xl font-bold hover:bg-gray-700 transition-colors"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <div className="flex justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((parseFloat(quantity || '0') + 5).toString())}
-                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-medium hover:bg-gray-700 transition-colors text-sm"
-                      >
-                        +5
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((parseFloat(quantity || '0') + 10).toString())}
-                        className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white font-medium hover:bg-gray-700 transition-colors text-sm"
-                      >
-                        +10
-                      </button>
-                      <input 
-                        type="number" 
-                        step="any" 
-                        min="0" 
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-center text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="0"
+                  {/* Main Counter Section with Gradient */}
+                  <div className="p-6">
+                    <div className="relative overflow-hidden rounded-2xl mb-6">
+                      {/* Gradient Background */}
+                      <div 
+                        className="absolute inset-0"
+                        style={{
+                          background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}10 100%)`
+                        }}
                       />
+                      
+                      <div className="relative p-8">
+                        <div className="text-center mb-8">
+                          <div className="text-8xl font-black text-white mb-4" style={{ textShadow: '0 0 30px rgba(255,255,255,0.2)' }}>
+                            {quantity || '0'}
+                          </div>
+                          <div className="text-xl text-white font-medium uppercase tracking-wider">
+                            {selectedExercise.unit}{selectedExercise.unit !== 'rep' && 's'}
+                          </div>
+                        </div>
+
+                        {/* Control Buttons */}
+                        <div className="flex items-center justify-center gap-6 mb-8">
+                          <button
+                            type="button"
+                            onClick={() => setQuantity(Math.max(0, parseFloat(quantity || '0') - (selectedExercise.is_time_based ? 5 : 1)).toString())}
+                            className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                            style={{
+                              background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 100%)`,
+                              boxShadow: `0 10px 30px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
+                            }}
+                          >
+                            −
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => setQuantity((parseFloat(quantity || '0') + (selectedExercise.is_time_based ? 5 : 1)).toString())}
+                            className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                            style={{
+                              background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
+                              boxShadow: `0 10px 30px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40`
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Quick Add Buttons */}
+                        <div className="flex justify-center gap-3">
+                          {selectedExercise.is_time_based ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setQuantity((parseFloat(quantity || '0') + 15).toString())}
+                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
+                                style={{
+                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
+                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
+                                }}
+                              >
+                                +15min
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setQuantity((parseFloat(quantity || '0') + 30).toString())}
+                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
+                                style={{
+                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
+                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
+                                }}
+                              >
+                                +30min
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setQuantity((parseFloat(quantity || '0') + 5).toString())}
+                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
+                                style={{
+                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
+                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
+                                }}
+                              >
+                                +5
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setQuantity((parseFloat(quantity || '0') + 10).toString())}
+                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
+                                style={{
+                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
+                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
+                                }}
+                              >
+                                +10
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Weight Input - Modern Button Style */}
-                  {selectedExercise.is_weighted && (
-                    <div className="bg-gray-900/30 rounded-lg p-6 border border-gray-800">
-                      <label className="block text-sm font-medium text-white mb-4 text-center">Weight (kg)</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setWeight('0')}
-                          className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors border ${
-                            weight === '0' || weight === '' 
-                              ? 'bg-blue-600 border-blue-500 text-white' 
-                              : 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
-                          }`}
-                        >
-                          Bodyweight
-                        </button>
-                        {[10, 15, 20, 25, 30, 35].map((w) => (
-                          <button
-                            key={w}
-                            type="button"
-                            onClick={() => setWeight(w.toString())}
-                            className={`py-3 px-4 rounded-lg text-sm font-medium transition-colors border ${
-                              weight === w.toString() 
-                                ? 'bg-blue-600 border-blue-500 text-white' 
-                                : 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
-                            }`}
-                          >
-                            {w}kg
-                          </button>
-                        ))}
-                        <input 
-                          type="number" 
-                          step="any" 
-                          min="0" 
-                          value={weight}
-                          onChange={(e) => setWeight(e.target.value)}
-                          className="py-3 px-4 bg-gray-800 border border-gray-700 rounded-lg text-center text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Custom"
+                  {/* Weight & Modifiers Section */}
+                  {(selectedExercise.is_weighted || selectedExercise.supports_decreased) && (
+                    <div className="px-6 pb-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Weight Selection */}
+                        {selectedExercise.is_weighted && (
+                          <div className="relative overflow-hidden rounded-xl">
+                            <div 
+                              className="absolute inset-0 opacity-30"
+                              style={{
+                                background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 0%, transparent 100%)`
+                              }}
+                            />
+                            <div className="relative p-4">
+                              <div className="text-center text-white font-medium mb-3">Weight</div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setWeight('0')}
+                                  className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                                    weight === '0' || weight === '' 
+                                      ? 'text-white shadow-lg' 
+                                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                  }`}
+                                  style={weight === '0' || weight === '' ? {
+                                    background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
+                                    boxShadow: `0 4px 15px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
+                                  } : {}}
+                                >
+                                  Body
+                                </button>
+                                {[10, 15, 20, 25].map((w) => (
+                                  <button
+                                    key={w}
+                                    type="button"
+                                    onClick={() => setWeight(w.toString())}
+                                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                                      weight === w.toString() 
+                                        ? 'text-white shadow-lg' 
+                                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                    }`}
+                                    style={weight === w.toString() ? {
+                                      background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
+                                      boxShadow: `0 4px 15px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
+                                    } : {}}
+                                  >
+                                    {w}kg
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Decreased Exercise Option */}
+                        {selectedExercise.supports_decreased && (
+                          <div className="relative overflow-hidden rounded-xl">
+                            <div 
+                              className="absolute inset-0 opacity-30"
+                              style={{
+                                background: `linear-gradient(135deg, #f59e0b20 0%, transparent 100%)`
+                              }}
+                            />
+                            <div className="relative p-4">
+                              <div className="text-center text-white font-medium mb-3">Difficulty</div>
+                              <div className="space-y-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setWeight('')} // Using weight state for this toggle
+                                  className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                                    weight !== 'decreased' 
+                                      ? 'text-white shadow-lg' 
+                                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                  }`}
+                                  style={weight !== 'decreased' ? {
+                                    background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
+                                    boxShadow: `0 4px 15px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
+                                  } : {}}
+                                >
+                                  Regular
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setWeight('decreased')}
+                                  className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                                    weight === 'decreased' 
+                                      ? 'text-white shadow-lg' 
+                                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                                  }`}
+                                  style={weight === 'decreased' ? {
+                                    background: `linear-gradient(135deg, #f59e0b80 0%, #f59e0b60 100%)`,
+                                    boxShadow: `0 4px 15px #f59e0b30`
+                                  } : {}}
+                                >
+                                  <div>Decreased</div>
+                                  <div className="text-xs opacity-75">+50% pts</div>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Slide to Commit Button */}
+                  <div className="p-6 pt-0">
+                    <div className="relative overflow-hidden rounded-2xl">
+                      {/* Gradient Background */}
+                      <div 
+                        className="absolute inset-0"
+                        style={{
+                          background: `linear-gradient(90deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 100%)`
+                        }}
+                      />
+                      
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSubmit(e as any);
+                        }}
+                        disabled={loading || !quantity || parseFloat(quantity) <= 0}
+                        className="relative w-full py-6 px-8 text-black font-black text-xl tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center">
+                              <div className="w-0 h-0 border-l-[8px] border-l-black/60 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
+                            </div>
+                            <span>SLIDE TO COMMIT</span>
+                          </div>
+                          <div className="text-2xl">
+                            {loading ? '⏳' : '🚀'}
+                          </div>
+                        </div>
+                        
+                        {/* Shimmer Effect */}
+                        <div 
+                          className="absolute inset-0 opacity-30"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                            animation: 'shimmer 2s infinite'
+                          }}
                         />
-                      </div>
+                      </button>
                     </div>
-                  )}
-
-                  {/* Points Preview */}
-                  {quantity && (
-                    <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-800">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Points Earned</div>
-                          <div className="text-sm text-white">This workout</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-4xl font-black" style={{ color: getUserColor() }}>{calculatePoints()}</div>
-                          <div className="text-xs text-gray-400">points</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
-                  <button 
-                    type="submit"
-                    disabled={loading}
-                    className="w-full text-black py-4 px-4 rounded-lg transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    style={{ backgroundColor: getUserColor() }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = getUserColorHover()}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = getUserColor()}
-                  >
-                    {loading ? 'LOGGING...' : 'LOG WORKOUT'}
-                  </button>
-                </form>
+                  </div>
+                </div>
               )}
             </>
           )}
@@ -2025,6 +2185,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
           </div>
         )}
-    </div>
+      </div>
+    </>
   )
 }
