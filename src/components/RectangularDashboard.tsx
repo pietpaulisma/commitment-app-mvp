@@ -516,27 +516,6 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
 const MemoizedChartComponent = memo(ChartComponent)
 
 // Personal stats component with user accent colors
-const PersonalStatComponent = ({ stat, userProfile }: { stat: any, userProfile: any }) => {
-  const userColor = userProfile?.personal_color || '#f97316'
-  
-  return (
-    <div className="p-6 bg-gray-900/30 relative overflow-hidden">
-      <div className="relative z-10">
-        <div className="text-center">
-          <div 
-            className="text-3xl font-black mb-2"
-            style={{ color: userColor }}
-          >
-            {stat.value}
-          </div>
-          <div className="text-xs text-gray-400 uppercase tracking-wide">
-            {stat.title}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function RectangularDashboard() {
   // Add keyframe animations for enhanced chart effects and header animations
@@ -1066,70 +1045,91 @@ export default function RectangularDashboard() {
     if (!user) return
 
     try {
-      // Get personal workout data
+      // Get personal workout data for the last 30 days
+      const past30Days = Array.from({length: 30}, (_, i) => {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        return date.toISOString().split('T')[0]
+      }).reverse()
+
       const { data: logs } = await supabase
         .from('logs')
-        .select('points, created_at, exercise_id, exercises(name)')
+        .select('date, points, created_at')
+        .eq('user_id', user.id)
+        .in('date', past30Days)
+
+      // 1. Personal Points (30-day line chart)
+      const dailyTotals = past30Days.map(date => {
+        const dayLogs = logs?.filter(log => log.date === date) || []
+        const totalPoints = dayLogs.reduce((sum, log) => sum + log.points, 0)
+        return { date, totalPoints }
+      })
+
+      const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
+
+      // 2. Personal Money Pot (your contribution)
+      const personalMoneyContribution = totalPersonalPoints * 0.10
+
+      // 3. Personal Birthday (fake data for now, could be user's actual birthday)
+      const nextBirthdayDays = Math.floor(Math.random() * 365) + 1
+      const nextBirthdayDate = new Date()
+      nextBirthdayDate.setDate(nextBirthdayDate.getDate() + nextBirthdayDays)
+      const monthName = nextBirthdayDate.toLocaleString('default', { month: 'long' })
+      const dayNum = nextBirthdayDate.getDate()
+
+      // 4. Personal Workout Times
+      const { data: allPersonalLogs } = await supabase
+        .from('logs')
+        .select('created_at')
         .eq('user_id', user.id)
 
-      if (!logs || logs.length === 0) {
-        setPersonalStats({ interestingStats: [] })
-        return
-      }
+      const hourCounts = new Array(24).fill(0)
+      allPersonalLogs?.forEach(log => {
+        const hour = new Date(log.created_at).getHours()
+        hourCounts[hour]++
+      })
 
-      const totalWorkouts = logs.length
-      const totalPoints = logs.reduce((sum, log) => sum + log.points, 0)
-      const avgPointsPerWorkout = Math.round(totalPoints / totalWorkouts)
+      const mostPopularHour = hourCounts.indexOf(Math.max(...hourCounts))
+      const peakTime = `${mostPopularHour}:00`
 
-      // Get current streak from checkins
-      const { data: checkins } = await supabase
-        .from('daily_checkins')
-        .select('date, is_complete')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(30)
-
-      let currentStreak = 0
-      if (checkins) {
-        for (const checkin of checkins) {
-          if (checkin.is_complete) {
-            currentStreak++
-          } else {
-            break
-          }
-        }
-      }
-
-      // Create personal stats in same format as group stats
+      // Create personal stats using same visualization types as group stats
       setPersonalStats({
         interestingStats: [
           {
-            type: 'personal-points',
-            title: 'Your Total Points',
-            value: totalPoints,
-            layout: 'col-span-2',
-            accentColor: profile?.personal_color || '#f97316'
+            title: 'Your Points',
+            subtitle: '30-day total',
+            value: `${totalPersonalPoints} PT`,
+            data: dailyTotals.map((day, i) => ({ 
+              day: `D${i+1}`, 
+              points: day.totalPoints 
+            })),
+            type: 'line_chart'
           },
           {
-            type: 'personal-workouts',
-            title: 'Total Workouts',
-            value: totalWorkouts,
-            layout: 'square',
-            accentColor: profile?.personal_color || '#f97316'
+            title: 'Your Contribution',
+            subtitle: 'money pot',
+            value: Math.max(0, Math.round(personalMoneyContribution * 100) / 100),
+            type: 'typography_stat'
           },
           {
-            type: 'personal-average',
-            title: 'Average/Workout',
-            value: avgPointsPerWorkout,
-            layout: 'square',
-            accentColor: profile?.personal_color || '#f97316'
+            title: 'Your Birthday',
+            subtitle: profile?.email?.split('@')[0] || 'You',
+            value: nextBirthdayDays,
+            daysUntil: nextBirthdayDays,
+            name: `${monthName} ${dayNum}`,
+            doublePoints: true,
+            type: 'countdown_bar'
           },
           {
-            type: 'personal-streak',
-            title: 'Current Streak',
-            value: `${currentStreak} days`,
-            layout: 'col-span-2',
-            accentColor: profile?.personal_color || '#f97316'
+            title: 'Your Peak Time',
+            subtitle: 'most active hour',
+            value: peakTime,
+            data: hourCounts.map((count, hour) => ({
+              hour: `${hour}:00`,
+              count,
+              activity: count
+            })),
+            type: 'heatmap_grid'
           }
         ]
       })
@@ -1617,30 +1617,42 @@ export default function RectangularDashboard() {
                 <div className="space-y-0 border-t border-b border-gray-800">
                   {/* Top row - Personal Points (full width) */}
                   <div className="w-full border-b border-gray-800">
-                    <PersonalStatComponent 
+                    <MemoizedChartComponent 
+                      key={`personal-${personalStats.interestingStats[0].type}-0`}
                       stat={personalStats.interestingStats[0]} 
+                      index={0} 
+                      getLayoutClasses={getLayoutClasses}
                       userProfile={profile}
                     />
                   </div>
                   
-                  {/* Middle row - Workouts and Average (2 squares) */}
+                  {/* Middle row - Money Pot and Birthday (2 squares) */}
                   <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
                     <div className="border-r border-gray-800">
-                      <PersonalStatComponent 
+                      <MemoizedChartComponent 
+                        key={`personal-${personalStats.interestingStats[1].type}-1`}
                         stat={personalStats.interestingStats[1]} 
+                        index={1} 
+                        getLayoutClasses={getLayoutClasses}
                         userProfile={profile}
                       />
                     </div>
-                    <PersonalStatComponent 
+                    <MemoizedChartComponent 
+                      key={`personal-${personalStats.interestingStats[2].type}-2`}
                       stat={personalStats.interestingStats[2]} 
+                      index={2} 
+                      getLayoutClasses={getLayoutClasses}
                       userProfile={profile}
                     />
                   </div>
                   
-                  {/* Bottom row - Streak (full width rectangle) */}
+                  {/* Bottom row - Workout Times (full width rectangle) */}
                   <div className="w-full">
-                    <PersonalStatComponent 
+                    <MemoizedChartComponent 
+                      key={`personal-${personalStats.interestingStats[3].type}-3`}
                       stat={personalStats.interestingStats[3]} 
+                      index={3} 
+                      getLayoutClasses={getLayoutClasses}
                       userProfile={profile}
                     />
                   </div>
