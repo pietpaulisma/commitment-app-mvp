@@ -612,6 +612,10 @@ export default function RectangularDashboard() {
   const [showPersonalStats, setShowPersonalStats] = useState(false)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
+  const [pullDistance, setPullDistance] = useState(0)
+  const [isPulling, setIsPulling] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [pullStartY, setPullStartY] = useState(0)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -1351,6 +1355,63 @@ export default function RectangularDashboard() {
     }
   }
 
+  // Pull-to-refresh handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0) {
+      setPullStartY(e.touches[0].clientY)
+      setIsPulling(true)
+    }
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isPulling || window.scrollY > 0) return
+    
+    const currentY = e.touches[0].clientY
+    const distance = Math.max(0, currentY - pullStartY)
+    const maxPull = 120 // Maximum pull distance
+    
+    setPullDistance(Math.min(distance, maxPull))
+    
+    if (distance > 0) {
+      e.preventDefault() // Prevent scrolling when pulling
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (!isPulling) return
+    
+    const refreshThreshold = 80 // Distance needed to trigger refresh
+    
+    if (pullDistance >= refreshThreshold) {
+      triggerRefresh()
+    } else {
+      // Reset pull
+      setPullDistance(0)
+      setIsPulling(false)
+    }
+  }
+
+  const triggerRefresh = async () => {
+    setIsRefreshing(true)
+    setIsPulling(false)
+    
+    // Keep the pull distance for animation
+    setTimeout(() => {
+      setPullDistance(0)
+    }, 300)
+    
+    try {
+      await loadDashboardData()
+    } catch (error) {
+      console.error('Refresh error:', error)
+    }
+    
+    // Minimum refresh time for better UX
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 1500)
+  }
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'supreme_admin':
@@ -1381,7 +1442,52 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen pb-8">
+    <div 
+      className="min-h-screen pb-8 relative"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        transform: `translateY(${pullDistance * 0.4}px)`,
+        transition: !isPulling ? 'transform 0.3s ease-out' : 'none'
+      }}
+    >
+      {/* Pull-to-Refresh Indicator */}
+      <div 
+        className="absolute top-0 left-0 right-0 z-50 flex items-center justify-center"
+        style={{
+          transform: `translateY(${-60 + (pullDistance * 0.8)}px)`,
+          opacity: Math.min(pullDistance / 80, 1),
+          transition: !isPulling && !isRefreshing ? 'all 0.3s ease-out' : 'opacity 0.2s'
+        }}
+      >
+        <div className="bg-black/90 backdrop-blur-md border border-gray-700 rounded-full px-6 py-3 shadow-xl">
+          <div className="flex items-center space-x-3">
+            {isRefreshing ? (
+              <>
+                <div className="animate-spin w-6 h-6 border-2 border-gray-400 border-t-white rounded-full"></div>
+                <span className="text-white font-medium">💪 Great form! Refreshing...</span>
+              </>
+            ) : pullDistance >= 80 ? (
+              <>
+                <span className="text-2xl animate-bounce">🏆</span>
+                <span className="text-white font-medium">Perfect pull-up! Release to refresh</span>
+              </>
+            ) : pullDistance > 20 ? (
+              <>
+                <span className="text-2xl">💪</span>
+                <span className="text-white font-medium">A proper pull-up will result in a refresh</span>
+              </>
+            ) : (
+              <>
+                <span className="text-2xl opacity-50">💪</span>
+                <span className="text-gray-400 font-medium">Pull down for refresh</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Demo Mode Indicator */}
       {isDemoMode && (
         <div className="bg-orange-900/20 border-b border-orange-600/50 px-4 py-2">
