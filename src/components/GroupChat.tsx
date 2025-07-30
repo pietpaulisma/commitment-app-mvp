@@ -54,6 +54,7 @@ type EmojiOption = {
 type GroupChatProps = {
   isOpen: boolean
   onClose: () => void
+  onCloseStart?: () => void
 }
 
 type WorkoutCompletionMessageProps = {
@@ -154,7 +155,7 @@ const WorkoutCompletionMessage = ({ message, workoutData }: WorkoutCompletionMes
   )
 }
 
-export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
+export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatProps) {
   const { user } = useAuth()
   const { profile } = useProfile()
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -163,6 +164,11 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
   const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [groupName, setGroupName] = useState('')
+  
+  // Animation states
+  const [isAnimatedIn, setIsAnimatedIn] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  const [showIconTransition, setShowIconTransition] = useState(false)
   
   // Image upload states
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -181,10 +187,41 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
     { emoji: '😊', label: 'smile', icon: FaceSmileIcon, solidIcon: FaceSmileIconSolid }
   ]
 
+  // Handle close with animation
+  const handleClose = () => {
+    setIsClosing(true)
+    
+    // Start reverse icon animation immediately - X flips back to chat
+    setShowIconTransition(false)
+    
+    // Start modal slide down animation
+    setIsAnimatedIn(false)
+    
+    // Notify parent immediately that close animation started (for button sync)
+    if (onCloseStart) {
+      onCloseStart()
+    }
+    
+    // Wait for animation to complete, then actually close
+    setTimeout(() => {
+      onClose()
+    }, 500) // Match the CSS transition duration
+  }
+
   useEffect(() => {
     if (isOpen && profile?.group_id) {
       loadMessages()
       loadGroupName()
+      
+      // Wait for modal to be fully mounted before starting animation
+      setTimeout(() => {
+        setIsAnimatedIn(true)
+        
+        // Delay icon transition until modal reaches the top
+        setTimeout(() => {
+          setShowIconTransition(true)
+        }, 200) // Delay icon transition
+      }, 50) // Small delay to ensure DOM is ready
       
       // Set up real-time subscription
       const channel = supabase
@@ -282,6 +319,10 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
       return () => {
         supabase.removeChannel(channel)
       }
+    } else if (!isOpen) {
+      setIsAnimatedIn(false)
+      setIsClosing(false)
+      setShowIconTransition(false)
     }
   }, [isOpen, profile?.group_id])
 
@@ -648,10 +689,22 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
     )
   }
 
+  if (!isOpen) return null
+
   return (
-    <div className="fixed inset-0 bg-black z-[9999] flex flex-col fixed-fullscreen">
+    <div 
+      className="fixed inset-0 bg-black flex flex-col transition-transform duration-500 ease-out"
+      style={{ 
+        paddingTop: 'env(safe-area-inset-top)',
+        transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        touchAction: 'manipulation',
+        zIndex: isClosing ? 40 : 9999 // Slide behind bottom nav (z-50) when closing
+      }}
+    >
         {/* Header - matches workout page header style */}
-        <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="sticky top-0">
           <div className="flex">
             {/* Main header area */}
             <div className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden">
@@ -660,13 +713,31 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
               </div>
             </div>
 
-            {/* Close button - matches workout page X button */}
+            {/* Close button - matches workout page X button with icon transitions */}
             <button
-              onClick={onClose}
-              className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
+              onClick={handleClose}
+              className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
               aria-label="Close chat"
             >
-              <XMarkIcon className="w-6 h-6" />
+              {/* Chat Icon (slides up and out when modal reaches top) */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
+                style={{
+                  transform: showIconTransition ? 'translateY(-64px)' : 'translateY(0px)'
+                }}
+              >
+                <ChatBubbleLeftRightIcon className="w-6 h-6" />
+              </div>
+              
+              {/* X Icon (slides up from below when modal reaches top) */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
+                style={{
+                  transform: showIconTransition ? 'translateY(0px)' : 'translateY(64px)'
+                }}
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </div>
             </button>
           </div>
         </div>

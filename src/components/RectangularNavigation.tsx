@@ -48,6 +48,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
   const [todayLogs, setTodayLogs] = useState<any[]>([])
   const [progressAnimated, setProgressAnimated] = useState(false)
   const [showXInChatButton, setShowXInChatButton] = useState(false)
+  const [isChatAnimating, setIsChatAnimating] = useState(false)
 
   const isOnProfilePage = pathname === '/profile'
 
@@ -72,9 +73,35 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     }, 200) // Flip back to chat after 200ms
   }
 
+  const handleChatButtonClick = () => {
+    // Open modal first
+    setIsChatOpen(true)
+    onChatModalStateChange?.(true)
+    
+    // Start button animation synchronized with modal
+    setTimeout(() => {
+      setIsChatAnimating(true)
+    }, 50) // Match modal's delay
+  }
+
+  const handleChatCloseStart = () => {
+    // Start button animation immediately when modal close begins
+    setIsChatAnimating(false)
+    // Show X in chat button briefly, then flip back to chat
+    setShowXInChatButton(true)
+    setTimeout(() => {
+      setShowXInChatButton(false)
+    }, 200) // Flip back to chat after 200ms
+  }
+
   const handleWorkoutClose = () => {
     setIsWorkoutOpen(false)
     onWorkoutModalStateChange?.(false)
+  }
+
+  const handleChatClose = () => {
+    setIsChatOpen(false)
+    onChatModalStateChange?.(false)
   }
 
   useEffect(() => {
@@ -289,10 +316,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
 
           {/* Chat Button (20% width) */}
           <button
-            onClick={() => {
-              setIsChatOpen(true)
-              onChatModalStateChange?.(true)
-            }}
+            onClick={handleChatButtonClick}
             disabled={!profile.group_id}
             className={`w-16 h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none relative overflow-hidden ${
               profile.group_id 
@@ -300,7 +324,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
                 : 'bg-gray-950 text-gray-500 cursor-not-allowed'
             }`}
             style={{
-              transform: isAnimating ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
+              transform: (isAnimating || isChatAnimating) ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
               willChange: 'transform',
               backfaceVisibility: 'hidden',
               touchAction: 'manipulation'
@@ -394,10 +418,8 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       {/* Group Chat Modal */}
       <GroupChat 
         isOpen={isChatOpen} 
-        onClose={() => {
-          setIsChatOpen(false)
-          onChatModalStateChange?.(false)
-        }} 
+        onClose={handleChatClose}
+        onCloseStart={handleChatCloseStart}
       />
 
       {/* Workout Modal */}
