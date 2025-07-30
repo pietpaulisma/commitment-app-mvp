@@ -1489,7 +1489,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         style={{
                           background: weekMode === 'sane' 
                             ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)'
-                            : 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)'
+                            : 'linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%)'
                         }}
                       />
                       
@@ -1933,9 +1933,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         width: '80px',
                         height: '80px',
                         borderRadius: '50%',
-                        background: '#ef4444',
+                        background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
                         border: '4px solid rgba(0,0,0,0.3)',
-                        boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
+                        boxShadow: '0 8px 20px rgba(71, 85, 105, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
                       }}
                     >
                       −
@@ -1957,9 +1957,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         width: '80px',
                         height: '80px',
                         borderRadius: '50%',
-                        background: '#22c55e',
+                        background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 100%)`,
                         border: '4px solid rgba(0,0,0,0.3)',
-                        boxShadow: '0 8px 20px rgba(34, 197, 94, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
+                        boxShadow: `0 8px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40, inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)`
                       }}
                     >
                       +
@@ -1979,9 +1979,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         width: '48px',
                         height: '48px',
                         borderRadius: '50%',
-                        background: '#ef4444',
+                        background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
                         border: '3px solid rgba(0,0,0,0.3)',
-                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
+                        boxShadow: '0 4px 12px rgba(71, 85, 105, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
                       -10
@@ -1993,9 +1993,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         width: '48px',
                         height: '48px',
                         borderRadius: '50%',
-                        background: '#ef4444',
+                        background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
                         border: '3px solid rgba(0,0,0,0.3)',
-                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
+                        boxShadow: '0 4px 12px rgba(71, 85, 105, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
                       -5
@@ -2007,9 +2007,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         width: '48px',
                         height: '48px',
                         borderRadius: '50%',
-                        background: '#22c55e',
+                        background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 100%)`,
                         border: '3px solid rgba(0,0,0,0.3)',
-                        boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
+                        boxShadow: `0 4px 12px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30, inset 0 1px 2px rgba(255,255,255,0.2)`
                       }}
                     >
                       +5
@@ -2021,9 +2021,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         width: '48px',
                         height: '48px',
                         borderRadius: '50%',
-                        background: '#22c55e',
+                        background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 100%)`,
                         border: '3px solid rgba(0,0,0,0.3)',
-                        boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
+                        boxShadow: `0 4px 12px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30, inset 0 1px 2px rgba(255,255,255,0.2)`
                       }}
                     >
                       +10
