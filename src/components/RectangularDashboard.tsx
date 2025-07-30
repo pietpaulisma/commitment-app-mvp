@@ -1103,13 +1103,15 @@ export default function RectangularDashboard() {
               day: `D${i+1}`, 
               points: day.totalPoints 
             })),
-            type: 'line_chart'
+            type: 'line_chart',
+            layout: 'col-span-2' // Top row - full width
           },
           {
             title: 'Your Contribution',
             subtitle: 'money pot',
             value: Math.max(0, Math.round(personalMoneyContribution * 100) / 100),
-            type: 'typography_stat'
+            type: 'typography_stat',
+            layout: 'square' // Bottom left - square
           },
           {
             title: 'Your Birthday',
@@ -1118,7 +1120,8 @@ export default function RectangularDashboard() {
             daysUntil: nextBirthdayDays,
             name: `${monthName} ${dayNum}`,
             doublePoints: true,
-            type: 'countdown_bar'
+            type: 'countdown_bar',
+            layout: 'square' // Bottom right - square  
           },
           {
             title: 'Your Peak Time',
@@ -1129,7 +1132,8 @@ export default function RectangularDashboard() {
               count,
               activity: count
             })),
-            type: 'heatmap_grid'
+            type: 'heatmap_grid',
+            layout: 'col-span-2' // Bottom - full width rectangle
           }
         ]
       })
