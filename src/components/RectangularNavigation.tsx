@@ -60,13 +60,14 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     }, 50) // Match modal's delay
   }
 
+  const handleWorkoutCloseStart = () => {
+    // Start button animation immediately when modal close begins
+    setIsAnimating(false)
+  }
+
   const handleWorkoutClose = () => {
     setIsWorkoutOpen(false)
     onWorkoutModalStateChange?.(false)
-    // Keep button hidden until modal animation completes
-    setTimeout(() => {
-      setIsAnimating(false)
-    }, 500) // Match modal's exact duration
   }
 
   useEffect(() => {
@@ -378,6 +379,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       <WorkoutModal 
         isOpen={isWorkoutOpen} 
         onClose={handleWorkoutClose}
+        onCloseStart={handleWorkoutCloseStart}
         onWorkoutAdded={loadDailyProgress}
         isAnimating={isAnimating}
       />

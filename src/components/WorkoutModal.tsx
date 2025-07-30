@@ -48,9 +48,10 @@ type WorkoutModalProps = {
   onClose: () => void
   onWorkoutAdded?: () => void
   isAnimating?: boolean
+  onCloseStart?: () => void
 }
 
-export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimating = false }: WorkoutModalProps) {
+export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimating = false, onCloseStart }: WorkoutModalProps) {
   const { user } = useAuth()
   const { profile } = useProfile()
   const { weekMode, setWeekMode, isWeekModeAvailable } = useWeekMode()
@@ -152,8 +153,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     setShowIconTransition(false) // Reset icons first
     setIsAnimatedIn(false)
     
-    // Immediately notify parent that button should start appearing
-    onClose()
+    // Notify parent immediately that close animation started (for button sync)
+    if (onCloseStart) {
+      onCloseStart()
+    }
+    
+    // Wait for animation to complete, then actually close
+    setTimeout(() => {
+      console.log('Animation complete, closing modal')
+      onClose()
+    }, 500) // Match the CSS transition duration
   }
 
   // Shared function to load group data and calculate target
