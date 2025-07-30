@@ -63,10 +63,10 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
   const handleWorkoutClose = () => {
     setIsWorkoutOpen(false)
     onWorkoutModalStateChange?.(false)
-    // Reset animation state after modal closes - match modal's 500ms duration
+    // Keep button hidden until modal animation completes
     setTimeout(() => {
       setIsAnimating(false)
-    }, 500)
+    }, 500) // Match modal's exact duration
   }
 
   useEffect(() => {

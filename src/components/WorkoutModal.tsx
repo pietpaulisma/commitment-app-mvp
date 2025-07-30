@@ -152,11 +152,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     setShowIconTransition(false) // Reset icons first
     setIsAnimatedIn(false)
     
-    // Wait for animation to complete, then actually close
-    setTimeout(() => {
-      console.log('Animation complete, closing modal')
-      onClose()
-    }, 500) // Match the CSS transition duration
+    // Immediately notify parent that button should start appearing
+    onClose()
   }
 
   // Shared function to load group data and calculate target
