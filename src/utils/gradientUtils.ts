@@ -114,19 +114,17 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     console.log('- Purple section width:', purpleWidth + '%')
   }
   
-  // Extended fade to black - increased to 20%
-  const fadeStart = totalProgress - 20  // Start fade 20% before end 
-  if (fadeStart > 0) {
-    gradientStops.push(`#00000066 ${fadeStart}%`)
-  }
-  
-  // Add 20% fade out at the end where progress meets black background
+  // Add smooth fade out extending 20% beyond progress end
   const fadeOutStart = totalProgress
   const fadeOutEnd = Math.min(100, totalProgress + 20)
-  gradientStops.push(`#000000 ${fadeOutStart}%`)
+  
+  // Create seamless transition from last color to black
   if (fadeOutEnd > fadeOutStart) {
-    gradientStops.push(`#00000099 ${(fadeOutStart + fadeOutEnd) / 2}%`) // Mid-fade
-    gradientStops.push(`#000000 ${fadeOutEnd}%`)
+    gradientStops.push(`#00000033 ${fadeOutStart + 5}%`) // Very light fade start
+    gradientStops.push(`#00000066 ${fadeOutStart + 10}%`) // Medium fade
+    gradientStops.push(`#000000 ${fadeOutEnd}%`) // Full black
+  } else {
+    gradientStops.push(`#000000 ${fadeOutStart}%`)
   }
   gradientStops.push(`#000000 100%`)
   
