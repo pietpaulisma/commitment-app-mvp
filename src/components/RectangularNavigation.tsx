@@ -51,20 +51,20 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
 
   const handleWorkoutButtonClick = () => {
     setIsAnimating(true)
-    // Small delay to ensure animation state is set before opening modal
-    setTimeout(() => {
+    // Start modal immediately for smooth PWA experience
+    requestAnimationFrame(() => {
       setIsWorkoutOpen(true)
       onWorkoutModalStateChange?.(true)
-    }, 50)
+    })
   }
 
   const handleWorkoutClose = () => {
     setIsWorkoutOpen(false)
     onWorkoutModalStateChange?.(false)
-    // Reset animation state after modal closes
+    // Reset animation state after modal closes - match modal's 500ms duration
     setTimeout(() => {
       setIsAnimating(false)
-    }, 300)
+    }, 500)
   }
 
   useEffect(() => {
@@ -234,9 +234,13 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={handleWorkoutButtonClick}
-            className={`flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-all duration-500 ease-out ${
-              isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
-            }`}
+            className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-all duration-500 ease-out"
+            style={{
+              transform: isAnimating ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              touchAction: 'manipulation'
+            }}
           >
             {/* Stacked gradient progress background with subtle animation */}
             <div 
@@ -284,9 +288,13 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
               profile.group_id 
                 ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
                 : 'bg-gray-950 text-gray-500 cursor-not-allowed'
-            } ${
-              isAnimating ? 'transform -translate-y-full' : 'transform translate-y-0'
             }`}
+            style={{
+              transform: isAnimating ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              touchAction: 'manipulation'
+            }}
           >
             <ChatBubbleLeftRightIcon className="w-6 h-6" />
           </button>

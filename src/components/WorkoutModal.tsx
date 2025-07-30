@@ -124,8 +124,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       loadTodaysWorkouts()
       loadFavoriteExercises()
       
-      // Trigger slide-up animation after component mounts
-      setTimeout(() => {
+      // Trigger slide-up animation immediately for smooth mobile experience
+      requestAnimationFrame(() => {
         console.log('Setting isAnimatedIn to true')
         setIsAnimatedIn(true)
         
@@ -134,7 +134,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           console.log('Starting icon transition - chat pushed out by X')
           setShowIconTransition(true)
         }, 400) // Start icon transition near end of modal slide-up
-      }, 100) // Increased delay to be more visible
+      })
       
       // Trigger subtle progress animation after modal loads
       setTimeout(() => setProgressAnimated(true), 300)
@@ -1154,7 +1154,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         className="fixed inset-0 bg-black z-[9999] flex flex-col transition-transform duration-500 ease-out"
         style={{ 
           paddingTop: 'env(safe-area-inset-top)',
-          transform: isAnimatedIn ? 'translateY(0)' : 'translateY(100vh)'
+          transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          touchAction: 'manipulation'
         }}
       >
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
