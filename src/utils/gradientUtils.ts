@@ -119,7 +119,15 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
   if (fadeStart > 0) {
     gradientStops.push(`#00000066 ${fadeStart}%`)
   }
-  gradientStops.push(`#000000 ${totalProgress}%`)
+  
+  // Add 20% fade out at the end where progress meets black background
+  const fadeOutStart = totalProgress
+  const fadeOutEnd = Math.min(100, totalProgress + 20)
+  gradientStops.push(`#000000 ${fadeOutStart}%`)
+  if (fadeOutEnd > fadeOutStart) {
+    gradientStops.push(`#00000099 ${(fadeOutStart + fadeOutEnd) / 2}%`) // Mid-fade
+    gradientStops.push(`#000000 ${fadeOutEnd}%`)
+  }
   gradientStops.push(`#000000 100%`)
   
   const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
