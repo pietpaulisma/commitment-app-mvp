@@ -1869,25 +1869,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Workout Input Overlay - Redesigned */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-            <div className="relative bg-black border border-gray-700 rounded-3xl w-96 h-96 overflow-hidden shadow-2xl">
+            <div className="relative bg-black border border-gray-700 rounded-lg w-96 h-[32rem] overflow-hidden shadow-2xl">
               
               {/* Header - Exercise Button Style with Progress Bar */}
               <div className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
                 <div className="flex">
                   {/* Main content area with progress bar - matches exercise button layout */}
                   <div className="flex-1 relative overflow-hidden">
-                    {/* Diagonal swoosh gradient progress bar background */}
+                    {/* Live progress bar background */}
                     <div 
-                      className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                      className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out"
                       style={{ 
-                        width: '100%',
-                        background: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) === 0 
-                          ? '#000000'
-                          : `linear-gradient(to right, 
-                            ${getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'linear')} 0%, 
-                            ${getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'linear')} ${Math.max(0, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100) - 5)}%, 
-                            ${getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'diagonal')} ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100)}%, 
-                            #000000 ${Math.min(100, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100) + 3)}%)`
+                        width: `${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100)}%`,
+                        background: getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'linear')
                       }}
                     />
                     
@@ -1917,10 +1911,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   {/* Close button - matches exercise button X layout exactly */}
                   <button
                     onClick={() => setWorkoutInputOpen(false)}
-                    className="w-16 h-16 flex items-center justify-center hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors duration-200"
+                    className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
                     aria-label="Close workout input"
                   >
-                    <XMarkIcon className="w-5 h-5" />
+                    <XMarkIcon className="w-6 h-6" />
                   </button>
                 </div>
               </div>
@@ -1929,10 +1923,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 {/* Counter Section */}
                 <div className="mb-4">
                   {/* Main counter with - and + buttons */}
-                  <div className="flex items-center justify-center gap-4 mb-3">
+                  <div className="flex items-center justify-center gap-6 mb-4">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 hover:scale-110 active:scale-95 border-0"
                       style={{
                         background: getButtonGradient('red'),
                         boxShadow: getButtonShadow('red')
@@ -1945,13 +1939,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       type="number"
                       value={workoutCount}
                       onChange={(e) => setWorkoutCount(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="text-4xl font-black text-white text-center bg-transparent border-none outline-none w-16"
+                      className="text-5xl font-black text-white text-center bg-transparent border-none outline-none w-20"
                       style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}
                     />
                     
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 hover:scale-110 active:scale-95 border-0"
                       style={{
                         background: getButtonGradient('green'),
                         boxShadow: getButtonShadow('green')
@@ -2016,11 +2010,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {/* Weight Options */}
                     {selectedWorkoutExercise.is_weighted && (
                       <div>
-                        <h4 className="text-white font-semibold text-center mb-2 text-xs uppercase tracking-wide">Weight</h4>
-                        <div className="flex flex-wrap justify-center gap-2">
+                        <h4 className="text-white font-semibold text-center mb-3 text-xs uppercase tracking-wide">Weight</h4>
+                        <div className="grid grid-cols-4 gap-2 max-w-xs mx-auto">
                           <button
                             onClick={() => handleWeightClick(0)}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
+                            className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
                               lockedWeight === 0 ? 'border-2 border-yellow-400' : ''
                             }`}
                             style={{
@@ -2040,11 +2034,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               </div>
                             )}
                           </button>
-                          {[5, 10, 15, 20, 25, 30].map((weight) => (
+                          {[5, 10, 15, 20, 25, 30, 35].map((weight) => (
                             <button
                               key={weight}
                               onClick={() => handleWeightClick(weight)}
-                              className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
+                              className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
                                 lockedWeight === weight ? 'border-2 border-yellow-400' : ''
                               }`}
                               style={{
