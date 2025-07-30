@@ -650,19 +650,25 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
 
   return (
     <div className="fixed inset-0 bg-black z-[9999] flex flex-col fixed-fullscreen">
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2.5rem)' }}>
-          <div>
-            <h3 className="text-lg font-semibold text-white">{groupName} Chat</h3>
-            <p className="text-sm text-gray-400">Group discussion</p>
+        {/* Header - matches workout page header style */}
+        <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <div className="flex">
+            {/* Main header area */}
+            <div className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden">
+              <div className="relative h-full flex items-center justify-center px-6 text-white">
+                <h1 className="text-2xl font-bold text-white">Group Chat</h1>
+              </div>
+            </div>
+
+            {/* Close button - matches workout page X button */}
+            <button
+              onClick={onClose}
+              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200"
+              aria-label="Close chat"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg"
-            aria-label="Close chat"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
         </div>
 
         {/* Messages */}

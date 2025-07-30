@@ -11,7 +11,8 @@ import {
   UsersIcon,
   ClipboardDocumentListIcon,
   AdjustmentsHorizontalIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 export default function NewMobileProfile() {
@@ -45,9 +46,29 @@ export default function NewMobileProfile() {
 
   return (
     <div className="min-h-screen bg-black pb-20">
-      {/* Dashboard-style Header */}
-      <div className="px-4 pt-8 pb-6">
-        <h1 className="text-4xl font-black text-white mb-2">Profile</h1>
+      {/* Header - matches workout page header style */}
+      <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="flex">
+          {/* Main header area */}
+          <div className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden">
+            <div className="relative h-full flex items-center justify-center px-6 text-white">
+              <h1 className="text-2xl font-bold text-white">Profile</h1>
+            </div>
+          </div>
+
+          {/* Close button - matches workout page X button */}
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200"
+            aria-label="Back to dashboard"
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Welcome message */}
+      <div className="px-4 pt-6 pb-6">
         <p className="text-xl text-gray-300">Hey, {username}!</p>
       </div>
 
