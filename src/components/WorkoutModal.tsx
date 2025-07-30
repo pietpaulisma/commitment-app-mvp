@@ -1869,7 +1869,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Workout Input Overlay - Redesigned */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-            <div className="relative bg-black border border-gray-700 rounded-lg w-96 h-[32rem] overflow-hidden shadow-2xl">
+            <div className="relative bg-black border border-gray-700 rounded-lg w-96 h-[36rem] overflow-hidden shadow-2xl">
               
               {/* Header - Exercise Button Style with Progress Bar */}
               <div className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
@@ -1880,7 +1880,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <div 
                       className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out"
                       style={{ 
-                        width: `${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100)}%`,
+                        width: `${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget - dailyProgress)) * 100)}%`,
                         background: getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'linear')
                       }}
                     />
@@ -1900,10 +1900,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         </div>
                       </div>
                       <div className="ml-auto text-right">
-                        <span className="font-medium text-white text-xl">
-                          {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)}
-                        </span>
-                        <span className="font-thin text-white ml-1">pts</span>
+                        <div className="text-xl font-bold text-white">
+                          {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {Math.max(0, dailyTarget - dailyProgress)} remaining
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1919,17 +1921,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              <div className="p-4 h-80 flex flex-col">
+              <div className="p-4 flex-1 flex flex-col">
                 {/* Counter Section */}
                 <div className="mb-4">
                   {/* Main counter with - and + buttons */}
                   <div className="flex items-center justify-center gap-6 mb-4">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 hover:scale-110 active:scale-95 border-0"
+                      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
-                        background: getButtonGradient('red'),
-                        boxShadow: getButtonShadow('red')
+                        background: '#ef4444',
+                        border: '3px solid rgba(0,0,0,0.2)',
+                        boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
                       }}
                     >
                       −
@@ -1945,10 +1948,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 hover:scale-110 active:scale-95 border-0"
+                      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
-                        background: getButtonGradient('green'),
-                        boxShadow: getButtonShadow('green')
+                        background: '#22c55e',
+                        border: '3px solid rgba(0,0,0,0.2)',
+                        boxShadow: '0 8px 20px rgba(34, 197, 94, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
                       }}
                     >
                       +
@@ -1959,44 +1963,48 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {selectedWorkoutExercise.unit}{selectedWorkoutExercise.unit !== 'rep' && 's'}
                   </div>
 
-                  {/* Quick adjustment buttons - connected element */}
-                  <div className="flex rounded-full overflow-hidden border border-gray-600">
+                  {/* Quick adjustment buttons - round individual buttons */}
+                  <div className="flex justify-center gap-3">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 10))}
-                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
-                        background: getButtonGradient('red'),
-                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
+                        background: '#ef4444',
+                        border: '2px solid rgba(0,0,0,0.2)',
+                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
                       -10
                     </button>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 5))}
-                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110 border-l border-r border-gray-600"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
-                        background: getButtonGradient('red'),
-                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
+                        background: '#ef4444',
+                        border: '2px solid rgba(0,0,0,0.2)',
+                        boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
                       -5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
-                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110 border-l border-r border-gray-600"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
-                        background: getButtonGradient('green'),
-                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
+                        background: '#22c55e',
+                        border: '2px solid rgba(0,0,0,0.2)',
+                        boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
                       +5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
-                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
-                        background: getButtonGradient('green'),
-                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
+                        background: '#22c55e',
+                        border: '2px solid rgba(0,0,0,0.2)',
+                        boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
                       +10
@@ -2014,16 +2022,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         <div className="grid grid-cols-4 gap-2 max-w-xs mx-auto">
                           <button
                             onClick={() => handleWeightClick(0)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
-                              lockedWeight === 0 ? 'border-2 border-yellow-400' : ''
-                            }`}
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
                             style={{
-                              background: selectedWeight === 0 
-                                ? getButtonGradient('green')
-                                : getButtonGradient('gray'),
+                              background: selectedWeight === 0 ? '#22c55e' : '#4b5563',
+                              border: lockedWeight === 0 ? '3px solid #fbbf24' : '2px solid rgba(0,0,0,0.2)',
                               boxShadow: selectedWeight === 0 
-                                ? getButtonShadow('green')
-                                : getButtonShadow('gray'),
+                                ? '0 4px 12px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
+                                : '0 4px 12px rgba(75, 85, 99, 0.3), inset 0 1px 2px rgba(255,255,255,0.1)',
                               color: 'white'
                             }}
                           >
@@ -2038,16 +2043,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             <button
                               key={weight}
                               onClick={() => handleWeightClick(weight)}
-                              className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
-                                lockedWeight === weight ? 'border-2 border-yellow-400' : ''
-                              }`}
+                              className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
                               style={{
-                                background: selectedWeight === weight 
-                                  ? getButtonGradient('green')
-                                  : getButtonGradient('gray'),
+                                background: selectedWeight === weight ? '#22c55e' : '#4b5563',
+                                border: lockedWeight === weight ? '3px solid #fbbf24' : '2px solid rgba(0,0,0,0.2)',
                                 boxShadow: selectedWeight === weight 
-                                  ? getButtonShadow('green')
-                                  : getButtonShadow('gray'),
+                                  ? '0 4px 12px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
+                                  : '0 4px 12px rgba(75, 85, 99, 0.3), inset 0 1px 2px rgba(255,255,255,0.1)',
                                 color: 'white'
                               }}
                             >
@@ -2063,47 +2065,39 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       </div>
                     )}
 
-                    {/* Decreased Exercise Option */}
+                    {/* Decreased Exercise Toggle */}
                     {selectedWorkoutExercise.supports_decreased && (
-                      <div className="relative overflow-hidden rounded-lg">
-                        <div 
-                          className="absolute inset-0 opacity-15"
-                          style={{
-                            background: `linear-gradient(135deg, #f59e0b25 0%, transparent 100%)`
-                          }}
-                        />
-                        <div className="relative p-3">
-                          <h4 className="text-white font-semibold text-center mb-2 text-sm uppercase tracking-wide">Difficulty</h4>
-                          <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <h4 className="text-white font-semibold text-center mb-3 text-xs uppercase tracking-wide">Difficulty</h4>
+                        <div className="flex justify-center">
+                          <div className="relative inline-flex items-center">
                             <button
-                              onClick={() => setIsDecreasedExercise(false)}
-                              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all duration-300 ${
-                                !isDecreasedExercise 
-                                  ? 'text-black shadow-md' 
-                                  : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/40'
-                              }`}
-                              style={!isDecreasedExercise ? {
-                                background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}85 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}65 100%)`,
-                                boxShadow: `0 4px 15px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}35`
-                              } : {}}
-                            >
-                              Regular
-                            </button>
-                            <button
-                              onClick={() => setIsDecreasedExercise(true)}
-                              className={`py-2 px-3 rounded-lg text-xs font-bold transition-all duration-300 ${
+                              onClick={() => setIsDecreasedExercise(!isDecreasedExercise)}
+                              className={`relative w-16 h-8 rounded-full transition-all duration-300 ${
                                 isDecreasedExercise 
-                                  ? 'text-black shadow-md' 
-                                  : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/40'
+                                  ? 'bg-amber-500' 
+                                  : 'bg-gray-600'
                               }`}
-                              style={isDecreasedExercise ? {
-                                background: `linear-gradient(135deg, #f59e0b85 0%, #f59e0b65 100%)`,
-                                boxShadow: `0 4px 15px #f59e0b35`
-                              } : {}}
+                              style={{
+                                boxShadow: isDecreasedExercise 
+                                  ? '0 4px 12px rgba(245, 158, 11, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
+                                  : '0 4px 12px rgba(75, 85, 99, 0.3), inset 0 1px 2px rgba(255,255,255,0.1)'
+                              }}
                             >
-                              <div>Decreased</div>
-                              <div className="text-xs opacity-75">+50%</div>
+                              <div
+                                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                                  isDecreasedExercise ? 'translate-x-8' : 'translate-x-0'
+                                }`}
+                              />
                             </button>
+                            <div className="ml-3 text-white">
+                              <div className="text-sm font-medium">
+                                {isDecreasedExercise ? 'Decreased' : 'Regular'}
+                              </div>
+                              {isDecreasedExercise && (
+                                <div className="text-xs text-amber-300">+50% points</div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2111,8 +2105,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 )}
 
-                {/* Save Button */}
-                <div className="relative overflow-hidden rounded-full">
+                {/* Submit Button */}
+                <div className="mt-auto pt-4">
                   <button
                     onClick={async () => {
                       if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
@@ -2165,20 +2159,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       }
                     }}
                     disabled={loading || workoutCount <= 0}
-                    className="w-full py-4 px-6 rounded-full font-bold text-white transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative overflow-hidden"
+                    className="w-full py-4 px-6 rounded-full font-bold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     style={{
                       background: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
-                        ? getButtonGradient('exercise', selectedWorkoutExercise.type)
-                        : getButtonGradient('gray'),
+                        ? '#22c55e'
+                        : '#4b5563',
+                      border: '2px solid rgba(0,0,0,0.2)',
                       boxShadow: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
-                        ? getButtonShadow('exercise')
-                        : getButtonShadow('gray'),
-                      border: 'none'
+                        ? '0 6px 20px rgba(34, 197, 94, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
+                        : '0 6px 20px rgba(75, 85, 99, 0.3), inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.3)'
                     }}
                   >
-                    <span className="relative z-10">
-                      {loading ? 'Submitting...' : `Submit ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
-                    </span>
+                    {loading ? 'Submitting...' : `Submit ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
                   </button>
                 </div>
               </div>
