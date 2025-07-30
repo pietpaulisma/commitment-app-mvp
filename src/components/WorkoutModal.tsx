@@ -1172,7 +1172,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
           )}
           
-          {!exercisesLoading && exercises.length > 0 && !showSportSelection && (
+          {!exercisesLoading && exercises.length > 0 && (
             <>
 
               {/* Current Workouts Section */}
