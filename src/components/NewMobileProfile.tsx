@@ -5,6 +5,14 @@ import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { 
+  CogIcon,
+  UserGroupIcon,
+  UsersIcon,
+  ClipboardDocumentListIcon,
+  AdjustmentsHorizontalIcon,
+  ArrowRightOnRectangleIcon
+} from '@heroicons/react/24/outline'
 
 export default function NewMobileProfile() {
   const { user, loading: authLoading, signOut } = useAuth()
@@ -48,46 +56,96 @@ export default function NewMobileProfile() {
         {/* Admin Tools Section */}
         {(profile.role === 'supreme_admin' || profile.role === 'group_admin') && (
           <div>
-            <h2 className="text-2xl font-bold text-white mb-4">Admin Tools</h2>
-            <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-white mb-6">Admin Tools</h2>
+            <div className="space-y-4">
               {profile.role === 'supreme_admin' && (
                 <>
                   <Link 
                     href="/admin"
-                    className="w-full bg-gray-900/30 hover:bg-gray-900/50 text-white py-4 px-6 rounded-lg transition-colors flex items-center justify-between"
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
                   >
-                    <span className="font-medium">System Administration</span>
-                    <span className="text-gray-400">→</span>
+                    <CogIcon className="w-6 h-6 text-blue-400 group-hover:text-blue-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">System Administration</div>
+                      <div className="text-sm text-gray-400">Manage users, settings & system</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
                   </Link>
+                  
                   <Link 
                     href="/admin/groups"
-                    className="w-full bg-gray-900/30 hover:bg-gray-900/50 text-white py-4 px-6 rounded-lg transition-colors flex items-center justify-between"
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
                   >
-                    <span className="font-medium">Manage All Groups</span>
-                    <span className="text-gray-400">→</span>
+                    <UserGroupIcon className="w-6 h-6 text-green-400 group-hover:text-green-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">Manage All Groups</div>
+                      <div className="text-sm text-gray-400">View & edit all workout groups</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                  </Link>
+                  
+                  <Link 
+                    href="/admin/users"
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
+                  >
+                    <UsersIcon className="w-6 h-6 text-purple-400 group-hover:text-purple-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">Manage Users</div>
+                      <div className="text-sm text-gray-400">User accounts & permissions</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                  </Link>
+                  
+                  <Link 
+                    href="/admin/exercises"
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
+                  >
+                    <ClipboardDocumentListIcon className="w-6 h-6 text-orange-400 group-hover:text-orange-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">Manage Exercises</div>
+                      <div className="text-sm text-gray-400">Exercise library & categories</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                  </Link>
+                  
+                  <Link 
+                    href="/admin/group-exercises"
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
+                  >
+                    <AdjustmentsHorizontalIcon className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">Group Exercises</div>
+                      <div className="text-sm text-gray-400">Assign exercises to groups</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
                   </Link>
                 </>
               )}
               {(profile.role === 'group_admin' || profile.role === 'supreme_admin') && (
                 <Link 
                   href="/group-admin"
-                  className="w-full bg-gray-900/30 hover:bg-gray-900/50 text-white py-4 px-6 rounded-lg transition-colors flex items-center justify-between"
+                  className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
                 >
-                  <span className="font-medium">Group Management</span>
-                  <span className="text-gray-400">→</span>
+                  <UserGroupIcon className="w-6 h-6 text-indigo-400 group-hover:text-indigo-300" />
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-white">Group Management</div>
+                    <div className="text-sm text-gray-400">Manage your workout group</div>
+                  </div>
+                  <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
                 </Link>
               )}
             </div>
           </div>
         )}
 
-        {/* Subtle Sign Out */}
+        {/* Sign Out Button */}
         <div className="pt-8">
           <button
             onClick={signOut}
-            className="text-gray-400 hover:text-white text-sm transition-colors"
+            className="w-full bg-red-900/20 hover:bg-red-900/30 border border-red-800/50 hover:border-red-700 text-red-300 hover:text-red-200 py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium"
           >
-            Sign out
+            <ArrowRightOnRectangleIcon className="w-5 h-5" />
+            Sign Out
           </button>
         </div>
       </div>
