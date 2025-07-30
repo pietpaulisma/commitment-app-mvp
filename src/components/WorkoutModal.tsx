@@ -952,17 +952,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const handleSliderMove = (e: React.TouchEvent | React.MouseEvent) => {
     if (!isDragging) return
     
-    const slider = e.currentTarget as HTMLElement
-    const rect = slider.getBoundingClientRect()
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-    const position = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-    
-    setSliderPosition(position)
-    
-    // Complete if slider reaches 85% or more
-    if (position >= 85) {
-      setIsSliderComplete(true)
-    }
+    // Use requestAnimationFrame to throttle updates for smooth performance
+    requestAnimationFrame(() => {
+      const slider = e.currentTarget as HTMLElement
+      const rect = slider.getBoundingClientRect()
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+      const position = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+      
+      setSliderPosition(position)
+      
+      // Complete if slider reaches 85% or more
+      if (position >= 85 && !isSliderComplete) {
+        setIsSliderComplete(true)
+      }
+    })
   }
 
   const handleSliderEnd = async () => {

@@ -14,11 +14,19 @@ export default function Dashboard() {
   const pathname = usePathname()
 
   useEffect(() => {
+    let ticking = false
+    
     const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const threshold = window.innerHeight * 0.3 // 30% of viewport height
-      setIsScrolled(currentScrollY > threshold)
-      setScrollY(currentScrollY)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY
+          const threshold = window.innerHeight * 0.3 // 30% of viewport height
+          setIsScrolled(currentScrollY > threshold)
+          setScrollY(currentScrollY)
+          ticking = false
+        })
+        ticking = true
+      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -31,7 +39,8 @@ export default function Dashboard() {
       <div 
         className="absolute inset-0 h-[50vh] z-0"
         style={{
-          transform: `translateY(${scrollY * -0.3}px)`
+          transform: `translateY(${scrollY * -0.3}px)`,
+          willChange: 'transform'
         }}
       >
         <TimeGradient />

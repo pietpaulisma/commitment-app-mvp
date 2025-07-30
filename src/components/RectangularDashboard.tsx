@@ -638,8 +638,16 @@ export default function RectangularDashboard() {
 
   // Parallax scroll effect
   useEffect(() => {
+    let ticking = false
+    
     const handleScroll = () => {
-      setScrollY(window.scrollY)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrollY(window.scrollY)
+          ticking = false
+        })
+        ticking = true
+      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -1314,7 +1322,8 @@ export default function RectangularDashboard() {
           className="relative overflow-hidden"
           style={{
             marginTop: 'calc(env(safe-area-inset-top) + 80px)', // Mobile: safe area + reduced spacing
-            transform: `translateY(${scrollY * 0.1}px)`
+            transform: `translateY(${scrollY * 0.1}px)`,
+            willChange: 'transform'
           }}
         >
           <style jsx>{`
@@ -1377,7 +1386,8 @@ export default function RectangularDashboard() {
       <div 
         className="bg-black pt-6 rounded-t-3xl relative z-10"
         style={{
-          transform: `translateY(${scrollY * -0.05}px)`
+          transform: `translateY(${scrollY * -0.05}px)`,
+          willChange: 'transform'
         }}
       >
         <div className="px-4 pb-4">
@@ -1388,7 +1398,8 @@ export default function RectangularDashboard() {
       <div 
         className="space-y-0 relative z-10"
         style={{
-          transform: `translateY(${scrollY * -0.05}px)`
+          transform: `translateY(${scrollY * -0.05}px)`,
+          willChange: 'transform'
         }}
       >
         {/* Group Status */}
