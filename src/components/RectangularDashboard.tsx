@@ -1720,6 +1720,7 @@ export default function RectangularDashboard() {
                   <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
                 </div>
               </div>
+            )
             )}
           </div>
         </div>
