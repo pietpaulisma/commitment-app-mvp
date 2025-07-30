@@ -638,16 +638,8 @@ export default function RectangularDashboard() {
 
   // Parallax scroll effect
   useEffect(() => {
-    let ticking = false
-    
     const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          setScrollY(window.scrollY)
-          ticking = false
-        })
-        ticking = true
-      }
+      setScrollY(window.scrollY)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })

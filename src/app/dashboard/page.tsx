@@ -21,8 +21,17 @@ export default function Dashboard() {
         requestAnimationFrame(() => {
           const currentScrollY = window.scrollY
           const threshold = window.innerHeight * 0.3 // 30% of viewport height
+          
+          // Update state less frequently for better performance
           setIsScrolled(currentScrollY > threshold)
           setScrollY(currentScrollY)
+          
+          // Direct DOM manipulation for smoother parallax
+          const parallaxElement = document.querySelector('.parallax-bg')
+          if (parallaxElement) {
+            (parallaxElement as HTMLElement).style.transform = `translate3d(0, ${currentScrollY * -0.3}px, 0)`
+          }
+          
           ticking = false
         })
         ticking = true
@@ -37,9 +46,8 @@ export default function Dashboard() {
     <div className="relative min-h-screen bg-black overflow-hidden">
       {/* Unified gradient background covering 50% landing area with parallax */}
       <div 
-        className="absolute inset-0 h-[50vh] z-0"
+        className="parallax-bg absolute inset-0 h-[50vh] z-0"
         style={{
-          transform: `translateY(${scrollY * -0.3}px)`,
           willChange: 'transform'
         }}
       >
