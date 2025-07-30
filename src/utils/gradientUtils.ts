@@ -133,3 +133,67 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
   console.log('=== End Shared Gradient Debug ===')
   return gradient
 }
+
+// Centralized exercise type gradients with diagonal swoosh and 20% fade
+export const getExerciseTypeGradient = (type: string, exerciseId: string = '', variant: 'diagonal' | 'linear' | 'button' = 'diagonal'): string => {
+  const baseColors = {
+    'all': {
+      primary: '#3b82f6',
+      secondary: '#1d4ed8',
+      accent: '#2563eb'
+    },
+    'recovery': {
+      primary: '#22c55e',
+      secondary: '#15803d',
+      accent: '#16a34a'
+    },
+    'sports': {
+      primary: '#a855f7',
+      secondary: '#7c3aed',
+      accent: '#9333ea'
+    }
+  }
+  
+  const colors = baseColors[type as keyof typeof baseColors] || baseColors['all']
+  
+  switch (variant) {
+    case 'diagonal':
+      // Diagonal swoosh with 20% fade
+      return `linear-gradient(135deg, ${colors.primary}80 0%, ${colors.secondary}60 30%, ${colors.accent}40 60%, transparent 80%)`
+    
+    case 'button':
+      // Rich gradient for buttons with bevel effect
+      return `linear-gradient(145deg, ${colors.primary} 0%, ${colors.accent} 30%, ${colors.secondary} 70%, ${colors.primary}dd 100%)`
+    
+    case 'linear':
+    default:
+      // Standard linear gradient
+      return `linear-gradient(90deg, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.accent} 100%)`
+  }
+}
+
+// Specialized button gradients with bevel/emboss effect
+export const getButtonGradient = (color: 'red' | 'green' | 'yellow' | 'gray' | 'exercise', exerciseType?: string): string => {
+  const gradients = {
+    red: 'linear-gradient(145deg, #ef4444 0%, #dc2626 30%, #b91c1c 70%, #991b1b 100%)',
+    green: 'linear-gradient(145deg, #22c55e 0%, #16a34a 30%, #15803d 70%, #166534 100%)',
+    yellow: 'linear-gradient(145deg, #eab308 0%, #ca8a04 30%, #a16207 70%, #92400e 100%)',
+    gray: 'linear-gradient(145deg, #6b7280 0%, #4b5563 30%, #374151 70%, #1f2937 100%)',
+    exercise: exerciseType ? getExerciseTypeGradient(exerciseType, '', 'button') : 'linear-gradient(145deg, #3b82f6 0%, #2563eb 30%, #1d4ed8 70%, #1e40af 100%)'
+  }
+  
+  return gradients[color]
+}
+
+// Box shadow for buttons with bevel effect
+export const getButtonShadow = (color: 'red' | 'green' | 'yellow' | 'gray' | 'exercise'): string => {
+  const shadows = {
+    red: '0 4px 15px rgba(239, 68, 68, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.2)',
+    green: '0 4px 15px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.2)',
+    yellow: '0 4px 15px rgba(234, 179, 8, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.2)',
+    gray: '0 4px 15px rgba(107, 114, 128, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.1), inset 0 -1px 2px rgba(0, 0, 0, 0.3)',
+    exercise: '0 4px 15px rgba(59, 130, 246, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.2), inset 0 -1px 2px rgba(0, 0, 0, 0.2)'
+  }
+  
+  return shadows[color]
+}

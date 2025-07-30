@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { createCumulativeGradient } from '@/utils/gradientUtils'
+import { createCumulativeGradient, getExerciseTypeGradient, getButtonGradient, getButtonShadow } from '@/utils/gradientUtils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
@@ -1869,14 +1869,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Workout Input Overlay - Redesigned */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-            <div className="relative bg-black border border-gray-700 rounded-3xl max-w-sm w-full max-h-[95vh] overflow-hidden shadow-2xl">
+            <div className="relative bg-black border border-gray-700 rounded-3xl w-96 h-96 overflow-hidden shadow-2xl">
               
               {/* Header - Exercise Button Style with Progress Bar */}
               <div className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
                 <div className="flex">
                   {/* Main content area with progress bar - matches exercise button layout */}
                   <div className="flex-1 relative overflow-hidden">
-                    {/* Liquid gradient progress bar background */}
+                    {/* Diagonal swoosh gradient progress bar background */}
                     <div 
                       className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
                       style={{ 
@@ -1884,15 +1884,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         background: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) === 0 
                           ? '#000000'
                           : `linear-gradient(to right, 
-                            ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} 0%, 
-                            ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} ${Math.max(0, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100) - 5)}%, 
-                            ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}dd ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100)}%, 
+                            ${getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'linear')} 0%, 
+                            ${getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'linear')} ${Math.max(0, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100) - 5)}%, 
+                            ${getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'diagonal')} ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100)}%, 
                             #000000 ${Math.min(100, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100) + 3)}%)`
                       }}
                     />
                     
                     {/* Exercise info */}
-                    <div className="relative h-20 flex items-center px-4">
+                    <div className="relative h-16 flex items-center px-4">
                       <div className="flex items-center space-x-3">
                         {getExerciseIcon(selectedWorkoutExercise)}
                         <div>
@@ -1914,10 +1914,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </div>
                   
-                  {/* Close button - matches exercise button X layout */}
+                  {/* Close button - matches exercise button X layout exactly */}
                   <button
                     onClick={() => setWorkoutInputOpen(false)}
-                    className="w-16 flex items-center justify-center hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors duration-200"
+                    className="w-16 h-16 flex items-center justify-center hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors duration-200"
                     aria-label="Close workout input"
                   >
                     <XMarkIcon className="w-5 h-5" />
@@ -1925,17 +1925,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              <div className="p-4">
+              <div className="p-4 h-80 flex flex-col">
                 {/* Counter Section */}
-                <div className="mb-6">
+                <div className="mb-4">
                   {/* Main counter with - and + buttons */}
-                  <div className="flex items-center justify-center gap-6 mb-4">
+                  <div className="flex items-center justify-center gap-4 mb-3">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                      className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
                       style={{
-                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                        boxShadow: '0 6px 20px rgba(239, 68, 68, 0.4)'
+                        background: getButtonGradient('red'),
+                        boxShadow: getButtonShadow('red')
                       }}
                     >
                       −
@@ -1945,66 +1945,64 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       type="number"
                       value={workoutCount}
                       onChange={(e) => setWorkoutCount(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="text-6xl font-black text-white text-center bg-transparent border-none outline-none w-24"
+                      className="text-4xl font-black text-white text-center bg-transparent border-none outline-none w-16"
                       style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}
                     />
                     
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
-                      className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
                       style={{
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                        boxShadow: '0 6px 20px rgba(34, 197, 94, 0.4)'
+                        background: getButtonGradient('green'),
+                        boxShadow: getButtonShadow('green')
                       }}
                     >
                       +
                     </button>
                   </div>
                   
-                  <div className="text-center mb-4">
-                    <div className="text-sm text-white/70 font-medium uppercase tracking-wider">
-                      {selectedWorkoutExercise.unit}{selectedWorkoutExercise.unit !== 'rep' && 's'}
-                    </div>
+                  <div className="text-center text-xs text-white/70 font-medium uppercase tracking-wider mb-3">
+                    {selectedWorkoutExercise.unit}{selectedWorkoutExercise.unit !== 'rep' && 's'}
                   </div>
 
-                  {/* Quick adjustment buttons */}
-                  <div className="flex">
+                  {/* Quick adjustment buttons - connected element */}
+                  <div className="flex rounded-full overflow-hidden border border-gray-600">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 10))}
-                      className="flex-1 py-3 text-white font-semibold text-sm transition-all duration-300 hover:scale-105 rounded-l-full"
+                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110"
                       style={{
-                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                        boxShadow: '0 2px 10px rgba(239, 68, 68, 0.3)'
+                        background: getButtonGradient('red'),
+                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       -10
                     </button>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 5))}
-                      className="flex-1 py-3 text-white font-semibold text-sm transition-all duration-300 hover:scale-105"
+                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110 border-l border-r border-gray-600"
                       style={{
-                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                        boxShadow: '0 2px 10px rgba(239, 68, 68, 0.3)'
+                        background: getButtonGradient('red'),
+                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       -5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
-                      className="flex-1 py-3 text-white font-semibold text-sm transition-all duration-300 hover:scale-105"
+                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110 border-l border-r border-gray-600"
                       style={{
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                        boxShadow: '0 2px 10px rgba(34, 197, 94, 0.3)'
+                        background: getButtonGradient('green'),
+                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       +5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
-                      className="flex-1 py-3 text-white font-semibold text-sm transition-all duration-300 hover:scale-105 rounded-r-full"
+                      className="flex-1 py-2 text-white font-semibold text-xs transition-all duration-300 hover:brightness-110"
                       style={{
-                        background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                        boxShadow: '0 2px 10px rgba(34, 197, 94, 0.3)'
+                        background: getButtonGradient('green'),
+                        boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.1)'
                       }}
                     >
                       +10
@@ -2014,49 +2012,55 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                 {/* Weight & Difficulty Options */}
                 {(selectedWorkoutExercise.is_weighted || selectedWorkoutExercise.supports_decreased) && (
-                  <div className="grid grid-cols-1 gap-6 mb-4">
+                  <div className="flex-1 flex flex-col gap-3">
                     {/* Weight Options */}
                     {selectedWorkoutExercise.is_weighted && (
                       <div>
-                        <h4 className="text-white font-semibold text-center mb-4 text-sm uppercase tracking-wide">Weight</h4>
-                        <div className="flex flex-wrap justify-center gap-3">
+                        <h4 className="text-white font-semibold text-center mb-2 text-xs uppercase tracking-wide">Weight</h4>
+                        <div className="flex flex-wrap justify-center gap-2">
                           <button
                             onClick={() => handleWeightClick(0)}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
-                              selectedWeight === 0 
-                                ? 'text-white shadow-lg' 
-                                : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60'
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
+                              lockedWeight === 0 ? 'border-2 border-yellow-400' : ''
                             }`}
-                            style={selectedWeight === 0 ? {
-                              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                              boxShadow: '0 4px 15px rgba(34, 197, 94, 0.4)'
-                            } : {}}
+                            style={{
+                              background: selectedWeight === 0 
+                                ? getButtonGradient('green')
+                                : getButtonGradient('gray'),
+                              boxShadow: selectedWeight === 0 
+                                ? getButtonShadow('green')
+                                : getButtonShadow('gray'),
+                              color: 'white'
+                            }}
                           >
-                            0
+                            Body
                             {lockedWeight === 0 && (
-                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                                <div className="w-2 h-2 bg-black rounded-sm"></div>
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
+                                <div className="w-1 h-1 bg-black rounded-sm"></div>
                               </div>
                             )}
                           </button>
-                          {Array.from({length: 30}, (_, i) => i + 1).map((weight) => (
+                          {[5, 10, 15, 20, 25, 30].map((weight) => (
                             <button
                               key={weight}
                               onClick={() => handleWeightClick(weight)}
-                              className={`w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
-                                selectedWeight === weight 
-                                  ? 'text-white shadow-lg' 
-                                  : 'bg-gray-800/60 text-gray-400 hover:bg-gray-700/60'
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 relative ${
+                                lockedWeight === weight ? 'border-2 border-yellow-400' : ''
                               }`}
-                              style={selectedWeight === weight ? {
-                                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                                boxShadow: '0 4px 15px rgba(34, 197, 94, 0.4)'
-                              } : {}}
+                              style={{
+                                background: selectedWeight === weight 
+                                  ? getButtonGradient('green')
+                                  : getButtonGradient('gray'),
+                                boxShadow: selectedWeight === weight 
+                                  ? getButtonShadow('green')
+                                  : getButtonShadow('gray'),
+                                color: 'white'
+                              }}
                             >
                               {weight}
                               {lockedWeight === weight && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                                  <div className="w-2 h-2 bg-black rounded-sm"></div>
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
+                                  <div className="w-1 h-1 bg-black rounded-sm"></div>
                                 </div>
                               )}
                             </button>
@@ -2169,17 +2173,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     disabled={loading || workoutCount <= 0}
                     className="w-full py-4 px-6 rounded-full font-bold text-white transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 relative overflow-hidden"
                     style={{
-                      background: '#1f2937',
-                      border: '2px solid #374151'
+                      background: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
+                        ? getButtonGradient('exercise', selectedWorkoutExercise.type)
+                        : getButtonGradient('gray'),
+                      boxShadow: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
+                        ? getButtonShadow('exercise')
+                        : getButtonShadow('gray'),
+                      border: 'none'
                     }}
-                  >
-                    <div 
-                      className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-                      style={{
-                        width: `${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / 50) * 100)}%`,
-                        background: `linear-gradient(90deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}dd 100%)`
-                      }}
-                    />
+                  />
                     <span className="relative z-10">
                       {loading ? 'Submitting...' : `Submit ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
                     </span>
