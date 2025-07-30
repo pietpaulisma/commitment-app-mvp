@@ -608,7 +608,6 @@ export default function RectangularDashboard() {
   const [groupStats, setGroupStats] = useState<any>(null)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -636,15 +635,6 @@ export default function RectangularDashboard() {
     }
   }, [user, profile, groupStartDate])
 
-  // Parallax scroll effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
 
   // Countdown timer effect
@@ -1313,9 +1303,7 @@ export default function RectangularDashboard() {
         <div 
           className="relative overflow-hidden"
           style={{
-            marginTop: 'calc(env(safe-area-inset-top) + 80px)', // Mobile: safe area + reduced spacing
-            transform: `translateY(${scrollY * 0.1}px)`,
-            willChange: 'transform'
+            marginTop: 'calc(env(safe-area-inset-top) + 80px)' // Mobile: safe area + reduced spacing
           }}
         >
           <style jsx>{`
@@ -1374,26 +1362,14 @@ export default function RectangularDashboard() {
       )}
 
 
-      {/* Today's Activity Header with Parallax */}
-      <div 
-        className="bg-black pt-6 rounded-t-3xl relative z-10"
-        style={{
-          transform: `translateY(${scrollY * -0.05}px)`,
-          willChange: 'transform'
-        }}
-      >
+      {/* Today's Activity Header */}
+      <div className="bg-black pt-6 rounded-t-3xl relative z-10">
         <div className="px-4 pb-4">
           <h2 className="text-2xl font-bold text-white">Today's Activity</h2>
         </div>
       </div>
 
-      <div 
-        className="space-y-0 relative z-10"
-        style={{
-          transform: `translateY(${scrollY * -0.05}px)`,
-          willChange: 'transform'
-        }}
-      >
+      <div className="space-y-0 relative z-10">
         {/* Group Status */}
         <div id="group-status" className="bg-black">
           <div className="py-8">

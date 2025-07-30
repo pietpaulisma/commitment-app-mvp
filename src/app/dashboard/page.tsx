@@ -8,34 +8,15 @@ import TimeGradient from '@/components/TimeGradient'
 
 export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
   const [isChatModalOpen, setIsChatModalOpen] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
-    let ticking = false
-    
     const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY
-          const threshold = window.innerHeight * 0.3 // 30% of viewport height
-          
-          // Update state less frequently for better performance
-          setIsScrolled(currentScrollY > threshold)
-          setScrollY(currentScrollY)
-          
-          // Direct DOM manipulation for smoother parallax
-          const parallaxElement = document.querySelector('.parallax-bg')
-          if (parallaxElement) {
-            (parallaxElement as HTMLElement).style.transform = `translate3d(0, ${currentScrollY * -0.3}px, 0)`
-          }
-          
-          ticking = false
-        })
-        ticking = true
-      }
+      const currentScrollY = window.scrollY
+      const threshold = window.innerHeight * 0.3 // 30% of viewport height
+      setIsScrolled(currentScrollY > threshold)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -43,18 +24,39 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
-      {/* Unified gradient background covering 50% landing area with parallax */}
-      <div 
-        className="parallax-bg absolute inset-0 h-[50vh] z-0"
-        style={{
-          willChange: 'transform'
-        }}
-      >
-        <TimeGradient />
-      </div>
+    <>
+      <style jsx global>{`
+        .parallax-container {
+          height: 100vh;
+          overflow-x: hidden;
+          overflow-y: auto;
+          perspective: 1px;
+        }
+        
+        .parallax-bg {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          transform: translateZ(-1px) scale(2);
+          height: 50vh;
+        }
+        
+        .parallax-content {
+          position: relative;
+          transform: translateZ(0);
+        }
+      `}</style>
       
-      {/* Landing Logo - ONLY show on exact dashboard route, positioned near DAY text, hide when modal is open */}
+      <div className="parallax-container relative min-h-screen bg-black">
+        {/* Pure CSS parallax background */}
+        <div className="parallax-bg z-0">
+          <TimeGradient />
+        </div>
+        
+        <div className="parallax-content z-10">
+          {/* Landing Logo - ONLY show on exact dashboard route, positioned near DAY text, hide when modal is open */}
       {pathname === '/dashboard' && !pathname.includes('/workout') && !pathname.includes('/chat') && !isWorkoutModalOpen && !isChatModalOpen && (
         <>
           {!isScrolled ? (
@@ -105,16 +107,18 @@ export default function Dashboard() {
           )}
         </>
       )}
-      
-      {/* Components with transparent/relative positioning */}
-      <div className="relative z-10">
-        <RectangularNavigation 
-          isScrolled={isScrolled} 
-          onWorkoutModalStateChange={setIsWorkoutModalOpen}
-          onChatModalStateChange={setIsChatModalOpen}
-        />
-        <RectangularDashboard />
+          
+          {/* Components with transparent/relative positioning */}
+          <div className="relative z-10">
+            <RectangularNavigation 
+              isScrolled={isScrolled} 
+              onWorkoutModalStateChange={setIsWorkoutModalOpen}
+              onChatModalStateChange={setIsChatModalOpen}
+            />
+            <RectangularDashboard />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
