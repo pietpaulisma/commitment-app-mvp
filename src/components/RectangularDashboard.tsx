@@ -1368,7 +1368,7 @@ export default function RectangularDashboard() {
     
     const currentY = e.touches[0].clientY
     const distance = Math.max(0, currentY - pullStartY)
-    const maxPull = 120 // Maximum pull distance
+    const maxPull = 150 // Maximum pull distance
     
     setPullDistance(Math.min(distance, maxPull))
     
@@ -1380,7 +1380,7 @@ export default function RectangularDashboard() {
   const handleTouchEnd = () => {
     if (!isPulling) return
     
-    const refreshThreshold = 80 // Distance needed to trigger refresh
+    const refreshThreshold = 120 // Distance needed to trigger refresh - much harder now!
     
     if (pullDistance >= refreshThreshold) {
       triggerRefresh()
@@ -1452,39 +1452,37 @@ export default function RectangularDashboard() {
         transition: !isPulling ? 'transform 0.3s ease-out' : 'none'
       }}
     >
-      {/* Pull-to-Refresh Indicator */}
+      {/* Pull-to-Refresh Indicator - appears in black space above header */}
       <div 
-        className="absolute top-0 left-0 right-0 z-50 flex items-center justify-center"
+        className="fixed top-0 left-0 right-0 z-50 bg-black flex items-center justify-center"
         style={{
-          transform: `translateY(${-60 + (pullDistance * 0.8)}px)`,
-          opacity: Math.min(pullDistance / 80, 1),
+          height: `${Math.max(0, pullDistance * 0.6)}px`,
+          opacity: Math.min(pullDistance / 120, 1),
           transition: !isPulling && !isRefreshing ? 'all 0.3s ease-out' : 'opacity 0.2s'
         }}
       >
-        <div className="bg-black/90 backdrop-blur-md border border-gray-700 rounded-full px-6 py-3 shadow-xl">
-          <div className="flex items-center space-x-3">
-            {isRefreshing ? (
-              <>
-                <div className="animate-spin w-6 h-6 border-2 border-gray-400 border-t-white rounded-full"></div>
-                <span className="text-white font-medium">💪 Great form! Refreshing...</span>
-              </>
-            ) : pullDistance >= 80 ? (
-              <>
-                <span className="text-2xl animate-bounce">🏆</span>
-                <span className="text-white font-medium">Perfect pull-up! Release to refresh</span>
-              </>
-            ) : pullDistance > 20 ? (
-              <>
-                <span className="text-2xl">💪</span>
-                <span className="text-white font-medium">A proper pull-up will result in a refresh</span>
-              </>
-            ) : (
-              <>
-                <span className="text-2xl opacity-50">💪</span>
-                <span className="text-gray-400 font-medium">Pull down for refresh</span>
-              </>
-            )}
-          </div>
+        <div className="flex items-center space-x-3 py-2">
+          {isRefreshing ? (
+            <>
+              <div className="animate-spin w-6 h-6 border-2 border-gray-400 border-t-white rounded-full"></div>
+              <span className="text-white font-medium">💪 Great form! Refreshing...</span>
+            </>
+          ) : pullDistance >= 120 ? (
+            <>
+              <span className="text-2xl animate-bounce">🏆</span>
+              <span className="text-white font-medium">Perfect pull-up! Release to refresh</span>
+            </>
+          ) : pullDistance > 40 ? (
+            <>
+              <span className="text-2xl">💪</span>
+              <span className="text-white font-medium">A proper pull-up will result in a refresh</span>
+            </>
+          ) : pullDistance > 10 ? (
+            <>
+              <span className="text-2xl opacity-50">💪</span>
+              <span className="text-gray-400 font-medium">Keep pulling...</span>
+            </>
+          ) : null}
         </div>
       </div>
 
