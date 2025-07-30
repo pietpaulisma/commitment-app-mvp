@@ -1932,6 +1932,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       style={{
                         width: '80px',
                         height: '80px',
+                        borderRadius: '50%',
                         background: '#ef4444',
                         border: '4px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
@@ -1954,6 +1955,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       style={{
                         width: '80px',
                         height: '80px',
+                        borderRadius: '50%',
                         background: '#22c55e',
                         border: '4px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 8px 20px rgba(34, 197, 94, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
@@ -1975,6 +1977,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       style={{
                         width: '48px',
                         height: '48px',
+                        borderRadius: '50%',
                         background: '#ef4444',
                         border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
@@ -1988,6 +1991,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       style={{
                         width: '48px',
                         height: '48px',
+                        borderRadius: '50%',
                         background: '#ef4444',
                         border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
@@ -2001,6 +2005,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       style={{
                         width: '48px',
                         height: '48px',
+                        borderRadius: '50%',
                         background: '#22c55e',
                         border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
@@ -2014,6 +2019,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       style={{
                         width: '48px',
                         height: '48px',
+                        borderRadius: '50%',
                         background: '#22c55e',
                         border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
@@ -2038,6 +2044,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             style={{
                               width: '48px',
                               height: '48px',
+                              borderRadius: '50%',
                               background: selectedWeight === 0 ? '#22c55e' : '#4b5563',
                               border: lockedWeight === 0 ? '3px solid #fbbf24' : '3px solid rgba(0,0,0,0.3)',
                               boxShadow: selectedWeight === 0 
@@ -2061,6 +2068,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               style={{
                                 width: '48px',
                                 height: '48px',
+                                borderRadius: '50%',
                                 background: selectedWeight === weight ? '#22c55e' : '#4b5563',
                                 border: lockedWeight === weight ? '3px solid #fbbf24' : '3px solid rgba(0,0,0,0.3)',
                                 boxShadow: selectedWeight === weight 
