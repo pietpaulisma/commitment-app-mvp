@@ -1161,13 +1161,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       `}</style>
       
       <div 
-        className="fixed inset-0 bg-black z-[9999] flex flex-col transition-transform duration-500 ease-out"
+        className="fixed inset-0 bg-black flex flex-col transition-transform duration-500 ease-out"
         style={{ 
           paddingTop: 'env(safe-area-inset-top)',
           transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
-          touchAction: 'manipulation'
+          touchAction: 'manipulation',
+          zIndex: isClosing ? 40 : 9999 // Slide behind bottom nav (z-50) when closing
         }}
       >
         {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
