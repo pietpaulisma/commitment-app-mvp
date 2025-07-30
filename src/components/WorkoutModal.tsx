@@ -124,8 +124,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       loadTodaysWorkouts()
       loadFavoriteExercises()
       
-      // Trigger slide-up animation immediately for smooth mobile experience
-      requestAnimationFrame(() => {
+      // Wait for modal to be fully mounted before starting animation
+      setTimeout(() => {
         console.log('Setting isAnimatedIn to true')
         setIsAnimatedIn(true)
         
@@ -134,7 +134,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           console.log('Starting icon transition - chat pushed out by X')
           setShowIconTransition(true)
         }, 400) // Start icon transition near end of modal slide-up
-      })
+      }, 50) // Small delay to ensure DOM is ready
       
       // Trigger subtle progress animation after modal loads
       setTimeout(() => setProgressAnimated(true), 300)

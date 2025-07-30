@@ -50,12 +50,14 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
   const isOnProfilePage = pathname === '/profile'
 
   const handleWorkoutButtonClick = () => {
-    setIsAnimating(true)
-    // Start modal immediately for smooth PWA experience
-    requestAnimationFrame(() => {
-      setIsWorkoutOpen(true)
-      onWorkoutModalStateChange?.(true)
-    })
+    // Open modal first
+    setIsWorkoutOpen(true)
+    onWorkoutModalStateChange?.(true)
+    
+    // Start button animation synchronized with modal
+    setTimeout(() => {
+      setIsAnimating(true)
+    }, 50) // Match modal's delay
   }
 
   const handleWorkoutClose = () => {
