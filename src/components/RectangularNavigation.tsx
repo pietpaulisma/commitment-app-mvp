@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
   ChatBubbleLeftRightIcon,
-  UserIcon
+  UserIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import GroupChat from '@/components/GroupChat'
 import WorkoutModal from '@/components/WorkoutModal'
@@ -46,6 +47,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
   const [isAnimating, setIsAnimating] = useState(false)
   const [todayLogs, setTodayLogs] = useState<any[]>([])
   const [progressAnimated, setProgressAnimated] = useState(false)
+  const [showXIcon, setShowXIcon] = useState(false)
 
   const isOnProfilePage = pathname === '/profile'
 
@@ -57,12 +59,16 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
     // Start button animation synchronized with modal
     setTimeout(() => {
       setIsAnimating(true)
+      // Show X icon in chat button when modal opens
+      setShowXIcon(true)
     }, 50) // Match modal's delay
   }
 
   const handleWorkoutCloseStart = () => {
     // Start button animation immediately when modal close begins
     setIsAnimating(false)
+    // Start reverse icon animation - X flips back to chat
+    setShowXIcon(false)
   }
 
   const handleWorkoutClose = () => {
@@ -287,7 +293,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
               onChatModalStateChange?.(true)
             }}
             disabled={!profile.group_id}
-            className={`w-16 h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none ${
+            className={`w-16 h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none relative overflow-hidden ${
               profile.group_id 
                 ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
                 : 'bg-gray-950 text-gray-500 cursor-not-allowed'
@@ -299,7 +305,25 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
               touchAction: 'manipulation'
             }}
           >
-            <ChatBubbleLeftRightIcon className="w-6 h-6" />
+            {/* Chat Icon (visible when showXIcon is false) */}
+            <div 
+              className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
+              style={{
+                transform: showXIcon ? 'translateY(-64px)' : 'translateY(0px)'
+              }}
+            >
+              <ChatBubbleLeftRightIcon className="w-6 h-6" />
+            </div>
+            
+            {/* X Icon (visible when showXIcon is true) */}
+            <div 
+              className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
+              style={{
+                transform: showXIcon ? 'translateY(0px)' : 'translateY(64px)'
+              }}
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </div>
           </button>
         </div>
       </div>
