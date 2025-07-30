@@ -107,9 +107,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [todayLogs, setTodayLogs] = useState<any[]>([])
   const [selectedWeight, setSelectedWeight] = useState(0)
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
-  const [sliderPosition, setSliderPosition] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isSliderComplete, setIsSliderComplete] = useState(false)
   const [progressAnimated, setProgressAnimated] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
@@ -2314,64 +2311,67 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 )}
 
-                {/* iPhone-style Slide to Save Slider */}
-                <div className="relative overflow-hidden rounded-2xl h-16">
-                  {/* Slider Track Background */}
-                  <div 
-                    className="absolute inset-0 bg-gray-800 rounded-2xl"
-                    style={{
-                      background: `linear-gradient(90deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}20 100%)`
-                    }}
-                  />
-                  
-                  {/* Slider Progress Fill */}
-                  <div 
-                    className="absolute left-0 top-0 bottom-0 rounded-2xl transition-all duration-200 ease-out"
-                    style={{
-                      width: `${sliderPosition}%`,
-                      background: `linear-gradient(90deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 100%)`
-                    }}
-                  />
-                  
-                  {/* Slider Text */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-white font-black text-lg tracking-wider">
-                      {isSliderComplete ? 'SAVING...' : loading ? 'SAVING...' : 'SLIDE TO SAVE'}
-                    </span>
-                  </div>
-                  
-                  {/* Draggable Slider Dot */}
-                  <div 
-                    className="absolute top-1 bottom-1 w-14 bg-white rounded-xl shadow-lg cursor-pointer transition-all duration-200 ease-out flex items-center justify-center"
-                    style={{
-                      left: `${Math.max(2, (sliderPosition / 100) * (100 - 14))}%`,
-                      transform: isDragging ? 'scale(1.1)' : 'scale(1)',
-                      background: isSliderComplete ? getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id) : 'white'
-                    }}
-                    onMouseDown={handleSliderStart}
-                    onMouseMove={handleSliderMove}
-                    onMouseUp={handleSliderEnd}
-                    onMouseLeave={handleSliderEnd}
-                    onTouchStart={handleSliderStart}
-                    onTouchMove={handleSliderMove}
-                    onTouchEnd={handleSliderEnd}
-                  >
-                    <div className="text-2xl">
-                      {loading ? '⏳' : isSliderComplete ? '✓' : '💾'}
-                    </div>
-                  </div>
-                  
-                  {/* Global mouse/touch event handlers for smooth dragging */}
-                  {isDragging && (
-                    <div 
-                      className="fixed inset-0 z-50 cursor-pointer"
-                      onMouseMove={handleSliderMove}
-                      onMouseUp={handleSliderEnd}
-                      onTouchMove={handleSliderMove}
-                      onTouchEnd={handleSliderEnd}
-                    />
-                  )}
-                </div>
+                {/* Save Button */}
+                <button
+                  onClick={async () => {
+                    if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
+                    
+                    setLoading(true)
+                    try {
+                      const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                      
+                      const { error } = await supabase
+                        .from('logs')
+                        .insert({
+                          user_id: user.id,
+                          group_id: profile?.group_id,
+                          exercise_id: selectedWorkoutExercise.id,
+                          count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
+                          weight: selectedWeight,
+                          duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
+                          points: points,
+                          date: new Date().toISOString().split('T')[0],
+                          timestamp: Date.now(),
+                          is_decreased: isDecreasedExercise
+                        })
+                      
+                      if (error) {
+                        alert('Error logging workout: ' + error.message)
+                      } else {
+                        // Refresh data
+                        if (onWorkoutAdded) {
+                          onWorkoutAdded()
+                        }
+                        loadDailyProgress()
+                        loadTodaysWorkouts()
+                        
+                        // Reset and close
+                        setWorkoutInputOpen(false)
+                        setWorkoutCount(0)
+                        setSelectedWeight(0)
+                        setIsDecreasedExercise(false)
+                        
+                        // Haptic feedback
+                        if (navigator.vibrate) {
+                          navigator.vibrate(100)
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Error saving workout:', error)
+                      alert('An error occurred while saving your workout.')
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  disabled={loading || workoutCount <= 0}
+                  className="w-full h-16 rounded-2xl font-black text-lg tracking-wider text-white transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
+                  style={{
+                    background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 100%)`,
+                    boxShadow: `0 6px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}30`
+                  }}
+                >
+                  {loading ? '💾 SAVING...' : '💾 SAVE WORKOUT'}
+                </button>
               </div>
             </div>
           </div>
