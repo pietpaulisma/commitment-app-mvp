@@ -2037,54 +2037,59 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {selectedWorkoutExercise.is_weighted && (
                       <div>
                         <h4 className="text-white font-semibold text-center mb-3 text-xs uppercase tracking-wide">Weight</h4>
-                        <div className="grid grid-cols-4 gap-2 max-w-xs mx-auto">
-                          <button
-                            onClick={() => handleWeightClick(0)}
-                            className="rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
+                        <div className="max-w-xs mx-auto">
+                          {/* Connected weight grid component */}
+                          <div 
+                            className="grid grid-cols-4 overflow-hidden"
                             style={{
-                              width: '48px',
-                              height: '48px',
-                              borderRadius: '50%',
-                              background: selectedWeight === 0 ? '#22c55e' : '#4b5563',
-                              border: lockedWeight === 0 ? '3px solid #fbbf24' : '3px solid rgba(0,0,0,0.3)',
-                              boxShadow: selectedWeight === 0 
-                                ? '0 4px 12px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
-                                : '0 4px 12px rgba(75, 85, 99, 0.3), inset 0 1px 2px rgba(255,255,255,0.1)',
-                              color: 'white'
+                              background: '#374151',
+                              border: '2px solid rgba(0,0,0,0.3)',
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1)'
                             }}
                           >
-                            Body
-                            {lockedWeight === 0 && (
-                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
-                                <div className="w-1 h-1 bg-black rounded-sm"></div>
-                              </div>
-                            )}
-                          </button>
-                          {[5, 10, 15, 20, 25, 30, 35].map((weight) => (
                             <button
-                              key={weight}
-                              onClick={() => handleWeightClick(weight)}
-                              className="rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
+                              onClick={() => handleWeightClick(0)}
+                              className="flex items-center justify-center text-xs font-bold transition-all duration-200 hover:brightness-110 relative border-r border-b border-black/20"
                               style={{
                                 width: '48px',
                                 height: '48px',
-                                borderRadius: '50%',
-                                background: selectedWeight === weight ? '#22c55e' : '#4b5563',
-                                border: lockedWeight === weight ? '3px solid #fbbf24' : '3px solid rgba(0,0,0,0.3)',
-                                boxShadow: selectedWeight === weight 
-                                  ? '0 4px 12px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
-                                  : '0 4px 12px rgba(75, 85, 99, 0.3), inset 0 1px 2px rgba(255,255,255,0.1)',
+                                background: selectedWeight === 0 ? '#22c55e' : 'transparent',
                                 color: 'white'
                               }}
                             >
-                              {weight}
-                              {lockedWeight === weight && (
+                              Body
+                              {lockedWeight === 0 && (
                                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
                                   <div className="w-1 h-1 bg-black rounded-sm"></div>
                                 </div>
                               )}
                             </button>
-                          ))}
+                            {[5, 10, 15, 20, 25, 30, 35].map((weight, index) => (
+                              <button
+                                key={weight}
+                                onClick={() => handleWeightClick(weight)}
+                                className={`flex items-center justify-center text-xs font-bold transition-all duration-200 hover:brightness-110 relative ${
+                                  (index + 1) % 4 !== 0 ? 'border-r border-black/20' : ''
+                                } ${
+                                  index < 3 ? 'border-b border-black/20' : ''
+                                }`}
+                                style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  background: selectedWeight === weight ? '#22c55e' : 'transparent',
+                                  color: 'white'
+                                }}
+                              >
+                                {weight}
+                                {lockedWeight === weight && (
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
+                                    <div className="w-1 h-1 bg-black rounded-sm"></div>
+                                  </div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}
