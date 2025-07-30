@@ -2142,7 +2142,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 )}
 
                 {/* Submit Button - matches header shape but bottom filled */}
-                <div className="mt-auto">
+                <div className="mt-auto -mx-6 -mb-6">
                   <div className="relative bg-gray-900/30 border-t border-gray-800 overflow-hidden">
                     <div className="flex">
                       {/* Main content area - matches header layout */}
