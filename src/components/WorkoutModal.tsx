@@ -1921,7 +1921,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              <div className="p-4 flex-1 flex flex-col">
+              <div className="pt-4 px-4 flex-1 flex flex-col">
                 {/* Counter Section */}
                 <div className="mb-4">
                   {/* Main counter with - and + buttons */}
@@ -2142,7 +2142,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 )}
 
                 {/* Submit Button - matches header shape but bottom filled */}
-                <div className="mt-auto -mx-6 -mb-6">
+                <div className="mt-auto -mx-4">
                   <div className="relative bg-gray-900/30 border-t border-gray-800 overflow-hidden">
                     <div className="flex">
                       {/* Main content area - matches header layout */}
