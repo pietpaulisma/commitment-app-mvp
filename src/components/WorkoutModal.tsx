@@ -1928,10 +1928,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="flex items-center justify-center gap-6 mb-4">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                      className="rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
+                        width: '80px',
+                        height: '80px',
                         background: '#ef4444',
-                        border: '3px solid rgba(0,0,0,0.2)',
+                        border: '4px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
                       }}
                     >
@@ -1948,10 +1950,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
-                      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
+                      className="rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
+                        width: '80px',
+                        height: '80px',
                         background: '#22c55e',
-                        border: '3px solid rgba(0,0,0,0.2)',
+                        border: '4px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 8px 20px rgba(34, 197, 94, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
                       }}
                     >
@@ -1963,14 +1967,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {selectedWorkoutExercise.unit}{selectedWorkoutExercise.unit !== 'rep' && 's'}
                   </div>
 
-                  {/* Quick adjustment buttons - round individual buttons */}
+                  {/* Quick adjustment buttons - perfect round circles */}
                   <div className="flex justify-center gap-3">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 10))}
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                      className="rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
+                        width: '48px',
+                        height: '48px',
                         background: '#ef4444',
-                        border: '2px solid rgba(0,0,0,0.2)',
+                        border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
@@ -1978,10 +1984,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </button>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 5))}
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                      className="rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
+                        width: '48px',
+                        height: '48px',
                         background: '#ef4444',
-                        border: '2px solid rgba(0,0,0,0.2)',
+                        border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
@@ -1989,10 +1997,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                      className="rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
+                        width: '48px',
+                        height: '48px',
                         background: '#22c55e',
-                        border: '2px solid rgba(0,0,0,0.2)',
+                        border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
@@ -2000,10 +2010,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+                      className="rounded-full flex items-center justify-center text-white font-bold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                       style={{
+                        width: '48px',
+                        height: '48px',
                         background: '#22c55e',
-                        border: '2px solid rgba(0,0,0,0.2)',
+                        border: '3px solid rgba(0,0,0,0.3)',
                         boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'
                       }}
                     >
@@ -2022,10 +2034,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         <div className="grid grid-cols-4 gap-2 max-w-xs mx-auto">
                           <button
                             onClick={() => handleWeightClick(0)}
-                            className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
+                            className="rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
                             style={{
+                              width: '48px',
+                              height: '48px',
                               background: selectedWeight === 0 ? '#22c55e' : '#4b5563',
-                              border: lockedWeight === 0 ? '3px solid #fbbf24' : '2px solid rgba(0,0,0,0.2)',
+                              border: lockedWeight === 0 ? '3px solid #fbbf24' : '3px solid rgba(0,0,0,0.3)',
                               boxShadow: selectedWeight === 0 
                                 ? '0 4px 12px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
                                 : '0 4px 12px rgba(75, 85, 99, 0.3), inset 0 1px 2px rgba(255,255,255,0.1)',
@@ -2043,10 +2057,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             <button
                               key={weight}
                               onClick={() => handleWeightClick(weight)}
-                              className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
+                              className="rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 relative"
                               style={{
+                                width: '48px',
+                                height: '48px',
                                 background: selectedWeight === weight ? '#22c55e' : '#4b5563',
-                                border: lockedWeight === weight ? '3px solid #fbbf24' : '2px solid rgba(0,0,0,0.2)',
+                                border: lockedWeight === weight ? '3px solid #fbbf24' : '3px solid rgba(0,0,0,0.3)',
                                 boxShadow: selectedWeight === weight 
                                   ? '0 4px 12px rgba(34, 197, 94, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)'
                                   : '0 4px 12px rgba(75, 85, 99, 0.3), inset 0 1px 2px rgba(255,255,255,0.1)',
