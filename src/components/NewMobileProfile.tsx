@@ -52,7 +52,7 @@ export default function NewMobileProfile() {
           {/* Main header area */}
           <div className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden">
             <div className="relative h-full flex items-center justify-start px-6 text-white">
-              <h1 className="text-2xl font-bold text-white">Profile</h1>
+              <h1 className="text-2xl font-bold text-white">Settings</h1>
             </div>
           </div>
 
@@ -67,12 +67,7 @@ export default function NewMobileProfile() {
         </div>
       </div>
       
-      {/* Welcome message */}
-      <div className="px-4 pt-6 pb-6">
-        <p className="text-xl text-gray-300">Hey, {username}!</p>
-      </div>
-
-      <div className="px-4 space-y-6">
+      <div className="px-4 pt-6 space-y-6">
 
         {/* Admin Tools Section */}
         {(profile.role === 'supreme_admin' || profile.role === 'group_admin') && (

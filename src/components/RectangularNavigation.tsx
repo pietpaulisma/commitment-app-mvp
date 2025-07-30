@@ -7,7 +7,8 @@ import { usePathname } from 'next/navigation'
 import { 
   ChatBubbleLeftRightIcon,
   UserIcon,
-  XMarkIcon
+  XMarkIcon,
+  CogIcon
 } from '@heroicons/react/24/outline'
 import GroupChat from '@/components/GroupChat'
 import WorkoutModal from '@/components/WorkoutModal'
@@ -365,7 +366,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
           {isOnProfilePage ? (
             <span className="text-white text-2xl font-bold drop-shadow-lg">×</span>
           ) : (
-            <span className="text-2xl drop-shadow-lg">{profile?.custom_icon || '👤'}</span>
+            <CogIcon className="w-6 h-6 text-white drop-shadow-lg" />
           )}
         </Link>
       </div>
@@ -391,12 +392,12 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
           href={isOnProfilePage ? "/dashboard" : "/profile"} 
           className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium transition-all duration-200 hover:opacity-80"
         >
-          <span className="drop-shadow-lg">{isOnProfilePage ? "Back to Dashboard" : "Profile"}</span>
+          <span className="drop-shadow-lg">{isOnProfilePage ? "Back to Dashboard" : "Settings"}</span>
           <div className="flex items-center justify-center">
             {isOnProfilePage ? (
               <span className="text-white text-xl font-bold drop-shadow-lg">×</span>
             ) : (
-              <span className="text-xl drop-shadow-lg">{profile?.custom_icon || '👤'}</span>
+              <CogIcon className="w-5 h-5 text-white drop-shadow-lg" />
             )}
           </div>
         </Link>
