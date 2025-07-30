@@ -114,8 +114,8 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     console.log('- Purple section width:', purpleWidth + '%')
   }
   
-  // Extended fade to black - increased from 5% to 10%
-  const fadeStart = totalProgress - 10  // Start fade 10% before end (was 5%)
+  // Extended fade to black - increased to 20%
+  const fadeStart = totalProgress - 20  // Start fade 20% before end 
   if (fadeStart > 0) {
     gradientStops.push(`#00000066 ${fadeStart}%`)
   }
