@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
+import { ShareIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline'
 
 type Member = {
   id: string
@@ -62,6 +63,14 @@ export default function GroupAdminDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
   const [editingSettings, setEditingSettings] = useState(false)
   const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string; week_mode?: 'sane' | 'insane' }>>({})
+  const [inviteLink, setInviteLink] = useState('')
+
+  useEffect(() => {
+    // Set invite link on client side
+    if (group && typeof window !== 'undefined') {
+      setInviteLink(`${window.location.origin}/onboarding/groups?invite=${group.id}`)
+    }
+  }, [group])
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -417,6 +426,51 @@ export default function GroupAdminDashboard() {
                   <div>
                     <label className="block text-sm font-medium text-gray-400 uppercase tracking-wide">Most Active Day</label>
                     <p className="text-lg text-white">{workoutSummary?.most_active_day || 'No data'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Invite Link */}
+            <div className="bg-gray-900/30 border border-gray-800">
+              <div className="px-6 py-4 border-b border-gray-800">
+                <h3 className="text-lg font-semibold text-white">Invite New Members</h3>
+              </div>
+              <div className="p-6">
+                <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <ShareIcon className="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="text-white font-medium mb-2">Share Group Invite Link</h4>
+                      <p className="text-gray-300 text-sm mb-4">
+                        Send this link to people you want to invite to your group. They'll be able to join and start working out together.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            value={inviteLink}
+                            readOnly
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (inviteLink) {
+                              navigator.clipboard.writeText(inviteLink).then(() => {
+                                alert('Invite link copied to clipboard!')
+                              }).catch(() => {
+                                alert('Failed to copy link. Please copy manually.')
+                              })
+                            }
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors whitespace-nowrap"
+                        >
+                          <ClipboardDocumentIcon className="w-4 h-4" />
+                          Copy Link
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
