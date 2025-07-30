@@ -2181,7 +2181,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         : getButtonShadow('gray'),
                       border: 'none'
                     }}
-                  />
+                  >
                     <span className="relative z-10">
                       {loading ? 'Submitting...' : `Submit ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
                     </span>
