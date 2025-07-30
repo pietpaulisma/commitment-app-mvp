@@ -82,18 +82,6 @@ export default function NewMobileProfile() {
               {profile.role === 'supreme_admin' && (
                 <>
                   <Link 
-                    href="/admin"
-                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
-                  >
-                    <CogIcon className="w-6 h-6 text-blue-400 group-hover:text-blue-300" />
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold text-white">System Administration</div>
-                      <div className="text-sm text-gray-400">Manage users, settings & system</div>
-                    </div>
-                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
-                  </Link>
-                  
-                  <Link 
                     href="/admin/groups"
                     className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
                   >
