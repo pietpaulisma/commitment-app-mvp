@@ -1574,22 +1574,73 @@ export default function RectangularDashboard() {
                 <p className="text-gray-500 text-sm mt-2">Start a conversation with your group</p>
               </div>
             ) : (
-              <div className="space-y-1 px-4">
-                {recentChats.slice(0, 7).map((chat) => (
-                  <div key={chat.id} className={`px-3 py-2 rounded ${
-                    chat.is_own_message ? 'bg-gray-900/50' : 'bg-gray-900/30'
-                  }`}>
-                    <p className="text-sm text-gray-300">
-                      <span className="font-medium text-white mr-2">
-                        {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}:
-                      </span>
-                      {chat.message}
-                      <span className="text-xs text-gray-500 ml-2">
-                        {formatTimeAgo(chat.created_at)}
-                      </span>
-                    </p>
-                  </div>
-                ))}
+              <div className="space-y-3 px-4">
+                {recentChats.slice(0, 7).map((chat) => {
+                  // Check if it's a workout completion message
+                  let isWorkoutMessage = false
+                  let workoutData = null
+                  let displayText = chat.message
+
+                  try {
+                    if (chat.message && (chat.message.includes('workout_data') || chat.message.includes('Workout completed!'))) {
+                      const parsed = JSON.parse(chat.message)
+                      if (parsed.workout_data) {
+                        isWorkoutMessage = true
+                        workoutData = parsed.workout_data
+                        displayText = parsed.text || '🎯 Workout completed!'
+                      }
+                    }
+                  } catch (e) {
+                    // If parsing fails, just show the original message
+                  }
+
+                  return (
+                    <div key={chat.id} className={`px-4 py-3 rounded-2xl ${
+                      chat.is_own_message ? 'bg-gray-700/60' : 'bg-gray-800/60'
+                    } ${isWorkoutMessage ? 'border border-green-500/30' : ''}`}>
+                      {isWorkoutMessage && workoutData ? (
+                        // Special workout completion display
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                                <span className="text-xs">🏆</span>
+                              </div>
+                              <span className="font-medium text-green-400 text-sm">Workout Completed!</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-white">{workoutData.total_points}</div>
+                              <div className="text-xs text-gray-400">points</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-400">
+                              {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]} crushed their target
+                            </span>
+                            <span className="text-gray-500">
+                              {formatTimeAgo(chat.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        // Regular message display  
+                        <div className="text-sm text-gray-300">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <span className="font-medium text-white mr-2">
+                                {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}:
+                              </span>
+                              <span>{displayText}</span>
+                            </div>
+                            <span className="text-xs text-gray-500 flex-shrink-0">
+                              {formatTimeAgo(chat.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
