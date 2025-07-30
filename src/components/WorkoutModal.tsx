@@ -150,7 +150,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const handleClose = () => {
     console.log('Starting close animation')
     setIsClosing(true)
-    setShowIconTransition(false) // Reset icons first
+    
+    // Start reverse icon animation immediately - X flips back to chat
+    setShowIconTransition(false)
+    
+    // Start modal slide down animation
     setIsAnimatedIn(false)
     
     // Notify parent immediately that close animation started (for button sync)
