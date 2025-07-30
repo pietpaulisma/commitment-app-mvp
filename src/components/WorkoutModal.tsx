@@ -659,9 +659,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="font-medium text-gray-500">
-                    Sport
-                  </span>
+                  <StarIcon className="w-5 h-5 text-gray-500" />
                 </div>
               </div>
             </button>
