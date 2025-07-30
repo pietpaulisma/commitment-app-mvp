@@ -515,6 +515,29 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
 
 const MemoizedChartComponent = memo(ChartComponent)
 
+// Personal stats component with user accent colors
+const PersonalStatComponent = ({ stat, userProfile }: { stat: any, userProfile: any }) => {
+  const userColor = userProfile?.personal_color || '#f97316'
+  
+  return (
+    <div className="p-6 bg-gray-900/30 relative overflow-hidden">
+      <div className="relative z-10">
+        <div className="text-center">
+          <div 
+            className="text-3xl font-black mb-2"
+            style={{ color: userColor }}
+          >
+            {stat.value}
+          </div>
+          <div className="text-xs text-gray-400 uppercase tracking-wide">
+            {stat.title}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function RectangularDashboard() {
   // Add keyframe animations for enhanced chart effects and header animations
   const chartAnimationStyles = `
@@ -606,6 +629,8 @@ export default function RectangularDashboard() {
   const [accentColor, setAccentColor] = useState('blue') // Default blue
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
+  const [personalStats, setPersonalStats] = useState<any>(null)
+  const [showPersonalStats, setShowPersonalStats] = useState(false)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
 
@@ -1037,6 +1062,83 @@ export default function RectangularDashboard() {
     }
   }
 
+  const loadPersonalStats = async () => {
+    if (!user) return
+
+    try {
+      // Get personal workout data
+      const { data: logs } = await supabase
+        .from('logs')
+        .select('points, created_at, exercise_id, exercises(name)')
+        .eq('user_id', user.id)
+
+      if (!logs || logs.length === 0) {
+        setPersonalStats({ interestingStats: [] })
+        return
+      }
+
+      const totalWorkouts = logs.length
+      const totalPoints = logs.reduce((sum, log) => sum + log.points, 0)
+      const avgPointsPerWorkout = Math.round(totalPoints / totalWorkouts)
+
+      // Get current streak from checkins
+      const { data: checkins } = await supabase
+        .from('daily_checkins')
+        .select('date, is_complete')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(30)
+
+      let currentStreak = 0
+      if (checkins) {
+        for (const checkin of checkins) {
+          if (checkin.is_complete) {
+            currentStreak++
+          } else {
+            break
+          }
+        }
+      }
+
+      // Create personal stats in same format as group stats
+      setPersonalStats({
+        interestingStats: [
+          {
+            type: 'personal-points',
+            title: 'Your Total Points',
+            value: totalPoints,
+            layout: 'col-span-2',
+            accentColor: profile?.personal_color || '#f97316'
+          },
+          {
+            type: 'personal-workouts',
+            title: 'Total Workouts',
+            value: totalWorkouts,
+            layout: 'square',
+            accentColor: profile?.personal_color || '#f97316'
+          },
+          {
+            type: 'personal-average',
+            title: 'Average/Workout',
+            value: avgPointsPerWorkout,
+            layout: 'square',
+            accentColor: profile?.personal_color || '#f97316'
+          },
+          {
+            type: 'personal-streak',
+            title: 'Current Streak',
+            value: `${currentStreak} days`,
+            layout: 'col-span-2',
+            accentColor: profile?.personal_color || '#f97316'
+          }
+        ]
+      })
+    } catch (error) {
+      console.error('Error loading personal stats:', error)
+      setPersonalStats({ interestingStats: [] })
+    }
+  }
+
   // Predefined 2×4 grid layouts with 8 cells each
   // A = 1×1 (square), B = 1×2 (tall), C = 2×1 (wide)
   const PREDEFINED_LAYOUTS = [
@@ -1173,7 +1275,7 @@ export default function RectangularDashboard() {
         setGroupStartDate(group?.start_date || null)
 
         // Load group members and stats
-        await Promise.all([loadGroupMembers(), loadGroupStats()])
+        await Promise.all([loadGroupMembers(), loadGroupStats(), loadPersonalStats()])
 
         // Try to load group settings for rest/recovery days and UI configuration
         try {
@@ -1492,55 +1594,107 @@ export default function RectangularDashboard() {
         {/* Essential Stats */}
         <div id="group-stats" className="bg-black">
           <div className="py-8">
-            <h3 className="text-lg font-semibold text-white mb-6 px-4 flex items-center gap-2">
-              <ChartPieIcon className="w-5 h-5 text-gray-400" />
-              Stats
-            </h3>
+            <div className="px-4 mb-6 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <ChartPieIcon className="w-5 h-5 text-gray-400" />
+                Stats
+              </h3>
+              <button
+                onClick={() => setShowPersonalStats(!showPersonalStats)}
+                className={`text-sm px-3 py-1 rounded transition-colors ${
+                  showPersonalStats 
+                    ? 'bg-gray-700 text-white' 
+                    : 'bg-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                Your Stats
+              </button>
+            </div>
             
-            {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
-              <div className="space-y-0 border-t border-b border-gray-800">
-                {/* Top row - Group Points (full width) */}
-                <div className="w-full border-b border-gray-800">
-                  <MemoizedChartComponent 
-                    key={`${groupStats.interestingStats[0].type}-0`}
-                    stat={groupStats.interestingStats[0]} 
-                    index={0} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                  />
+{/* Show either group stats or personal stats based on toggle */}
+            {showPersonalStats ? (
+              personalStats && personalStats.interestingStats && personalStats.interestingStats.length > 0 ? (
+                <div className="space-y-0 border-t border-b border-gray-800">
+                  {/* Top row - Personal Points (full width) */}
+                  <div className="w-full border-b border-gray-800">
+                    <PersonalStatComponent 
+                      stat={personalStats.interestingStats[0]} 
+                      userProfile={profile}
+                    />
+                  </div>
+                  
+                  {/* Middle row - Workouts and Average (2 squares) */}
+                  <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
+                    <div className="border-r border-gray-800">
+                      <PersonalStatComponent 
+                        stat={personalStats.interestingStats[1]} 
+                        userProfile={profile}
+                      />
+                    </div>
+                    <PersonalStatComponent 
+                      stat={personalStats.interestingStats[2]} 
+                      userProfile={profile}
+                    />
+                  </div>
+                  
+                  {/* Bottom row - Streak (full width rectangle) */}
+                  <div className="w-full">
+                    <PersonalStatComponent 
+                      stat={personalStats.interestingStats[3]} 
+                      userProfile={profile}
+                    />
+                  </div>
                 </div>
-                
-                {/* Middle row - Money Pot and Birthday (2 squares) */}
-                <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
-                  <div className="border-r border-gray-800">
+              ) : (
+                <div className="border-t border-b border-gray-800 p-8 text-center text-gray-400">
+                  No personal workout data available
+                </div>
+              )
+            ) : (
+              groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
+                <div className="space-y-0 border-t border-b border-gray-800">
+                  {/* Top row - Group Points (full width) */}
+                  <div className="w-full border-b border-gray-800">
                     <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[1].type}-1`}
-                      stat={groupStats.interestingStats[1]} 
-                      index={1} 
+                      key={`${groupStats.interestingStats[0].type}-0`}
+                      stat={groupStats.interestingStats[0]} 
+                      index={0} 
                       getLayoutClasses={getLayoutClasses}
                       userProfile={profile}
                     />
                   </div>
-                  <MemoizedChartComponent 
-                    key={`${groupStats.interestingStats[2].type}-2`}
-                    stat={groupStats.interestingStats[2]} 
-                    index={2} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                  />
+                  
+                  {/* Middle row - Money Pot and Birthday (2 squares) */}
+                  <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
+                    <div className="border-r border-gray-800">
+                      <MemoizedChartComponent 
+                        key={`${groupStats.interestingStats[1].type}-1`}
+                        stat={groupStats.interestingStats[1]} 
+                        index={1} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                      />
+                    </div>
+                    <MemoizedChartComponent 
+                      key={`${groupStats.interestingStats[2].type}-2`}
+                      stat={groupStats.interestingStats[2]} 
+                      index={2} 
+                      getLayoutClasses={getLayoutClasses}
+                      userProfile={profile}
+                    />
+                  </div>
+                  
+                  {/* Bottom row - Workout Times (full width rectangle) */}
+                  <div className="w-full">
+                    <MemoizedChartComponent 
+                      key={`${groupStats.interestingStats[3].type}-3`}
+                      stat={groupStats.interestingStats[3]} 
+                      index={3} 
+                      getLayoutClasses={getLayoutClasses}
+                      userProfile={profile}
+                    />
+                  </div>
                 </div>
-                
-                {/* Bottom row - Workout Times (full width rectangle) */}
-                <div className="w-full">
-                  <MemoizedChartComponent 
-                    key={`${groupStats.interestingStats[3].type}-3`}
-                    stat={groupStats.interestingStats[3]} 
-                    index={3} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                  />
-                </div>
-              </div>
             ) : (
               <div className="space-y-0">
                 <div className="p-4 bg-gray-900/30 rounded-lg h-32">
