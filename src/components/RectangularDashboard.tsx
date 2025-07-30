@@ -990,7 +990,7 @@ export default function RectangularDashboard() {
         moneyPot: {
           title: 'Money Pot',
           subtitle: `top: ${biggestContributor}`,
-          value: Math.max(0, Math.round(moneyInPot * 100) / 100),
+          value: Math.max(0, Math.round(moneyInPot)),
           type: 'typography_stat'
         },
         birthday: {
@@ -1109,7 +1109,7 @@ export default function RectangularDashboard() {
           {
             title: 'Your Contribution',
             subtitle: 'money pot',
-            value: Math.max(0, Math.round(personalMoneyContribution * 100) / 100),
+            value: Math.max(0, Math.round(personalMoneyContribution)),
             type: 'typography_stat',
             layout: 'square' // Bottom left - square
           },
