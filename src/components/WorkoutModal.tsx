@@ -112,6 +112,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [favoritesExpanded, setFavoritesExpanded] = useState(true)
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState<string[]>([])
   const [favoritesLoading, setFavoritesLoading] = useState(false)
+  const [showSportSelection, setShowSportSelection] = useState(false)
+  const [selectedSport, setSelectedSport] = useState('')
+  const [selectedSportType, setSelectedSportType] = useState('')
+  const [selectedIntensity, setSelectedIntensity] = useState('medium')
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -621,6 +625,52 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     )
   }
 
+  const renderSportButton = (sportName: string) => {
+    return (
+      <div
+        key={sportName}
+        className="w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 bg-gray-900/30 hover:bg-gray-900/40"
+      >
+        <div className="flex">
+          {/* Main content area with progress bar - matches header layout */}
+          <div className="flex-1 relative overflow-hidden">
+            {/* Gradient background for sports */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+              style={{ 
+                width: '100%',
+                background: '#000000'
+              }}
+            />
+            
+            {/* Main sport button */}
+            <button
+              onClick={() => {
+                setSelectedSport(sportName)
+                setShowSportSelection(true)
+              }}
+              className="w-full p-3 hover:scale-105 transition-transform duration-300 relative"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <BoltIcon className="w-6 h-6 text-purple-400" />
+                  <div>
+                    <div className="font-medium text-white text-left">{sportName}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="font-medium text-gray-500">
+                    Sport
+                  </span>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const calculateWorkoutPoints = (exercise: ExerciseWithProgress, count: number, weight: number, isDecreased: boolean) => {
     let points = count * exercise.points_per_unit
     
@@ -1028,6 +1078,22 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
 
 
+  // Predefined sports types with better variety
+  const sportTypes = [
+    'Running',
+    'Basketball', 
+    'Soccer/Football',
+    'Tennis',
+    'Swimming',
+    'Cycling',
+    'Volleyball',
+    'Hiking',
+    'Rock Climbing',
+    'Surfing',
+    'Mountain Biking',
+    'Canoeing'
+  ]
+
   if (!isOpen) return null
 
   // Group exercises by their actual types, with recovery and sports separate
@@ -1377,7 +1443,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <h4 className="text-2xl font-bold text-white">Sports</h4>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">({sportsExercises.length})</span>
+                      <span className="text-sm text-gray-400">({sportTypes.length})</span>
                       <ChevronDownIcon 
                         className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
                           sportsExpanded ? 'rotate-180' : ''
@@ -1387,7 +1453,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </button>
                   {sportsExpanded && (
                     <div className="space-y-0 border-t border-gray-800">
-                      {sportsExercises.map((exercise) => renderExerciseButton(exercise))}
+                      {sportTypes.map((sportName) => renderSportButton(sportName))}
                     </div>
                   )}
                 </div>
@@ -2125,6 +2191,78 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 >
                   {loading ? '💾 SAVING...' : '💾 SAVE WORKOUT'}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sport Selection Modal */}
+        {showSportSelection && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[120] flex items-center justify-center p-4">
+            <div className="relative bg-black border border-gray-700 rounded-3xl max-w-sm w-full max-h-[95vh] overflow-hidden shadow-2xl">
+              
+              {/* Header */}
+              <div className="relative overflow-hidden">
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #a855f750 0%, #a855f730 50%, transparent 100%)'
+                  }}
+                />
+                
+                <div className="relative p-6 border-b border-gray-700/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div 
+                        className="p-3 rounded-2xl"
+                        style={{
+                          background: 'linear-gradient(135deg, #a855f740 0%, #a855f720 100%)'
+                        }}
+                      >
+                        <BoltIcon className="w-6 h-6 text-purple-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-1">{selectedSport}</h3>
+                        <div className="text-white/80 text-sm">Select intensity level</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowSportSelection(false)}
+                      className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-110"
+                    >
+                      <XMarkIcon className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* Intensity Selection */}
+                <div className="space-y-3">
+                  {sportsExercises.map((exercise) => (
+                    <button
+                      key={exercise.id}
+                      onClick={() => {
+                        setSelectedWorkoutExercise(exercise)
+                        setWorkoutCount(1)
+                        setSelectedWeight(0)
+                        setIsDecreasedExercise(false)
+                        setShowSportSelection(false)
+                        setWorkoutInputOpen(true)
+                      }}
+                      className="w-full bg-gray-900/30 hover:bg-gray-800/40 border border-gray-700/50 hover:border-purple-400/50 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between group"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <BoltIcon className="w-5 h-5 text-purple-400" />
+                        <div className="text-left">
+                          <div className="font-semibold">{exercise.name}</div>
+                          <div className="text-sm text-gray-400">{exercise.points_per_unit} pts/{exercise.unit}</div>
+                        </div>
+                      </div>
+                      <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
