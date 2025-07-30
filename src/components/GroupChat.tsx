@@ -655,7 +655,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
           <div className="flex">
             {/* Main header area */}
             <div className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden">
-              <div className="relative h-full flex items-center justify-center px-6 text-white">
+              <div className="relative h-full flex items-center justify-start px-6 text-white">
                 <h1 className="text-2xl font-bold text-white">Group Chat</h1>
               </div>
             </div>
@@ -663,7 +663,7 @@ export default function GroupChat({ isOpen, onClose }: GroupChatProps) {
             {/* Close button - matches workout page X button */}
             <button
               onClick={onClose}
-              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200"
+              className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
               aria-label="Close chat"
             >
               <XMarkIcon className="w-6 h-6" />
