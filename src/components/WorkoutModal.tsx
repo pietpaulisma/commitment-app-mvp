@@ -1943,10 +1943,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     
                     <input
                       type="number"
-                      value={workoutCount}
+                      value={workoutCount || 0}
                       onChange={(e) => setWorkoutCount(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="text-5xl font-black text-white text-center bg-transparent border-none outline-none w-20"
+                      className="text-6xl font-black text-white text-center bg-transparent border-none outline-none w-24"
                       style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}
+                      placeholder="0"
                     />
                     
                     <button
@@ -2037,15 +2038,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {selectedWorkoutExercise.is_weighted && (
                       <div>
                         <h4 className="text-white font-semibold text-center mb-3 text-xs uppercase tracking-wide">Weight</h4>
-                        <div className="max-w-xs mx-auto">
-                          {/* Connected weight grid component */}
+                        <div className="flex justify-center">
+                          {/* Connected weight grid component - aligned with quick buttons */}
                           <div 
-                            className="grid grid-cols-4 overflow-hidden"
+                            className="grid grid-cols-4 gap-0"
                             style={{
+                              width: '192px', // Exactly 4 * 48px to match quick adjustment buttons width
                               background: '#374151',
                               border: '2px solid rgba(0,0,0,0.3)',
                               borderRadius: '12px',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1)'
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1)',
+                              overflow: 'hidden'
                             }}
                           >
                             <button
@@ -2054,7 +2057,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               style={{
                                 width: '48px',
                                 height: '48px',
-                                background: selectedWeight === 0 ? '#22c55e' : 'transparent',
+                                background: selectedWeight === 0 
+                                  ? 'linear-gradient(145deg, #22c55e 0%, #16a34a 30%, #15803d 70%, #166534 100%)'
+                                  : 'transparent',
                                 color: 'white'
                               }}
                             >
@@ -2077,7 +2082,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                 style={{
                                   width: '48px',
                                   height: '48px',
-                                  background: selectedWeight === weight ? '#22c55e' : 'transparent',
+                                  background: selectedWeight === weight 
+                                    ? 'linear-gradient(145deg, #22c55e 0%, #16a34a 30%, #15803d 70%, #166534 100%)'
+                                    : 'transparent',
                                   color: 'white'
                                 }}
                               >
@@ -2134,73 +2141,85 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 )}
 
-                {/* Submit Button */}
-                <div className="mt-auto pt-4">
-                  <button
-                    onClick={async () => {
-                      if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
-                      
-                      setLoading(true)
-                      try {
-                        const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                {/* Submit Button - matches header shape but bottom filled */}
+                <div className="mt-auto">
+                  <div className="relative bg-gray-900/30 border-t border-gray-800 overflow-hidden">
+                    <div className="flex">
+                      {/* Main content area - matches header layout */}
+                      <div className="flex-1 relative overflow-hidden">
+                        {/* Progress background */}
+                        <div 
+                          className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out"
+                          style={{ 
+                            width: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0 ? '100%' : '0%',
+                            background: getExerciseTypeGradient(selectedWorkoutExercise.type, selectedWorkoutExercise.id, 'linear')
+                          }}
+                        />
                         
-                        const { error } = await supabase
-                          .from('logs')
-                          .insert({
-                            user_id: user.id,
-                            group_id: profile?.group_id,
-                            exercise_id: selectedWorkoutExercise.id,
-                            count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
-                            weight: selectedWeight,
-                            duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
-                            points: points,
-                            date: new Date().toISOString().split('T')[0],
-                            timestamp: Date.now(),
-                            is_decreased: isDecreasedExercise
-                          })
-                        
-                        if (error) {
-                          alert('Error logging workout: ' + error.message)
-                        } else {
-                          // Refresh data
-                          if (onWorkoutAdded) {
-                            onWorkoutAdded()
-                          }
-                          loadDailyProgress()
-                          loadTodaysWorkouts()
-                          
-                          // Reset and close
-                          setWorkoutInputOpen(false)
-                          setWorkoutCount(0)
-                          setSelectedWeight(lockedWeight || 0) // Keep locked weight
-                          setIsDecreasedExercise(false)
-                          
-                          // Haptic feedback
-                          if (navigator.vibrate) {
-                            navigator.vibrate(100)
-                          }
-                        }
-                      } catch (error) {
-                        console.error('Error saving workout:', error)
-                        alert('An error occurred while saving your workout.')
-                      } finally {
-                        setLoading(false)
-                      }
-                    }}
-                    disabled={loading || workoutCount <= 0}
-                    className="w-full py-4 px-6 rounded-full font-bold text-white transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    style={{
-                      background: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
-                        ? '#22c55e'
-                        : '#4b5563',
-                      border: '2px solid rgba(0,0,0,0.2)',
-                      boxShadow: calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
-                        ? '0 6px 20px rgba(34, 197, 94, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
-                        : '0 6px 20px rgba(75, 85, 99, 0.3), inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.3)'
-                    }}
-                  >
-                    {loading ? 'Submitting...' : `Submit ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
-                  </button>
+                        {/* Submit button content */}
+                        <button
+                          onClick={async () => {
+                            if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
+                            
+                            setLoading(true)
+                            try {
+                              const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                              
+                              const { error } = await supabase
+                                .from('logs')
+                                .insert({
+                                  user_id: user.id,
+                                  group_id: profile?.group_id,
+                                  exercise_id: selectedWorkoutExercise.id,
+                                  count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
+                                  weight: selectedWeight,
+                                  duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
+                                  points: points,
+                                  date: new Date().toISOString().split('T')[0],
+                                  timestamp: Date.now(),
+                                  is_decreased: isDecreasedExercise
+                                })
+                              
+                              if (error) {
+                                alert('Error logging workout: ' + error.message)
+                              } else {
+                                // Refresh data
+                                if (onWorkoutAdded) {
+                                  onWorkoutAdded()
+                                }
+                                loadDailyProgress()
+                                loadTodaysWorkouts()
+                                
+                                // Reset and close
+                                setWorkoutInputOpen(false)
+                                setWorkoutCount(0)
+                                setSelectedWeight(lockedWeight || 0) // Keep locked weight
+                                setIsDecreasedExercise(false)
+                                
+                                // Haptic feedback
+                                if (navigator.vibrate) {
+                                  navigator.vibrate(100)
+                                }
+                              }
+                            } catch (error) {
+                              console.error('Error saving workout:', error)
+                              alert('An error occurred while saving your workout.')
+                            } finally {
+                              setLoading(false)
+                            }
+                          }}
+                          disabled={loading || workoutCount <= 0}
+                          className="relative h-16 w-full flex items-center justify-center px-4 text-white font-bold transition-all duration-200 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <div className="text-center">
+                            <div className="text-lg font-bold">
+                              {loading ? 'Submitting...' : `Submit ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
