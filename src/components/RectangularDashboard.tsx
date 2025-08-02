@@ -1499,10 +1499,10 @@ export default function RectangularDashboard() {
                     Day
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className={`text-6xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
+                    <div className="text-6xl font-black text-white drop-shadow-lg">
                       {challengeDay}
                     </div>
-                    <p className={`text-sm font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
+                    <p className="text-sm font-medium text-white/90 drop-shadow">
                       {getCurrentDayName()}
                     </p>
                   </div>
@@ -1533,14 +1533,14 @@ export default function RectangularDashboard() {
                     Time
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className={`text-3xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
+                    <div className="text-3xl font-black text-white drop-shadow-lg">
                       {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
                         <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
                           {char}
                         </span>
                       ))}
                     </div>
-                    <div className={`text-sm font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
+                    <div className="text-sm font-medium text-white/90 drop-shadow">
                       remaining
                     </div>
                   </div>
