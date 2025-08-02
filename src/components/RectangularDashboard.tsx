@@ -1439,7 +1439,7 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b border-gray-600"
+        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b border-gray-900/20"
         style={{
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4)'
         }}
@@ -1486,7 +1486,7 @@ export default function RectangularDashboard() {
           
           {/* Greeting with username and motivational text */}
           <div 
-            className="border-b border-gray-600"
+            className="border-b border-gray-900/20"
             style={{
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.3)'
             }}
@@ -1498,8 +1498,8 @@ export default function RectangularDashboard() {
               }}
             >
               <div className="py-6 px-4">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
-                  <span className="text-gray-400">💬</span>
+                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                  <span className="text-gray-400 text-sm">💬</span>
                   Motivation
                 </h3>
                 <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
@@ -1526,7 +1526,7 @@ export default function RectangularDashboard() {
             {/* DAY Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-r border-b border-gray-600"
+                className="relative aspect-square border-r border-b border-gray-900/20"
                 style={{
                   background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #111111 40%, #000000 80%, #050505 100%)',
                   boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
@@ -1535,8 +1535,8 @@ export default function RectangularDashboard() {
                 
                 {/* DAY Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
-                    <CalendarDaysIcon className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                    <CalendarDaysIcon className="w-4 h-4 text-gray-400" />
                     Day
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
@@ -1554,28 +1554,29 @@ export default function RectangularDashboard() {
             {/* Time Remaining Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-b border-gray-600"
+                className="relative aspect-square border-b border-gray-900/20"
                 style={{
                   background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #111111 40%, #000000 80%, #050505 100%)',
                   boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
                 }}
               >
-                {/* Time-based gradient overlay positioned inside the block */}
+                {/* Brighter time-based gradient overlay that extends to edges with inner shadow */}
                 <div 
-                  className="absolute inset-3 rounded-xl"
+                  className="absolute inset-0 rounded-none"
                   style={{
-                    background: getTimeBasedGradient().background
+                    background: `radial-gradient(ellipse at center, rgba(255, 215, 0, 0.6) 0%, rgba(255, 165, 0, 0.4) 30%, rgba(255, 69, 0, 0.3) 60%, rgba(139, 69, 19, 0.2) 100%)`,
+                    boxShadow: 'inset 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 -4px 8px rgba(0, 0, 0, 0.3)'
                   }}
                 />
                 
                 {/* Time Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
-                    <ClockIcon className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                    <ClockIcon className="w-4 h-4 text-gray-400" />
                     Time
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-3xl font-black text-white drop-shadow-lg">
+                    <div className="text-3xl text-white drop-shadow-lg" style={{ fontFamily: 'monospace, "Courier New", Courier' }}>
                       {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
                         <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
                           {char}
@@ -1602,15 +1603,15 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="relative border-b border-gray-800"
+              className="relative border-b border-gray-900/20"
               style={{
                 background: '#000000'
               }}
             >
               
               <div className="relative py-6 px-4 z-10">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
-                  <ChartBarIcon className="w-5 h-5 text-gray-400" />
+                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                  <ChartBarIcon className="w-4 h-4 text-gray-400" />
                   Status
                 </h3>
             
@@ -1701,15 +1702,15 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="relative border-b border-gray-800"
+              className="relative border-b border-gray-900/20"
               style={{
                 background: '#000000'
               }}
             >
               
               <div className="relative py-6 px-4 z-10">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
-                  <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400" />
+                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                  <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
                   Chats
                 </h3>
             
@@ -1805,7 +1806,7 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="relative border-b border-gray-800"
+              className="relative border-b border-gray-900/20"
               style={{
                 background: '#000000'
               }}
@@ -1813,8 +1814,8 @@ export default function RectangularDashboard() {
               
               <div className="relative py-6 px-4 z-10">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2 drop-shadow">
-                    <ChartPieIcon className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-sm font-medium text-white flex items-center gap-2 drop-shadow">
+                    <ChartPieIcon className="w-4 h-4 text-gray-400" />
                     Stats
                   </h3>
               <button
