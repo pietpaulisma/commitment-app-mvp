@@ -800,37 +800,50 @@ export default function RectangularDashboard() {
   }
 
 
-  // Simple time-based gradient calculation without useCallback
+  // Time-based gradient that moves horizontally across the day
   const getTimeBasedGradient = () => {
     const now = new Date()
     const hour = now.getHours()
+    const minutes = now.getMinutes()
     
-    // Early morning (5-7): Soft sunrise colors
+    // Calculate position as percentage across the day (6AM = 0%, 6PM = 100%)
+    const dayStart = 6 // 6AM
+    const dayEnd = 18 // 6PM
+    const currentTime = hour + (minutes / 60)
+    
+    let position = 0
+    if (currentTime >= dayStart && currentTime <= dayEnd) {
+      position = ((currentTime - dayStart) / (dayEnd - dayStart)) * 100
+    } else if (currentTime < dayStart) {
+      position = 0 // Before 6AM, stay at left
+    } else {
+      position = 100 // After 6PM, stay at right
+    }
+    
+    // Clamp position between 0 and 100
+    position = Math.max(0, Math.min(100, position))
+    
+    // Get time-based colors
+    let colors = { primary: 'orange-300', secondary: 'yellow-300' }
+    
     if (hour >= 5 && hour < 7) {
-      return 'from-orange-300/20 via-transparent to-yellow-300/10'
+      colors = { primary: 'orange-300', secondary: 'yellow-300' } // Sunrise
+    } else if (hour >= 7 && hour < 10) {
+      colors = { primary: 'orange-400', secondary: 'yellow-400' } // Morning
+    } else if (hour >= 10 && hour < 16) {
+      colors = { primary: 'yellow-400', secondary: 'orange-300' } // Day
+    } else if (hour >= 16 && hour < 18) {
+      colors = { primary: 'orange-500', secondary: 'red-400' } // Golden hour
+    } else if (hour >= 18 && hour < 20) {
+      colors = { primary: 'red-500', secondary: 'purple-500' } // Sunset
+    } else {
+      colors = { primary: 'blue-800', secondary: 'indigo-900' } // Night
     }
-    // Morning (7-10): Bright sunrise
-    else if (hour >= 7 && hour < 10) {
-      return 'from-orange-400/25 via-transparent to-yellow-400/15'
+    
+    return {
+      background: `radial-gradient(ellipse 80% 60% at ${position}% 80%, ${colors.primary}/30 0%, ${colors.secondary}/15 40%, transparent 70%)`,
+      position
     }
-    // Mid-morning to afternoon (10-16): Bright day
-    else if (hour >= 10 && hour < 16) {
-      return 'from-yellow-400/20 via-transparent to-orange-300/10'
-    }
-    // Late afternoon (16-18): Golden hour
-    else if (hour >= 16 && hour < 18) {
-      return 'from-orange-500/25 via-transparent to-red-400/15'
-    }
-    // Evening (18-20): Sunset
-    else if (hour >= 18 && hour < 20) {
-      return 'from-red-500/20 via-transparent to-purple-500/10'
-    }
-    // Night (20-24): Deep evening
-    else if (hour >= 20 || hour < 5) {
-      return 'from-blue-800/20 via-transparent to-indigo-900/10'
-    }
-    // Default fallback
-    return 'from-orange-600/20 via-transparent to-orange-500/10'
   }
 
   const loadGroupMembers = async () => {
@@ -1482,7 +1495,10 @@ export default function RectangularDashboard() {
                 <div className="relative px-6 py-8 z-10">
                   {/* Time-based gradient overlay positioned inside the block */}
                   <div 
-                    className={`absolute inset-3 rounded-xl bg-gradient-to-br ${getTimeBasedGradient()}`}
+                    className="absolute inset-3 rounded-xl"
+                    style={{
+                      background: getTimeBasedGradient().background
+                    }}
                   />
                   
                   {/* Content with relative positioning */}
