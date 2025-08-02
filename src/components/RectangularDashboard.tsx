@@ -1447,7 +1447,7 @@ export default function RectangularDashboard() {
           <div 
             className="relative rounded-2xl border overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
+              background: '#111827',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}
           >
@@ -1566,7 +1566,7 @@ export default function RectangularDashboard() {
           <div 
             className="relative rounded-2xl border overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
+              background: '#111827',
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }}
           >
