@@ -1487,18 +1487,22 @@ export default function RectangularDashboard() {
             
             <div className="relative px-6 py-4 z-10">
               <div className="flex items-center justify-between">
-                {/* Logo/Brand */}
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-white to-gray-300 rounded-lg flex items-center justify-center">
-                    <span className="text-black font-black text-lg">C</span>
-                  </div>
-                  <h1 className="text-xl font-bold text-white">Commitment</h1>
+                {/* Logo */}
+                <div>
+                  <img 
+                    src="/logo.png" 
+                    alt="The Commitment" 
+                    className="h-6 w-auto drop-shadow-lg"
+                  />
                 </div>
                 
                 {/* Settings Icon */}
-                <button className="p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+                <Link 
+                  href="/profile" 
+                  className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50"
+                >
                   <Cog6ToothIcon className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
-                </button>
+                </Link>
               </div>
             </div>
           </div>
