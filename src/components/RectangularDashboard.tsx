@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon } from '@heroicons/react/24/outline'
+import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 
 // Helper function to get hilarious hourly commitment messages
 const getHourlyMessage = (hour: number): string => {
@@ -1436,6 +1436,75 @@ export default function RectangularDashboard() {
       
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
+      
+      {/* Header with Logo and Settings */}
+      <div 
+        className="relative mx-2 mt-4 mb-2"
+        style={{
+          marginTop: 'calc(env(safe-area-inset-top) + 20px)'
+        }}
+      >
+        <style jsx>{`
+          @media (min-width: 1024px) {
+            div {
+              margin-top: 1rem !important;
+            }
+          }
+        `}</style>
+        
+        <div className="relative">
+          {/* Outer glow */}
+          <div 
+            className="absolute inset-0 rounded-2xl blur-lg opacity-15"
+            style={{
+              background: 'linear-gradient(135deg, #111827, #000000)',
+              transform: 'scale(1.01)'
+            }}
+          />
+          
+          {/* Main container */}
+          <div 
+            className="relative rounded-2xl border-2 overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
+              borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
+              boxShadow: `
+                inset 0 1px 0 rgba(255, 255, 255, 0.03),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+                0 4px 20px rgba(0, 0, 0, 0.5),
+                0 2px 8px rgba(0, 0, 0, 0.3)
+              `
+            }}
+          >
+            {/* Inner highlight */}
+            <div 
+              className="absolute inset-1 rounded-[14px] pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 50%, rgba(255,255,255,0.01) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.03)'
+              }}
+            />
+            
+            <div className="relative px-6 py-4 z-10">
+              <div className="flex items-center justify-between">
+                {/* Logo/Brand */}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-white to-gray-300 rounded-lg flex items-center justify-center">
+                    <span className="text-black font-black text-lg">C</span>
+                  </div>
+                  <h1 className="text-xl font-bold text-white">Commitment</h1>
+                </div>
+                
+                {/* Settings Icon */}
+                <button className="p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+                  <Cog6ToothIcon className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div 
