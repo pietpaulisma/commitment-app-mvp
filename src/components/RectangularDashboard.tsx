@@ -1480,13 +1480,9 @@ export default function RectangularDashboard() {
                 
                 {/* Content container */}
                 <div className="relative px-6 py-8 z-10">
-                  {/* Gradient overlay positioned inside the block */}
+                  {/* Time-based gradient overlay positioned inside the block */}
                   <div 
-                    className="absolute inset-3 rounded-xl"
-                    style={{
-                      background: `linear-gradient(135deg, ${profile?.personal_color || '#c084fc'} 0%, transparent 50%, ${profile?.personal_color || '#c084fc'}60 100%)`,
-                      opacity: 0.4
-                    }}
+                    className={`absolute inset-3 rounded-xl bg-gradient-to-br ${getTimeBasedGradient()}`}
                   />
                   
                   {/* Content with relative positioning */}
