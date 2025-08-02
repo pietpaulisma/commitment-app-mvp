@@ -823,25 +823,31 @@ export default function RectangularDashboard() {
     // Clamp position between 0 and 100
     position = Math.max(0, Math.min(100, position))
     
-    // Get time-based colors
-    let colors = { primary: 'orange-300', secondary: 'yellow-300' }
+    // Get time-based colors with rgba values
+    let primaryColor, secondaryColor
     
     if (hour >= 5 && hour < 7) {
-      colors = { primary: 'orange-300', secondary: 'yellow-300' } // Sunrise
+      primaryColor = 'rgba(252, 165, 165, 0.3)' // orange-300
+      secondaryColor = 'rgba(254, 240, 138, 0.15)' // yellow-300
     } else if (hour >= 7 && hour < 10) {
-      colors = { primary: 'orange-400', secondary: 'yellow-400' } // Morning
+      primaryColor = 'rgba(251, 146, 60, 0.35)' // orange-400
+      secondaryColor = 'rgba(250, 204, 21, 0.2)' // yellow-400
     } else if (hour >= 10 && hour < 16) {
-      colors = { primary: 'yellow-400', secondary: 'orange-300' } // Day
+      primaryColor = 'rgba(250, 204, 21, 0.3)' // yellow-400
+      secondaryColor = 'rgba(252, 165, 165, 0.15)' // orange-300
     } else if (hour >= 16 && hour < 18) {
-      colors = { primary: 'orange-500', secondary: 'red-400' } // Golden hour
+      primaryColor = 'rgba(249, 115, 22, 0.35)' // orange-500
+      secondaryColor = 'rgba(248, 113, 113, 0.2)' // red-400
     } else if (hour >= 18 && hour < 20) {
-      colors = { primary: 'red-500', secondary: 'purple-500' } // Sunset
+      primaryColor = 'rgba(239, 68, 68, 0.3)' // red-500
+      secondaryColor = 'rgba(168, 85, 247, 0.15)' // purple-500
     } else {
-      colors = { primary: 'blue-800', secondary: 'indigo-900' } // Night
+      primaryColor = 'rgba(30, 64, 175, 0.25)' // blue-800
+      secondaryColor = 'rgba(49, 46, 129, 0.12)' // indigo-900
     }
     
     return {
-      background: `radial-gradient(ellipse 80% 60% at ${position}% 80%, ${colors.primary}/30 0%, ${colors.secondary}/15 40%, transparent 70%)`,
+      background: `radial-gradient(ellipse 80% 60% at ${position}% 80%, ${primaryColor} 0%, ${secondaryColor} 40%, transparent 70%)`,
       position
     }
   }
