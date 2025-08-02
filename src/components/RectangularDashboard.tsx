@@ -1482,74 +1482,88 @@ export default function RectangularDashboard() {
           className="relative overflow-hidden mt-2"
         >
           
-          {/* Retro Boxed Container with Strokes and Shadows */}
-          <div className="relative mx-2 mb-1">
-            {/* Main Container with Multiple Stroke Layers */}
+          {/* Two Square Blocks: DAY and Time Remaining */}
+          <div className="grid grid-cols-2 gap-1 mx-2 mb-1">
+            {/* DAY Block */}
             <div className="relative">
-              {/* Main Box with Dark Grey Background */}
               <div 
-                className="relative rounded-2xl border overflow-hidden"
+                className="relative rounded-2xl border overflow-hidden aspect-square"
                 style={{
                   background: '#111827',
                   border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}
               >
+                {/* Time-based gradient overlay positioned inside the block */}
+                <div 
+                  className="absolute inset-3 rounded-xl"
+                  style={{
+                    background: getTimeBasedGradient().background
+                  }}
+                />
                 
-                {/* Content container */}
-                <div className="relative px-4 py-6 z-10">
-                  {/* Time-based gradient overlay positioned inside the block */}
-                  <div 
-                    className="absolute inset-3 rounded-xl"
-                    style={{
-                      background: getTimeBasedGradient().background
-                    }}
-                  />
-                  
-                  {/* Content with relative positioning */}
-                  <div className="relative z-10">
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div className={`flex items-baseline space-x-1 ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
-                        <span className="text-5xl font-thin uppercase tracking-wide text-white drop-shadow-lg">DAY</span>
-                        <span className="text-5xl font-black text-white drop-shadow-lg">{challengeDay}</span>
-                      </div>
-                      <p className={`text-sm font-medium -mt-1 text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
-                        {getCurrentDayName()}
+                {/* DAY Content */}
+                <div className="relative z-10 p-4 h-full flex flex-col justify-center items-center text-center">
+                  <div className={`flex items-baseline space-x-1 ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
+                    <span className="text-3xl font-thin uppercase tracking-wide text-white drop-shadow-lg">DAY</span>
+                    <span className="text-3xl font-black text-white drop-shadow-lg">{challengeDay}</span>
+                  </div>
+                  <p className={`text-xs font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
+                    {getCurrentDayName()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Time Remaining Block */}
+            <div className="relative">
+              <div 
+                className="relative rounded-2xl border overflow-hidden aspect-square"
+                style={{
+                  background: '#111827',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                {/* Time Content */}
+                <div className="relative z-10 p-4 h-full flex flex-col justify-center items-center text-center">
+                  <div className={`text-2xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
+                    {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
+                      <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
+                        {char}
+                      </span>
+                    ))}
+                  </div>
+                  <div className={`text-xs font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
+                    remaining
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Greeting with username and motivational text */}
+          <div className="mx-2 mb-1">
+            <div 
+              className="relative rounded-2xl border overflow-hidden"
+              style={{
+                background: '#111827',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <div className="px-4 py-4">
+                <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
+                  {(() => {
+                    // Find current user's progress
+                    const currentUserMember = groupMembers.find(member => member.isCurrentUser)
+                    const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+                    
+                    return (
+                      <p className="text-sm text-white/80 font-medium drop-shadow">
+                        {hasAchievedTarget 
+                          ? getTargetAchievedMessage(currentTime.getHours())
+                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
                       </p>
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-3xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
-                        {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
-                          <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
-                            {char}
-                          </span>
-                        ))}
-                      </div>
-                      <div className={`text-sm font-medium -mt-1 text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
-                        remaining
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Greeting with username and motivational text */}
-                  <div className="px-2 py-6">
-                    <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
-                      {(() => {
-                        // Find current user's progress
-                        const currentUserMember = groupMembers.find(member => member.isCurrentUser)
-                        const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
-                        
-                        return (
-                          <p className="text-sm text-white/80 font-medium drop-shadow">
-                            {hasAchievedTarget 
-                              ? getTargetAchievedMessage(currentTime.getHours())
-                              : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
-                          </p>
-                        )
-                      })()}
-                    </div>
-                  </div>
-                  </div>
+                    )
+                  })()}
                 </div>
               </div>
             </div>
