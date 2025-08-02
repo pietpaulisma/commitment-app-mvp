@@ -1439,16 +1439,15 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky top-0 z-[70] mx-2 mb-0 mt-4 bg-black/95 backdrop-blur-sm"
+        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b border-gray-800"
       >
         
         <div className="relative">
           {/* Main container */}
           <div 
-            className="relative rounded-2xl border overflow-hidden"
+            className="relative"
             style={{
-              background: '#111827',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
+              background: '#000000'
             }}
           >
             
@@ -1483,14 +1482,13 @@ export default function RectangularDashboard() {
         >
           
           {/* Two Square Blocks: DAY and Time Remaining */}
-          <div className="grid grid-cols-2 gap-1 mx-2 mb-1">
+          <div className="grid grid-cols-2">
             {/* DAY Block */}
             <div className="relative">
               <div 
-                className="relative rounded-2xl border overflow-hidden aspect-square"
+                className="relative aspect-square border-r border-b border-gray-800"
                 style={{
-                  background: '#111827',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                  background: '#000000'
                 }}
               >
                 {/* Time-based gradient overlay positioned inside the block */}
@@ -1522,10 +1520,9 @@ export default function RectangularDashboard() {
             {/* Time Remaining Block */}
             <div className="relative">
               <div 
-                className="relative rounded-2xl border overflow-hidden aspect-square"
+                className="relative aspect-square border-b border-gray-800"
                 style={{
-                  background: '#111827',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                  background: '#000000'
                 }}
               >
                 {/* Time Content */}
@@ -1552,12 +1549,11 @@ export default function RectangularDashboard() {
           </div>
 
           {/* Greeting with username and motivational text */}
-          <div className="mx-2 mb-1">
+          <div className="border-b border-gray-800">
             <div 
-              className="relative rounded-2xl border overflow-hidden"
+              className="relative"
               style={{
-                background: '#111827',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                background: '#000000'
               }}
             >
               <div className="px-4 py-4">
@@ -1584,17 +1580,16 @@ export default function RectangularDashboard() {
 
 
 
-      <div className="space-y-1 relative z-10 mx-2">
+      <div className="relative z-10">
         {/* Group Status */}
         <div id="group-status" className="relative">
           {/* Retro container wrapper */}
           <div className="relative">
             {/* Main container */}
             <div 
-              className="relative rounded-2xl border overflow-hidden"
+              className="relative border-b border-gray-800"
               style={{
-                background: '#111827',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                background: '#000000'
               }}
             >
               
@@ -1682,10 +1677,9 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="relative rounded-2xl border overflow-hidden"
+              className="relative border-b border-gray-800"
               style={{
-                background: '#111827',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                background: '#000000'
               }}
             >
               
@@ -1781,10 +1775,9 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="relative rounded-2xl border overflow-hidden"
+              className="relative border-b border-gray-800"
               style={{
-                background: '#111827',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                background: '#000000'
               }}
             >
               
