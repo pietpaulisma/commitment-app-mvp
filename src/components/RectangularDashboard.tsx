@@ -1634,22 +1634,31 @@ export default function RectangularDashboard() {
                       const borderRadius = isLeftColumn ? '' : '' // Remove rounded corners
                       
                       return (
-                        <div key={member.id} className="relative h-12 bg-gray-900 rounded-full overflow-hidden mx-1">
-                          {/* Rounded progress bar background */}
-                          <div className="absolute inset-0 bg-gray-800 rounded-full" />
+                        <div key={member.id} className="relative h-8 bg-gray-900 rounded-full overflow-hidden mx-1 shadow-inner">
+                          {/* Rounded progress bar background with inset shadow */}
+                          <div 
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: 'linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
+                              boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)'
+                            }}
+                          />
                           
-                          {/* Rounded progress fill */}
+                          {/* Rounded progress fill with 3D gradient */}
                           <div 
                             className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-500 ease-out"
                             style={{ 
                               width: `${Math.min(progressPercentage, 100)}%`,
                               background: progressPercentage >= 100 
-                                ? 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)'
+                                ? 'linear-gradient(180deg, #4ade80 0%, #22c55e 40%, #16a34a 100%)'
                                 : progressPercentage >= 75 
-                                  ? 'linear-gradient(90deg, #eab308 0%, #ca8a04 100%)'
+                                  ? 'linear-gradient(180deg, #fbbf24 0%, #eab308 40%, #ca8a04 100%)'
                                   : progressPercentage > 0
-                                    ? 'linear-gradient(90deg, #84cc16 0%, #65a30d 100%)'
-                                    : 'transparent'
+                                    ? 'linear-gradient(180deg, #a3e635 0%, #84cc16 40%, #65a30d 100%)'
+                                    : 'transparent',
+                              boxShadow: progressPercentage > 0 
+                                ? 'inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+                                : 'none'
                             }}
                           />
                           
