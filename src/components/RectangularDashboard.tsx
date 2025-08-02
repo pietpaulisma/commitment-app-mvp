@@ -1481,6 +1481,38 @@ export default function RectangularDashboard() {
           className="relative overflow-hidden mt-2"
         >
           
+          {/* Greeting with username and motivational text */}
+          <div className="border-b border-gray-800">
+            <div 
+              className="relative"
+              style={{
+                background: '#000000'
+              }}
+            >
+              <div className="py-6 px-4">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
+                  <span className="text-gray-400">💬</span>
+                  Motivation
+                </h3>
+                <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
+                  {(() => {
+                    // Find current user's progress
+                    const currentUserMember = groupMembers.find(member => member.isCurrentUser)
+                    const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+                    
+                    return (
+                      <p className="text-sm text-white/80 font-medium drop-shadow">
+                        {hasAchievedTarget 
+                          ? getTargetAchievedMessage(currentTime.getHours())
+                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
+                      </p>
+                    )
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Two Square Blocks: DAY and Time Remaining */}
           <div className="grid grid-cols-2">
             {/* DAY Block */}
@@ -1544,38 +1576,6 @@ export default function RectangularDashboard() {
                       remaining
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Greeting with username and motivational text */}
-          <div className="border-b border-gray-800">
-            <div 
-              className="relative"
-              style={{
-                background: '#000000'
-              }}
-            >
-              <div className="py-6 px-4">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
-                  <span className="text-gray-400">💬</span>
-                  Motivation
-                </h3>
-                <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
-                  {(() => {
-                    // Find current user's progress
-                    const currentUserMember = groupMembers.find(member => member.isCurrentUser)
-                    const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
-                    
-                    return (
-                      <p className="text-sm text-white/80 font-medium drop-shadow">
-                        {hasAchievedTarget 
-                          ? getTargetAchievedMessage(currentTime.getHours())
-                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
-                      </p>
-                    )
-                  })()}
                 </div>
               </div>
             </div>
