@@ -1438,12 +1438,11 @@ export default function RectangularDashboard() {
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
-      {/* Header with Logo and Settings - Sticky */}
+      {/* Header with Logo and Settings - Floating Glass */}
       <div 
-        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b"
+        className="sticky top-0 z-[70] mb-6 mt-4 mx-4 bg-black/20 backdrop-blur-md rounded-2xl border border-white/10"
         style={{
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
         }}
       >
         
@@ -1488,19 +1487,12 @@ export default function RectangularDashboard() {
           
           {/* Greeting with username and motivational text */}
           <div 
-            className="border-b border-gray-900/20"
+            className="mx-4 mb-6 bg-black/20 backdrop-blur-md rounded-2xl border border-white/10"
             style={{
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.3)'
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
             }}
           >
-            <div 
-              className="relative"
-              style={{
-                background: '#000000',
-                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-              }}
-            >
+            <div className="relative">
               <div className="py-6 px-4">
                 <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
                   <span className="text-gray-400 text-sm">💬</span>
@@ -1526,14 +1518,13 @@ export default function RectangularDashboard() {
           </div>
 
           {/* Two Square Blocks: DAY and Time Remaining */}
-          <div className="grid grid-cols-2">
+          <div className="grid grid-cols-2 gap-6 mx-4 mb-6">
             {/* DAY Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-r border-b border-gray-900/20"
+                className="relative aspect-square bg-black/20 backdrop-blur-md rounded-2xl border border-white/10"
                 style={{
-                  background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #111111 40%, #000000 80%, #050505 100%)',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
               >
                 
@@ -1558,19 +1549,18 @@ export default function RectangularDashboard() {
             {/* Time Remaining Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-b border-gray-900/20"
+                className="relative aspect-square bg-black/20 backdrop-blur-md rounded-2xl border border-white/10"
                 style={{
-                  background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #111111 40%, #000000 80%, #050505 100%)',
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                {/* Time remaining bar - fills right side to show what's left */}
+                {/* Time remaining bar - pill-shaped progress */}
                 <div 
-                  className="absolute right-0 top-0 bottom-0 rounded-none transition-all duration-1000"
+                  className="absolute right-2 top-2 bottom-2 rounded-2xl transition-all duration-1000"
                   style={{
-                    width: `${100 - timeRemainingPercentage}%`,
-                    background: `linear-gradient(270deg, rgba(255, 215, 0, 0.8) 0%, rgba(255, 165, 0, 0.6) 50%, rgba(255, 69, 0, 0.5) 100%)`,
-                    boxShadow: 'inset 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 -4px 8px rgba(0, 0, 0, 0.3)'
+                    width: `${Math.max(8, 100 - timeRemainingPercentage)}%`,
+                    background: `linear-gradient(270deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.7) 50%, rgba(255, 69, 0, 0.6) 100%)`,
+                    boxShadow: '0 4px 16px rgba(255, 165, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3)'
                   }}
                 />
                 
@@ -1596,18 +1586,13 @@ export default function RectangularDashboard() {
 
       <div className="relative z-10">
         {/* Group Status */}
-        <div id="group-status" className="relative">
-          {/* Retro container wrapper */}
-          <div className="relative">
-            {/* Main container */}
-            <div 
-              className="relative border-b"
-              style={{
-                background: '#000000',
-                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-              }}
-            >
+        <div id="group-status" className="relative mx-4 mb-6">
+          <div 
+            className="relative bg-black/20 backdrop-blur-md rounded-2xl border border-white/10"
+            style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+            }}
+          >
               
               <div className="relative py-6 px-4 z-10">
                 <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
@@ -1697,18 +1682,13 @@ export default function RectangularDashboard() {
         </div>
 
         {/* Chats Section */}
-        <div id="chats" className="relative">
-          {/* Retro container wrapper */}
-          <div className="relative">
-            {/* Main container */}
-            <div 
-              className="relative border-b"
-              style={{
-                background: '#000000',
-                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-              }}
-            >
+        <div id="chats" className="relative mx-4 mb-6">
+          <div 
+            className="relative bg-black/20 backdrop-blur-md rounded-2xl border border-white/10"
+            style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+            }}
+          >
               
               <div className="relative py-6 px-4 z-10">
                 <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
@@ -1803,18 +1783,13 @@ export default function RectangularDashboard() {
         </div>
 
         {/* Essential Stats */}
-        <div id="group-stats" className="relative">
-          {/* Retro container wrapper */}
-          <div className="relative">
-            {/* Main container */}
-            <div 
-              className="relative border-b"
-              style={{
-                background: '#000000',
-                boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.6)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-              }}
-            >
+        <div id="group-stats" className="relative mx-4 mb-6">
+          <div 
+            className="relative bg-black/20 backdrop-blur-md rounded-2xl border border-white/10"
+            style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+            }}
+          >
               
               <div className="relative py-6 px-4 z-10">
                 <div className="mb-4 flex items-center justify-between">
