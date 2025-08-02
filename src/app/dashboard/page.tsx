@@ -24,7 +24,7 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
+    <div className="relative min-h-screen bg-black">
       {/* Static gradient background - no parallax */}
       <div className="absolute inset-0 h-[50vh] z-0">
         <TimeGradient />

@@ -1439,7 +1439,7 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky top-4 z-[70] mx-2 mb-0 mt-4"
+        className="sticky top-0 z-[70] mx-2 mb-0 mt-4 bg-black/95 backdrop-blur-sm"
       >
         
         <div className="relative">
