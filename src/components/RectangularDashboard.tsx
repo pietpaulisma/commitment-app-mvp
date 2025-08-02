@@ -1450,7 +1450,7 @@ export default function RectangularDashboard() {
           <div 
             className="relative"
             style={{
-              background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 20%, #000000 80%, #0d0d0d 100%)'
+              background: 'radial-gradient(ellipse at top, #1a1a1a 0%, #111111 30%, #000000 70%, #050505 100%)'
             }}
           >
             
@@ -1528,10 +1528,8 @@ export default function RectangularDashboard() {
               <div 
                 className="relative aspect-square border-r border-b border-gray-600"
                 style={{
+                  background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #111111 40%, #000000 80%, #050505 100%)',
                   boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
-                }}
-                style={{
-                  background: '#000000'
                 }}
               >
                 
@@ -1558,10 +1556,8 @@ export default function RectangularDashboard() {
               <div 
                 className="relative aspect-square border-b border-gray-600"
                 style={{
+                  background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #111111 40%, #000000 80%, #050505 100%)',
                   boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
-                }}
-                style={{
-                  background: '#000000'
                 }}
               >
                 {/* Time-based gradient overlay positioned inside the block */}
@@ -1744,9 +1740,15 @@ export default function RectangularDashboard() {
                   }
 
                   return (
-                    <div key={chat.id} className={`px-4 py-3 rounded-2xl ${
-                      chat.is_own_message ? 'bg-gray-700' : 'bg-gray-800'
-                    } ${isWorkoutMessage ? 'border border-green-500/30' : ''}`}>
+                    <div key={chat.id} className={`px-4 py-3 ${
+                      chat.is_own_message ? '' : ''
+                    } ${isWorkoutMessage ? 'border-l-2 border-green-500/50' : 'border-l-2 border-gray-600/30'}`}
+                    style={{
+                      background: chat.is_own_message 
+                        ? 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)' 
+                        : 'linear-gradient(135deg, #151515 0%, #080808 100%)',
+                      borderRadius: '0px'
+                    }}>
                       {isWorkoutMessage && workoutData ? (
                         // Special workout completion display
                         <div>
