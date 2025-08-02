@@ -1455,11 +1455,11 @@ export default function RectangularDashboard() {
                 }}
               />
               
-              {/* Main Box with Neutral Background */}
+              {/* Main Box with Black Background */}
               <div 
                 className="relative rounded-2xl border-2 overflow-hidden"
                 style={{
-                  background: 'rgba(17, 24, 39, 0.9)',
+                  background: '#000000',
                   borderImage: 'linear-gradient(135deg, #ffffff20, #4b556340, #ffffff15) 1',
                   boxShadow: `
                     inset 0 1px 0 rgba(255, 255, 255, 0.08),
@@ -1480,15 +1480,12 @@ export default function RectangularDashboard() {
                 
                 {/* Content container */}
                 <div className="relative px-6 py-8 z-10">
-                  {/* Gradient overlay inside content */}
+                  {/* Gradient overlay positioned inside the block */}
                   <div 
-                    className="absolute inset-0 rounded-xl"
+                    className="absolute inset-4 rounded-xl"
                     style={{
-                      background: `linear-gradient(135deg, 
-                        ${profile?.personal_color || '#c084fc'}25 0%, 
-                        transparent 40%, 
-                        ${profile?.personal_color || '#c084fc'}15 100%)`,
-                      opacity: 0.8
+                      background: `linear-gradient(135deg, ${profile?.personal_color || '#c084fc'}40, transparent 60%, ${profile?.personal_color || '#c084fc'}20)`,
+                      opacity: 0.7
                     }}
                   />
                   
