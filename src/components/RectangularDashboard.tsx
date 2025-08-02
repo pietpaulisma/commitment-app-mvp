@@ -1439,7 +1439,10 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b border-gray-800"
+        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b border-gray-700"
+        style={{
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+        }}
       >
         
         <div className="relative">
@@ -1447,7 +1450,7 @@ export default function RectangularDashboard() {
           <div 
             className="relative"
             style={{
-              background: '#000000'
+              background: 'linear-gradient(180deg, #0a0a0a 0%, #000000 50%, #0a0a0a 100%)'
             }}
           >
             
@@ -1482,7 +1485,12 @@ export default function RectangularDashboard() {
         >
           
           {/* Greeting with username and motivational text */}
-          <div className="border-b border-gray-800">
+          <div 
+            className="border-b border-gray-700"
+            style={{
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02)'
+            }}
+          >
             <div 
               className="relative"
               style={{
@@ -1518,7 +1526,10 @@ export default function RectangularDashboard() {
             {/* DAY Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-r border-b border-gray-800"
+                className="relative aspect-square border-r border-b border-gray-700"
+                style={{
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 2px 6px rgba(0, 0, 0, 0.3)'
+                }}
                 style={{
                   background: '#000000'
                 }}
@@ -1545,7 +1556,10 @@ export default function RectangularDashboard() {
             {/* Time Remaining Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-b border-gray-800"
+                className="relative aspect-square border-b border-gray-700"
+                style={{
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 2px 6px rgba(0, 0, 0, 0.3)'
+                }}
                 style={{
                   background: '#000000'
                 }}
