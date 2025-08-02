@@ -1482,10 +1482,10 @@ export default function RectangularDashboard() {
                 <div className="relative px-6 py-8 z-10">
                   {/* Gradient overlay positioned inside the block */}
                   <div 
-                    className="absolute inset-4 rounded-xl"
+                    className="absolute inset-3 rounded-xl"
                     style={{
-                      background: `linear-gradient(135deg, ${profile?.personal_color || '#c084fc'}40, transparent 60%, ${profile?.personal_color || '#c084fc'}20)`,
-                      opacity: 0.7
+                      background: `linear-gradient(135deg, ${profile?.personal_color || '#c084fc'} 0%, transparent 50%, ${profile?.personal_color || '#c084fc'}60 100%)`,
+                      opacity: 0.4
                     }}
                   />
                   
