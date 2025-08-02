@@ -1439,20 +1439,8 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky z-[70] mx-2 mb-1"
-        style={{
-          top: 'calc(env(safe-area-inset-top) + 0.5rem)',
-          marginTop: 'calc(env(safe-area-inset-top) + 1rem)'
-        }}
+        className="sticky top-4 z-[70] mx-2 mb-0 mt-4"
       >
-        <style jsx>{`
-          @media (min-width: 1024px) {
-            div {
-              top: 0.5rem !important;
-              margin-top: 1rem !important;
-            }
-          }
-        `}</style>
         
         <div className="relative">
           {/* Outer glow */}
@@ -1514,18 +1502,8 @@ export default function RectangularDashboard() {
       {/* Time-Based Challenge Header */}
       {groupStartDate && (
         <div 
-          className="relative overflow-hidden"
-          style={{
-            marginTop: 'calc(env(safe-area-inset-top) + 80px)' // Mobile: safe area + reduced spacing
-          }}
+          className="relative overflow-hidden mt-2"
         >
-          <style jsx>{`
-            @media (min-width: 1024px) {
-              div {
-                margin-top: 4rem !important;
-              }
-            }
-          `}</style>
           
           {/* Retro Boxed Container with Strokes and Shadows */}
           <div className="relative mx-2 mb-1">
