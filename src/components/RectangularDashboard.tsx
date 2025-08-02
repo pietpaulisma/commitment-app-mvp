@@ -1437,16 +1437,18 @@ export default function RectangularDashboard() {
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
-      {/* Header with Logo and Settings */}
+      {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="relative mx-2 mt-4 mb-2"
+        className="sticky z-50 mx-2 mb-2"
         style={{
+          top: 'calc(env(safe-area-inset-top) + 1rem)',
           marginTop: 'calc(env(safe-area-inset-top) + 20px)'
         }}
       >
         <style jsx>{`
           @media (min-width: 1024px) {
             div {
+              top: 1rem !important;
               margin-top: 1rem !important;
             }
           }
