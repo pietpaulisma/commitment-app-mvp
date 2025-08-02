@@ -1490,7 +1490,7 @@ export default function RectangularDashboard() {
               <div 
                 className="relative rounded-2xl border overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
+                  background: '#111827',
                   border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}
               >
@@ -1624,12 +1624,12 @@ export default function RectangularDashboard() {
             {groupMembers.length === 0 ? (
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-gray-900/30">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
+                  <div className="animate-pulse bg-gray-800 rounded h-10 mb-2"></div>
+                  <div className="animate-pulse bg-gray-700 rounded h-4"></div>
                 </div>
                 <div className="p-3 rounded-lg bg-gray-900/30">
-                  <div className="animate-pulse bg-gradient-to-r from-gray-800 to-gray-700 rounded h-10 mb-2"></div>
-                  <div className="animate-pulse bg-gradient-to-r from-gray-700 to-gray-600 rounded h-4"></div>
+                  <div className="animate-pulse bg-gray-800 rounded h-10 mb-2"></div>
+                  <div className="animate-pulse bg-gray-700 rounded h-4"></div>
                 </div>
               </div>
             ) : (
@@ -1763,14 +1763,14 @@ export default function RectangularDashboard() {
 
                   return (
                     <div key={chat.id} className={`px-4 py-3 rounded-2xl ${
-                      chat.is_own_message ? 'bg-gray-700/60' : 'bg-gray-800/60'
+                      chat.is_own_message ? 'bg-gray-700' : 'bg-gray-800'
                     } ${isWorkoutMessage ? 'border border-green-500/30' : ''}`}>
                       {isWorkoutMessage && workoutData ? (
                         // Special workout completion display
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-gray-500 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                                 <span className="text-xs">🏆</span>
                               </div>
                               <span className="font-medium text-green-400 text-sm">Workout Completed!</span>
