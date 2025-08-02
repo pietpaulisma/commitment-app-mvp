@@ -1462,7 +1462,7 @@ export default function RectangularDashboard() {
                   <img 
                     src="/logo.png" 
                     alt="The Commitment" 
-                    className="h-6 w-auto drop-shadow-lg"
+                    className="h-6 w-auto -lg"
                   />
                 </div>
                 
@@ -1494,7 +1494,7 @@ export default function RectangularDashboard() {
           >
             <div className="relative">
               <div className="py-6 px-4">
-                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                <h3 className="text-sm font-medium text-white/90 mb-4 flex items-center gap-2 ">
                   <span className="text-gray-400 text-sm">💬</span>
                   Motivation
                 </h3>
@@ -1505,7 +1505,7 @@ export default function RectangularDashboard() {
                     const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
                     
                     return (
-                      <p className="text-sm text-white/80 font-medium drop-shadow">
+                      <p className="text-sm text-white/80 font-medium ">
                         {hasAchievedTarget 
                           ? getTargetAchievedMessage(currentTime.getHours())
                           : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
@@ -1530,15 +1530,15 @@ export default function RectangularDashboard() {
                 
                 {/* DAY Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                  <h3 className="text-sm font-medium text-white/90 mb-4 flex items-center gap-2 ">
                     <CalendarDaysIcon className="w-4 h-4 text-gray-400" />
                     Day
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-6xl font-black text-white drop-shadow-lg">
+                    <div className="text-6xl font-black text-white/95 -lg">
                       {challengeDay}
                     </div>
-                    <p className="text-sm font-medium text-white/90 drop-shadow">
+                    <p className="text-sm font-medium text-white/90 ">
                       {getCurrentDayName()}
                     </p>
                   </div>
@@ -1566,12 +1566,12 @@ export default function RectangularDashboard() {
                 
                 {/* Time Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                  <h3 className="text-sm font-medium text-white/90 mb-4 flex items-center gap-2 ">
                     <ClockIcon className="w-4 h-4 text-gray-400" />
                     Time
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-3xl font-black text-white">
+                    <div className="text-3xl font-black text-white/95">
                       {timeLeft}
                     </div>
                   </div>
@@ -1595,7 +1595,7 @@ export default function RectangularDashboard() {
           >
               
               <div className="relative py-6 px-4 z-10">
-                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                <h3 className="text-sm font-medium text-white/90 mb-4 flex items-center gap-2 ">
                   <ChartBarIcon className="w-4 h-4 text-gray-400" />
                   Status
                 </h3>
@@ -1691,7 +1691,7 @@ export default function RectangularDashboard() {
           >
               
               <div className="relative py-6 px-4 z-10">
-                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
+                <h3 className="text-sm font-medium text-white/90 mb-4 flex items-center gap-2 ">
                   <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
                   Chats
                 </h3>
@@ -1724,13 +1724,11 @@ export default function RectangularDashboard() {
 
                   return (
                     <div key={chat.id} className={`px-4 py-3 ${
-                      chat.is_own_message ? '' : ''
+                      chat.is_own_message ? 'bg-white/5 backdrop-blur-sm' : 'bg-black/20 backdrop-blur-sm'
                     } ${isWorkoutMessage ? 'border-l-2 border-green-500/50' : 'border-l-2 border-gray-600/30'}`}
                     style={{
-                      background: chat.is_own_message 
-                        ? 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)' 
-                        : 'linear-gradient(135deg, #151515 0%, #080808 100%)',
-                      borderRadius: '0px'
+                      borderRadius: '12px',
+                      border: chat.is_own_message ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.05)'
                     }}>
                       {isWorkoutMessage && workoutData ? (
                         // Special workout completion display
@@ -1793,7 +1791,7 @@ export default function RectangularDashboard() {
               
               <div className="relative py-6 px-4 z-10">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-white flex items-center gap-2 drop-shadow">
+                  <h3 className="text-sm font-medium text-white/90 flex items-center gap-2 ">
                     <ChartPieIcon className="w-4 h-4 text-gray-400" />
                     Stats
                   </h3>
