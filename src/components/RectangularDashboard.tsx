@@ -1776,7 +1776,6 @@ export default function RectangularDashboard() {
               </div>
             )}
               </div>
-            </div>
           </div>
         </div>
 
@@ -1825,130 +1824,130 @@ export default function RectangularDashboard() {
               </button>
             </div>
             
-{/* Show either group stats or personal stats based on toggle */}
-            {showPersonalStats ? (
-              personalStats && personalStats.interestingStats && personalStats.interestingStats.length > 0 ? (
-                <div className="space-y-0 border-t border-b border-gray-800">
-                  {/* Top row - Personal Points (full width) */}
-                  <div className="w-full border-b border-gray-800">
-                    <MemoizedChartComponent 
-                      key={`personal-${personalStats.interestingStats[0].type}-0`}
-                      stat={personalStats.interestingStats[0]} 
-                      index={0} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
-                  
-                  {/* Middle row - Money Pot and Birthday (2 squares) */}
-                  <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
-                    <div className="border-r border-gray-800">
+            {/* Show either group stats or personal stats based on toggle */}
+            <div className="border-t border-b border-gray-800">
+              {showPersonalStats ? (
+                personalStats && personalStats.interestingStats && personalStats.interestingStats.length > 0 ? (
+                  <div className="space-y-0">
+                    {/* Top row - Personal Points (full width) */}
+                    <div className="w-full border-b border-gray-800">
                       <MemoizedChartComponent 
-                        key={`personal-${personalStats.interestingStats[1].type}-1`}
-                        stat={personalStats.interestingStats[1]} 
-                        index={1} 
+                        key={`personal-${personalStats.interestingStats[0].type}-0`}
+                        stat={personalStats.interestingStats[0]} 
+                        index={0} 
                         getLayoutClasses={getLayoutClasses}
                         userProfile={profile}
                       />
                     </div>
-                    <MemoizedChartComponent 
-                      key={`personal-${personalStats.interestingStats[2].type}-2`}
-                      stat={personalStats.interestingStats[2]} 
-                      index={2} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
+                    
+                    {/* Middle row - Money Pot and Birthday (2 squares) */}
+                    <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
+                      <div className="border-r border-gray-800">
+                        <MemoizedChartComponent 
+                          key={`personal-${personalStats.interestingStats[1].type}-1`}
+                          stat={personalStats.interestingStats[1]} 
+                          index={1} 
+                          getLayoutClasses={getLayoutClasses}
+                          userProfile={profile}
+                        />
+                      </div>
+                      <MemoizedChartComponent 
+                        key={`personal-${personalStats.interestingStats[2].type}-2`}
+                        stat={personalStats.interestingStats[2]} 
+                        index={2} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                      />
+                    </div>
+                    
+                    {/* Bottom row - Workout Times (full width rectangle) */}
+                    <div className="w-full">
+                      <MemoizedChartComponent 
+                        key={`personal-${personalStats.interestingStats[3].type}-3`}
+                        stat={personalStats.interestingStats[3]} 
+                        index={3} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                      />
+                    </div>
                   </div>
-                  
-                  {/* Bottom row - Workout Times (full width rectangle) */}
-                  <div className="w-full">
-                    <MemoizedChartComponent 
-                      key={`personal-${personalStats.interestingStats[3].type}-3`}
-                      stat={personalStats.interestingStats[3]} 
-                      index={3} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
+                ) : (
+                  <div className="p-8 text-center text-gray-400">
+                    No personal workout data available
                   </div>
-                </div>
+                )
               ) : (
-                <div className="border-t border-b border-gray-800 p-8 text-center text-gray-400">
-                  No personal workout data available
-                </div>
-              )
-            ) : (
-              groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
-                <div className="space-y-0 border-t border-b border-gray-800">
-                  {/* Top row - Group Points (full width) */}
-                  <div className="w-full border-b border-gray-800">
-                    <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[0].type}-0`}
-                      stat={groupStats.interestingStats[0]} 
-                      index={0} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
-                  
-                  {/* Middle row - Money Pot and Birthday (2 squares) */}
-                  <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
-                    <div className="border-r border-gray-800">
+                groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
+                  <div className="space-y-0">
+                    {/* Top row - Group Points (full width) */}
+                    <div className="w-full border-b border-gray-800">
                       <MemoizedChartComponent 
-                        key={`${groupStats.interestingStats[1].type}-1`}
-                        stat={groupStats.interestingStats[1]} 
-                        index={1} 
+                        key={`${groupStats.interestingStats[0].type}-0`}
+                        stat={groupStats.interestingStats[0]} 
+                        index={0} 
                         getLayoutClasses={getLayoutClasses}
                         userProfile={profile}
                       />
                     </div>
-                    <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[2].type}-2`}
-                      stat={groupStats.interestingStats[2]} 
-                      index={2} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
+                    
+                    {/* Middle row - Money Pot and Birthday (2 squares) */}
+                    <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
+                      <div className="border-r border-gray-800">
+                        <MemoizedChartComponent 
+                          key={`${groupStats.interestingStats[1].type}-1`}
+                          stat={groupStats.interestingStats[1]} 
+                          index={1} 
+                          getLayoutClasses={getLayoutClasses}
+                          userProfile={profile}
+                        />
+                      </div>
+                      <MemoizedChartComponent 
+                        key={`${groupStats.interestingStats[2].type}-2`}
+                        stat={groupStats.interestingStats[2]} 
+                        index={2} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                      />
+                    </div>
+                    
+                    {/* Bottom row - Workout Times (full width rectangle) */}
+                    <div className="w-full">
+                      <MemoizedChartComponent 
+                        key={`${groupStats.interestingStats[3].type}-3`}
+                        stat={groupStats.interestingStats[3]} 
+                        index={3} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                      />
+                    </div>
                   </div>
-                  
-                  {/* Bottom row - Workout Times (full width rectangle) */}
-                  <div className="w-full">
-                    <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[3].type}-3`}
-                      stat={groupStats.interestingStats[3]} 
-                      index={3} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
+                ) : (
+                  <div className="space-y-0 p-4">
+                    <div className="p-4 bg-gray-900/30 rounded-lg h-32">
+                      <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                      <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                      <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="p-4 bg-gray-900/30 rounded-lg h-32">
+                        <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                        <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                        <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                      </div>
+                      <div className="p-4 bg-gray-900/30 rounded-lg h-32">
+                        <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                        <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                        <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-900/30 rounded-lg h-20 mt-4">
+                      <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
+                      <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
+                      <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
+                    </div>
                   </div>
-                </div>
-            ) : (
-              <div className="space-y-0">
-                <div className="p-4 bg-gray-900/30 rounded-lg h-32">
-                  <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                  <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                  <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                </div>
-                <div className="grid grid-cols-2 gap-0">
-                  <div className="p-4 bg-gray-900/30 rounded-lg h-32">
-                    <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                    <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                    <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                  </div>
-                  <div className="p-4 bg-gray-900/30 rounded-lg h-32">
-                    <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                    <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                    <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-900/30 rounded-lg h-20">
-                  <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                  <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                  <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                </div>
-              </div>
-            )
-            )}
-              </div>
+                )
+              )}
             </div>
           </div>
         </div>
