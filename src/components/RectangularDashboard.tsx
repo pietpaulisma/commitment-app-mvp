@@ -1439,9 +1439,9 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b border-gray-700"
+        className="sticky top-0 z-[70] mb-0 mt-4 bg-black border-b border-gray-600"
         style={{
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4)'
         }}
       >
         
@@ -1450,7 +1450,7 @@ export default function RectangularDashboard() {
           <div 
             className="relative"
             style={{
-              background: 'linear-gradient(180deg, #0a0a0a 0%, #000000 50%, #0a0a0a 100%)'
+              background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 20%, #000000 80%, #0d0d0d 100%)'
             }}
           >
             
@@ -1486,9 +1486,9 @@ export default function RectangularDashboard() {
           
           {/* Greeting with username and motivational text */}
           <div 
-            className="border-b border-gray-700"
+            className="border-b border-gray-600"
             style={{
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.02)'
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.3)'
             }}
           >
             <div 
@@ -1526,9 +1526,9 @@ export default function RectangularDashboard() {
             {/* DAY Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-r border-b border-gray-700"
+                className="relative aspect-square border-r border-b border-gray-600"
                 style={{
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 2px 6px rgba(0, 0, 0, 0.3)'
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
                 }}
                 style={{
                   background: '#000000'
@@ -1556,9 +1556,9 @@ export default function RectangularDashboard() {
             {/* Time Remaining Block */}
             <div className="relative">
               <div 
-                className="relative aspect-square border-b border-gray-700"
+                className="relative aspect-square border-b border-gray-600"
                 style={{
-                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 2px 6px rgba(0, 0, 0, 0.3)'
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
                 }}
                 style={{
                   background: '#000000'
