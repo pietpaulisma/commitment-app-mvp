@@ -1583,37 +1583,14 @@ export default function RectangularDashboard() {
         <div id="group-status" className="relative">
           {/* Retro container wrapper */}
           <div className="relative">
-            {/* Outer glow */}
-            <div 
-              className="absolute inset-0 rounded-2xl blur-lg opacity-15"
-              style={{
-                background: 'linear-gradient(135deg, #111827, #000000)',
-                transform: 'scale(1.01)'
-              }}
-            />
-            
             {/* Main container */}
             <div 
-              className="relative rounded-2xl border-2 overflow-hidden"
+              className="relative rounded-2xl border overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
-                borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
-                boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                  inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-                  0 4px 20px rgba(0, 0, 0, 0.5),
-                  0 2px 8px rgba(0, 0, 0, 0.3)
-                `
+                background: '#111827',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
-              {/* Inner highlight */}
-              <div 
-                className="absolute inset-1 rounded-[14px] pointer-events-none"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.01) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.03)'
-                }}
-              />
               
               <div className="relative py-6 px-4 z-10">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
@@ -1697,37 +1674,14 @@ export default function RectangularDashboard() {
         <div id="chats" className="relative">
           {/* Retro container wrapper */}
           <div className="relative">
-            {/* Outer glow */}
-            <div 
-              className="absolute inset-0 rounded-2xl blur-lg opacity-15"
-              style={{
-                background: 'linear-gradient(135deg, #111827, #000000)',
-                transform: 'scale(1.01)'
-              }}
-            />
-            
             {/* Main container */}
             <div 
-              className="relative rounded-2xl border-2 overflow-hidden"
+              className="relative rounded-2xl border overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
-                borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
-                boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                  inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-                  0 4px 20px rgba(0, 0, 0, 0.5),
-                  0 2px 8px rgba(0, 0, 0, 0.3)
-                `
+                background: '#111827',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
-              {/* Inner highlight */}
-              <div 
-                className="absolute inset-1 rounded-[14px] pointer-events-none"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.01) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.03)'
-                }}
-              />
               
               <div className="relative py-6 px-4 z-10">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
@@ -1819,37 +1773,14 @@ export default function RectangularDashboard() {
         <div id="group-stats" className="relative">
           {/* Retro container wrapper */}
           <div className="relative">
-            {/* Outer glow */}
-            <div 
-              className="absolute inset-0 rounded-2xl blur-lg opacity-15"
-              style={{
-                background: 'linear-gradient(135deg, #111827, #000000)',
-                transform: 'scale(1.01)'
-              }}
-            />
-            
             {/* Main container */}
             <div 
-              className="relative rounded-2xl border-2 overflow-hidden"
+              className="relative rounded-2xl border overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
-                borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
-                boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                  inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-                  0 4px 20px rgba(0, 0, 0, 0.5),
-                  0 2px 8px rgba(0, 0, 0, 0.3)
-                `
+                background: '#111827',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
               }}
             >
-              {/* Inner highlight */}
-              <div 
-                className="absolute inset-1 rounded-[14px] pointer-events-none"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.01) 100%)',
-                  border: '1px solid rgba(255, 255, 255, 0.03)'
-                }}
-              />
               
               <div className="relative py-6 px-4 z-10">
                 <div className="mb-4 flex items-center justify-between">
