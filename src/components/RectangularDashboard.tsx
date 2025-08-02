@@ -1560,11 +1560,12 @@ export default function RectangularDashboard() {
                   boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5)'
                 }}
               >
-                {/* Brighter time-based gradient overlay that extends to edges with inner shadow */}
+                {/* Day progress bar - fills left to right based on time elapsed */}
                 <div 
-                  className="absolute inset-0 rounded-none"
+                  className="absolute left-0 top-0 bottom-0 rounded-none transition-all duration-1000"
                   style={{
-                    background: `radial-gradient(ellipse at center, rgba(255, 215, 0, 0.6) 0%, rgba(255, 165, 0, 0.4) 30%, rgba(255, 69, 0, 0.3) 60%, rgba(139, 69, 19, 0.2) 100%)`,
+                    width: `${timeRemainingPercentage}%`,
+                    background: `linear-gradient(90deg, rgba(255, 215, 0, 0.8) 0%, rgba(255, 165, 0, 0.6) 50%, rgba(255, 69, 0, 0.5) 100%)`,
                     boxShadow: 'inset 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 -4px 8px rgba(0, 0, 0, 0.3)'
                   }}
                 />
