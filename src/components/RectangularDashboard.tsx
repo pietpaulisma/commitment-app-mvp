@@ -1478,16 +1478,22 @@ export default function RectangularDashboard() {
                   }}
                 />
                 
-                {/* Content with gradient background inside */}
-                <div 
-                  className="relative px-6 py-8 z-10 rounded-2xl overflow-hidden"
-                  style={{
-                    background: `linear-gradient(135deg, 
-                      ${profile?.personal_color || '#c084fc'}20 0%, 
-                      transparent 50%, 
-                      ${profile?.personal_color || '#c084fc'}10 100%)`
-                  }}
-                >
+                {/* Content container */}
+                <div className="relative px-6 py-8 z-10">
+                  {/* Gradient overlay inside content */}
+                  <div 
+                    className="absolute inset-0 rounded-xl"
+                    style={{
+                      background: `linear-gradient(135deg, 
+                        ${profile?.personal_color || '#c084fc'}25 0%, 
+                        transparent 40%, 
+                        ${profile?.personal_color || '#c084fc'}15 100%)`,
+                      opacity: 0.8
+                    }}
+                  />
+                  
+                  {/* Content with relative positioning */}
+                  <div className="relative z-10">
                   <div className="flex items-end justify-between">
                     <div>
                       <div className={`flex items-baseline space-x-1 ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
@@ -1529,6 +1535,7 @@ export default function RectangularDashboard() {
                         )
                       })()}
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
