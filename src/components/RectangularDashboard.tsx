@@ -1395,7 +1395,19 @@ export default function RectangularDashboard() {
             </div>
             <button
               onClick={exitDemoMode}
-              className="text-xs bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500 transition-colors"
+              className="text-xs px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+              style={{
+                background: 'linear-gradient(135deg, #ea580c 0%, #dc2626 100%)',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: `
+                  inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                  inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                  0 4px 12px rgba(0, 0, 0, 0.3),
+                  0 2px 4px rgba(234, 88, 12, 0.4)
+                `,
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
+                color: '#ffffff'
+              }}
             >
               Exit Demo Mode
             </button>
@@ -1420,48 +1432,103 @@ export default function RectangularDashboard() {
               }
             }
           `}</style>
-          {/* Content with more vertical padding */}
-          <div className="relative px-4 py-8 z-10">
-            <div className="flex items-end justify-between">
-              <div>
-                <div className={`flex items-baseline space-x-1 ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
-                  <span className="text-5xl font-thin uppercase tracking-wide text-white">DAY</span>
-                  <span className="text-5xl font-black text-white">{challengeDay}</span>
-                </div>
-                <p className={`text-sm font-medium -mt-1 text-white ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
-                  {getCurrentDayName()}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className={`text-3xl font-black text-white ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
-                  {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
-                    <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
-                      {char}
-                    </span>
-                  ))}
-                </div>
-                <div className={`text-sm font-medium -mt-1 text-white ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
-                  remaining
-                </div>
-              </div>
-            </div>
-            
-            {/* Greeting with username and motivational text */}
-            <div className="px-4 py-10">
-              <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
-                {(() => {
-                  // Find current user's progress
-                  const currentUserMember = groupMembers.find(member => member.isCurrentUser)
-                  const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+          
+          {/* Retro Boxed Container with Strokes and Shadows */}
+          <div className="relative mx-4 mb-8">
+            {/* Main Container with Multiple Stroke Layers */}
+            <div className="relative">
+              {/* Outer Glow/Shadow */}
+              <div 
+                className="absolute inset-0 rounded-3xl blur-xl opacity-30"
+                style={{
+                  background: `linear-gradient(135deg, ${profile?.personal_color || '#c084fc'}, #1f2937)`,
+                  transform: 'scale(1.02)'
+                }}
+              />
+              
+              {/* Secondary Shadow */}
+              <div 
+                className="absolute inset-0 rounded-3xl blur-lg opacity-20"
+                style={{
+                  background: 'linear-gradient(135deg, #ffffff, #000000)',
+                  transform: 'translate(2px, 4px) scale(1.01)'
+                }}
+              />
+              
+              {/* Main Box with Gradient Background */}
+              <div 
+                className="relative rounded-3xl border-2 overflow-hidden"
+                style={{
+                  background: `linear-gradient(135deg, 
+                    ${profile?.personal_color || '#c084fc'}15 0%, 
+                    #00000080 50%, 
+                    ${profile?.personal_color || '#c084fc'}10 100%)`,
+                  borderImage: `linear-gradient(135deg, 
+                    ${profile?.personal_color || '#c084fc'}, 
+                    #ffffff40, 
+                    ${profile?.personal_color || '#c084fc'}80) 1`,
+                  boxShadow: `
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+                    0 4px 20px rgba(0, 0, 0, 0.4),
+                    0 1px 3px rgba(0, 0, 0, 0.3)
+                  `
+                }}
+              >
+                {/* Inner Highlight Border */}
+                <div 
+                  className="absolute inset-1 rounded-[22px] pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                  }}
+                />
+                
+                {/* Content with more vertical padding */}
+                <div className="relative px-6 py-8 z-10">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className={`flex items-baseline space-x-1 ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
+                        <span className="text-5xl font-thin uppercase tracking-wide text-white drop-shadow-lg">DAY</span>
+                        <span className="text-5xl font-black text-white drop-shadow-lg">{challengeDay}</span>
+                      </div>
+                      <p className={`text-sm font-medium -mt-1 text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
+                        {getCurrentDayName()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-3xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
+                        {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
+                          <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
+                            {char}
+                          </span>
+                        ))}
+                      </div>
+                      <div className={`text-sm font-medium -mt-1 text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
+                        remaining
+                      </div>
+                    </div>
+                  </div>
                   
-                  return (
-                    <p className="text-sm text-white/80 font-medium">
-                      {hasAchievedTarget 
-                        ? getTargetAchievedMessage(currentTime.getHours())
-                        : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
-                    </p>
-                  )
-                })()}
+                  {/* Greeting with username and motivational text */}
+                  <div className="px-4 py-10">
+                    <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
+                      {(() => {
+                        // Find current user's progress
+                        const currentUserMember = groupMembers.find(member => member.isCurrentUser)
+                        const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+                        
+                        return (
+                          <p className="text-sm text-white/80 font-medium drop-shadow">
+                            {hasAchievedTarget 
+                              ? getTargetAchievedMessage(currentTime.getHours())
+                              : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
+                          </p>
+                        )
+                      })()}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1470,20 +1537,88 @@ export default function RectangularDashboard() {
 
 
       {/* Today's Activity Header */}
-      <div className="bg-black pt-6 rounded-t-3xl relative z-10">
-        <div className="px-4 pb-4">
-          <h2 className="text-2xl font-bold text-white">Today's Activity</h2>
+      <div className="relative pt-6 rounded-t-3xl z-10 mx-4 mb-4">
+        {/* Retro container with stroke effects */}
+        <div className="relative">
+          {/* Outer glow */}
+          <div 
+            className="absolute inset-0 rounded-3xl blur-lg opacity-20"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff, #4b5563)',
+              transform: 'scale(1.01)'
+            }}
+          />
+          
+          {/* Main container */}
+          <div 
+            className="relative rounded-3xl border-2 overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
+              borderImage: 'linear-gradient(135deg, #ffffff40, #4b556380, #ffffff20) 1',
+              boxShadow: `
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+                0 4px 20px rgba(0, 0, 0, 0.5)
+              `
+            }}
+          >
+            {/* Inner highlight */}
+            <div 
+              className="absolute inset-1 rounded-[22px] pointer-events-none"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(255,255,255,0.02) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.05)'
+              }}
+            />
+            
+            <div className="relative px-6 py-6 z-10">
+              <h2 className="text-2xl font-bold text-white drop-shadow-lg">Today's Activity</h2>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-0 relative z-10">
+      <div className="space-y-6 relative z-10 mx-4">
         {/* Group Status */}
-        <div id="group-status" className="bg-black">
-          <div className="py-8">
-            <h3 className="text-lg font-semibold text-white mb-6 px-4 flex items-center gap-2">
-              <ChartBarIcon className="w-5 h-5 text-gray-400" />
-              Status
-            </h3>
+        <div id="group-status" className="relative">
+          {/* Retro container wrapper */}
+          <div className="relative">
+            {/* Outer glow */}
+            <div 
+              className="absolute inset-0 rounded-3xl blur-lg opacity-15"
+              style={{
+                background: 'linear-gradient(135deg, #6b7280, #1f2937)',
+                transform: 'scale(1.01)'
+              }}
+            />
+            
+            {/* Main container */}
+            <div 
+              className="relative rounded-3xl border-2 overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
+                borderImage: 'linear-gradient(135deg, #6b728040, #1f293740, #6b728020) 1',
+                boxShadow: `
+                  inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                  inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+                  0 4px 20px rgba(0, 0, 0, 0.4)
+                `
+              }}
+            >
+              {/* Inner highlight */}
+              <div 
+                className="absolute inset-1 rounded-[22px] pointer-events-none"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.01) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.03)'
+                }}
+              />
+              
+              <div className="relative py-8 px-6 z-10">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2 drop-shadow">
+                  <ChartBarIcon className="w-5 h-5 text-gray-400" />
+                  Status
+                </h3>
             
             {groupMembers.length === 0 ? (
               <div className="grid grid-cols-2 gap-3">
@@ -1558,16 +1693,51 @@ export default function RectangularDashboard() {
                 ))}
               </div>
             )}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Chats Section */}
-        <div id="chats" className="bg-black">
-          <div className="py-8">
-            <h3 className="text-lg font-semibold text-white mb-6 px-4 flex items-center gap-2">
-              <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400" />
-              Chats
-            </h3>
+        <div id="chats" className="relative">
+          {/* Retro container wrapper */}
+          <div className="relative">
+            {/* Outer glow */}
+            <div 
+              className="absolute inset-0 rounded-3xl blur-lg opacity-15"
+              style={{
+                background: 'linear-gradient(135deg, #374151, #111827)',
+                transform: 'scale(1.01)'
+              }}
+            />
+            
+            {/* Main container */}
+            <div 
+              className="relative rounded-3xl border-2 overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
+                borderImage: 'linear-gradient(135deg, #37415140, #11182740, #37415120) 1',
+                boxShadow: `
+                  inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                  inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+                  0 4px 20px rgba(0, 0, 0, 0.4)
+                `
+              }}
+            >
+              {/* Inner highlight */}
+              <div 
+                className="absolute inset-1 rounded-[22px] pointer-events-none"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.01) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.03)'
+                }}
+              />
+              
+              <div className="relative py-8 px-6 z-10">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2 drop-shadow">
+                  <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400" />
+                  Chats
+                </h3>
             
             {recentChats.length === 0 ? (
               <div className="text-center py-8 px-4">
@@ -1644,24 +1814,77 @@ export default function RectangularDashboard() {
                 })}
               </div>
             )}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Essential Stats */}
-        <div id="group-stats" className="bg-black">
-          <div className="py-8">
-            <div className="px-4 mb-6 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <ChartPieIcon className="w-5 h-5 text-gray-400" />
-                Stats
-              </h3>
+        <div id="group-stats" className="relative">
+          {/* Retro container wrapper */}
+          <div className="relative">
+            {/* Outer glow */}
+            <div 
+              className="absolute inset-0 rounded-3xl blur-lg opacity-15"
+              style={{
+                background: 'linear-gradient(135deg, #4b5563, #111827)',
+                transform: 'scale(1.01)'
+              }}
+            />
+            
+            {/* Main container */}
+            <div 
+              className="relative rounded-3xl border-2 overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
+                borderImage: 'linear-gradient(135deg, #4b556340, #11182740, #4b556320) 1',
+                boxShadow: `
+                  inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                  inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+                  0 4px 20px rgba(0, 0, 0, 0.4)
+                `
+              }}
+            >
+              {/* Inner highlight */}
+              <div 
+                className="absolute inset-1 rounded-[22px] pointer-events-none"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.01) 100%)',
+                  border: '1px solid rgba(255, 255, 255, 0.03)'
+                }}
+              />
+              
+              <div className="relative py-8 px-6 z-10">
+                <div className="mb-6 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2 drop-shadow">
+                    <ChartPieIcon className="w-5 h-5 text-gray-400" />
+                    Stats
+                  </h3>
               <button
                 onClick={() => setShowPersonalStats(!showPersonalStats)}
-                className={`text-sm px-3 py-1 rounded transition-colors ${
-                  showPersonalStats 
-                    ? 'bg-gray-700 text-white' 
-                    : 'bg-transparent text-gray-400 hover:text-white'
-                }`}
+                className="text-sm px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+                style={{
+                  background: showPersonalStats 
+                    ? `linear-gradient(135deg, ${profile?.personal_color || '#c084fc'} 0%, #4b5563 100%)`
+                    : 'linear-gradient(135deg, rgba(75, 85, 99, 0.3) 0%, rgba(31, 41, 55, 0.3) 100%)',
+                  border: `2px solid ${showPersonalStats 
+                    ? (profile?.personal_color || '#c084fc') + '40'
+                    : 'rgba(156, 163, 175, 0.3)'}`,
+                  boxShadow: showPersonalStats 
+                    ? `
+                      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                      inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+                      0 4px 12px rgba(0, 0, 0, 0.4),
+                      0 2px 4px ${(profile?.personal_color || '#c084fc')}40
+                    `
+                    : `
+                      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                      inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+                      0 2px 8px rgba(0, 0, 0, 0.3)
+                    `,
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
+                  color: showPersonalStats ? '#ffffff' : '#d1d5db'
+                }}
               >
                 Your Stats
               </button>
@@ -1790,6 +2013,8 @@ export default function RectangularDashboard() {
               </div>
             )
             )}
+              </div>
+            </div>
           </div>
         </div>
 
