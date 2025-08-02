@@ -1439,7 +1439,7 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky z-[70] mx-2 mb-2"
+        className="sticky z-[70] mx-2 mb-1"
         style={{
           top: 'calc(env(safe-area-inset-top) + 0.5rem)',
           marginTop: 'calc(env(safe-area-inset-top) + 1rem)'
@@ -1528,7 +1528,7 @@ export default function RectangularDashboard() {
           `}</style>
           
           {/* Retro Boxed Container with Strokes and Shadows */}
-          <div className="relative mx-2 mb-4">
+          <div className="relative mx-2 mb-1">
             {/* Main Container with Multiple Stroke Layers */}
             <div className="relative">
               {/* Outer Glow/Shadow */}
@@ -1636,7 +1636,7 @@ export default function RectangularDashboard() {
 
 
       {/* Today's Activity Header */}
-      <div className="relative pt-3 rounded-t-2xl z-10 mx-2 mb-2">
+      <div className="relative pt-1 rounded-t-2xl z-10 mx-2 mb-1">
         {/* Retro container with stroke effects */}
         <div className="relative">
           {/* Outer glow */}
@@ -1678,7 +1678,7 @@ export default function RectangularDashboard() {
         </div>
       </div>
 
-      <div className="space-y-2 relative z-10 mx-2">
+      <div className="space-y-1 relative z-10 mx-2">
         {/* Group Status */}
         <div id="group-status" className="relative">
           {/* Retro container wrapper */}
