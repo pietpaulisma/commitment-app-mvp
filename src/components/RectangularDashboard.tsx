@@ -1491,13 +1491,6 @@ export default function RectangularDashboard() {
                   background: '#000000'
                 }}
               >
-                {/* Time-based gradient overlay positioned inside the block */}
-                <div 
-                  className="absolute inset-3 rounded-xl"
-                  style={{
-                    background: getTimeBasedGradient().background
-                  }}
-                />
                 
                 {/* DAY Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
@@ -1525,6 +1518,14 @@ export default function RectangularDashboard() {
                   background: '#000000'
                 }}
               >
+                {/* Time-based gradient overlay positioned inside the block */}
+                <div 
+                  className="absolute inset-3 rounded-xl"
+                  style={{
+                    background: getTimeBasedGradient().background
+                  }}
+                />
+                
                 {/* Time Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
@@ -1556,7 +1557,11 @@ export default function RectangularDashboard() {
                 background: '#000000'
               }}
             >
-              <div className="px-4 py-4">
+              <div className="py-6 px-4">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
+                  <span className="text-gray-400">💬</span>
+                  Motivation
+                </h3>
                 <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress
