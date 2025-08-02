@@ -823,27 +823,27 @@ export default function RectangularDashboard() {
     // Clamp position between 0 and 100
     position = Math.max(0, Math.min(100, position))
     
-    // Get time-based colors with rgba values
+    // Get time-based colors with orange accent and dark grey base
     let primaryColor, secondaryColor
     
     if (hour >= 5 && hour < 7) {
-      primaryColor = 'rgba(252, 165, 165, 0.3)' // orange-300
-      secondaryColor = 'rgba(254, 240, 138, 0.15)' // yellow-300
+      primaryColor = 'rgba(251, 146, 60, 0.3)' // orange sunrise
+      secondaryColor = 'rgba(107, 114, 128, 0.15)' // grey-500
     } else if (hour >= 7 && hour < 10) {
-      primaryColor = 'rgba(251, 146, 60, 0.35)' // orange-400
-      secondaryColor = 'rgba(250, 204, 21, 0.2)' // yellow-400
+      primaryColor = 'rgba(249, 115, 22, 0.35)' // bright orange morning
+      secondaryColor = 'rgba(75, 85, 99, 0.2)' // grey-600
     } else if (hour >= 10 && hour < 16) {
-      primaryColor = 'rgba(250, 204, 21, 0.3)' // yellow-400
-      secondaryColor = 'rgba(252, 165, 165, 0.15)' // orange-300
+      primaryColor = 'rgba(234, 88, 12, 0.3)' // orange-600 day
+      secondaryColor = 'rgba(55, 65, 81, 0.15)' // grey-700
     } else if (hour >= 16 && hour < 18) {
-      primaryColor = 'rgba(249, 115, 22, 0.35)' // orange-500
-      secondaryColor = 'rgba(248, 113, 113, 0.2)' // red-400
+      primaryColor = 'rgba(249, 115, 22, 0.35)' // golden hour orange
+      secondaryColor = 'rgba(75, 85, 99, 0.2)' // grey-600
     } else if (hour >= 18 && hour < 20) {
-      primaryColor = 'rgba(239, 68, 68, 0.3)' // red-500
-      secondaryColor = 'rgba(168, 85, 247, 0.15)' // purple-500
+      primaryColor = 'rgba(251, 146, 60, 0.3)' // sunset orange
+      secondaryColor = 'rgba(107, 114, 128, 0.15)' // grey-500
     } else {
-      primaryColor = 'rgba(30, 64, 175, 0.25)' // blue-800
-      secondaryColor = 'rgba(49, 46, 129, 0.12)' // indigo-900
+      primaryColor = 'rgba(107, 114, 128, 0.25)' // night grey
+      secondaryColor = 'rgba(55, 65, 81, 0.12)' // dark grey
     }
     
     return {
