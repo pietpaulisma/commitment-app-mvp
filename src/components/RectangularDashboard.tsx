@@ -76,7 +76,7 @@ const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'line
     const organicMap: Record<string, string> = {
       'bg-orange-400': 'radial-gradient(ellipse 200% 100% at 50% 0%, #fb923c 0%, #f97316 30%, #ea580c 60%, #dc2626 100%)',
       'bg-purple-400': 'radial-gradient(ellipse 200% 100% at 50% 0%, #c084fc 0%, #a855f7 30%, #9333ea 60%, #7c3aed 100%)', 
-      'bg-blue-500': 'radial-gradient(ellipse 200% 100% at 50% 0%, #3b82f6 0%, #2563eb 30%, #1d4ed8 60%, #1e40af 100%)',
+      'bg-gray-500': 'radial-gradient(ellipse 200% 100% at 50% 0%, #6b7280 0%, #4b5563 30%, #374151 60%, #1f2937 100%)',
       'bg-gray-500': 'radial-gradient(ellipse 150% 100% at 50% 0%, #6b7280 0%, #4b5563 40%, #374151 80%, #1f2937 100%)',
       'bg-gray-700': 'radial-gradient(ellipse 150% 100% at 50% 0%, #374151 0%, #1f2937 50%, #111827 100%)'
     }
@@ -86,7 +86,7 @@ const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'line
   const gradientMap: Record<string, string> = {
     'bg-orange-400': 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
     'bg-purple-400': 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)', 
-    'bg-blue-500': 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
+    'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
     'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
     'bg-gray-700': 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)'
   }
@@ -142,7 +142,7 @@ const CHART_COLORS = [
   'text-orange-400',
   'text-green-400', 
   'text-purple-400',
-  'text-blue-400',
+  'text-gray-400',
   'text-yellow-400',
   'text-pink-400'
 ]
@@ -150,7 +150,7 @@ const CHART_COLORS = [
 // Memoized chart component for performance
 const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string, userProfile: any }) => {
   // Simple color selection without useMemo to avoid circular dependencies
-  const accentColor = CHART_COLORS[index % CHART_COLORS.length] || 'text-blue-400'
+  const accentColor = CHART_COLORS[index % CHART_COLORS.length] || 'text-gray-400'
 
   const layoutClasses = getLayoutClasses(stat.layout)
 
@@ -605,7 +605,7 @@ export default function RectangularDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
   const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
-  const [accentColor, setAccentColor] = useState('blue') // Default blue
+  const [accentColor, setAccentColor] = useState('gray') // Default gray
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
   const [personalStats, setPersonalStats] = useState<any>(null)
@@ -704,10 +704,10 @@ export default function RectangularDashboard() {
 
   const getAccentColors = () => {
     const colorMap = {
-      'blue': {
-        primary: 'text-purple-400',
-        bg: 'bg-purple-900/50',
-        border: 'border-purple-400',
+      'gray': {
+        primary: 'text-gray-400',
+        bg: 'bg-gray-900/50',
+        border: 'border-gray-400',
         borderL: 'border-l-purple-500'
       },
       'green': {
@@ -741,7 +741,7 @@ export default function RectangularDashboard() {
         borderL: 'border-l-yellow-500'
       }
     }
-    return colorMap[accentColor as keyof typeof colorMap] || colorMap.blue
+    return colorMap[accentColor as keyof typeof colorMap] || colorMap.gray
   }
 
   const getDayTypeDisplay = () => {
@@ -775,8 +775,8 @@ export default function RectangularDashboard() {
       // Low time: warning orange
       return 'bg-orange-500'
     } else {
-      // Plenty of time: calm blue
-      return 'bg-blue-400'
+      // Plenty of time: calm grey
+      return 'bg-gray-400'
     }
   }
 
@@ -794,8 +794,8 @@ export default function RectangularDashboard() {
       // Low time: warning orange text
       return 'text-orange-400'
     } else {
-      // Plenty of time: calm blue text
-      return 'text-blue-400'
+      // Plenty of time: calm grey text
+      return 'text-gray-400'
     }
   }
 
@@ -842,8 +842,8 @@ export default function RectangularDashboard() {
       primaryColor = 'rgba(239, 68, 68, 0.3)' // red-500
       secondaryColor = 'rgba(168, 85, 247, 0.15)' // purple-500
     } else {
-      primaryColor = 'rgba(30, 64, 175, 0.25)' // blue-800
-      secondaryColor = 'rgba(49, 46, 129, 0.12)' // indigo-900
+      primaryColor = 'rgba(107, 114, 128, 0.25)' // gray-500
+      secondaryColor = 'rgba(75, 85, 99, 0.12)' // gray-600
     }
     
     return {
@@ -1311,7 +1311,7 @@ export default function RectangularDashboard() {
           if (!settingsError && groupSettings) {
             setRestDays(groupSettings.rest_days || [1]) // Default Monday
             setRecoveryDays(groupSettings.recovery_days || [5]) // Default Friday
-            setAccentColor(groupSettings.accent_color || 'blue') // Default blue
+            setAccentColor(groupSettings.accent_color || 'gray') // Default gray
           }
         } catch (error) {
           console.log('Group settings not available, using defaults')
@@ -1479,12 +1479,12 @@ export default function RectangularDashboard() {
                 className="relative rounded-2xl border-2 overflow-hidden"
                 style={{
                   background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-                  borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
+                  borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
                   boxShadow: `
-                    inset 0 1px 0 rgba(249, 115, 22, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05),
                     inset 0 -1px 0 rgba(0, 0, 0, 0.3),
                     0 4px 20px rgba(0, 0, 0, 0.5),
-                    0 2px 8px rgba(249, 115, 22, 0.1)
+                    0 2px 8px rgba(0, 0, 0, 0.3)
                   `
                 }}
               >
@@ -1612,7 +1612,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #f97316, #6b7280)',
+                background: 'linear-gradient(135deg, #374151, #1f2937)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1622,12 +1622,12 @@ export default function RectangularDashboard() {
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-                borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
+                borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
                 boxShadow: `
-                  inset 0 1px 0 rgba(249, 115, 22, 0.1),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
                   0 4px 20px rgba(0, 0, 0, 0.5),
-                  0 2px 8px rgba(249, 115, 22, 0.1)
+                  0 2px 8px rgba(0, 0, 0, 0.3)
                 `
               }}
             >
@@ -1692,7 +1692,7 @@ export default function RectangularDashboard() {
                                     ? `#22c55e 0%, #22c55edd ${Math.max(0, progressPercentage - 15)}%, #22c55e66 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
                                     : progressPercentage >= 75 
                                       ? `#eab308 0%, #eab308dd ${Math.max(0, progressPercentage - 15)}%, #eab30866 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
-                                      : `#3b82f6 0%, #3b82f6dd ${Math.max(0, progressPercentage - 15)}%, #3b82f666 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
+                                      : `#6b7280 0%, #6b7280dd ${Math.max(0, progressPercentage - 15)}%, #6b728066 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
                                 })`
                             }}
                           />
@@ -1732,7 +1732,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #f97316, #6b7280)',
+                background: 'linear-gradient(135deg, #374151, #1f2937)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1742,12 +1742,12 @@ export default function RectangularDashboard() {
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-                borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
+                borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
                 boxShadow: `
-                  inset 0 1px 0 rgba(249, 115, 22, 0.1),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
                   0 4px 20px rgba(0, 0, 0, 0.5),
-                  0 2px 8px rgba(249, 115, 22, 0.1)
+                  0 2px 8px rgba(0, 0, 0, 0.3)
                 `
               }}
             >
@@ -1801,7 +1801,7 @@ export default function RectangularDashboard() {
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-gray-500 rounded-full flex items-center justify-center">
                                 <span className="text-xs">🏆</span>
                               </div>
                               <span className="font-medium text-green-400 text-sm">Workout Completed!</span>
@@ -1854,7 +1854,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #f97316, #6b7280)',
+                background: 'linear-gradient(135deg, #374151, #1f2937)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1864,12 +1864,12 @@ export default function RectangularDashboard() {
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
                 background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-                borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
+                borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
                 boxShadow: `
-                  inset 0 1px 0 rgba(249, 115, 22, 0.1),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.05),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
                   0 4px 20px rgba(0, 0, 0, 0.5),
-                  0 2px 8px rgba(249, 115, 22, 0.1)
+                  0 2px 8px rgba(0, 0, 0, 0.3)
                 `
               }}
             >
