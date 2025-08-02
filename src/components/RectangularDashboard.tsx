@@ -1558,25 +1558,6 @@ export default function RectangularDashboard() {
       )}
 
 
-      {/* Today's Activity Header */}
-      <div className="relative pt-1 rounded-t-2xl z-10 mx-2 mb-1">
-        {/* Retro container with stroke effects */}
-        <div className="relative">
-          {/* Main container */}
-          <div 
-            className="relative rounded-2xl border overflow-hidden"
-            style={{
-              background: '#111827',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}
-          >
-            
-            <div className="relative px-4 py-4 z-10">
-              <h2 className="text-2xl font-bold text-white drop-shadow-lg">Today's Activity</h2>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="space-y-1 relative z-10 mx-2">
         {/* Group Status */}
