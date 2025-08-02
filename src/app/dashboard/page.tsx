@@ -37,6 +37,7 @@ export default function Dashboard() {
           isScrolled={isScrolled} 
           onWorkoutModalStateChange={setIsWorkoutModalOpen}
           onChatModalStateChange={setIsChatModalOpen}
+          hideSettingsIcons={true}
         />
         <RectangularDashboard />
       </div>

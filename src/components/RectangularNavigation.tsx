@@ -31,9 +31,10 @@ interface RectangularNavigationProps {
   isScrolled?: boolean
   onWorkoutModalStateChange?: (isOpen: boolean) => void
   onChatModalStateChange?: (isOpen: boolean) => void
+  hideSettingsIcons?: boolean
 }
 
-export default function RectangularNavigation({ isScrolled = false, onWorkoutModalStateChange, onChatModalStateChange }: RectangularNavigationProps) {
+export default function RectangularNavigation({ isScrolled = false, onWorkoutModalStateChange, onChatModalStateChange, hideSettingsIcons = false }: RectangularNavigationProps) {
   const { profile, loading } = useProfile()
   const { user } = useAuth()
   const { weekMode } = useWeekMode()
@@ -355,21 +356,23 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       </div>
 
       {/* Fixed Profile Icon - Always in top right with safe area */}
-      <div 
-        className="lg:hidden fixed right-4 z-[60]"
-        style={{ top: 'calc(env(safe-area-inset-top) + 8px)' }}
-      >
-        <Link 
-          href={isOnProfilePage ? "/dashboard" : "/profile"} 
-          className="flex items-center justify-center transition-all duration-200 hover:opacity-80"
+      {!hideSettingsIcons && (
+        <div 
+          className="lg:hidden fixed right-4 z-[60]"
+          style={{ top: 'calc(env(safe-area-inset-top) + 8px)' }}
         >
-          {isOnProfilePage ? (
-            <span className="text-white text-2xl font-bold drop-shadow-lg">×</span>
-          ) : (
-            <CogIcon className="w-6 h-6 text-white drop-shadow-lg" />
-          )}
-        </Link>
-      </div>
+          <Link 
+            href={isOnProfilePage ? "/dashboard" : "/profile"} 
+            className="flex items-center justify-center transition-all duration-200 hover:opacity-80"
+          >
+            {isOnProfilePage ? (
+              <span className="text-white text-2xl font-bold drop-shadow-lg">×</span>
+            ) : (
+              <CogIcon className="w-6 h-6 text-white drop-shadow-lg" />
+            )}
+          </Link>
+        </div>
+      )}
 
       
       {/* Mobile Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
@@ -387,21 +390,23 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       )}
 
       {/* Fixed Profile Icon - Desktop */}
-      <div className="hidden lg:block fixed top-4 right-8 z-[60]">
-        <Link 
-          href={isOnProfilePage ? "/dashboard" : "/profile"} 
-          className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium transition-all duration-200 hover:opacity-80"
-        >
-          <span className="drop-shadow-lg">{isOnProfilePage ? "Back to Dashboard" : "Settings"}</span>
-          <div className="flex items-center justify-center">
-            {isOnProfilePage ? (
-              <span className="text-white text-xl font-bold drop-shadow-lg">×</span>
-            ) : (
-              <CogIcon className="w-5 h-5 text-white drop-shadow-lg" />
-            )}
-          </div>
-        </Link>
-      </div>
+      {!hideSettingsIcons && (
+        <div className="hidden lg:block fixed top-4 right-8 z-[60]">
+          <Link 
+            href={isOnProfilePage ? "/dashboard" : "/profile"} 
+            className="text-sm text-white hover:text-white flex items-center space-x-3 font-medium transition-all duration-200 hover:opacity-80"
+          >
+            <span className="drop-shadow-lg">{isOnProfilePage ? "Back to Dashboard" : "Settings"}</span>
+            <div className="flex items-center justify-center">
+              {isOnProfilePage ? (
+                <span className="text-white text-xl font-bold drop-shadow-lg">×</span>
+              ) : (
+                <CogIcon className="w-5 h-5 text-white drop-shadow-lg" />
+              )}
+            </div>
+          </Link>
+        </div>
+      )}
 
       
       {/* Desktop Sticky Header - Only appears when scrolled - Logo handled by dashboard */}

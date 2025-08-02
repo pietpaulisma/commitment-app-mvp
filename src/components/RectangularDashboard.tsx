@@ -1439,16 +1439,16 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Sticky */}
       <div 
-        className="sticky z-50 mx-2 mb-2"
+        className="sticky z-[70] mx-2 mb-2"
         style={{
-          top: 'calc(env(safe-area-inset-top) + 1rem)',
-          marginTop: 'calc(env(safe-area-inset-top) + 20px)'
+          top: 'calc(env(safe-area-inset-top) + 0.5rem)',
+          marginTop: 'calc(env(safe-area-inset-top) + 1rem)'
         }}
       >
         <style jsx>{`
           @media (min-width: 1024px) {
             div {
-              top: 1rem !important;
+              top: 0.5rem !important;
               margin-top: 1rem !important;
             }
           }
