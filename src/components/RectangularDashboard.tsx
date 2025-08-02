@@ -1453,7 +1453,7 @@ export default function RectangularDashboard() {
           `}</style>
           
           {/* Retro Boxed Container with Strokes and Shadows */}
-          <div className="relative mx-4 mb-8">
+          <div className="relative mx-2 mb-4">
             {/* Main Container with Multiple Stroke Layers */}
             <div className="relative">
               {/* Outer Glow/Shadow */}
@@ -1498,7 +1498,7 @@ export default function RectangularDashboard() {
                 />
                 
                 {/* Content container */}
-                <div className="relative px-6 py-8 z-10">
+                <div className="relative px-4 py-6 z-10">
                   {/* Time-based gradient overlay positioned inside the block */}
                   <div 
                     className="absolute inset-3 rounded-xl"
@@ -1534,7 +1534,7 @@ export default function RectangularDashboard() {
                   </div>
                   
                   {/* Greeting with username and motivational text */}
-                  <div className="px-4 py-10">
+                  <div className="px-2 py-6">
                     <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                       {(() => {
                         // Find current user's progress
@@ -1561,7 +1561,7 @@ export default function RectangularDashboard() {
 
 
       {/* Today's Activity Header */}
-      <div className="relative pt-6 rounded-t-2xl z-10 mx-4 mb-4">
+      <div className="relative pt-3 rounded-t-2xl z-10 mx-2 mb-2">
         {/* Retro container with stroke effects */}
         <div className="relative">
           {/* Outer glow */}
@@ -1595,14 +1595,14 @@ export default function RectangularDashboard() {
               }}
             />
             
-            <div className="relative px-6 py-6 z-10">
+            <div className="relative px-4 py-4 z-10">
               <h2 className="text-2xl font-bold text-white drop-shadow-lg">Today's Activity</h2>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="space-y-6 relative z-10 mx-4">
+      <div className="space-y-2 relative z-10 mx-2">
         {/* Group Status */}
         <div id="group-status" className="relative">
           {/* Retro container wrapper */}
@@ -1638,8 +1638,8 @@ export default function RectangularDashboard() {
                 }}
               />
               
-              <div className="relative py-8 px-6 z-10">
-                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2 drop-shadow">
+              <div className="relative py-6 px-4 z-10">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
                   <ChartBarIcon className="w-5 h-5 text-gray-400" />
                   Status
                 </h3>
@@ -1757,8 +1757,8 @@ export default function RectangularDashboard() {
                 }}
               />
               
-              <div className="relative py-8 px-6 z-10">
-                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2 drop-shadow">
+              <div className="relative py-6 px-4 z-10">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
                   <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400" />
                   Chats
                 </h3>
@@ -1878,8 +1878,8 @@ export default function RectangularDashboard() {
                 }}
               />
               
-              <div className="relative py-8 px-6 z-10">
-                <div className="mb-6 flex items-center justify-between">
+              <div className="relative py-6 px-4 z-10">
+                <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-white flex items-center gap-2 drop-shadow">
                     <ChartPieIcon className="w-5 h-5 text-gray-400" />
                     Stats
