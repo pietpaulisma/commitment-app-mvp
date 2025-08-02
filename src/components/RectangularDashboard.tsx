@@ -1502,14 +1502,19 @@ export default function RectangularDashboard() {
                 />
                 
                 {/* DAY Content */}
-                <div className="relative z-10 p-4 h-full flex flex-col justify-center items-center text-center">
-                  <div className={`flex items-baseline space-x-1 ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
-                    <span className="text-3xl font-thin uppercase tracking-wide text-white drop-shadow-lg">DAY</span>
-                    <span className="text-3xl font-black text-white drop-shadow-lg">{challengeDay}</span>
+                <div className="relative z-10 py-6 px-4 h-full">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
+                    <CalendarDaysIcon className="w-5 h-5 text-gray-400" />
+                    Day
+                  </h3>
+                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
+                    <div className={`text-6xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-day-enter' : ''}`}>
+                      {challengeDay}
+                    </div>
+                    <p className={`text-sm font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
+                      {getCurrentDayName()}
+                    </p>
                   </div>
-                  <p className={`text-xs font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-day-name-enter' : ''}`}>
-                    {getCurrentDayName()}
-                  </p>
                 </div>
               </div>
             </div>
@@ -1524,16 +1529,22 @@ export default function RectangularDashboard() {
                 }}
               >
                 {/* Time Content */}
-                <div className="relative z-10 p-4 h-full flex flex-col justify-center items-center text-center">
-                  <div className={`text-2xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
-                    {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
-                      <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
-                        {char}
-                      </span>
-                    ))}
-                  </div>
-                  <div className={`text-xs font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
-                    remaining
+                <div className="relative z-10 py-6 px-4 h-full">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 drop-shadow">
+                    <ClockIcon className="w-5 h-5 text-gray-400" />
+                    Time
+                  </h3>
+                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
+                    <div className={`text-3xl font-black text-white drop-shadow-lg ${isAnimationLoaded ? 'animate-time-enter' : ''}`}>
+                      {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
+                        <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
+                          {char}
+                        </span>
+                      ))}
+                    </div>
+                    <div className={`text-sm font-medium text-white/90 drop-shadow ${isAnimationLoaded ? 'animate-remaining-enter' : ''}`}>
+                      remaining
+                    </div>
                   </div>
                 </div>
               </div>
