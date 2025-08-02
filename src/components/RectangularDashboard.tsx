@@ -654,18 +654,19 @@ export default function RectangularDashboard() {
       const timeDiff = endOfDay.getTime() - now.getTime()
       const hours = Math.floor(timeDiff / (1000 * 60 * 60))
       const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000)
       
       // Calculate percentage of day elapsed (for progress bar)
       const totalDayTime = endOfDay.getTime() - startOfDay.getTime()
       const elapsedTime = now.getTime() - startOfDay.getTime()
       const elapsedPercentage = (elapsedTime / totalDayTime) * 100
       
-      setTimeLeft(`${hours}h ${minutes}m`)
+      setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`)
       setTimeRemainingPercentage(Math.min(100, Math.max(0, elapsedPercentage)))
     }
 
     updateTimer() // Initial update
-    const timer = setInterval(updateTimer, 60000) // Update every minute
+    const timer = setInterval(updateTimer, 1000) // Update every second
     
     return () => clearInterval(timer)
   }, [])
@@ -1577,12 +1578,15 @@ export default function RectangularDashboard() {
                     Time
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-3xl text-white drop-shadow-lg" style={{ fontFamily: 'monospace, "Courier New", Courier' }}>
-                      {timeLeft.replace(/h/g, 'h').replace(/m/g, 'm').split('').map((char, i) => (
-                        <span key={i} className={char === 'h' || char === 'm' ? 'font-thin' : 'font-black'}>
-                          {char}
-                        </span>
-                      ))}
+                    <div 
+                      className="text-3xl text-white drop-shadow-lg font-bold tracking-wider" 
+                      style={{ 
+                        fontFamily: '"Courier New", Courier, "Lucida Console", "Monaco", monospace',
+                        letterSpacing: '0.1em',
+                        textShadow: '0 0 10px rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.8)'
+                      }}
+                    >
+                      {timeLeft}
                     </div>
                     <div className="text-sm font-medium text-white/90 drop-shadow">
                       remaining
