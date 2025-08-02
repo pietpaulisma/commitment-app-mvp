@@ -807,30 +807,30 @@ export default function RectangularDashboard() {
     
     // Early morning (5-7): Soft sunrise colors
     if (hour >= 5 && hour < 7) {
-      return 'from-orange-300/40 to-yellow-300/20'
+      return 'from-orange-300/20 via-transparent to-yellow-300/10'
     }
     // Morning (7-10): Bright sunrise
     else if (hour >= 7 && hour < 10) {
-      return 'from-orange-400/50 to-yellow-400/30'
+      return 'from-orange-400/25 via-transparent to-yellow-400/15'
     }
     // Mid-morning to afternoon (10-16): Bright day
     else if (hour >= 10 && hour < 16) {
-      return 'from-yellow-400/40 to-orange-300/20'
+      return 'from-yellow-400/20 via-transparent to-orange-300/10'
     }
     // Late afternoon (16-18): Golden hour
     else if (hour >= 16 && hour < 18) {
-      return 'from-orange-500/50 to-red-400/30'
+      return 'from-orange-500/25 via-transparent to-red-400/15'
     }
     // Evening (18-20): Sunset
     else if (hour >= 18 && hour < 20) {
-      return 'from-red-500/40 to-purple-500/20'
+      return 'from-red-500/20 via-transparent to-purple-500/10'
     }
     // Night (20-24): Deep evening
     else if (hour >= 20 || hour < 5) {
-      return 'from-blue-800/40 to-indigo-900/20'
+      return 'from-blue-800/20 via-transparent to-indigo-900/10'
     }
     // Default fallback
-    return 'from-orange-600/40 to-orange-500/20'
+    return 'from-orange-600/20 via-transparent to-orange-500/10'
   }
 
   const loadGroupMembers = async () => {
