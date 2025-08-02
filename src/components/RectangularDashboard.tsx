@@ -1581,13 +1581,7 @@ export default function RectangularDashboard() {
                     Time
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div 
-                      className="text-3xl text-white drop-shadow-lg font-bold tracking-wider" 
-                      style={{ 
-                        fontFamily: '"Courier New", Courier, "Lucida Console", "Monaco", monospace',
-                        letterSpacing: '0.1em'
-                      }}
-                    >
+                    <div className="text-3xl font-black text-white">
                       {timeLeft}
                     </div>
                   </div>
