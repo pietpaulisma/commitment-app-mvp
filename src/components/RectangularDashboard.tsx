@@ -1479,7 +1479,7 @@ export default function RectangularDashboard() {
                 className="relative rounded-2xl border-2 overflow-hidden"
                 style={{
                   background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-                  borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
+                  borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
                   boxShadow: `
                     inset 0 1px 0 rgba(255, 255, 255, 0.05),
                     inset 0 -1px 0 rgba(0, 0, 0, 0.3),
@@ -1568,7 +1568,7 @@ export default function RectangularDashboard() {
           <div 
             className="absolute inset-0 rounded-2xl blur-lg opacity-20"
             style={{
-              background: 'linear-gradient(135deg, #f97316, #6b7280)',
+              background: 'linear-gradient(135deg, #111827, #000000)',
               transform: 'scale(1.01)'
             }}
           />
@@ -1577,7 +1577,7 @@ export default function RectangularDashboard() {
           <div 
             className="relative rounded-2xl border-2 overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+              background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
               borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
               boxShadow: `
                 inset 0 1px 0 rgba(249, 115, 22, 0.1),
@@ -1612,7 +1612,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #374151, #1f2937)',
+                background: 'linear-gradient(135deg, #111827, #000000)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1621,8 +1621,8 @@ export default function RectangularDashboard() {
             <div 
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-                borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
+                background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
+                borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
                 boxShadow: `
                   inset 0 1px 0 rgba(255, 255, 255, 0.05),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
@@ -1676,40 +1676,34 @@ export default function RectangularDashboard() {
                       const borderRadius = isLeftColumn ? '' : '' // Remove rounded corners
                       
                       return (
-                        <div key={member.id} className={`relative h-12 ${backgroundColor} overflow-hidden ${borderRadius}`}>
-                          {/* Liquid gradient progress bar with soft edges */}
+                        <div key={member.id} className="relative h-12 bg-gray-900 rounded-full overflow-hidden mx-1">
+                          {/* Rounded progress bar background */}
+                          <div className="absolute inset-0 bg-gray-800 rounded-full" />
+                          
+                          {/* Rounded progress fill */}
                           <div 
-                            className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                            className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-500 ease-out"
                             style={{ 
-                              width: '100%',
-                              background: `linear-gradient(to right, 
-                                ${isCurrentUser 
-                                  ? `${profile?.personal_color || '#c084fc'} 0%, 
-                                     ${profile?.personal_color || '#c084fc'}dd ${Math.max(0, progressPercentage - 15)}%, 
-                                     ${profile?.personal_color || '#c084fc'}66 ${progressPercentage}%, 
-                                     #000000 ${Math.min(100, progressPercentage + 20)}%`
-                                  : progressPercentage >= 100 
-                                    ? `#22c55e 0%, #22c55edd ${Math.max(0, progressPercentage - 15)}%, #22c55e66 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
-                                    : progressPercentage >= 75 
-                                      ? `#eab308 0%, #eab308dd ${Math.max(0, progressPercentage - 15)}%, #eab30866 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
-                                      : `#6b7280 0%, #6b7280dd ${Math.max(0, progressPercentage - 15)}%, #6b728066 ${progressPercentage}%, #000000 ${Math.min(100, progressPercentage + 20)}%`
-                                })`
+                              width: `${Math.min(progressPercentage, 100)}%`,
+                              background: progressPercentage >= 100 
+                                ? 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)'
+                                : progressPercentage >= 75 
+                                  ? 'linear-gradient(90deg, #eab308 0%, #ca8a04 100%)'
+                                  : progressPercentage > 0
+                                    ? 'linear-gradient(90deg, #84cc16 0%, #65a30d 100%)'
+                                    : 'transparent'
                             }}
                           />
                           
                           {/* Content overlay */}
-                          <div className={`absolute inset-0 flex items-center ${
-                            isLeftColumn ? 'justify-start pl-4' : 'justify-end pr-4'
-                          }`}>
-                            <div className={`flex items-center gap-2 ${
-                              isLeftColumn ? 'flex-row-reverse' : 'flex-row'
-                            }`}>
-                              <div className="font-black text-lg text-white">
-                                {progressPercentage}%
-                              </div>
-                              <span className="font-bold text-sm text-white">
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="flex items-center gap-3">
+                              <span className="font-semibold text-sm text-white">
                                 {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
                               </span>
+                              <div className="font-bold text-base text-white">
+                                {progressPercentage}%
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1732,7 +1726,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #374151, #1f2937)',
+                background: 'linear-gradient(135deg, #111827, #000000)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1741,8 +1735,8 @@ export default function RectangularDashboard() {
             <div 
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-                borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
+                background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
+                borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
                 boxShadow: `
                   inset 0 1px 0 rgba(255, 255, 255, 0.05),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
@@ -1854,7 +1848,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #374151, #1f2937)',
+                background: 'linear-gradient(135deg, #111827, #000000)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1863,8 +1857,8 @@ export default function RectangularDashboard() {
             <div 
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
-                borderImage: 'linear-gradient(135deg, #1f2937, #111827, #1f2937) 1',
+                background: 'linear-gradient(135deg, #111827 0%, #000000 100%)',
+                borderImage: 'linear-gradient(135deg, #000000, #111827, #000000) 1',
                 boxShadow: `
                   inset 0 1px 0 rgba(255, 255, 255, 0.05),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
