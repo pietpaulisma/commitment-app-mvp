@@ -823,27 +823,27 @@ export default function RectangularDashboard() {
     // Clamp position between 0 and 100
     position = Math.max(0, Math.min(100, position))
     
-    // Get time-based colors with orange accent and dark grey base
+    // Get time-based colors with rgba values
     let primaryColor, secondaryColor
     
     if (hour >= 5 && hour < 7) {
-      primaryColor = 'rgba(251, 146, 60, 0.3)' // orange sunrise
-      secondaryColor = 'rgba(107, 114, 128, 0.15)' // grey-500
+      primaryColor = 'rgba(252, 165, 165, 0.3)' // orange-300
+      secondaryColor = 'rgba(254, 240, 138, 0.15)' // yellow-300
     } else if (hour >= 7 && hour < 10) {
-      primaryColor = 'rgba(249, 115, 22, 0.35)' // bright orange morning
-      secondaryColor = 'rgba(75, 85, 99, 0.2)' // grey-600
+      primaryColor = 'rgba(251, 146, 60, 0.35)' // orange-400
+      secondaryColor = 'rgba(250, 204, 21, 0.2)' // yellow-400
     } else if (hour >= 10 && hour < 16) {
-      primaryColor = 'rgba(234, 88, 12, 0.3)' // orange-600 day
-      secondaryColor = 'rgba(55, 65, 81, 0.15)' // grey-700
+      primaryColor = 'rgba(250, 204, 21, 0.3)' // yellow-400
+      secondaryColor = 'rgba(252, 165, 165, 0.15)' // orange-300
     } else if (hour >= 16 && hour < 18) {
-      primaryColor = 'rgba(249, 115, 22, 0.35)' // golden hour orange
-      secondaryColor = 'rgba(75, 85, 99, 0.2)' // grey-600
+      primaryColor = 'rgba(249, 115, 22, 0.35)' // orange-500
+      secondaryColor = 'rgba(248, 113, 113, 0.2)' // red-400
     } else if (hour >= 18 && hour < 20) {
-      primaryColor = 'rgba(251, 146, 60, 0.3)' // sunset orange
-      secondaryColor = 'rgba(107, 114, 128, 0.15)' // grey-500
+      primaryColor = 'rgba(239, 68, 68, 0.3)' // red-500
+      secondaryColor = 'rgba(168, 85, 247, 0.15)' // purple-500
     } else {
-      primaryColor = 'rgba(107, 114, 128, 0.25)' // night grey
-      secondaryColor = 'rgba(55, 65, 81, 0.12)' // dark grey
+      primaryColor = 'rgba(30, 64, 175, 0.25)' // blue-800
+      secondaryColor = 'rgba(49, 46, 129, 0.12)' // indigo-900
     }
     
     return {
@@ -1474,17 +1474,17 @@ export default function RectangularDashboard() {
                 }}
               />
               
-              {/* Main Box with Black Background */}
+              {/* Main Box with Dark Grey Background */}
               <div 
                 className="relative rounded-2xl border-2 overflow-hidden"
                 style={{
-                  background: '#000000',
-                  borderImage: 'linear-gradient(135deg, #ffffff20, #4b556340, #ffffff15) 1',
+                  background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+                  borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
                   boxShadow: `
-                    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-                    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-                    0 4px 20px rgba(0, 0, 0, 0.4),
-                    0 1px 3px rgba(0, 0, 0, 0.3)
+                    inset 0 1px 0 rgba(249, 115, 22, 0.1),
+                    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+                    0 4px 20px rgba(0, 0, 0, 0.5),
+                    0 2px 8px rgba(249, 115, 22, 0.1)
                   `
                 }}
               >
@@ -1492,8 +1492,8 @@ export default function RectangularDashboard() {
                 <div 
                   className="absolute inset-1 rounded-[14px] pointer-events-none"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%, rgba(255,255,255,0.02) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)'
+                    background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, transparent 50%, rgba(107, 114, 128, 0.03) 100%)',
+                    border: '1px solid rgba(249, 115, 22, 0.1)'
                   }}
                 />
                 
@@ -1568,7 +1568,7 @@ export default function RectangularDashboard() {
           <div 
             className="absolute inset-0 rounded-2xl blur-lg opacity-20"
             style={{
-              background: 'linear-gradient(135deg, #ffffff, #4b5563)',
+              background: 'linear-gradient(135deg, #f97316, #6b7280)',
               transform: 'scale(1.01)'
             }}
           />
@@ -1577,12 +1577,13 @@ export default function RectangularDashboard() {
           <div 
             className="relative rounded-2xl border-2 overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
-              borderImage: 'linear-gradient(135deg, #ffffff40, #4b556380, #ffffff20) 1',
+              background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+              borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
               boxShadow: `
-                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(249, 115, 22, 0.1),
                 inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-                0 4px 20px rgba(0, 0, 0, 0.5)
+                0 4px 20px rgba(0, 0, 0, 0.5),
+                0 2px 8px rgba(249, 115, 22, 0.1)
               `
             }}
           >
@@ -1611,7 +1612,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #6b7280, #1f2937)',
+                background: 'linear-gradient(135deg, #f97316, #6b7280)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1620,12 +1621,13 @@ export default function RectangularDashboard() {
             <div 
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
-                borderImage: 'linear-gradient(135deg, #6b728040, #1f293740, #6b728020) 1',
+                background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+                borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
                 boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                  inset 0 1px 0 rgba(249, 115, 22, 0.1),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-                  0 4px 20px rgba(0, 0, 0, 0.4)
+                  0 4px 20px rgba(0, 0, 0, 0.5),
+                  0 2px 8px rgba(249, 115, 22, 0.1)
                 `
               }}
             >
@@ -1730,7 +1732,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #374151, #111827)',
+                background: 'linear-gradient(135deg, #f97316, #6b7280)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1739,12 +1741,13 @@ export default function RectangularDashboard() {
             <div 
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
-                borderImage: 'linear-gradient(135deg, #37415140, #11182740, #37415120) 1',
+                background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+                borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
                 boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                  inset 0 1px 0 rgba(249, 115, 22, 0.1),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-                  0 4px 20px rgba(0, 0, 0, 0.4)
+                  0 4px 20px rgba(0, 0, 0, 0.5),
+                  0 2px 8px rgba(249, 115, 22, 0.1)
                 `
               }}
             >
@@ -1851,7 +1854,7 @@ export default function RectangularDashboard() {
             <div 
               className="absolute inset-0 rounded-2xl blur-lg opacity-15"
               style={{
-                background: 'linear-gradient(135deg, #4b5563, #111827)',
+                background: 'linear-gradient(135deg, #f97316, #6b7280)',
                 transform: 'scale(1.01)'
               }}
             />
@@ -1860,12 +1863,13 @@ export default function RectangularDashboard() {
             <div 
               className="relative rounded-2xl border-2 overflow-hidden"
               style={{
-                background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%)',
-                borderImage: 'linear-gradient(135deg, #4b556340, #11182740, #4b556320) 1',
+                background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
+                borderImage: 'linear-gradient(135deg, #f97316, #6b7280, #f97316) 1',
                 boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                  inset 0 1px 0 rgba(249, 115, 22, 0.1),
                   inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-                  0 4px 20px rgba(0, 0, 0, 0.4)
+                  0 4px 20px rgba(0, 0, 0, 0.5),
+                  0 2px 8px rgba(249, 115, 22, 0.1)
                 `
               }}
             >
