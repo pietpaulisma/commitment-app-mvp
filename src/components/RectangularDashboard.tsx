@@ -1516,8 +1516,7 @@ export default function RectangularDashboard() {
           >
             <div className="relative">
               <div className="py-6 px-4">
-                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
-                  <span className="text-gray-400 text-sm">💬</span>
+                <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                   Motivation
                 </h3>
                 <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
@@ -1552,8 +1551,7 @@ export default function RectangularDashboard() {
                 
                 {/* DAY Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
-                    <CalendarDaysIcon className="w-4 h-4 text-gray-400" />
+                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                     Day
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
@@ -1578,21 +1576,20 @@ export default function RectangularDashboard() {
               >
                 {/* Time remaining bar - uses same gradient as background */}
                 <div 
-                  className="absolute left-0 top-0 bottom-0 transition-all duration-1000"
+                  className="absolute right-0 top-0 bottom-0 transition-all duration-1000"
                   style={{
-                    width: `${Math.max(8, 100 - timeRemainingPercentage)}%`,
+                    width: `${Math.max(8, timeRemainingPercentage)}%`,
                     background: getTimeOfDayGradient(),
-                    borderTopLeftRadius: '0px',
-                    borderBottomLeftRadius: '0px',
-                    borderTopRightRadius: '16px',
-                    borderBottomRightRadius: '16px'
+                    borderTopLeftRadius: '16px',
+                    borderBottomLeftRadius: '16px',
+                    borderTopRightRadius: '0px',
+                    borderBottomRightRadius: '0px'
                   }}
                 />
                 
                 {/* Time Content */}
                 <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
-                    <ClockIcon className="w-4 h-4 text-gray-400" />
+                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                     Time
                   </h3>
                   <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
@@ -1623,8 +1620,7 @@ export default function RectangularDashboard() {
             >
               
               <div className="relative py-6 px-4 z-10">
-                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
-                  <ChartBarIcon className="w-4 h-4 text-gray-400" />
+                <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                   Status
                 </h3>
             
@@ -1791,8 +1787,7 @@ export default function RectangularDashboard() {
             >
               
               <div className="relative py-6 px-4 z-10">
-                <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2 drop-shadow">
-                  <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-400" />
+                <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                   Chats
                 </h3>
             
@@ -1896,8 +1891,7 @@ export default function RectangularDashboard() {
               
               <div className="relative py-6 px-4 z-10">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-white flex items-center gap-2 drop-shadow">
-                    <ChartPieIcon className="w-4 h-4 text-gray-400" />
+                  <h3 className="text-xs font-light text-white/80 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                     Stats
                   </h3>
               <button
