@@ -562,6 +562,10 @@ export default function RectangularDashboard() {
       0% { opacity: 0; }
       100% { opacity: 1; }
     }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
     
     /* Animation utility classes */
     .animate-day-enter {
@@ -1549,13 +1553,14 @@ export default function RectangularDashboard() {
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                {/* Time remaining bar - fills right side with rounded glass effect */}
+                {/* Time remaining bar - transparent white glass effect */}
                 <div 
                   className="absolute right-2 top-2 bottom-2 rounded-xl transition-all duration-1000"
                   style={{
                     width: `${Math.max(8, 100 - timeRemainingPercentage)}%`,
-                    background: `linear-gradient(270deg, rgba(255, 215, 0, 0.9) 0%, rgba(255, 165, 0, 0.7) 50%, rgba(255, 69, 0, 0.6) 100%)`,
-                    boxShadow: '0 4px 16px rgba(255, 165, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3)'
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 4px 16px rgba(255, 255, 255, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
                   }}
                 />
                 
@@ -1628,33 +1633,102 @@ export default function RectangularDashboard() {
                       const borderRadius = isLeftColumn ? '' : '' // Remove rounded corners
                       
                       return (
-                        <div key={member.id} className="relative h-8 bg-gray-900 rounded-full overflow-hidden mx-1 shadow-inner">
-                          {/* Rounded progress bar background with inset shadow */}
+                        <div key={member.id} className="relative h-8 bg-gray-900 rounded-full overflow-hidden mx-1">
+                          {/* Outer glow effect */}
                           <div 
-                            className="absolute inset-0 rounded-full"
+                            className="absolute inset-0 rounded-full opacity-60"
                             style={{
-                              background: 'linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
-                              boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)'
+                              boxShadow: `0 0 20px ${progressPercentage >= 100 
+                                ? 'rgba(74, 222, 128, 0.4)' 
+                                : progressPercentage >= 75 
+                                  ? 'rgba(251, 191, 36, 0.3)'
+                                  : progressPercentage > 0
+                                    ? 'rgba(163, 230, 53, 0.3)'
+                                    : 'rgba(0, 0, 0, 0)'}`
                             }}
                           />
                           
-                          {/* Rounded progress fill with 3D gradient */}
+                          {/* Deep inset track with multiple shadow layers */}
                           <div 
-                            className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-500 ease-out"
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 20%, #2a2a2a 50%, #1a1a1a 80%, #0a0a0a 100%)',
+                              boxShadow: `
+                                inset 0 3px 6px rgba(0, 0, 0, 0.6),
+                                inset 0 1px 2px rgba(0, 0, 0, 0.8),
+                                inset 0 -1px 1px rgba(255, 255, 255, 0.05)
+                              `,
+                              border: '1px solid rgba(255, 255, 255, 0.02)'
+                            }}
+                          />
+                          
+                          {/* Progress fill with gorgeous multi-layer depth */}
+                          <div 
+                            className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-700 ease-out"
                             style={{ 
                               width: `${Math.min(progressPercentage, 100)}%`,
                               background: progressPercentage >= 100 
-                                ? 'linear-gradient(180deg, #4ade80 0%, #22c55e 40%, #16a34a 100%)'
+                                ? `linear-gradient(180deg, 
+                                    #6ee7b7 0%, 
+                                    #4ade80 15%, 
+                                    #22c55e 40%, 
+                                    #16a34a 70%, 
+                                    #15803d 90%, 
+                                    #14532d 100%)`
                                 : progressPercentage >= 75 
-                                  ? 'linear-gradient(180deg, #fbbf24 0%, #eab308 40%, #ca8a04 100%)'
+                                  ? `linear-gradient(180deg, 
+                                      #fde68a 0%, 
+                                      #fbbf24 15%, 
+                                      #eab308 40%, 
+                                      #ca8a04 70%, 
+                                      #a16207 90%, 
+                                      #78350f 100%)`
                                   : progressPercentage > 0
-                                    ? 'linear-gradient(180deg, #a3e635 0%, #84cc16 40%, #65a30d 100%)'
+                                    ? `linear-gradient(180deg, 
+                                        #d9f99d 0%, 
+                                        #a3e635 15%, 
+                                        #84cc16 40%, 
+                                        #65a30d 70%, 
+                                        #4d7c0f 90%, 
+                                        #365314 100%)`
                                     : 'transparent',
                               boxShadow: progressPercentage > 0 
-                                ? 'inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+                                ? `
+                                    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+                                    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+                                    inset 0 -1px 2px rgba(0, 0, 0, 0.2),
+                                    0 2px 4px rgba(0, 0, 0, 0.2),
+                                    0 1px 8px ${progressPercentage >= 100 
+                                      ? 'rgba(74, 222, 128, 0.3)' 
+                                      : progressPercentage >= 75 
+                                        ? 'rgba(251, 191, 36, 0.2)'
+                                        : 'rgba(163, 230, 53, 0.2)'}
+                                  `
+                                : 'none',
+                              border: progressPercentage > 0 
+                                ? `1px solid ${progressPercentage >= 100 
+                                    ? 'rgba(74, 222, 128, 0.6)' 
+                                    : progressPercentage >= 75 
+                                      ? 'rgba(251, 191, 36, 0.5)'
+                                      : 'rgba(163, 230, 53, 0.5)'}`
                                 : 'none'
                             }}
                           />
+                          
+                          {/* Animated shimmer effect for active progress */}
+                          {progressPercentage > 0 && progressPercentage < 100 && (
+                            <div 
+                              className="absolute left-0 top-0 bottom-0 rounded-full pointer-events-none"
+                              style={{
+                                width: `${Math.min(progressPercentage, 100)}%`,
+                                background: `linear-gradient(90deg, 
+                                  transparent 0%, 
+                                  rgba(255, 255, 255, 0.2) 50%, 
+                                  transparent 100%)`,
+                                animation: 'shimmer 2s ease-in-out infinite'
+                              }}
+                            />
+                          )}
                           
                           {/* Content overlay */}
                           <div className="absolute inset-0 flex items-center justify-center">
