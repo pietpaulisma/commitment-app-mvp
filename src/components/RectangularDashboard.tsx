@@ -1509,7 +1509,7 @@ export default function RectangularDashboard() {
           
           {/* Greeting with username and motivational text */}
           <div 
-            className="mx-2 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+            className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
             style={{
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
             }}
@@ -1539,7 +1539,7 @@ export default function RectangularDashboard() {
           </div>
 
           {/* Two Square Blocks: DAY and Time Remaining */}
-          <div className="grid grid-cols-2 gap-1 mx-2 mb-1">
+          <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
             {/* DAY Block */}
             <div className="relative">
               <div 
@@ -1613,7 +1613,7 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="mx-2 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+              className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
               style={{
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
@@ -1636,137 +1636,52 @@ export default function RectangularDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                {/* Group members in rows of 2 */}
-                {Array.from({ length: Math.ceil(groupMembers.length / 2) }, (_, rowIndex) => (
-                  <div key={rowIndex} className="grid grid-cols-2 gap-0">
-                    {groupMembers.slice(rowIndex * 2, rowIndex * 2 + 2).map((member, colIndex) => {
-                      const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
+              <div className="flex flex-wrap justify-center gap-4 py-4">
+                {groupMembers.map((member) => {
+                  const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
                       
-                      // Use user's personal color gradient
-                      const isCurrentUser = member.id === profile?.id
-                      
-                      // Use chat background color (gray-900/30) when no progress
-                      const backgroundColor = progressPercentage === 0 ? 'bg-gray-900/30' : 'bg-gray-800'
-                      
-                      // Left member: center to left edge, Right member: center to right edge
-                      const isLeftColumn = colIndex === 0
-                      const borderRadius = isLeftColumn ? '' : '' // Remove rounded corners
-                      
-                      return (
-                        <div key={member.id} className="relative h-8 bg-gray-900 rounded-full overflow-hidden mx-1">
-                          {/* Outer glow effect */}
-                          <div 
-                            className="absolute inset-0 rounded-full opacity-60"
-                            style={{
-                              boxShadow: `0 0 12px ${progressPercentage >= 100 
-                                ? 'rgba(239, 68, 68, 0.3)' 
-                                : progressPercentage >= 75 
-                                  ? 'rgba(239, 68, 68, 0.25)'
-                                  : progressPercentage > 0
-                                    ? 'rgba(239, 68, 68, 0.2)'
-                                    : 'rgba(0, 0, 0, 0)'}`
-                            }}
-                          />
-                          
-                          {/* Deep inset track with multiple shadow layers */}
-                          <div 
-                            className="absolute inset-0 rounded-full"
-                            style={{
-                              background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 20%, #2a2a2a 50%, #1a1a1a 80%, #0a0a0a 100%)',
-                              boxShadow: `
-                                inset 0 3px 6px rgba(0, 0, 0, 0.6),
-                                inset 0 1px 2px rgba(0, 0, 0, 0.8),
-                                inset 0 -1px 1px rgba(255, 255, 255, 0.05)
-                              `,
-                              border: '1px solid rgba(255, 255, 255, 0.02)'
-                            }}
-                          />
-                          
-                          {/* Progress fill with gorgeous multi-layer depth */}
-                          <div 
-                            className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-700 ease-out"
-                            style={{ 
-                              width: `${Math.min(progressPercentage, 100)}%`,
-                              background: progressPercentage >= 100 
-                                ? `linear-gradient(180deg, 
-                                    #fca5a5 0%, 
-                                    #f87171 15%, 
-                                    #ef4444 40%, 
-                                    #dc2626 70%, 
-                                    #b91c1c 90%, 
-                                    #991b1b 100%)`
-                                : progressPercentage >= 75 
-                                  ? `linear-gradient(180deg, 
-                                      #fca5a5 0%, 
-                                      #f87171 15%, 
-                                      #ef4444 40%, 
-                                      #dc2626 70%, 
-                                      #b91c1c 90%, 
-                                      #991b1b 100%)`
-                                  : progressPercentage > 0
-                                    ? `linear-gradient(180deg, 
-                                        #fca5a5 0%, 
-                                        #f87171 15%, 
-                                        #ef4444 40%, 
-                                        #dc2626 70%, 
-                                        #b91c1c 90%, 
-                                        #991b1b 100%)`
-                                    : 'transparent',
-                              boxShadow: progressPercentage > 0 
-                                ? `
-                                    inset 0 2px 0 rgba(255, 255, 255, 0.4),
-                                    inset 0 1px 1px rgba(255, 255, 255, 0.3),
-                                    inset 0 -1px 2px rgba(0, 0, 0, 0.2),
-                                    0 2px 4px rgba(0, 0, 0, 0.2),
-                                    0 1px 4px ${progressPercentage >= 100 
-                                      ? 'rgba(239, 68, 68, 0.2)' 
-                                      : progressPercentage >= 75 
-                                        ? 'rgba(239, 68, 68, 0.15)'
-                                        : 'rgba(239, 68, 68, 0.1)'}
-                                  `
-                                : 'none',
-                              border: progressPercentage > 0 
-                                ? `1px solid ${progressPercentage >= 100 
-                                    ? 'rgba(239, 68, 68, 0.4)' 
-                                    : progressPercentage >= 75 
-                                      ? 'rgba(239, 68, 68, 0.3)'
-                                      : 'rgba(239, 68, 68, 0.25)'}`
-                                : 'none'
-                            }}
-                          />
-                          
-                          {/* Animated shimmer effect for active progress */}
-                          {progressPercentage > 0 && progressPercentage < 100 && (
-                            <div 
-                              className="absolute left-0 top-0 bottom-0 rounded-full pointer-events-none"
-                              style={{
-                                width: `${Math.min(progressPercentage, 100)}%`,
-                                background: `linear-gradient(90deg, 
-                                  transparent 0%, 
-                                  rgba(255, 255, 255, 0.2) 50%, 
-                                  transparent 100%)`,
-                                animation: 'shimmer 2s ease-in-out infinite'
-                              }}
-                            />
-                          )}
-                          
-                          {/* Content overlay */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="flex items-center gap-3">
-                              <span className="font-semibold text-sm text-white">
-                                {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
-                              </span>
-                              <div className="font-bold text-base text-white">
+                  return (
+                        <div key={member.id} className="flex flex-col items-center mx-2">
+                          {/* Simple circular progress */}
+                          <div className="relative w-16 h-16">
+                            {/* Background circle */}
+                            <div className="w-16 h-16 rounded-full bg-gray-800/50 border border-white/10"></div>
+                            
+                            {/* Progress circle */}
+                            <svg 
+                              className="absolute top-0 left-0 w-16 h-16 transform -rotate-90"
+                              viewBox="0 0 64 64"
+                            >
+                              <circle
+                                cx="32"
+                                cy="32"
+                                r="28"
+                                fill="none"
+                                stroke="#ef4444"
+                                strokeWidth="4"
+                                strokeLinecap="round"
+                                strokeDasharray={`${(progressPercentage / 100) * 175.9} 175.9`}
+                                className="transition-all duration-700 ease-out"
+                              />
+                            </svg>
+                            
+                            {/* Percentage text */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">
                                 {progressPercentage}%
-                              </div>
+                              </span>
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ))}
+                          
+                          {/* Person name */}
+                          <div className="mt-2 text-center">
+                            <span className="text-white/80 text-xs font-light" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
+                              {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
+                            </span>
+                          </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
               </div>
@@ -1780,7 +1695,7 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="mx-2 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+              className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
               style={{
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
@@ -1883,7 +1798,7 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="mx-2 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+              className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
               style={{
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
