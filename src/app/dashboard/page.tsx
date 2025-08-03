@@ -23,8 +23,13 @@ export default function Dashboard() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Get time-of-day gradient
+  // Get time-of-day gradient - TEST VERSION
   const getTimeOfDayGradient = () => {
+    // Test with very obvious gradient first
+    return 'linear-gradient(45deg, #ff0000 0%, #00ff00 50%, #0000ff 100%)'
+    
+    // Original time-based logic (commented out for testing)
+    /*
     const now = new Date()
     const hour = now.getHours()
     
@@ -44,6 +49,7 @@ export default function Dashboard() {
       // Night - deep purple/blue
       return 'radial-gradient(ellipse 120% 100% at 25% 30%, rgba(106, 90, 205, 0.25) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(0, 0, 0, 0.85) 80%)'
     }
+    */
   }
 
   return (
