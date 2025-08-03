@@ -23,33 +23,27 @@ export default function Dashboard() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Get time-of-day gradient - TEST VERSION
+  // Get time-of-day gradient - SUBTLE VERSION
   const getTimeOfDayGradient = () => {
-    // Test with very obvious gradient first
-    return 'linear-gradient(45deg, #ff0000 0%, #00ff00 50%, #0000ff 100%)'
-    
-    // Original time-based logic (commented out for testing)
-    /*
     const now = new Date()
     const hour = now.getHours()
     
     if (hour >= 5 && hour < 8) {
-      // Dawn - soft orange to pink
-      return 'radial-gradient(ellipse 150% 120% at 30% 20%, rgba(255, 159, 67, 0.4) 0%, rgba(255, 107, 107, 0.3) 40%, rgba(0, 0, 0, 0.8) 80%)'
+      // Dawn - very subtle orange hint
+      return 'radial-gradient(ellipse 200% 150% at 30% 20%, rgba(255, 159, 67, 0.08) 0%, rgba(255, 107, 107, 0.06) 40%, rgba(0, 0, 0, 0.95) 70%)'
     } else if (hour >= 8 && hour < 11) {
-      // Morning - warm yellow
-      return 'radial-gradient(ellipse 140% 100% at 40% 30%, rgba(255, 206, 84, 0.35) 0%, rgba(255, 177, 66, 0.25) 50%, rgba(0, 0, 0, 0.85) 80%)'
+      // Morning - very subtle yellow hint
+      return 'radial-gradient(ellipse 180% 120% at 40% 30%, rgba(255, 206, 84, 0.06) 0%, rgba(255, 177, 66, 0.04) 50%, rgba(0, 0, 0, 0.96) 70%)'
     } else if (hour >= 11 && hour < 17) {
-      // Day - bright cool blue
-      return 'radial-gradient(ellipse 130% 90% at 50% 25%, rgba(116, 185, 255, 0.3) 0%, rgba(162, 155, 254, 0.2) 45%, rgba(0, 0, 0, 0.85) 80%)'
+      // Day - very subtle blue hint
+      return 'radial-gradient(ellipse 160% 110% at 50% 25%, rgba(116, 185, 255, 0.06) 0%, rgba(162, 155, 254, 0.04) 45%, rgba(0, 0, 0, 0.96) 70%)'
     } else if (hour >= 17 && hour < 20) {
-      // Evening - warm orange to purple
-      return 'radial-gradient(ellipse 150% 110% at 60% 40%, rgba(255, 94, 77, 0.4) 0%, rgba(199, 121, 208, 0.3) 45%, rgba(0, 0, 0, 0.8) 80%)'
+      // Evening - very subtle orange to purple hint
+      return 'radial-gradient(ellipse 180% 130% at 60% 40%, rgba(255, 94, 77, 0.08) 0%, rgba(199, 121, 208, 0.06) 45%, rgba(0, 0, 0, 0.95) 70%)'
     } else {
-      // Night - deep purple/blue
-      return 'radial-gradient(ellipse 120% 100% at 25% 30%, rgba(106, 90, 205, 0.25) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(0, 0, 0, 0.85) 80%)'
+      // Night - very subtle purple/blue hint (like your reference)
+      return 'radial-gradient(ellipse 150% 120% at 25% 30%, rgba(106, 90, 205, 0.06) 0%, rgba(59, 130, 246, 0.04) 50%, rgba(0, 0, 0, 0.96) 70%)'
     }
-    */
   }
 
   return (
