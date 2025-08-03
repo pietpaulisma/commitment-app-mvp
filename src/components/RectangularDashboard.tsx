@@ -1401,7 +1401,7 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen pb-8 bg-black">
+    <div className="min-h-screen pb-8">
 
       {/* Demo Mode Indicator */}
       {isDemoMode && (
