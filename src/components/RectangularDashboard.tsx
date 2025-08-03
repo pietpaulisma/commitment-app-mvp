@@ -374,7 +374,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
     const progressPercentage = Math.max(0, ((maxDays - daysUntil) / maxDays) * 100)
     
     return (
-      <div key={index} className={`relative bg-black ${layoutClasses} overflow-hidden`}>
+      <div key={index} className={`relative ${layoutClasses} overflow-hidden`}>
         {/* Full rectangle progress background */}
         <div 
           className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
