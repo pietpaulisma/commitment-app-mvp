@@ -32,8 +32,8 @@ export default function Dashboard() {
       // Dawn - vibrant orange/pink from bottom
       return 'radial-gradient(ellipse 150% 120% at 30% 80%, rgba(255, 94, 77, 0.35) 0%, rgba(255, 159, 67, 0.25) 30%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
     } else if (hour >= 8 && hour < 11) {
-      // Morning - vibrant golden yellow from bottom
-      return 'radial-gradient(ellipse 140% 110% at 40% 85%, rgba(255, 206, 84, 0.3) 0%, rgba(255, 177, 66, 0.22) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+      // Morning - powerful warm sunrise from bottom
+      return 'radial-gradient(ellipse 160% 130% at 40% 85%, rgba(255, 193, 7, 0.45) 0%, rgba(255, 152, 0, 0.35) 25%, rgba(255, 87, 34, 0.25) 45%, rgba(0, 0, 0, 0.8) 65%, #000000 80%)'
     } else if (hour >= 11 && hour < 17) {
       // Day - vibrant blue/cyan from bottom
       return 'radial-gradient(ellipse 130% 100% at 50% 85%, rgba(59, 130, 246, 0.3) 0%, rgba(116, 185, 255, 0.22) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'

@@ -518,6 +518,29 @@ const MemoizedChartComponent = memo(ChartComponent)
 // Personal stats component with user accent colors
 
 export default function RectangularDashboard() {
+  // Get time-of-day gradient - same as dashboard background
+  const getTimeOfDayGradient = () => {
+    const now = new Date()
+    const hour = now.getHours()
+    
+    if (hour >= 5 && hour < 8) {
+      // Dawn - vibrant orange/pink from bottom
+      return 'radial-gradient(ellipse 150% 120% at 30% 80%, rgba(255, 94, 77, 0.35) 0%, rgba(255, 159, 67, 0.25) 30%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+    } else if (hour >= 8 && hour < 11) {
+      // Morning - powerful warm sunrise from bottom
+      return 'radial-gradient(ellipse 160% 130% at 40% 85%, rgba(255, 193, 7, 0.45) 0%, rgba(255, 152, 0, 0.35) 25%, rgba(255, 87, 34, 0.25) 45%, rgba(0, 0, 0, 0.8) 65%, #000000 80%)'
+    } else if (hour >= 11 && hour < 17) {
+      // Day - vibrant blue/cyan from bottom
+      return 'radial-gradient(ellipse 130% 100% at 50% 85%, rgba(59, 130, 246, 0.3) 0%, rgba(116, 185, 255, 0.22) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+    } else if (hour >= 17 && hour < 20) {
+      // Evening - vibrant purple/magenta from bottom
+      return 'radial-gradient(ellipse 140% 120% at 60% 80%, rgba(168, 85, 247, 0.35) 0%, rgba(199, 121, 208, 0.25) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+    } else {
+      // Night - vibrant deep blue/purple from bottom
+      return 'radial-gradient(ellipse 120% 110% at 25% 85%, rgba(79, 70, 229, 0.3) 0%, rgba(106, 90, 205, 0.22) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+    }
+  }
+
   // Add keyframe animations for enhanced chart effects and header animations
   const chartAnimationStyles = `
     @keyframes slideUpScale {
@@ -1553,14 +1576,16 @@ export default function RectangularDashboard() {
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                {/* Time remaining bar - transparent white glass effect */}
+                {/* Time remaining bar - uses same gradient as background */}
                 <div 
-                  className="absolute right-2 top-2 bottom-2 rounded-xl transition-all duration-1000"
+                  className="absolute left-0 top-0 bottom-0 transition-all duration-1000"
                   style={{
                     width: `${Math.max(8, 100 - timeRemainingPercentage)}%`,
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    backdropFilter: 'blur(10px)',
-                    boxShadow: '0 4px 16px rgba(255, 255, 255, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+                    background: getTimeOfDayGradient(),
+                    borderTopLeftRadius: '0px',
+                    borderBottomLeftRadius: '0px',
+                    borderTopRightRadius: '16px',
+                    borderBottomRightRadius: '16px'
                   }}
                 />
                 
@@ -1638,12 +1663,12 @@ export default function RectangularDashboard() {
                           <div 
                             className="absolute inset-0 rounded-full opacity-60"
                             style={{
-                              boxShadow: `0 0 20px ${progressPercentage >= 100 
-                                ? 'rgba(74, 222, 128, 0.4)' 
+                              boxShadow: `0 0 12px ${progressPercentage >= 100 
+                                ? 'rgba(239, 68, 68, 0.3)' 
                                 : progressPercentage >= 75 
-                                  ? 'rgba(251, 191, 36, 0.3)'
+                                  ? 'rgba(239, 68, 68, 0.25)'
                                   : progressPercentage > 0
-                                    ? 'rgba(163, 230, 53, 0.3)'
+                                    ? 'rgba(239, 68, 68, 0.2)'
                                     : 'rgba(0, 0, 0, 0)'}`
                             }}
                           />
@@ -1669,28 +1694,28 @@ export default function RectangularDashboard() {
                               width: `${Math.min(progressPercentage, 100)}%`,
                               background: progressPercentage >= 100 
                                 ? `linear-gradient(180deg, 
-                                    #6ee7b7 0%, 
-                                    #4ade80 15%, 
-                                    #22c55e 40%, 
-                                    #16a34a 70%, 
-                                    #15803d 90%, 
-                                    #14532d 100%)`
+                                    #fca5a5 0%, 
+                                    #f87171 15%, 
+                                    #ef4444 40%, 
+                                    #dc2626 70%, 
+                                    #b91c1c 90%, 
+                                    #991b1b 100%)`
                                 : progressPercentage >= 75 
                                   ? `linear-gradient(180deg, 
-                                      #fde68a 0%, 
-                                      #fbbf24 15%, 
-                                      #eab308 40%, 
-                                      #ca8a04 70%, 
-                                      #a16207 90%, 
-                                      #78350f 100%)`
+                                      #fca5a5 0%, 
+                                      #f87171 15%, 
+                                      #ef4444 40%, 
+                                      #dc2626 70%, 
+                                      #b91c1c 90%, 
+                                      #991b1b 100%)`
                                   : progressPercentage > 0
                                     ? `linear-gradient(180deg, 
-                                        #d9f99d 0%, 
-                                        #a3e635 15%, 
-                                        #84cc16 40%, 
-                                        #65a30d 70%, 
-                                        #4d7c0f 90%, 
-                                        #365314 100%)`
+                                        #fca5a5 0%, 
+                                        #f87171 15%, 
+                                        #ef4444 40%, 
+                                        #dc2626 70%, 
+                                        #b91c1c 90%, 
+                                        #991b1b 100%)`
                                     : 'transparent',
                               boxShadow: progressPercentage > 0 
                                 ? `
@@ -1698,19 +1723,19 @@ export default function RectangularDashboard() {
                                     inset 0 1px 1px rgba(255, 255, 255, 0.3),
                                     inset 0 -1px 2px rgba(0, 0, 0, 0.2),
                                     0 2px 4px rgba(0, 0, 0, 0.2),
-                                    0 1px 8px ${progressPercentage >= 100 
-                                      ? 'rgba(74, 222, 128, 0.3)' 
+                                    0 1px 4px ${progressPercentage >= 100 
+                                      ? 'rgba(239, 68, 68, 0.2)' 
                                       : progressPercentage >= 75 
-                                        ? 'rgba(251, 191, 36, 0.2)'
-                                        : 'rgba(163, 230, 53, 0.2)'}
+                                        ? 'rgba(239, 68, 68, 0.15)'
+                                        : 'rgba(239, 68, 68, 0.1)'}
                                   `
                                 : 'none',
                               border: progressPercentage > 0 
                                 ? `1px solid ${progressPercentage >= 100 
-                                    ? 'rgba(74, 222, 128, 0.6)' 
+                                    ? 'rgba(239, 68, 68, 0.4)' 
                                     : progressPercentage >= 75 
-                                      ? 'rgba(251, 191, 36, 0.5)'
-                                      : 'rgba(163, 230, 53, 0.5)'}`
+                                      ? 'rgba(239, 68, 68, 0.3)'
+                                      : 'rgba(239, 68, 68, 0.25)'}`
                                 : 'none'
                             }}
                           />
