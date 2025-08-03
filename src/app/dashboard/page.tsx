@@ -23,8 +23,39 @@ export default function Dashboard() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Get time-of-day gradient
+  const getTimeOfDayGradient = () => {
+    const now = new Date()
+    const hour = now.getHours()
+    
+    if (hour >= 5 && hour < 8) {
+      // Dawn - soft orange to pink
+      return 'radial-gradient(ellipse 120% 80% at 30% 20%, rgba(255, 159, 67, 0.15) 0%, rgba(255, 107, 107, 0.1) 30%, rgba(0, 0, 0, 0.95) 70%)'
+    } else if (hour >= 8 && hour < 11) {
+      // Morning - warm yellow
+      return 'radial-gradient(ellipse 100% 60% at 40% 30%, rgba(255, 206, 84, 0.12) 0%, rgba(255, 177, 66, 0.08) 40%, rgba(0, 0, 0, 0.96) 70%)'
+    } else if (hour >= 11 && hour < 17) {
+      // Day - bright cool blue
+      return 'radial-gradient(ellipse 90% 50% at 50% 25%, rgba(116, 185, 255, 0.1) 0%, rgba(162, 155, 254, 0.06) 35%, rgba(0, 0, 0, 0.97) 65%)'
+    } else if (hour >= 17 && hour < 20) {
+      // Evening - warm orange to purple
+      return 'radial-gradient(ellipse 110% 70% at 60% 40%, rgba(255, 94, 77, 0.15) 0%, rgba(199, 121, 208, 0.1) 35%, rgba(0, 0, 0, 0.94) 70%)'
+    } else {
+      // Night - deep purple/blue
+      return 'radial-gradient(ellipse 80% 60% at 25% 30%, rgba(106, 90, 205, 0.08) 0%, rgba(59, 130, 246, 0.05) 40%, rgba(0, 0, 0, 0.98) 70%)'
+    }
+  }
+
   return (
     <div className="relative min-h-screen bg-black">
+      {/* Subtle time-of-day gradient background */}
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          background: getTimeOfDayGradient()
+        }}
+      />
+      
       {/* Static gradient background - no parallax */}
       <div className="absolute inset-0 h-[50vh] z-0">
         <TimeGradient />
