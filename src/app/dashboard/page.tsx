@@ -53,15 +53,18 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="relative min-h-screen bg-black">
-      {/* Fixed gradient background */}
+    <>
+      {/* Global gradient background - outside main container */}
       <div 
-        className="fixed inset-0 z-0"
+        className="fixed inset-0"
         style={{
           background: getTimeOfDayGradient(),
+          zIndex: -1,
           pointerEvents: 'none'
         }}
       />
+      
+      <div className="relative min-h-screen">
       
       
       {/* Components with transparent/relative positioning */}
@@ -75,5 +78,6 @@ export default function Dashboard() {
         <RectangularDashboard />
       </div>
     </div>
+    </>
   )
 }
