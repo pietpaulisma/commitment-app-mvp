@@ -1467,7 +1467,7 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Glass */}
       <div 
-        className="sticky top-0 z-[70] mb-1 mt-2 mx-2 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+        className="sticky top-0 z-[70] mb-1 mt-2 mx-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
         style={{
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
         }}
@@ -1491,7 +1491,7 @@ export default function RectangularDashboard() {
                 {/* Settings Icon */}
                 <Link 
                   href="/profile" 
-                  className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50"
+                  className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2"
                 >
                   <Cog6ToothIcon className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
                 </Link>
@@ -1574,12 +1574,12 @@ export default function RectangularDashboard() {
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                {/* Time remaining bar - uses same gradient as background */}
+                {/* Time remaining bar - solid color representing time left */}
                 <div 
                   className="absolute right-0 top-0 bottom-0 transition-all duration-1000"
                   style={{
-                    width: `${Math.max(8, timeRemainingPercentage)}%`,
-                    background: getTimeOfDayGradient(),
+                    width: `${Math.max(8, 100 - timeRemainingPercentage)}%`,
+                    background: 'rgba(255, 255, 255, 0.15)',
                     borderTopLeftRadius: '16px',
                     borderBottomLeftRadius: '16px',
                     borderTopRightRadius: '0px',
