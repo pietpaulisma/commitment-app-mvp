@@ -1440,7 +1440,7 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Glass */}
       <div 
-        className="sticky top-0 z-[70] mb-2 mt-4 mx-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
+        className="sticky top-0 z-[70] mb-1 mt-2 mx-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
         style={{
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
         }}
@@ -1482,7 +1482,7 @@ export default function RectangularDashboard() {
           
           {/* Greeting with username and motivational text */}
           <div 
-            className="mx-4 mb-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
+            className="mx-2 mb-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
             style={{
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
             }}
@@ -1513,7 +1513,7 @@ export default function RectangularDashboard() {
           </div>
 
           {/* Two Square Blocks: DAY and Time Remaining */}
-          <div className="grid grid-cols-2 gap-2 mx-4 mb-2">
+          <div className="grid grid-cols-2 gap-1 mx-2 mb-1">
             {/* DAY Block */}
             <div className="relative">
               <div 
@@ -1586,7 +1586,7 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="mx-4 mb-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
+              className="mx-2 mb-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
               style={{
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
@@ -1685,7 +1685,7 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="mx-4 mb-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
+              className="mx-2 mb-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
               style={{
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
@@ -1789,7 +1789,7 @@ export default function RectangularDashboard() {
           <div className="relative">
             {/* Main container */}
             <div 
-              className="mx-4 mb-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
+              className="mx-2 mb-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl"
               style={{
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
