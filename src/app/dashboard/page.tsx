@@ -47,14 +47,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="relative min-h-screen bg-black">
-      {/* Subtle time-of-day gradient background */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          background: getTimeOfDayGradient()
-        }}
-      />
+    <div 
+      className="relative min-h-screen"
+      style={{
+        background: getTimeOfDayGradient()
+      }}
+    >
       
       
       {/* Components with transparent/relative positioning */}
