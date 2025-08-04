@@ -103,45 +103,66 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
   return (
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
-      {/* Extremely visible full-screen gradient */}
+      {/* Main organic sunrise/sunset blob */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 opacity-60"
         style={{
           background: `
-            linear-gradient(135deg, 
-              ${colors.primary} 0%, 
-              ${colors.secondary} 50%, 
-              ${colors.accent} 100%)
+            radial-gradient(ellipse 700px 500px at ${blobPositionX}% ${blobPositionY}%, 
+              ${colors.primary}90 0%, 
+              ${colors.secondary}75 15%, 
+              ${colors.accent}60 30%, 
+              ${colors.primary}45 45%, 
+              transparent 65%)
           `,
-          opacity: 0.8
+          filter: 'blur(0.5px)'
         }}
       />
       
-      {/* Radial overlay for organic feel */}
+      {/* Secondary organic blob layer */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 opacity-45"
         style={{
           background: `
-            radial-gradient(ellipse 150% 100% at 25% 75%, 
-              ${colors.primary} 0%, 
-              ${colors.secondary} 40%, 
-              transparent 70%)
+            radial-gradient(ellipse 600px 400px at ${blobPositionX + 20}% ${blobPositionY - 5}%, 
+              ${colors.secondary}65 0%, 
+              ${colors.accent}55 20%, 
+              ${colors.primary}45 40%, 
+              transparent 60%)
           `,
-          opacity: 0.6
+          filter: 'blur(1px)'
         }}
       />
 
-      {/* Secondary radial for depth */}
+      {/* Flowing organic shapes for movement */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 opacity-35"
         style={{
           background: `
-            radial-gradient(ellipse 120% 80% at 60% 30%, 
-              ${colors.accent} 0%, 
-              ${colors.secondary} 50%, 
-              transparent 80%)
+            radial-gradient(ellipse 450px 300px at ${blobPositionX - 15}% ${blobPositionY + 10}%, 
+              ${colors.accent}60 0%, 
+              ${colors.secondary}50 25%, 
+              transparent 50%),
+            radial-gradient(ellipse 400px 250px at ${blobPositionX + 30}% ${blobPositionY - 20}%, 
+              ${colors.primary}55 0%, 
+              ${colors.accent}45 30%, 
+              transparent 55%)
           `,
-          opacity: 0.4
+          filter: 'blur(2px)'
+        }}
+      />
+
+      {/* Subtle texture overlay */}
+      <div 
+        className="absolute inset-0 opacity-25"
+        style={{
+          background: `
+            radial-gradient(ellipse 350px 200px at ${blobPositionX + 5}% ${blobPositionY}%, 
+              ${colors.secondary}50 0%, 
+              ${colors.primary}40 35%, 
+              transparent 60%)
+          `,
+          filter: 'blur(3px)'
         }}
       />
     </div>
