@@ -34,10 +34,15 @@ export default function InviteCodeManager() {
     if (!profile?.group_id) return
 
     try {
-      // Note: group_invites table doesn't exist yet - this is a future feature
-      // For now, just set empty invites to prevent 404 errors
-      console.log('Invite codes feature not yet implemented')
-      setInvites([])
+      const { data, error } = await supabase
+        .from('group_invites')
+        .select('*')
+        .eq('group_id', profile.group_id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      
+      setInvites(data || [])
     } catch (error) {
       console.error('Error loading invites:', error)
       setError('Failed to load invite codes')
@@ -53,9 +58,16 @@ export default function InviteCodeManager() {
     setError('')
 
     try {
-      // Note: group_invites feature not yet implemented
-      console.log('Create invite feature not yet available')
-      setError('Invite codes feature coming soon')
+      const { data, error } = await supabase.rpc('create_group_invite', {
+        p_group_id: profile.group_id,
+        p_max_uses: 10,
+        p_expires_days: 30
+      })
+
+      if (error) throw error
+
+      // Reload invites to show the new one
+      await loadInvites()
     } catch (error) {
       console.error('Error creating invite:', error)
       setError('Failed to create invite code')
@@ -66,9 +78,15 @@ export default function InviteCodeManager() {
 
   const toggleInvite = async (inviteId: string, isActive: boolean) => {
     try {
-      // Note: group_invites feature not yet implemented
-      console.log('Toggle invite feature not yet available')
-      setError('Invite codes feature coming soon')
+      const { error } = await supabase
+        .from('group_invites')
+        .update({ is_active: !isActive })
+        .eq('id', inviteId)
+
+      if (error) throw error
+
+      // Reload invites to show updated status
+      await loadInvites()
     } catch (error) {
       console.error('Error toggling invite:', error)
       setError('Failed to update invite code')
@@ -76,6 +94,12 @@ export default function InviteCodeManager() {
   }
 
   const copyToClipboard = (code: string) => {
+    const inviteLink = `${window.location.origin}/onboarding/groups?invite=${code}`
+    navigator.clipboard.writeText(inviteLink)
+    alert('Invite link copied to clipboard!')
+  }
+
+  const copyCodeOnly = (code: string) => {
     navigator.clipboard.writeText(code)
     alert('Invite code copied to clipboard!')
   }
@@ -129,12 +153,21 @@ export default function InviteCodeManager() {
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <div 
-                  className="font-mono text-lg text-orange-400 cursor-pointer hover:text-orange-300"
-                  onClick={() => copyToClipboard(invite.invite_code)}
-                  title="Click to copy"
-                >
-                  {invite.invite_code}
+                <div className="flex items-center space-x-2">
+                  <div 
+                    className="font-mono text-lg text-orange-400 cursor-pointer hover:text-orange-300"
+                    onClick={() => copyToClipboard(invite.invite_code)}
+                    title="Click to copy invite link"
+                  >
+                    {invite.invite_code}
+                  </div>
+                  <button
+                    onClick={() => copyCodeOnly(invite.invite_code)}
+                    className="text-xs text-gray-400 hover:text-white transition-colors"
+                    title="Copy code only"
+                  >
+                    📋
+                  </button>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`text-xs px-2 py-1 border ${

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import OnboardingLayout from '@/components/OnboardingLayout'
@@ -18,6 +18,7 @@ type Group = {
 
 export default function GroupSelectionPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [groups, setGroups] = useState<Group[]>([])
   const [inviteCode, setInviteCode] = useState('')
@@ -32,8 +33,18 @@ export default function GroupSelectionPage() {
       router.push('/login')
       return
     }
-    loadAvailableGroups()
-  }, [user, router])
+    
+    // Handle invite parameter from URL
+    const inviteParam = searchParams.get('invite')
+    if (inviteParam) {
+      setInviteCode(inviteParam.toUpperCase())
+      setShowInviteCode(true)
+      // Try to auto-join with invite code
+      handleInviteCodeJoin(inviteParam)
+    } else {
+      loadAvailableGroups()
+    }
+  }, [user, router, searchParams])
 
   const loadAvailableGroups = async () => {
     try {
@@ -81,6 +92,37 @@ export default function GroupSelectionPage() {
     }
   }
 
+  const handleInviteCodeJoin = async (code: string) => {
+    if (!user || !code.trim()) {
+      setError('Invalid invite code.')
+      return
+    }
+
+    setIsJoining(true)
+    setError('')
+
+    try {
+      // Use the database function to join via invite code
+      const { data, error } = await supabase.rpc('join_group_via_invite', {
+        p_invite_code: code.trim().toUpperCase()
+      })
+
+      if (error) throw error
+
+      if (data.success) {
+        // Success! Show success message and redirect
+        console.log('Successfully joined group:', data.group_name)
+        router.push('/onboarding/profile')
+      } else {
+        throw new Error(data.error || 'Failed to join group with invite code.')
+      }
+    } catch (error: any) {
+      console.error('Error joining via invite code:', error)
+      setError(error.message || 'Invalid or expired invite code.')
+      setIsJoining(false)
+    }
+  }
+
   const handleJoinGroup = async () => {
     if (!user || (!selectedGroup && !inviteCode.trim())) {
       setError('You must select a group or enter an invite code.')
@@ -91,19 +133,17 @@ export default function GroupSelectionPage() {
     setError('')
 
     try {
-      let groupIdToJoin = selectedGroup
-
-      // If using invite code, validate it first
+      // If using invite code, use the invite function
       if (inviteCode.trim()) {
-        // Note: group_invites feature not yet implemented
-        throw new Error('Invite codes feature not yet available. Please contact an admin to be added to a group.')
+        await handleInviteCodeJoin(inviteCode)
+        return
       }
 
-      // Join the group
+      // Otherwise join selected group directly
       const { error: joinError } = await supabase
         .from('profiles')
         .update({ 
-          group_id: groupIdToJoin
+          group_id: selectedGroup
         })
         .eq('id', user.id)
 
