@@ -1467,7 +1467,7 @@ export default function RectangularDashboard() {
       
       {/* Header with Logo and Settings - Glass */}
       <div 
-        className="sticky top-0 z-[70] mb-1 mt-2 mx-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+        className="sticky top-0 z-[70] mb-1 mt-8 mx-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
         style={{
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
         }}
@@ -1477,7 +1477,7 @@ export default function RectangularDashboard() {
           {/* Main container */}
           <div className="relative">
             
-            <div className="relative px-6 py-4 z-10">
+            <div className="relative px-6 py-8 z-10">
               <div className="flex items-center justify-between">
                 {/* Logo */}
                 <div>
@@ -1509,10 +1509,10 @@ export default function RectangularDashboard() {
           
           {/* Greeting with username and motivational text */}
           <div 
-            className="mx-1 mb-1"
+            className="mx-1 mb-6"
           >
             <div className="relative">
-              <div className="py-6 px-4">
+              <div className="py-12 px-6">
                 <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress
