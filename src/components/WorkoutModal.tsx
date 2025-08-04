@@ -511,7 +511,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-l-3xl hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -535,13 +535,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-          {/* Reorder icon for favorites - matches header X button layout */}
-          <button
-            className="w-16 flex items-center justify-center text-gray-500 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 rounded-r-lg"
-            aria-label="Reorder favorite"
-          >
-            <Bars3Icon className="w-5 h-5" />
-          </button>
+          {/* Reorder icon for favorites - circular button */}
+          <div className="w-16 flex items-center justify-center rounded-r-3xl">
+            <button
+              className="w-10 h-10 rounded-full bg-gray-800/50 hover:bg-gray-700/50 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 border border-white/10"
+              aria-label="Reorder favorite"
+            >
+              <Bars3Icon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -595,7 +597,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-l-3xl hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -619,21 +621,23 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-          {/* Right icon button - matches header X button layout */}
+          {/* Right icon button - circular */}
           {showFavorite && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleFavorite(exercise.id)
-              }}
-              className="w-16 flex items-center justify-center hover:bg-gray-800/50 transition-colors duration-200"
-            >
-              {isFavorite ? (
-                <StarIconSolid className="w-5 h-5 text-yellow-400" />
-              ) : (
-                <StarIcon className="w-5 h-5 text-gray-500 hover:text-yellow-400" />
-              )}
-            </button>
+            <div className="w-16 flex items-center justify-center rounded-r-3xl">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleFavorite(exercise.id)
+                }}
+                className="w-10 h-10 rounded-full bg-gray-800/50 hover:bg-gray-700/50 flex items-center justify-center transition-all duration-200 border border-white/10"
+              >
+                {isFavorite ? (
+                  <StarIconSolid className="w-4 h-4 text-yellow-400" />
+                ) : (
+                  <StarIcon className="w-4 h-4 text-gray-400 hover:text-yellow-400" />
+                )}
+              </button>
+            </div>
           )}
         </div>
       </div>

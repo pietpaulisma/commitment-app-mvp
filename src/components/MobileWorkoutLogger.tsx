@@ -754,10 +754,10 @@ export default function MobileWorkoutLogger() {
                             style={{ 
                               width: '100%',
                               background: `linear-gradient(to right, 
-                                ${exerciseColor} 0%, 
-                                ${exerciseColor}dd ${Math.max(0, progressPercentage - 15)}%, 
-                                ${exerciseColor}66 ${progressPercentage}%, 
-                                #000000 ${Math.min(100, progressPercentage + 20)}%)`
+                                ${exerciseColor}40 0%, 
+                                ${exerciseColor}60 ${Math.max(0, progressPercentage - 10)}%, 
+                                ${exerciseColor}40 ${progressPercentage}%, 
+                                transparent ${Math.min(100, progressPercentage + 15)}%)`
                             }}
                           />
                           
