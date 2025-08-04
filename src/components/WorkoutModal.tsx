@@ -1184,11 +1184,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           overflow: 'hidden' // Prevent background scrolling
         }}
       >
-        {/* Header - Modern styled version */}
+        {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
         <div className="sticky top-0">
-          <div className="flex rounded-t-2xl overflow-hidden">
-            {/* Progress Bar Section - Modernized */}
-            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/50 backdrop-blur-sm'} border-r border-white/10 overflow-hidden`}>
+          <div className="flex">
+            {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
+            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
               {/* Liquid gradient progress background with subtle animation */}
               <div 
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -1226,7 +1226,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Chat → X Button Transition */}
             <button
               onClick={handleClose}
-              className="w-16 h-16 bg-black/50 backdrop-blur-sm border-l border-white/10 hover:bg-black/70 text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 relative overflow-hidden shadow-lg"
+              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
               aria-label="Close workout log"
             >
               {/* Chat Icon (slides up and out when modal reaches top) */}
@@ -1881,13 +1881,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         </div>
 
-        {/* Workout Input Overlay - Redesigned */}
+        {/* Workout Input Overlay - Modern Redesigned */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-            <div className="relative bg-black border border-white/10 rounded-lg w-96 h-[36rem] overflow-hidden shadow-2xl">
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[110] flex items-center justify-center p-4">
+            <div className="relative bg-black/70 backdrop-blur-xl border border-white/5 rounded-3xl w-96 h-[36rem] overflow-hidden shadow-2xl">
               
-              {/* Header - Exercise Button Style with Progress Bar */}
-              <div className="relative bg-black/30 backdrop-blur-sm border-b border-white/10 overflow-hidden">
+              {/* Header - Modern Exercise Button Style with Progress Bar */}
+              <div className="relative bg-black/40 backdrop-blur-sm border-b border-white/10 overflow-hidden rounded-t-3xl">
                 <div className="flex">
                   {/* Main content area with progress bar - matches exercise button layout */}
                   <div className="flex-1 relative overflow-hidden">
@@ -1925,10 +1925,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </div>
                   
-                  {/* Close button - matches exercise button X layout exactly */}
+                  {/* Close button - Modern styled */}
                   <button
                     onClick={() => setWorkoutInputOpen(false)}
-                    className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
+                    className="w-16 h-16 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 flex items-center justify-center shadow-lg"
                     aria-label="Close workout input"
                   >
                     <XMarkIcon className="w-6 h-6" />
@@ -1943,15 +1943,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="flex items-center justify-center gap-6 mb-4">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
-                      className="rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                      style={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
-                        border: '4px solid rgba(0,0,0,0.3)',
-                        boxShadow: '0 8px 20px rgba(71, 85, 105, 0.4), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)'
-                      }}
+                      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95 bg-black/40 backdrop-blur-sm border border-white/20 shadow-2xl hover:shadow-xl hover:bg-black/60"
                     >
                       −
                     </button>
@@ -1960,22 +1952,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       type="number"
                       value={workoutCount || 0}
                       onChange={(e) => setWorkoutCount(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="text-6xl font-black text-white text-center bg-transparent border-none outline-none w-24"
-                      style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}
+                      className="text-6xl font-black text-white text-center bg-black/30 backdrop-blur-sm border border-white/20 outline-none w-24 h-20 rounded-2xl shadow-2xl"
+                      style={{ textShadow: '0 0 20px rgba(255,255,255,0.5)' }}
                       placeholder="0"
                     />
                     
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
-                      className="rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-200 hover:scale-105 active:scale-95"
-                      style={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '50%',
-                        background: `linear-gradient(135deg, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}80 0%, ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}60 100%)`,
-                        border: '4px solid rgba(0,0,0,0.3)',
-                        boxShadow: `0 8px 20px ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}40, inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)`
-                      }}
+                      className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95 bg-blue-500/40 backdrop-blur-sm border border-blue-400/50 shadow-2xl hover:shadow-xl hover:bg-blue-500/60"
                     >
                       +
                     </button>
@@ -2224,7 +2208,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             }
                           }}
                           disabled={loading || workoutCount <= 0}
-                          className="relative h-16 w-full flex items-center justify-center px-4 text-white font-bold transition-all duration-200 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative h-16 w-full flex items-center justify-center px-4 text-white font-bold transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-2xl shadow-2xl hover:shadow-xl hover:bg-blue-500/30"
                         >
                           <div className="text-center">
                             <div className="text-lg font-bold">
