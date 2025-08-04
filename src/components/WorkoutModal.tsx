@@ -484,7 +484,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-lg mb-2 shadow-lg hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-3xl mb-4 shadow-2xl hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
             ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
             : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
@@ -568,7 +568,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-lg mb-2 shadow-lg hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-3xl mb-4 shadow-2xl hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
             ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
             : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
@@ -1184,9 +1184,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           overflow: 'hidden' // Prevent background scrolling
         }}
       >
-        {/* Header - Modern styled version - UPDATED */}
+        {/* Header - Modern styled version */}
         <div className="sticky top-0">
-          <div className="flex rounded-t-2xl overflow-hidden bg-red-500/20">
+          <div className="flex rounded-t-2xl overflow-hidden">
             {/* Progress Bar Section - Modernized */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/50 backdrop-blur-sm'} border-r border-white/10 overflow-hidden`}>
               {/* Liquid gradient progress background with subtle animation */}
@@ -1276,7 +1276,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 
                 {todaysWorkouts.length === 0 ? (
                   <div className="px-4">
-                    <div className="text-center py-8 bg-black/30 backdrop-blur-sm rounded-2xl border border-white/5 shadow-lg">
+                    <div className="text-center py-8 bg-black/30 backdrop-blur-sm rounded-3xl border-2 border-blue-500/50 shadow-2xl">
                       <p className="text-gray-400 font-medium">No workouts logged yet</p>
                       <p className="text-gray-500 text-sm mt-1">Select exercises below to get started</p>
                     </div>
@@ -1289,7 +1289,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           return (
                             <div 
                               key={`${workout.exercise_id}-${workout.weight || 0}`} 
-                              className="relative bg-black/30 backdrop-blur-sm border-b border-white/5 overflow-hidden cursor-pointer hover:bg-black/50 transition-all duration-300 rounded-lg mb-2 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                              className="relative bg-black/30 backdrop-blur-sm border-b border-white/5 overflow-hidden cursor-pointer hover:bg-black/50 transition-all duration-300 rounded-3xl mb-4 shadow-2xl hover:shadow-xl hover:scale-[1.02]"
                               onClick={() => handleWorkoutClick(workout)}
                             >
                               <div className="flex">
