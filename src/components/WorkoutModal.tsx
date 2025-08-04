@@ -122,6 +122,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     if (isOpen && user && profile?.group_id) {
       console.log('Loading exercises for group:', profile.group_id)
       console.log('isAnimatedIn before:', isAnimatedIn)
+      
+      // Prevent background scrolling
+      document.body.style.overflow = 'hidden'
+      
       loadExercises()
       loadDailyProgress()
       loadTodaysWorkouts()
@@ -146,8 +150,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       setIsAnimatedIn(false)
       setIsClosing(false)
       setShowIconTransition(false)
+      
+      // Restore background scrolling
+      document.body.style.overflow = 'unset'
     }
   }, [isOpen, user, profile?.group_id])
+
+  // Cleanup effect to ensure body scroll is restored on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [])
 
   const handleClose = () => {
     console.log('Starting close animation')
@@ -1159,14 +1173,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       `}</style>
       
       <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-xl flex flex-col transition-all duration-500 ease-out shadow-2xl"
+        className="fixed inset-0 bg-black flex flex-col transition-all duration-500 ease-out shadow-2xl"
         style={{ 
           paddingTop: 'env(safe-area-inset-top)',
           transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           touchAction: 'manipulation',
-          zIndex: isClosing ? 40 : 9999 // Slide behind bottom nav (z-50) when closing
+          zIndex: isClosing ? 40 : 9999, // Slide behind bottom nav (z-50) when closing
+          overflow: 'hidden' // Prevent background scrolling
         }}
       >
         {/* Header - Modern styled version */}
