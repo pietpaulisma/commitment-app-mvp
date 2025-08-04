@@ -690,6 +690,15 @@ export default function RectangularDashboard() {
       animation-delay: 1.8s;
       opacity: 0;
     }
+    
+    @keyframes smooth-fill {
+      from {
+        stroke-dashoffset: 226.2;
+      }
+      to {
+        stroke-dashoffset: calc(226.2 - var(--progress) * 226.2 / 100);
+      }
+    }
   `
   const { user, loading: authLoading, isDemoMode, exitDemoMode } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
@@ -1763,38 +1772,42 @@ export default function RectangularDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-wrap justify-center gap-4 py-4">
+              <div className="flex flex-wrap justify-start gap-4 py-4 px-4">
                 {groupMembers.map((member) => {
                   const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
                       
                   return (
-                        <div key={member.id} className="flex flex-col items-center mx-2">
-                          {/* Simple circular progress */}
-                          <div className="relative w-16 h-16">
+                        <div key={member.id} className="flex flex-col items-start mx-2">
+                          {/* Bigger circular progress */}
+                          <div className="relative w-20 h-20">
                             {/* Background circle */}
-                            <div className="w-16 h-16 rounded-full bg-gray-800/50 border border-white/10"></div>
+                            <div className="w-20 h-20 rounded-full bg-gray-800/50 border border-white/10"></div>
                             
-                            {/* Progress circle */}
+                            {/* Progress circle with smooth fill animation */}
                             <svg 
-                              className="absolute top-0 left-0 w-16 h-16 transform -rotate-90"
-                              viewBox="0 0 64 64"
+                              className="absolute top-0 left-0 w-20 h-20 transform -rotate-90"
+                              viewBox="0 0 80 80"
                             >
                               <circle
-                                cx="32"
-                                cy="32"
-                                r="28"
+                                cx="40"
+                                cy="40"
+                                r="36"
                                 fill="none"
                                 stroke="#ef4444"
-                                strokeWidth="4"
+                                strokeWidth="5"
                                 strokeLinecap="round"
-                                strokeDasharray={`${(progressPercentage / 100) * 175.9} 175.9`}
-                                className="transition-all duration-700 ease-out"
+                                strokeDasharray={`${(progressPercentage / 100) * 226.2} 226.2`}
+                                className="transition-all duration-1000 ease-out"
+                                style={{
+                                  strokeDashoffset: `${226.2 - (progressPercentage / 100) * 226.2}`,
+                                  animation: 'smooth-fill 1.2s ease-out forwards'
+                                }}
                               />
                             </svg>
                             
-                            {/* Percentage text */}
+                            {/* Bigger, bolder percentage text */}
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">
+                              <span className="text-white font-black text-lg">
                                 {progressPercentage}%
                               </span>
                             </div>
