@@ -492,7 +492,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       >
         <div className="flex">
           {/* Main content area with progress bar - matches header layout */}
-          <div className="flex-1 relative overflow-hidden rounded-3xl">
+          <div className="flex-1 relative overflow-hidden rounded-3xl mr-14">
             {/* Liquid gradient progress bar background */}
             <div 
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -535,15 +535,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-          {/* Reorder icon for favorites - circular button in original position */}
-          <div className="w-16 flex items-center justify-center">
-            <button
-              className="w-10 h-10 rounded-full bg-gray-800/80 hover:bg-gray-700/80 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 border border-white/20 shadow-lg"
-              aria-label="Reorder favorite"
-            >
-              <Bars3Icon className="w-4 h-4" />
-            </button>
-          </div>
+          {/* Reorder icon for favorites - positioned absolutely */}
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gray-800/80 hover:bg-gray-700/80 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 border border-white/20 shadow-lg z-10"
+            aria-label="Reorder favorite"
+          >
+            <Bars3Icon className="w-4 h-4" />
+          </button>
         </div>
       </div>
     )
@@ -578,7 +576,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       >
         <div className="flex">
           {/* Main content area with progress bar - matches header layout */}
-          <div className="flex-1 relative overflow-hidden rounded-3xl">
+          <div className="flex-1 relative overflow-hidden rounded-3xl mr-14">
             {/* Liquid gradient progress bar background */}
             <div 
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -621,23 +619,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-          {/* Star icon button - circular button in original position */}
+          {/* Star icon button - positioned absolutely */}
           {showFavorite && (
-            <div className="w-16 flex items-center justify-center">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggleFavorite(exercise.id)
-                }}
-                className="w-10 h-10 rounded-full bg-gray-800/80 hover:bg-gray-700/80 flex items-center justify-center transition-all duration-200 border border-white/20 shadow-lg"
-              >
-                {isFavorite ? (
-                  <StarIconSolid className="w-4 h-4 text-yellow-400" />
-                ) : (
-                  <StarIcon className="w-4 h-4 text-gray-400 hover:text-yellow-400" />
-                )}
-              </button>
-            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleFavorite(exercise.id)
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gray-800/80 hover:bg-gray-700/80 flex items-center justify-center transition-all duration-200 border border-white/20 shadow-lg z-10"
+            >
+              {isFavorite ? (
+                <StarIconSolid className="w-4 h-4 text-yellow-400" />
+              ) : (
+                <StarIcon className="w-4 h-4 text-gray-400 hover:text-yellow-400" />
+              )}
+            </button>
           )}
         </div>
       </div>
@@ -652,7 +648,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       >
         <div className="flex">
           {/* Main content area with progress bar - matches header layout */}
-          <div className="flex-1 relative overflow-hidden rounded-3xl">
+          <div className="flex-1 relative overflow-hidden rounded-3xl mr-14">
             {/* Gradient background for sports */}
             <div 
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -1298,7 +1294,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             >
                               <div className="flex">
                                 {/* Main content area with progress bar - matches header layout */}
-                                <div className="flex-1 relative overflow-hidden rounded-3xl">
+                                <div className="flex-1 relative overflow-hidden rounded-3xl mr-14">
                                   {/* Liquid gradient progress bar background */}
                                   <div 
                                     className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -1894,7 +1890,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               <div className="relative bg-black/40 backdrop-blur-sm border-b border-white/10 overflow-hidden rounded-t-3xl">
                 <div className="flex">
                   {/* Main content area with progress bar - matches exercise button layout */}
-                  <div className="flex-1 relative overflow-hidden rounded-3xl">
+                  <div className="flex-1 relative overflow-hidden rounded-3xl mr-14">
                     {/* Live progress bar background */}
                     <div 
                       className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out"
@@ -2149,7 +2145,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="relative bg-black/30 backdrop-blur-sm mt-6 overflow-hidden">
                     <div className="flex">
                       {/* Main content area - matches header layout */}
-                      <div className="flex-1 relative overflow-hidden rounded-3xl">
+                      <div className="flex-1 relative overflow-hidden rounded-3xl mr-14">
                         {/* Progress background */}
                         <div 
                           className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out"
