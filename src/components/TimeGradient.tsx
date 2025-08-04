@@ -85,6 +85,10 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
   const colors = getTimeBasedColors()
   
+  // Debug log current colors
+  console.log('Current time:', currentTime.getHours() + ':' + currentTime.getMinutes())
+  console.log('Selected colors:', colors)
+  
   // Calculate day progress (0 = start of day, 1 = end of day)
   const hour = currentTime.getHours()
   const minute = currentTime.getMinutes()
@@ -99,66 +103,45 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
   return (
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
-      {/* Main organic sunrise/sunset blob */}
+      {/* Extremely visible full-screen gradient */}
       <div
-        className="absolute inset-0 opacity-100"
+        className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 900px 600px at ${blobPositionX}% ${blobPositionY}%, 
+            linear-gradient(135deg, 
               ${colors.primary} 0%, 
-              ${colors.secondary} 25%, 
-              ${colors.accent} 50%, 
-              ${colors.primary}80 70%, 
-              transparent 85%)
+              ${colors.secondary} 50%, 
+              ${colors.accent} 100%)
           `,
-          filter: 'blur(1px)'
+          opacity: 0.8
         }}
       />
       
-      {/* Secondary organic blob layer */}
+      {/* Radial overlay for organic feel */}
       <div
-        className="absolute inset-0 opacity-90"
+        className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 800px 500px at ${blobPositionX + 20}% ${blobPositionY - 10}%, 
-              ${colors.secondary} 0%, 
-              ${colors.accent} 30%, 
-              ${colors.primary}90 60%, 
-              transparent 75%)
-          `,
-          filter: 'blur(2px)'
-        }}
-      />
-
-      {/* Flowing organic shapes for movement */}
-      <div
-        className="absolute inset-0 opacity-80"
-        style={{
-          background: `
-            radial-gradient(ellipse 600px 400px at ${blobPositionX - 20}% ${blobPositionY + 15}%, 
-              ${colors.accent} 0%, 
-              ${colors.secondary}85 40%, 
-              transparent 65%),
-            radial-gradient(ellipse 500px 350px at ${blobPositionX + 40}% ${blobPositionY - 25}%, 
+            radial-gradient(ellipse 150% 100% at 25% 75%, 
               ${colors.primary} 0%, 
-              ${colors.accent}85 50%, 
+              ${colors.secondary} 40%, 
               transparent 70%)
           `,
-          filter: 'blur(3px)'
+          opacity: 0.6
         }}
       />
 
-      {/* Additional color layer for intensity */}
-      <div 
-        className="absolute inset-0 opacity-70"
+      {/* Secondary radial for depth */}
+      <div
+        className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 700px 450px at ${blobPositionX + 10}% ${blobPositionY + 5}%, 
-              ${colors.secondary}90 0%, 
-              ${colors.primary}75 50%, 
-              transparent 75%)
+            radial-gradient(ellipse 120% 80% at 60% 30%, 
+              ${colors.accent} 0%, 
+              ${colors.secondary} 50%, 
+              transparent 80%)
           `,
-          filter: 'blur(4px)'
+          opacity: 0.4
         }}
       />
     </div>
