@@ -67,11 +67,11 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         accent: '#f59e0b'    // White-hot amber
       }
     } else if (hour >= 14 && hour < 17) {
-      // Late Afternoon (14:00–17:00): "Copper Fade" / "Sunlow Drift"
+      // Late Afternoon (14:00–17:00): "Bright Daylight" / "Azure Sun"
       return {
-        primary: '#fb923c',  // Faded tangerine
-        secondary: '#94a3b8', // Better light denim
-        accent: '#eab308'    // Richer creamy gold
+        primary: '#0ea5e9',  // Bright sky blue
+        secondary: '#fbbf24', // Vibrant golden yellow
+        accent: '#06b6d4'    // Electric cyan
       }
     } else if (hour >= 17 && hour < 19 || (hour === 19 && minute < 30)) {
       // Sunset (17:00–19:30): "Saffron Mirage" / "Crimson Dusk"
@@ -115,14 +115,14 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
       {/* Main organic sunrise/sunset blob */}
       <div
-        className="absolute inset-0 opacity-95"
+        className="absolute inset-0 opacity-100"
         style={{
           background: `
             radial-gradient(ellipse 700px 500px at ${blobPositionX}% ${blobPositionY}%, 
-              ${colors.primary}90 0%, 
-              ${colors.secondary}75 15%, 
-              ${colors.accent}60 30%, 
-              ${colors.primary}45 45%, 
+              ${colors.primary}95 0%, 
+              ${colors.secondary}85 15%, 
+              ${colors.accent}70 30%, 
+              ${colors.primary}55 45%, 
               transparent 65%)
           `,
           filter: 'blur(0.5px)'
@@ -131,13 +131,13 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
       
       {/* Secondary organic blob layer */}
       <div
-        className="absolute inset-0 opacity-75"
+        className="absolute inset-0 opacity-85"
         style={{
           background: `
             radial-gradient(ellipse 600px 400px at ${blobPositionX + 20}% ${blobPositionY - 5}%, 
-              ${colors.secondary}65 0%, 
-              ${colors.accent}55 20%, 
-              ${colors.primary}45 40%, 
+              ${colors.secondary}75 0%, 
+              ${colors.accent}65 20%, 
+              ${colors.primary}55 40%, 
               transparent 60%)
           `,
           filter: 'blur(1px)'
