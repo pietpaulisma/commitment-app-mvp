@@ -511,7 +511,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-3xl hover:shadow-lg"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-l-3xl rounded-r-xl hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -535,8 +535,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-          {/* Reorder icon for favorites - positioned after rounded button */}
-          <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+          {/* Reorder icon for favorites - circular button in original position */}
+          <div className="w-16 flex items-center justify-center">
             <button
               className="w-10 h-10 rounded-full bg-gray-800/80 hover:bg-gray-700/80 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 border border-white/20 shadow-lg"
               aria-label="Reorder favorite"
@@ -597,7 +597,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-3xl hover:shadow-lg"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-l-3xl rounded-r-xl hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -621,9 +621,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-          {/* Star icon button - positioned after rounded button */}
+          {/* Star icon button - circular button in original position */}
           {showFavorite && (
-            <div className="absolute -right-3 top-1/2 -translate-y-1/2 z-10">
+            <div className="w-16 flex items-center justify-center">
               <button
                 onClick={(e) => {
                   e.stopPropagation()
