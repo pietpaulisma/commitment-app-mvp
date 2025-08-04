@@ -484,7 +484,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-3xl mb-4 shadow-2xl hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-6 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
             ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
             : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
@@ -511,7 +511,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
+              className="w-full p-6 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -568,7 +568,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-3xl mb-4 shadow-2xl hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-6 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
             ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
             : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
@@ -595,7 +595,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
+              className="w-full p-6 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -1272,7 +1272,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             <>
 
               {/* Current Workouts Section */}
-              <div className="pb-3 border-b border-white/10">
+              <div className="pb-6">
                 
                 {todaysWorkouts.length === 0 ? (
                   <div className="px-4">
@@ -1289,7 +1289,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           return (
                             <div 
                               key={`${workout.exercise_id}-${workout.weight || 0}`} 
-                              className="relative bg-black/30 backdrop-blur-sm border-b border-white/5 overflow-hidden cursor-pointer hover:bg-black/50 transition-all duration-300 rounded-3xl mb-4 shadow-2xl hover:shadow-xl hover:scale-[1.02]"
+                              className="relative bg-black/30 backdrop-blur-sm overflow-hidden cursor-pointer hover:bg-black/50 transition-all duration-300 rounded-3xl mb-6 shadow-2xl hover:shadow-xl hover:scale-[1.02] border-2 border-white/20"
                               onClick={() => handleWorkoutClick(workout)}
                             >
                               <div className="flex">
@@ -1310,7 +1310,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                     }}
                                   />
                                   
-                                  <div className="relative p-3">
+                                  <div className="relative p-6">
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center space-x-3">
                                         {getExerciseIcon(workout.exercises)}
@@ -1361,7 +1361,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                     {/* Submit to Group Button - appears when target is reached */}
                     {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && (
-                      <div className="px-4 py-6 mt-4 border-t border-white/10">
+                      <div className="px-4 py-6 mt-6">
                         <button
                           onClick={handleSubmitToGroup}
                           className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
@@ -1398,7 +1398,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {favoritesExpanded && (
-                    <div className="space-y-0 border-t border-white/10">
+                    <div className="space-y-0 mt-6">
                       {favoriteExercises.map((exercise) => renderFavoriteExerciseButton(exercise))}
                     </div>
                   )}
@@ -1426,7 +1426,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {allExercisesExpanded && (
-                    <div className="space-y-0 border-t border-white/10">
+                    <div className="space-y-0 mt-6">
                       {allExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
@@ -1454,7 +1454,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {recoveryExpanded && (
-                    <div className="space-y-0 border-t border-white/10">
+                    <div className="space-y-0 mt-6">
                       {recoveryExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
@@ -1482,7 +1482,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {sportsExpanded && (
-                    <div className="space-y-0 border-t border-white/10">
+                    <div className="space-y-0 mt-6">
                       {sportTypes.map((sportName) => renderSportButton(sportName))}
                     </div>
                   )}
@@ -1544,7 +1544,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               
               {/* Exercise Input Form - Completely Redesigned */}
               {selectedExercise && (
-                <div className="bg-black border-t border-white/10">
+                <div className="bg-black mt-6">
                   {/* Points Header with Gradient */}
                   <div className="relative overflow-hidden">
                     {/* Gradient Background */}
@@ -2142,7 +2142,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                 {/* Submit Button - matches header shape but bottom filled */}
                 <div className="mt-auto -mx-4">
-                  <div className="relative bg-black/30 backdrop-blur-sm border-t border-white/10 overflow-hidden">
+                  <div className="relative bg-black/30 backdrop-blur-sm mt-6 overflow-hidden">
                     <div className="flex">
                       {/* Main content area - matches header layout */}
                       <div className="flex-1 relative overflow-hidden">
