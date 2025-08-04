@@ -30,19 +30,19 @@ export default function Dashboard() {
     
     if (hour >= 5 && hour < 8) {
       // Dawn - vibrant orange/pink from bottom
-      return 'radial-gradient(ellipse 150% 120% at 30% 80%, rgba(255, 94, 77, 0.35) 0%, rgba(255, 159, 67, 0.25) 30%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+      return 'radial-gradient(ellipse 150% 120% at 30% 100%, rgba(255, 94, 77, 0.35) 0%, rgba(255, 159, 67, 0.25) 20%, rgba(0, 0, 0, 0.85) 40%, #000000 60%)'
     } else if (hour >= 8 && hour < 11) {
       // Morning - bright golden yellow vibes from bottom
-      return 'radial-gradient(ellipse 180% 150% at 50% 85%, rgba(255, 235, 59, 0.55) 0%, rgba(255, 193, 7, 0.45) 30%, rgba(255, 152, 0, 0.25) 50%, rgba(0, 0, 0, 0.75) 70%, #000000 85%)'
+      return 'radial-gradient(ellipse 180% 150% at 50% 100%, rgba(255, 235, 59, 0.55) 0%, rgba(255, 193, 7, 0.45) 20%, rgba(255, 152, 0, 0.25) 35%, rgba(0, 0, 0, 0.75) 50%, #000000 65%)'
     } else if (hour >= 11 && hour < 17) {
       // Day - vibrant blue/cyan from bottom
-      return 'radial-gradient(ellipse 130% 100% at 50% 85%, rgba(59, 130, 246, 0.3) 0%, rgba(116, 185, 255, 0.22) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+      return 'radial-gradient(ellipse 130% 100% at 50% 100%, rgba(59, 130, 246, 0.3) 0%, rgba(116, 185, 255, 0.22) 25%, rgba(0, 0, 0, 0.85) 45%, #000000 60%)'
     } else if (hour >= 17 && hour < 20) {
       // Evening - vibrant purple/magenta from bottom
-      return 'radial-gradient(ellipse 140% 120% at 60% 80%, rgba(168, 85, 247, 0.35) 0%, rgba(199, 121, 208, 0.25) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+      return 'radial-gradient(ellipse 140% 120% at 60% 100%, rgba(168, 85, 247, 0.35) 0%, rgba(199, 121, 208, 0.25) 25%, rgba(0, 0, 0, 0.85) 45%, #000000 60%)'
     } else {
       // Night - vibrant deep blue/purple from bottom
-      return 'radial-gradient(ellipse 120% 110% at 25% 85%, rgba(79, 70, 229, 0.3) 0%, rgba(106, 90, 205, 0.22) 35%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
+      return 'radial-gradient(ellipse 120% 110% at 25% 100%, rgba(79, 70, 229, 0.3) 0%, rgba(106, 90, 205, 0.22) 25%, rgba(0, 0, 0, 0.85) 45%, #000000 60%)'
     }
   }
 

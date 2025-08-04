@@ -1638,7 +1638,7 @@ export default function RectangularDashboard() {
 
           {/* Epic Data Metrics with Dynamic Colors */}
           <div className="mx-1 mb-4">
-            <div className="flex flex-col gap-2" style={{ marginLeft: '20px', paddingLeft: '16px' }}>
+            <div className="flex flex-col gap-2">
               {/* Days Since Donation */}
               <div className={`
                 inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border w-fit
