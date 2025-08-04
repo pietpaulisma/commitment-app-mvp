@@ -744,7 +744,7 @@ export default function MobileWorkoutLogger() {
                   <div className="space-y-1">
                     {todaysLogs.slice(0, 5).map(log => {
                       const exerciseColor = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
-                      const progressPercentage = Math.min(100, (log.points / Math.max(1, log.points)) * 100) // Always 100% for logged exercises
+                      const progressPercentage = Math.min(100, (log.points / Math.max(1, dailyTarget)) * 100) // Percentage of daily target this exercise represents
                       
                       return (
                         <div key={log.id} className="bg-gray-900/30 backdrop-blur-xl relative overflow-hidden rounded-3xl mb-1 shadow-2xl border border-white/5 hover:shadow-xl transition-all duration-300 mx-1">
@@ -753,11 +753,13 @@ export default function MobileWorkoutLogger() {
                             className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
                             style={{ 
                               width: '100%',
-                              background: `linear-gradient(to right, 
-                                ${exerciseColor}40 0%, 
-                                ${exerciseColor}60 ${Math.max(0, progressPercentage - 10)}%, 
-                                ${exerciseColor}40 ${progressPercentage}%, 
-                                transparent ${Math.min(100, progressPercentage + 15)}%)`
+                              background: progressPercentage === 0 
+                                ? 'transparent'
+                                : `linear-gradient(to right, 
+                                  ${exerciseColor}80 0%, 
+                                  ${exerciseColor}cc ${Math.max(0, progressPercentage - 15)}%, 
+                                  ${exerciseColor}60 ${progressPercentage}%, 
+                                  rgba(0,0,0,0.3) ${Math.min(100, progressPercentage + 20)}%)`
                             }}
                           />
                           
