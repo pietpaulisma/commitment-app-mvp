@@ -587,7 +587,76 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
   )
 }
 
-const MemoizedChartComponent = memo(ChartComponent)
+// Wrapper component that adds interactive functionality to any stat component
+const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonalData, userProfile }: {
+  children: React.ReactNode,
+  onClick?: () => void,
+  isPersonalMode?: boolean,
+  hasPersonalData?: boolean,
+  userProfile: any
+}) => {
+  const personalBorderColor = isPersonalMode && userProfile?.personal_color ? userProfile.personal_color + '60' : 'transparent'
+  
+  return (
+    <div 
+      className={`relative transition-all duration-300 ${onClick && hasPersonalData ? 'cursor-pointer hover:scale-[1.02] hover:shadow-lg' : ''}`}
+      onClick={onClick && hasPersonalData ? onClick : undefined}
+      style={{
+        border: isPersonalMode ? `2px solid ${personalBorderColor}` : '2px solid transparent',
+        boxShadow: isPersonalMode ? `0 0 15px ${personalBorderColor}40` : undefined,
+        borderRadius: '8px'
+      }}
+    >
+      {/* Personal mode indicator */}
+      {isPersonalMode && (
+        <div className="absolute top-2 right-2 z-20">
+          <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: userProfile?.personal_color || '#c084fc' }}></div>
+        </div>
+      )}
+      {/* Tap indicator for available personal data */}
+      {onClick && hasPersonalData && !isPersonalMode && (
+        <div className="absolute top-2 right-2 z-20 opacity-60 animate-pulse">
+          <div className="text-xs text-gray-400">👆</div>
+        </div>
+      )}
+      {/* Add "(You)" to title for personal mode */}
+      <div className="relative">
+        {children}
+        {isPersonalMode && (
+          <div className="absolute top-4 left-4 z-10">
+            <span className="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">(You)</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfile, onClick, isPersonalMode, hasPersonalData }: {
+  stat: any,
+  index: number,
+  getLayoutClasses: (blockType: string) => string,
+  userProfile: any,
+  onClick?: () => void,
+  isPersonalMode?: boolean,
+  hasPersonalData?: boolean
+}) => {
+  return (
+    <InteractiveStatWrapper
+      onClick={onClick}
+      isPersonalMode={isPersonalMode}
+      hasPersonalData={hasPersonalData}
+      userProfile={userProfile}
+    >
+      <ChartComponent
+        stat={stat}
+        index={index}
+        getLayoutClasses={getLayoutClasses}
+        userProfile={userProfile}
+      />
+    </InteractiveStatWrapper>
+  )
+})
 
 // Personal stats component with user accent colors
 
@@ -719,7 +788,7 @@ export default function RectangularDashboard() {
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
   const [personalStats, setPersonalStats] = useState<any>(null)
-  const [showPersonalStats, setShowPersonalStats] = useState(false)
+  const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false})
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
   const [daysSinceDonation, setDaysSinceDonation] = useState<number>(0)
@@ -1396,6 +1465,13 @@ export default function RectangularDashboard() {
     element?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const toggleIndividualStat = (index: number) => {
+    setIndividualStatsMode(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }))
+  }
+
   const loadDashboardData = async () => {
     if (!user || !profile) return
 
@@ -1917,136 +1993,70 @@ export default function RectangularDashboard() {
             >
               
               <div className="relative py-6 px-4 z-10">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4">
                   <h3 className="text-xs font-light text-white/80 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                     Stats
                   </h3>
-              <button
-                onClick={() => setShowPersonalStats(!showPersonalStats)}
-                className="text-sm px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
-                style={{
-                  background: showPersonalStats 
-                    ? `linear-gradient(135deg, ${profile?.personal_color || '#c084fc'} 0%, #4b5563 100%)`
-                    : 'linear-gradient(135deg, rgba(75, 85, 99, 0.3) 0%, rgba(31, 41, 55, 0.3) 100%)',
-                  border: `2px solid ${showPersonalStats 
-                    ? (profile?.personal_color || '#c084fc') + '40'
-                    : 'rgba(156, 163, 175, 0.3)'}`,
-                  boxShadow: showPersonalStats 
-                    ? `
-                      inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                      inset 0 -1px 0 rgba(0, 0, 0, 0.1),
-                      0 4px 12px rgba(0, 0, 0, 0.4),
-                      0 2px 4px ${(profile?.personal_color || '#c084fc')}40
-                    `
-                    : `
-                      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                      inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-                      0 2px 8px rgba(0, 0, 0, 0.3)
-                    `,
-                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-                  color: showPersonalStats ? '#ffffff' : '#d1d5db'
-                }}
-              >
-                Your Stats
-              </button>
-            </div>
+                  <p className="text-xs text-gray-500 mt-1">Tap individual blocks to toggle between group and personal stats</p>
+                </div>
             
-{/* Show either group stats or personal stats based on toggle */}
-            {showPersonalStats ? (
-              personalStats && personalStats.interestingStats && personalStats.interestingStats.length > 0 ? (
-                <div className="space-y-0 border-t border-b border-gray-800">
-                  {/* Top row - Personal Points (full width) */}
-                  <div className="w-full border-b border-gray-800">
-                    <MemoizedChartComponent 
-                      key={`personal-${personalStats.interestingStats[0].type}-0`}
-                      stat={personalStats.interestingStats[0]} 
-                      index={0} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
-                  
-                  {/* Middle row - Money Pot and Birthday (2 squares) */}
-                  <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
-                    <div className="border-r border-gray-800">
-                      <MemoizedChartComponent 
-                        key={`personal-${personalStats.interestingStats[1].type}-1`}
-                        stat={personalStats.interestingStats[1]} 
-                        index={1} 
-                        getLayoutClasses={getLayoutClasses}
-                        userProfile={profile}
-                      />
-                    </div>
-                    <MemoizedChartComponent 
-                      key={`personal-${personalStats.interestingStats[2].type}-2`}
-                      stat={personalStats.interestingStats[2]} 
-                      index={2} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
-                  
-                  {/* Bottom row - Workout Times (full width rectangle) */}
-                  <div className="w-full">
-                    <MemoizedChartComponent 
-                      key={`personal-${personalStats.interestingStats[3].type}-3`}
-                      stat={personalStats.interestingStats[3]} 
-                      index={3} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
+{/* Individual togglable stats */}
+            {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
+              <div className="space-y-0 border-t border-b border-gray-800">
+                {/* Top row - Points (full width) */}
+                <div className="w-full border-b border-gray-800">
+                  <MemoizedChartComponent 
+                    key={`${individualStatsMode[0] ? 'personal' : 'group'}-${(individualStatsMode[0] && personalStats?.interestingStats?.[0]) ? personalStats.interestingStats[0].type : groupStats.interestingStats[0].type}-0`}
+                    stat={individualStatsMode[0] && personalStats?.interestingStats?.[0] ? personalStats.interestingStats[0] : groupStats.interestingStats[0]} 
+                    index={0} 
+                    getLayoutClasses={getLayoutClasses}
+                    userProfile={profile}
+                    onClick={() => toggleIndividualStat(0)}
+                    isPersonalMode={individualStatsMode[0]}
+                    hasPersonalData={!!personalStats?.interestingStats?.[0]}
+                  />
                 </div>
-              ) : (
-                <div className="border-t border-b border-gray-800 p-8 text-center text-gray-400">
-                  No personal workout data available
+                
+                {/* Middle row - Money Pot and Birthday (2 squares) */}
+                <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
+                  <div className="border-r border-gray-800">
+                    <MemoizedChartComponent 
+                      key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
+                      stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
+                      index={1} 
+                      getLayoutClasses={getLayoutClasses}
+                      userProfile={profile}
+                      onClick={() => toggleIndividualStat(1)}
+                      isPersonalMode={individualStatsMode[1]}
+                      hasPersonalData={!!personalStats?.interestingStats?.[1]}
+                    />
+                  </div>
+                  <MemoizedChartComponent 
+                    key={`${individualStatsMode[2] ? 'personal' : 'group'}-${(individualStatsMode[2] && personalStats?.interestingStats?.[2]) ? personalStats.interestingStats[2].type : groupStats.interestingStats[2].type}-2`}
+                    stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]} 
+                    index={2} 
+                    getLayoutClasses={getLayoutClasses}
+                    userProfile={profile}
+                    onClick={() => toggleIndividualStat(2)}
+                    isPersonalMode={individualStatsMode[2]}
+                    hasPersonalData={!!personalStats?.interestingStats?.[2]}
+                  />
                 </div>
-              )
-            ) : (
-              groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
-                <div className="space-y-0 border-t border-b border-gray-800">
-                  {/* Top row - Group Points (full width) */}
-                  <div className="w-full border-b border-gray-800">
-                    <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[0].type}-0`}
-                      stat={groupStats.interestingStats[0]} 
-                      index={0} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
-                  
-                  {/* Middle row - Money Pot and Birthday (2 squares) */}
-                  <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
-                    <div className="border-r border-gray-800">
-                      <MemoizedChartComponent 
-                        key={`${groupStats.interestingStats[1].type}-1`}
-                        stat={groupStats.interestingStats[1]} 
-                        index={1} 
-                        getLayoutClasses={getLayoutClasses}
-                        userProfile={profile}
-                      />
-                    </div>
-                    <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[2].type}-2`}
-                      stat={groupStats.interestingStats[2]} 
-                      index={2} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
-                  
-                  {/* Bottom row - Workout Times (full width rectangle) */}
-                  <div className="w-full">
-                    <MemoizedChartComponent 
-                      key={`${groupStats.interestingStats[3].type}-3`}
-                      stat={groupStats.interestingStats[3]} 
-                      index={3} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                    />
-                  </div>
+                
+                {/* Bottom row - Workout Times (full width rectangle) */}
+                <div className="w-full">
+                  <MemoizedChartComponent 
+                    key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
+                    stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
+                    index={3} 
+                    getLayoutClasses={getLayoutClasses}
+                    userProfile={profile}
+                    onClick={() => toggleIndividualStat(3)}
+                    isPersonalMode={individualStatsMode[3]}
+                    hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                  />
                 </div>
+              </div>
             ) : (
               <div className="space-y-0">
                 <div className="p-4 bg-gray-900/30 rounded-lg h-32">
@@ -2072,7 +2082,6 @@ export default function RectangularDashboard() {
                   <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
                 </div>
               </div>
-            )
             )}
               </div>
             </div>
