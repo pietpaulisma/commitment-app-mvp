@@ -146,31 +146,17 @@ export default function InviteCodeManager() {
           {invites.map((invite) => (
             <div 
               key={invite.id} 
-              className={`border p-3 ${
+              className={`border p-4 rounded-lg ${
                 invite.is_active 
                   ? 'border-gray-600 bg-gray-800/50' 
                   : 'border-gray-700 bg-gray-800/20 opacity-60'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
+              {/* Header with status */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-medium text-white">Invite #{invite.id.slice(0, 8)}</div>
                 <div className="flex items-center space-x-2">
-                  <div 
-                    className="font-mono text-lg text-orange-400 cursor-pointer hover:text-orange-300"
-                    onClick={() => copyToClipboard(invite.invite_code)}
-                    title="Click to copy invite link"
-                  >
-                    {invite.invite_code}
-                  </div>
-                  <button
-                    onClick={() => copyCodeOnly(invite.invite_code)}
-                    className="text-xs text-gray-400 hover:text-white transition-colors"
-                    title="Copy code only"
-                  >
-                    📋
-                  </button>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-xs px-2 py-1 border ${
+                  <span className={`text-xs px-2 py-1 border rounded ${
                     invite.is_active 
                       ? 'text-green-300 border-green-600 bg-green-900/20' 
                       : 'text-gray-400 border-gray-600 bg-gray-800/20'
@@ -179,18 +165,53 @@ export default function InviteCodeManager() {
                   </span>
                   <button
                     onClick={() => toggleInvite(invite.id, invite.is_active)}
-                    className="text-xs text-gray-400 hover:text-white transition-colors"
+                    className="text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-gray-600 hover:border-gray-500"
                   >
                     {invite.is_active ? 'Deactivate' : 'Activate'}
                   </button>
                 </div>
               </div>
+
+              {/* Invite Code - Large and prominent */}
+              <div className="mb-4">
+                <div className="text-xs text-gray-400 mb-1">INVITE CODE</div>
+                <div className="flex items-center space-x-3">
+                  <div className="font-mono text-2xl text-orange-400 font-bold tracking-wider">
+                    {invite.invite_code}
+                  </div>
+                  <button
+                    onClick={() => copyCodeOnly(invite.invite_code)}
+                    className="px-3 py-2 bg-orange-600/20 border border-orange-600/40 text-orange-300 text-sm hover:bg-orange-600/30 transition-colors rounded"
+                    title="Copy code only"
+                  >
+                    Copy Code
+                  </button>
+                </div>
+              </div>
+
+              {/* Invite Link */}
+              <div className="mb-4">
+                <div className="text-xs text-gray-400 mb-1">INVITE LINK</div>
+                <div className="flex items-center space-x-3">
+                  <div className="flex-1 text-sm text-gray-300 font-mono bg-gray-900/50 px-3 py-2 rounded border border-gray-700 truncate">
+                    {`${window.location.origin}/onboarding/groups?invite=${invite.invite_code}`}
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(invite.invite_code)}
+                    className="px-3 py-2 bg-blue-600/20 border border-blue-600/40 text-blue-300 text-sm hover:bg-blue-600/30 transition-colors rounded"
+                    title="Copy full invite link"
+                  >
+                    Copy Link
+                  </button>
+                </div>
+              </div>
               
-              <div className="text-xs text-gray-400 space-y-1">
-                <div>Uses: {invite.current_uses}/{invite.max_uses}</div>
-                <div>Created: {new Date(invite.created_at).toLocaleDateString()}</div>
+              {/* Usage info */}
+              <div className="text-xs text-gray-400 space-x-4 flex">
+                <span>Uses: {invite.current_uses}/{invite.max_uses}</span>
+                <span>Created: {new Date(invite.created_at).toLocaleDateString()}</span>
                 {invite.expires_at && (
-                  <div>Expires: {new Date(invite.expires_at).toLocaleDateString()}</div>
+                  <span>Expires: {new Date(invite.expires_at).toLocaleDateString()}</span>
                 )}
               </div>
             </div>
