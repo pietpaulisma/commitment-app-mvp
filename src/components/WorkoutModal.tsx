@@ -470,10 +470,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 ${
+        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-lg mb-2 shadow-lg hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
-            ? 'bg-gray-900/40 hover:bg-gray-900/50'
-            : 'bg-gray-900/30 hover:bg-gray-900/40'
+            ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
+            : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
         }`}
       >
         <div className="flex">
@@ -497,7 +497,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-transform duration-300 relative"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -523,7 +523,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           
           {/* Reorder icon for favorites - matches header X button layout */}
           <button
-            className="w-16 flex items-center justify-center text-gray-500 cursor-grab active:cursor-grabbing"
+            className="w-16 flex items-center justify-center text-gray-500 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 rounded-r-lg"
             aria-label="Reorder favorite"
           >
             <Bars3Icon className="w-5 h-5" />
@@ -554,10 +554,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 ${
+        className={`w-full relative border-b border-white/5 overflow-hidden transition-all duration-300 rounded-lg mb-2 shadow-lg hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
-            ? 'bg-gray-900/40 hover:bg-gray-900/50'
-            : 'bg-gray-900/30 hover:bg-gray-900/40'
+            ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
+            : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
         }`}
       >
         <div className="flex">
@@ -581,7 +581,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-transform duration-300 relative"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -630,7 +630,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={sportName}
-        className="w-full relative border-b border-gray-800 overflow-hidden transition-all duration-300 bg-gray-900/30 hover:bg-gray-900/40"
+        className="w-full relative border-b border-white/10 overflow-hidden transition-all duration-300 bg-black/30 backdrop-blur-sm hover:bg-black/40"
       >
         <div className="flex">
           {/* Main content area with progress bar - matches header layout */}
@@ -1159,7 +1159,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       `}</style>
       
       <div 
-        className="fixed inset-0 bg-black flex flex-col transition-transform duration-500 ease-out"
+        className="fixed inset-0 bg-black/70 backdrop-blur-xl flex flex-col transition-all duration-500 ease-out shadow-2xl"
         style={{ 
           paddingTop: 'env(safe-area-inset-top)',
           transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
@@ -1169,11 +1169,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           zIndex: isClosing ? 40 : 9999 // Slide behind bottom nav (z-50) when closing
         }}
       >
-        {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
+        {/* Header - Modern styled version */}
         <div className="sticky top-0">
-          <div className="flex">
-            {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
-            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
+          <div className="flex rounded-t-2xl overflow-hidden">
+            {/* Progress Bar Section - Modernized */}
+            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/50 backdrop-blur-sm'} border-r border-white/10 overflow-hidden`}>
               {/* Liquid gradient progress background with subtle animation */}
               <div 
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -1211,7 +1211,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Chat → X Button Transition */}
             <button
               onClick={handleClose}
-              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
+              className="w-16 h-16 bg-black/50 backdrop-blur-sm border-l border-white/10 hover:bg-black/70 text-gray-300 hover:text-white transition-all duration-300 hover:scale-105 relative overflow-hidden shadow-lg"
               aria-label="Close workout log"
             >
               {/* Chat Icon (slides up and out when modal reaches top) */}
@@ -1237,7 +1237,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-2">
           {exercisesLoading && (
             <div className="text-center py-8">
               <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-purple-500 mx-auto"></div>
@@ -1257,11 +1257,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             <>
 
               {/* Current Workouts Section */}
-              <div className="pb-3 border-b border-gray-800">
+              <div className="pb-3 border-b border-white/10">
                 
                 {todaysWorkouts.length === 0 ? (
                   <div className="px-4">
-                    <div className="text-center py-8 bg-gray-900/30 rounded-lg">
+                    <div className="text-center py-8 bg-black/30 backdrop-blur-sm rounded-2xl border border-white/5 shadow-lg">
                       <p className="text-gray-400 font-medium">No workouts logged yet</p>
                       <p className="text-gray-500 text-sm mt-1">Select exercises below to get started</p>
                     </div>
@@ -1274,7 +1274,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           return (
                             <div 
                               key={`${workout.exercise_id}-${workout.weight || 0}`} 
-                              className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden cursor-pointer hover:bg-gray-800/30 transition-colors duration-200"
+                              className="relative bg-black/30 backdrop-blur-sm border-b border-white/5 overflow-hidden cursor-pointer hover:bg-black/50 transition-all duration-300 rounded-lg mb-2 shadow-lg hover:shadow-xl hover:scale-[1.02]"
                               onClick={() => handleWorkoutClick(workout)}
                             >
                               <div className="flex">
@@ -1346,7 +1346,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                     {/* Submit to Group Button - appears when target is reached */}
                     {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && (
-                      <div className="px-4 py-6 mt-4 border-t border-gray-800">
+                      <div className="px-4 py-6 mt-4 border-t border-white/10">
                         <button
                           onClick={handleSubmitToGroup}
                           className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
@@ -1383,7 +1383,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {favoritesExpanded && (
-                    <div className="space-y-0 border-t border-gray-800">
+                    <div className="space-y-0 border-t border-white/10">
                       {favoriteExercises.map((exercise) => renderFavoriteExerciseButton(exercise))}
                     </div>
                   )}
@@ -1411,7 +1411,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {allExercisesExpanded && (
-                    <div className="space-y-0 border-t border-gray-800">
+                    <div className="space-y-0 border-t border-white/10">
                       {allExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
@@ -1439,7 +1439,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {recoveryExpanded && (
-                    <div className="space-y-0 border-t border-gray-800">
+                    <div className="space-y-0 border-t border-white/10">
                       {recoveryExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
@@ -1467,7 +1467,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </button>
                   {sportsExpanded && (
-                    <div className="space-y-0 border-t border-gray-800">
+                    <div className="space-y-0 border-t border-white/10">
                       {sportTypes.map((sportName) => renderSportButton(sportName))}
                     </div>
                   )}
@@ -1477,7 +1477,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* Week Mode Toggle - Bottom Section */}
               {isWeekModeAvailable(groupDaysSinceStart) && (
                 <div className="py-6 px-4">
-                  <div className="bg-gray-900/30 p-4 rounded-lg">
+                  <div className="bg-black/30 backdrop-blur-sm p-4 rounded-lg">
                     <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
                     
                     {/* Horizontal Toggle */}
@@ -1529,7 +1529,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               
               {/* Exercise Input Form - Completely Redesigned */}
               {selectedExercise && (
-                <div className="bg-black border-t border-gray-800">
+                <div className="bg-black border-t border-white/10">
                   {/* Points Header with Gradient */}
                   <div className="relative overflow-hidden">
                     {/* Gradient Background */}
@@ -1869,10 +1869,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Workout Input Overlay - Redesigned */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[110] flex items-center justify-center p-4">
-            <div className="relative bg-black border border-gray-700 rounded-lg w-96 h-[36rem] overflow-hidden shadow-2xl">
+            <div className="relative bg-black border border-white/10 rounded-lg w-96 h-[36rem] overflow-hidden shadow-2xl">
               
               {/* Header - Exercise Button Style with Progress Bar */}
-              <div className="relative bg-gray-900/30 border-b border-gray-800 overflow-hidden">
+              <div className="relative bg-black/30 backdrop-blur-sm border-b border-white/10 overflow-hidden">
                 <div className="flex">
                   {/* Main content area with progress bar - matches exercise button layout */}
                   <div className="flex-1 relative overflow-hidden">
@@ -2143,7 +2143,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                 {/* Submit Button - matches header shape but bottom filled */}
                 <div className="mt-auto -mx-4">
-                  <div className="relative bg-gray-900/30 border-t border-gray-800 overflow-hidden">
+                  <div className="relative bg-black/30 backdrop-blur-sm border-t border-white/10 overflow-hidden">
                     <div className="flex">
                       {/* Main content area - matches header layout */}
                       <div className="flex-1 relative overflow-hidden">
@@ -2229,7 +2229,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Sport Selection Modal */}
         {showSportSelection && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[120] flex items-center justify-center p-4">
-            <div className="relative bg-black border border-gray-700 rounded-3xl max-w-sm w-full max-h-[95vh] overflow-hidden shadow-2xl">
+            <div className="relative bg-black border border-white/10 rounded-3xl max-w-sm w-full max-h-[95vh] overflow-hidden shadow-2xl">
               
               {/* Header */}
               <div className="relative overflow-hidden">
@@ -2240,7 +2240,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   }}
                 />
                 
-                <div className="relative p-6 border-b border-gray-700/50">
+                <div className="relative p-6 border-b border-white/10/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div 
@@ -2280,7 +2280,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         setShowSportSelection(false)
                         setWorkoutInputOpen(true)
                       }}
-                      className="w-full bg-gray-900/30 hover:bg-gray-800/40 border border-gray-700/50 hover:border-purple-400/50 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between group"
+                      className="w-full bg-black/30 backdrop-blur-sm hover:bg-gray-800/40 border border-white/10/50 hover:border-purple-400/50 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between group"
                     >
                       <div className="flex items-center space-x-3">
                         <BoltIcon className="w-5 h-5 text-purple-400" />
