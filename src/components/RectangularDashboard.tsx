@@ -147,6 +147,44 @@ const CHART_COLORS = [
   'text-pink-400'
 ]
 
+// Helper function to calculate days since last donation
+const calculateDaysSinceDonation = (lastDonationDate: string | null): number | null => {
+  if (!lastDonationDate) return null
+  
+  const today = new Date()
+  const donationDate = new Date(lastDonationDate)
+  const diffTime = today.getTime() - donationDate.getTime()
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  return diffDays >= 0 ? diffDays : null
+}
+
+// Helper function to calculate consecutive "insane" workout days (≥100 points)
+const calculateInsaneStreak = (logs: any[]): number => {
+  if (!logs || logs.length === 0) return 0
+  
+  // Group logs by date and sum points per day
+  const dailyPoints = logs.reduce((acc, log) => {
+    const date = log.date
+    acc[date] = (acc[date] || 0) + log.points
+    return acc
+  }, {} as Record<string, number>)
+  
+  // Sort dates in descending order (most recent first)
+  const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+  
+  let streak = 0
+  for (const date of sortedDates) {
+    if (dailyPoints[date] >= 100) {
+      streak++
+    } else {
+      break // Streak broken
+    }
+  }
+  
+  return streak
+}
+
 // Memoized chart component for performance
 const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string, userProfile: any }) => {
   // Simple color selection without useMemo to avoid circular dependencies
@@ -639,6 +677,8 @@ export default function RectangularDashboard() {
   const [showPersonalStats, setShowPersonalStats] = useState(false)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
+  const [daysSinceDonation, setDaysSinceDonation] = useState<number | null>(null)
+  const [insaneStreak, setInsaneStreak] = useState<number>(0)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -1375,6 +1415,39 @@ export default function RectangularDashboard() {
         }
       }
 
+      // Load donation tracking and insane streak data
+      try {
+        // Get profile with last_donation_date
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('last_donation_date')
+          .eq('id', user.id)
+          .single()
+
+        // Calculate days since donation
+        const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date)
+        setDaysSinceDonation(donationGap)
+
+        // Get logs for streak calculation (last 30 days)
+        const past30Days = Array.from({ length: 30 }, (_, i) => {
+          const date = new Date()
+          date.setDate(date.getDate() - i)
+          return date.toISOString().split('T')[0]
+        })
+
+        const { data: userLogs } = await supabase
+          .from('logs')
+          .select('date, points')
+          .eq('user_id', user.id)
+          .in('date', past30Days)
+
+        // Calculate insane streak
+        const streak = calculateInsaneStreak(userLogs || [])
+        setInsaneStreak(streak)
+      } catch (error) {
+        console.log('Could not load donation/streak data:', error)
+      }
+
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -1528,6 +1601,26 @@ export default function RectangularDashboard() {
                     )
                   })()}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Subtle Data Metrics */}
+          <div className="mx-1 mb-4">
+            <div className="px-6">
+              <div className="text-sm text-white/60 font-light">
+                {daysSinceDonation !== null && (
+                  <span>{daysSinceDonation} days since donation</span>
+                )}
+                {daysSinceDonation !== null && insaneStreak > 0 && (
+                  <span className="mx-2">•</span>
+                )}
+                {insaneStreak > 0 && (
+                  <span>{insaneStreak} day{insaneStreak !== 1 ? 's' : ''} insane streak</span>
+                )}
+                {daysSinceDonation === null && insaneStreak === 0 && (
+                  <span>No donation or insane streak data yet</span>
+                )}
               </div>
             </div>
           </div>
