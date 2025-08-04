@@ -104,61 +104,61 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0 opacity-100"
         style={{
           background: `
-            radial-gradient(ellipse 700px 500px at ${blobPositionX}% ${blobPositionY}%, 
-              ${colors.primary}95 0%, 
-              ${colors.secondary}85 15%, 
-              ${colors.accent}70 30%, 
-              ${colors.primary}55 45%, 
-              transparent 65%)
+            radial-gradient(ellipse 900px 600px at ${blobPositionX}% ${blobPositionY}%, 
+              ${colors.primary} 0%, 
+              ${colors.secondary} 25%, 
+              ${colors.accent} 50%, 
+              ${colors.primary}80 70%, 
+              transparent 85%)
           `,
-          filter: 'blur(0.5px)'
+          filter: 'blur(1px)'
         }}
       />
       
       {/* Secondary organic blob layer */}
       <div
-        className="absolute inset-0 opacity-85"
+        className="absolute inset-0 opacity-90"
         style={{
           background: `
-            radial-gradient(ellipse 600px 400px at ${blobPositionX + 20}% ${blobPositionY - 5}%, 
-              ${colors.secondary}75 0%, 
-              ${colors.accent}65 20%, 
-              ${colors.primary}55 40%, 
-              transparent 60%)
-          `,
-          filter: 'blur(1px)'
-        }}
-      />
-
-      {/* Flowing organic shapes for movement */}
-      <div
-        className="absolute inset-0 opacity-65"
-        style={{
-          background: `
-            radial-gradient(ellipse 450px 300px at ${blobPositionX - 15}% ${blobPositionY + 10}%, 
-              ${colors.accent}60 0%, 
-              ${colors.secondary}50 25%, 
-              transparent 50%),
-            radial-gradient(ellipse 400px 250px at ${blobPositionX + 30}% ${blobPositionY - 20}%, 
-              ${colors.primary}55 0%, 
-              ${colors.accent}45 30%, 
-              transparent 55%)
+            radial-gradient(ellipse 800px 500px at ${blobPositionX + 20}% ${blobPositionY - 10}%, 
+              ${colors.secondary} 0%, 
+              ${colors.accent} 30%, 
+              ${colors.primary}90 60%, 
+              transparent 75%)
           `,
           filter: 'blur(2px)'
         }}
       />
 
-      {/* Subtle texture overlay */}
-      <div 
-        className="absolute inset-0 opacity-55"
+      {/* Flowing organic shapes for movement */}
+      <div
+        className="absolute inset-0 opacity-80"
         style={{
           background: `
-            radial-gradient(ellipse 350px 200px at ${blobPositionX + 5}% ${blobPositionY}%, 
-              ${colors.secondary}50 0%, 
-              ${colors.primary}40 35%, 
-              transparent 60%)
+            radial-gradient(ellipse 600px 400px at ${blobPositionX - 20}% ${blobPositionY + 15}%, 
+              ${colors.accent} 0%, 
+              ${colors.secondary}85 40%, 
+              transparent 65%),
+            radial-gradient(ellipse 500px 350px at ${blobPositionX + 40}% ${blobPositionY - 25}%, 
+              ${colors.primary} 0%, 
+              ${colors.accent}85 50%, 
+              transparent 70%)
           `,
           filter: 'blur(3px)'
+        }}
+      />
+
+      {/* Additional color layer for intensity */}
+      <div 
+        className="absolute inset-0 opacity-70"
+        style={{
+          background: `
+            radial-gradient(ellipse 700px 450px at ${blobPositionX + 10}% ${blobPositionY + 5}%, 
+              ${colors.secondary}90 0%, 
+              ${colors.primary}75 50%, 
+              transparent 75%)
+          `,
+          filter: 'blur(4px)'
         }}
       />
     </div>
