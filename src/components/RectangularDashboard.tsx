@@ -1586,7 +1586,7 @@ export default function RectangularDashboard() {
           {/* Main container */}
           <div className="relative">
             
-            <div className="relative px-6 py-8 z-10">
+            <div className="relative px-5 py-8 z-10">
               <div className="flex items-center justify-between">
                 {/* Logo */}
                 <div>
@@ -1621,7 +1621,7 @@ export default function RectangularDashboard() {
             className="mx-1 mb-6"
           >
             <div className="relative">
-              <div className="py-12 px-6">
+              <div className="py-12 px-5">
                 <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress
@@ -1643,10 +1643,10 @@ export default function RectangularDashboard() {
 
           {/* Epic Data Metrics with Dynamic Colors */}
           <div className="mx-1 mb-4">
-            <div className="flex gap-2 px-6">
+            <div className="flex flex-col gap-2 px-5">
               {/* Days Since Donation */}
               <div className={`
-                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border
+                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border w-fit
                 ${getProgressiveColor(daysSinceDonation, 'bg')}
                 ${getProgressiveColor(daysSinceDonation, 'border')}
                 transition-all duration-300
@@ -1658,7 +1658,7 @@ export default function RectangularDashboard() {
 
               {/* Insane Streak */}
               <div className={`
-                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border
+                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border w-fit
                 ${getProgressiveColor(insaneStreak, 'bg')}
                 ${getProgressiveColor(insaneStreak, 'border')}
                 transition-all duration-300
