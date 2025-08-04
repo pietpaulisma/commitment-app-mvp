@@ -63,14 +63,8 @@ export default function GroupAdminDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
   const [editingSettings, setEditingSettings] = useState(false)
   const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string; week_mode?: 'sane' | 'insane' }>>({})
-  const [inviteLink, setInviteLink] = useState('')
-
-  useEffect(() => {
-    // Set invite link on client side
-    if (group && typeof window !== 'undefined') {
-      setInviteLink(`${window.location.origin}/onboarding/groups?invite=${group.id}`)
-    }
-  }, [group])
+  const [inviteCodes, setInviteCodes] = useState<any[]>([])
+  const [creatingInvite, setCreatingInvite] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -88,6 +82,7 @@ export default function GroupAdminDashboard() {
     if ((isGroupAdmin || (isSupremeAdmin && profile?.group_id)) && profile) {
       loadGroupData()
       loadGroupSettings()
+      loadInviteCodes()
     }
   }, [isGroupAdmin, isSupremeAdmin, profile])
 
@@ -288,6 +283,73 @@ export default function GroupAdminDashboard() {
     }
   }
 
+  const loadInviteCodes = async () => {
+    if (!profile) return
+
+    try {
+      const { data: groupData, error: groupError } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('admin_id', profile.id)
+        .single()
+
+      if (groupError) throw groupError
+
+      const { data, error } = await supabase
+        .from('group_invites')
+        .select('*')
+        .eq('group_id', groupData.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      
+      setInviteCodes(data || [])
+    } catch (error) {
+      console.error('Error loading invite codes:', error)
+    }
+  }
+
+  const createInvite = async () => {
+    if (!group) return
+
+    setCreatingInvite(true)
+
+    try {
+      const { data, error } = await supabase.rpc('create_group_invite', {
+        p_group_id: group.id,
+        p_max_uses: 10,
+        p_expires_days: 30
+      })
+
+      if (error) throw error
+
+      // Reload invites to show the new one
+      await loadInviteCodes()
+    } catch (error) {
+      console.error('Error creating invite:', error)
+      alert('Failed to create invite code')
+    } finally {
+      setCreatingInvite(false)
+    }
+  }
+
+  const copyToClipboard = (code: string) => {
+    const inviteLink = `${window.location.origin}/onboarding/groups?invite=${code}`
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      alert('Invite link copied to clipboard!')
+    }).catch(() => {
+      alert('Failed to copy link. Please copy manually.')
+    })
+  }
+
+  const copyCodeOnly = (code: string) => {
+    navigator.clipboard.writeText(code).then(() => {
+      alert('Invite code copied to clipboard!')
+    }).catch(() => {
+      alert('Failed to copy code. Please copy manually.')
+    })
+  }
+
   const removeUserFromGroup = async (userId: string) => {
     if (!confirm('Are you sure you want to remove this member from your group?')) {
       return
@@ -431,47 +493,75 @@ export default function GroupAdminDashboard() {
               </div>
             </div>
 
-            {/* Invite Link */}
+            {/* Invite Codes */}
             <div className="bg-gray-900/30 border border-gray-800">
-              <div className="px-6 py-4 border-b border-gray-800">
+              <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-white">Invite New Members</h3>
+                <button
+                  onClick={createInvite}
+                  disabled={creatingInvite}
+                  className="bg-green-600 text-white px-4 py-2 border border-green-400 hover:bg-green-500 transition-colors disabled:opacity-50 text-sm"
+                >
+                  {creatingInvite ? 'Creating...' : 'Create New Code'}
+                </button>
               </div>
               <div className="p-6">
-                <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <ShareIcon className="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="text-white font-medium mb-2">Share Group Invite Link</h4>
-                      <p className="text-gray-300 text-sm mb-4">
-                        Send this link to people you want to invite to your group. They'll be able to join and start working out together.
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <div className="flex-1 relative">
-                          <input
-                            type="text"
-                            value={inviteLink}
-                            readOnly
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (inviteLink) {
-                              navigator.clipboard.writeText(inviteLink).then(() => {
-                                alert('Invite link copied to clipboard!')
-                              }).catch(() => {
-                                alert('Failed to copy link. Please copy manually.')
-                              })
-                            }
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors whitespace-nowrap"
-                        >
-                          <ClipboardDocumentIcon className="w-4 h-4" />
-                          Copy Link
-                        </button>
-                      </div>
-                    </div>
+                {inviteCodes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-4">No invite codes created yet</div>
+                    <p className="text-gray-500 text-sm">Create an invite code to start sharing your group</p>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    {inviteCodes.filter(invite => invite.is_active).map((invite) => (
+                      <div key={invite.id} className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
+                        {/* Invite Code - Large and prominent */}
+                        <div className="mb-4">
+                          <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide">Invite Code</div>
+                          <div className="flex items-center justify-between">
+                            <div className="font-mono text-2xl text-orange-400 font-bold tracking-wider">
+                              {invite.invite_code}
+                            </div>
+                            <button
+                              onClick={() => copyCodeOnly(invite.invite_code)}
+                              className="px-4 py-2 bg-orange-600/20 border border-orange-600/40 text-orange-300 text-sm hover:bg-orange-600/30 transition-colors rounded"
+                            >
+                              Copy Code
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Invite Link */}
+                        <div className="mb-4">
+                          <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide">Invite Link</div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 text-sm text-gray-300 font-mono bg-gray-900/50 px-3 py-2 rounded border border-gray-700 truncate">
+                              {`${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding/groups?invite=${invite.invite_code}`}
+                            </div>
+                            <button
+                              onClick={() => copyToClipboard(invite.invite_code)}
+                              className="px-4 py-2 bg-blue-600/20 border border-blue-600/40 text-blue-300 text-sm hover:bg-blue-600/30 transition-colors rounded"
+                            >
+                              Copy Link
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Usage info */}
+                        <div className="text-xs text-gray-400 flex gap-4">
+                          <span>Uses: {invite.current_uses}/{invite.max_uses}</span>
+                          <span>Created: {new Date(invite.created_at).toLocaleDateString()}</span>
+                          {invite.expires_at && (
+                            <span>Expires: {new Date(invite.expires_at).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="text-xs text-gray-500 mt-4">
+                  Share the code or link with people you want to invite to your group. They can enter the code during onboarding or click the link directly.
                 </div>
               </div>
             </div>
