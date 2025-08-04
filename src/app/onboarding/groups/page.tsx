@@ -51,7 +51,11 @@ export default function GroupSelectionPage() {
       if (data.success) {
         // Success! Show success message and redirect
         console.log('Successfully joined group:', data.group_name)
-        router.push('/onboarding/profile')
+        
+        // Force a small delay to let the database update propagate
+        setTimeout(() => {
+          router.push('/onboarding/profile')
+        }, 500)
       } else {
         throw new Error(data.error || 'Failed to join group with invite code.')
       }

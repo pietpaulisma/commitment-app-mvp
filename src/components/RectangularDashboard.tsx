@@ -1859,25 +1859,36 @@ export default function RectangularDashboard() {
                             {/* Background circle */}
                             <div className="w-20 h-20 rounded-full bg-gray-800/50 border border-white/10"></div>
                             
-                            {/* Progress circle with smooth fill animation */}
+                            {/* Progress circle with bottom-to-top fill animation */}
                             <svg 
-                              className="absolute top-0 left-0 w-20 h-20 transform -rotate-90"
+                              className="absolute top-0 left-0 w-20 h-20"
                               viewBox="0 0 80 80"
                             >
+                              <defs>
+                                <clipPath id={`circle-clip-${progressPercentage}`}>
+                                  <circle cx="40" cy="40" r="36" />
+                                </clipPath>
+                              </defs>
+                              
+                              {/* Background circle border */}
                               <circle
                                 cx="40"
                                 cy="40"
                                 r="36"
                                 fill="none"
-                                stroke="#ef4444"
-                                strokeWidth="5"
-                                strokeLinecap="round"
-                                strokeDasharray={`${(progressPercentage / 100) * 226.2} 226.2`}
+                                stroke="#374151"
+                                strokeWidth="2"
+                              />
+                              
+                              {/* Filled progress area */}
+                              <rect
+                                x="4"
+                                y={76 - (progressPercentage / 100) * 72}
+                                width="72"
+                                height={(progressPercentage / 100) * 72}
+                                fill="#ef4444"
+                                clipPath={`url(#circle-clip-${progressPercentage})`}
                                 className="transition-all duration-1000 ease-out"
-                                style={{
-                                  strokeDashoffset: `${226.2 - (progressPercentage / 100) * 226.2}`,
-                                  animation: 'smooth-fill 1.2s ease-out forwards'
-                                }}
                               />
                             </svg>
                             
