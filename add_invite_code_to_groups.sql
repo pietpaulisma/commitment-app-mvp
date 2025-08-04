@@ -58,7 +58,58 @@ CREATE TRIGGER trigger_auto_generate_invite_code
   FOR EACH ROW
   EXECUTE FUNCTION auto_generate_invite_code();
 
--- 6. Add comment for documentation
+-- 6. Create function to join group via simple invite code
+CREATE OR REPLACE FUNCTION join_group_via_invite(p_invite_code TEXT) 
+RETURNS JSON AS $$
+DECLARE
+  group_record RECORD;
+  user_profile RECORD;
+BEGIN
+  -- Get current user
+  SELECT * INTO user_profile FROM profiles WHERE id = auth.uid();
+  
+  IF user_profile IS NULL THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'User not found'
+    );
+  END IF;
+  
+  -- Check if user is already in a group
+  IF user_profile.group_id IS NOT NULL THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'You are already in a group'
+    );
+  END IF;
+  
+  -- Find group by invite code
+  SELECT * INTO group_record 
+  FROM groups 
+  WHERE invite_code = UPPER(TRIM(p_invite_code));
+  
+  IF group_record IS NULL THEN
+    RETURN json_build_object(
+      'success', false,
+      'error', 'Invalid invite code'
+    );
+  END IF;
+  
+  -- Add user to group
+  UPDATE profiles 
+  SET group_id = group_record.id, updated_at = NOW()
+  WHERE id = auth.uid();
+  
+  RETURN json_build_object(
+    'success', true,
+    'group_id', group_record.id,
+    'group_name', group_record.name
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 7. Add comment for documentation
 COMMENT ON COLUMN groups.invite_code IS 'Unique 8-character invite code for joining the group';
+COMMENT ON FUNCTION join_group_via_invite IS 'Allows user to join a group using simple invite code from groups table';
 
 SELECT 'Simple invite code system added to groups table!' as status;
