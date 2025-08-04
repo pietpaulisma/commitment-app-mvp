@@ -1184,9 +1184,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           overflow: 'hidden' // Prevent background scrolling
         }}
       >
-        {/* Header - Modern styled version */}
+        {/* Header - Modern styled version - UPDATED */}
         <div className="sticky top-0">
-          <div className="flex rounded-t-2xl overflow-hidden">
+          <div className="flex rounded-t-2xl overflow-hidden bg-red-500/20">
             {/* Progress Bar Section - Modernized */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-black/50 backdrop-blur-sm' : 'bg-black/50 backdrop-blur-sm'} border-r border-white/10 overflow-hidden`}>
               {/* Liquid gradient progress background with subtle animation */}
