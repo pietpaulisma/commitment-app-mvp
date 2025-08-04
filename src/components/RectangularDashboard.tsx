@@ -148,15 +148,15 @@ const CHART_COLORS = [
 ]
 
 // Helper function to calculate days since last donation
-const calculateDaysSinceDonation = (lastDonationDate: string | null): number | null => {
-  if (!lastDonationDate) return null
+const calculateDaysSinceDonation = (lastDonationDate: string | null): number => {
+  if (!lastDonationDate) return 0 // Default to 0 if no donation date
   
   const today = new Date()
   const donationDate = new Date(lastDonationDate)
   const diffTime = today.getTime() - donationDate.getTime()
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
   
-  return diffDays >= 0 ? diffDays : null
+  return diffDays >= 0 ? diffDays : 0
 }
 
 // Helper function to calculate consecutive "insane" workout days (≥100 points)
@@ -183,6 +183,42 @@ const calculateInsaneStreak = (logs: any[]): number => {
   }
   
   return streak
+}
+
+// Helper function to get dynamic colors based on streak/count progression
+const getProgressiveColor = (count: number, type: 'bg' | 'text' | 'border' = 'bg') => {
+  let colorClass = ''
+  
+  if (count === 0) {
+    // Boring grey for 0
+    colorClass = type === 'bg' ? 'bg-gray-500/20' : type === 'text' ? 'text-gray-400' : 'border-gray-500/30'
+  } else if (count >= 1 && count <= 2) {
+    // Light grey for 1-2
+    colorClass = type === 'bg' ? 'bg-gray-400/30' : type === 'text' ? 'text-gray-300' : 'border-gray-400/40'
+  } else if (count >= 3 && count <= 6) {
+    // Blue for 3-6
+    colorClass = type === 'bg' ? 'bg-blue-500/30' : type === 'text' ? 'text-blue-300' : 'border-blue-500/50'
+  } else if (count >= 7 && count <= 13) {
+    // Purple for 7-13
+    colorClass = type === 'bg' ? 'bg-purple-500/30' : type === 'text' ? 'text-purple-300' : 'border-purple-500/50'
+  } else if (count >= 14 && count <= 20) {
+    // Red for 14-20
+    colorClass = type === 'bg' ? 'bg-red-500/30' : type === 'text' ? 'text-red-300' : 'border-red-500/50'
+  } else if (count >= 21 && count <= 29) {
+    // Gold for 21-29
+    colorClass = type === 'bg' ? 'bg-yellow-500/30' : type === 'text' ? 'text-yellow-300' : 'border-yellow-500/50'
+  } else {
+    // Rainbow gradient for 30+
+    if (type === 'bg') {
+      return 'bg-gradient-to-r from-pink-500/30 via-purple-500/30 to-indigo-500/30'
+    } else if (type === 'text') {
+      return 'text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400'
+    } else {
+      return 'border-gradient-to-r from-pink-500/50 via-purple-500/50 to-indigo-500/50'
+    }
+  }
+  
+  return colorClass
 }
 
 // Memoized chart component for performance
@@ -677,7 +713,7 @@ export default function RectangularDashboard() {
   const [showPersonalStats, setShowPersonalStats] = useState(false)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
-  const [daysSinceDonation, setDaysSinceDonation] = useState<number | null>(null)
+  const [daysSinceDonation, setDaysSinceDonation] = useState<number>(0)
   const [insaneStreak, setInsaneStreak] = useState<number>(0)
 
   useEffect(() => {
@@ -1605,22 +1641,31 @@ export default function RectangularDashboard() {
             </div>
           </div>
 
-          {/* Subtle Data Metrics */}
+          {/* Epic Data Metrics with Dynamic Colors */}
           <div className="mx-1 mb-4">
-            <div className="px-6">
-              <div className="text-sm text-white/60 font-light">
-                {daysSinceDonation !== null && (
-                  <span>{daysSinceDonation} days since donation</span>
-                )}
-                {daysSinceDonation !== null && insaneStreak > 0 && (
-                  <span className="mx-2">•</span>
-                )}
-                {insaneStreak > 0 && (
-                  <span>{insaneStreak} day{insaneStreak !== 1 ? 's' : ''} insane streak</span>
-                )}
-                {daysSinceDonation === null && insaneStreak === 0 && (
-                  <span>No donation or insane streak data yet</span>
-                )}
+            <div className="flex gap-2 px-6">
+              {/* Days Since Donation */}
+              <div className={`
+                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border
+                ${getProgressiveColor(daysSinceDonation, 'bg')}
+                ${getProgressiveColor(daysSinceDonation, 'border')}
+                transition-all duration-300
+              `}>
+                <span className={`text-sm font-medium ${getProgressiveColor(daysSinceDonation, 'text')}`}>
+                  {daysSinceDonation} days since donation
+                </span>
+              </div>
+
+              {/* Insane Streak */}
+              <div className={`
+                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border
+                ${getProgressiveColor(insaneStreak, 'bg')}
+                ${getProgressiveColor(insaneStreak, 'border')}
+                transition-all duration-300
+              `}>
+                <span className={`text-sm font-medium ${getProgressiveColor(insaneStreak, 'text')}`}>
+                  {insaneStreak} day{insaneStreak !== 1 ? 's' : ''} insane streak
+                </span>
               </div>
             </div>
           </div>
