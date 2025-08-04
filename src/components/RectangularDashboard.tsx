@@ -1853,24 +1853,25 @@ export default function RectangularDashboard() {
               </div>
             ) : (
               <div className="space-y-3 px-4">
-                {recentChats.slice(0, 7).map((chat) => {
-                  // Check if it's a workout completion message
-                  let isWorkoutMessage = false
-                  let workoutData = null
-                  let displayText = chat.message
-
-                  try {
-                    if (chat.message && (chat.message.includes('workout_data') || chat.message.includes('Workout completed!'))) {
-                      const parsed = JSON.parse(chat.message)
-                      if (parsed.workout_data) {
-                        isWorkoutMessage = true
-                        workoutData = parsed.workout_data
-                        displayText = parsed.text || '🎯 Workout completed!'
+                {recentChats
+                  .filter((chat) => {
+                    // Filter out workout completion messages from dashboard
+                    try {
+                      if (chat.message && (chat.message.includes('workout_data') || chat.message.includes('Workout completed!'))) {
+                        const parsed = JSON.parse(chat.message)
+                        if (parsed.workout_data) {
+                          return false // Skip workout messages on dashboard
+                        }
                       }
+                    } catch (e) {
+                      // If parsing fails, include the message
                     }
-                  } catch (e) {
-                    // If parsing fails, just show the original message
-                  }
+                    return true // Include regular messages
+                  })
+                  .slice(0, 7)
+                  .map((chat) => {
+                  // Only regular messages reach here now
+                  let displayText = chat.message
 
                   return (
                     <div key={chat.id} className="p-2 mx-2 mb-2 text-sm rounded-xl"
@@ -1879,46 +1880,20 @@ export default function RectangularDashboard() {
                         ? 'rgba(255, 255, 255, 0.08)' 
                         : 'rgba(255, 255, 255, 0.05)'
                     }}>
-                      {isWorkoutMessage && workoutData ? (
-                        // Special workout completion display
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                                <span className="text-xs">🏆</span>
-                              </div>
-                              <span className="font-medium text-green-400 text-sm">Workout Completed!</span>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg font-bold text-white">{workoutData.total_points}</div>
-                              <div className="text-xs text-gray-400">points</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400">
-                              {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]} crushed their target
+                      {/* Regular message display only - workout messages filtered out */}
+                      <div className="text-sm text-gray-300">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <span className="font-medium text-white mr-2">
+                              {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}:
                             </span>
-                            <span className="text-gray-500">
-                              {formatTimeAgo(chat.created_at)}
-                            </span>
+                            <span>{displayText}</span>
                           </div>
+                          <span className="text-xs text-gray-500 flex-shrink-0">
+                            {formatTimeAgo(chat.created_at)}
+                          </span>
                         </div>
-                      ) : (
-                        // Regular message display  
-                        <div className="text-sm text-gray-300">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <span className="font-medium text-white mr-2">
-                                {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}:
-                              </span>
-                              <span>{displayText}</span>
-                            </div>
-                            <span className="text-xs text-gray-500 flex-shrink-0">
-                              {formatTimeAgo(chat.created_at)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   )
                 })}
