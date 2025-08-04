@@ -1980,57 +1980,61 @@ export default function RectangularDashboard() {
           </div>
         </div>
 
-        {/* Essential Stats */}
-        <div id="group-stats" className="relative">
-          {/* Glass morphism container wrapper */}
-          <div className="relative">
-            {/* Main container */}
-            <div 
-              className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-              style={{
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-              }}
-            >
-              
-              <div className="relative py-6 px-4 z-10">
-                <div className="mb-4">
-                  <h3 className="text-xs font-light text-white/80 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                    Stats
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1">Tap individual blocks to toggle between group and personal stats</p>
-                </div>
-            
-{/* Individual togglable stats */}
-            {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 ? (
-              <div className="space-y-0 border-t border-b border-gray-800">
-                {/* Top row - Points (full width) */}
-                <div className="w-full border-b border-gray-800">
+        {/* Individual Stat Blocks - integrated into dashboard */}
+        {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 && (
+          <>
+            {/* Group Points - Full width block */}
+            <div className="relative">
+              <div 
+                className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                style={{
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <MemoizedChartComponent 
+                  key={`${individualStatsMode[0] ? 'personal' : 'group'}-${(individualStatsMode[0] && personalStats?.interestingStats?.[0]) ? personalStats.interestingStats[0].type : groupStats.interestingStats[0].type}-0`}
+                  stat={individualStatsMode[0] && personalStats?.interestingStats?.[0] ? personalStats.interestingStats[0] : groupStats.interestingStats[0]} 
+                  index={0} 
+                  getLayoutClasses={getLayoutClasses}
+                  userProfile={profile}
+                  onClick={() => toggleIndividualStat(0)}
+                  isPersonalMode={individualStatsMode[0]}
+                  hasPersonalData={!!personalStats?.interestingStats?.[0]}
+                />
+              </div>
+            </div>
+
+            {/* Money Pot and Birthday - Two square blocks side by side */}
+            <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
+              {/* Money Pot Block */}
+              <div className="relative">
+                <div 
+                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                  style={{
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                  }}
+                >
                   <MemoizedChartComponent 
-                    key={`${individualStatsMode[0] ? 'personal' : 'group'}-${(individualStatsMode[0] && personalStats?.interestingStats?.[0]) ? personalStats.interestingStats[0].type : groupStats.interestingStats[0].type}-0`}
-                    stat={individualStatsMode[0] && personalStats?.interestingStats?.[0] ? personalStats.interestingStats[0] : groupStats.interestingStats[0]} 
-                    index={0} 
+                    key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
+                    stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
+                    index={1} 
                     getLayoutClasses={getLayoutClasses}
                     userProfile={profile}
-                    onClick={() => toggleIndividualStat(0)}
-                    isPersonalMode={individualStatsMode[0]}
-                    hasPersonalData={!!personalStats?.interestingStats?.[0]}
+                    onClick={() => toggleIndividualStat(1)}
+                    isPersonalMode={individualStatsMode[1]}
+                    hasPersonalData={!!personalStats?.interestingStats?.[1]}
                   />
                 </div>
-                
-                {/* Middle row - Money Pot and Birthday (2 squares) */}
-                <div className="grid grid-cols-2 gap-0 border-b border-gray-800">
-                  <div className="border-r border-gray-800">
-                    <MemoizedChartComponent 
-                      key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
-                      stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
-                      index={1} 
-                      getLayoutClasses={getLayoutClasses}
-                      userProfile={profile}
-                      onClick={() => toggleIndividualStat(1)}
-                      isPersonalMode={individualStatsMode[1]}
-                      hasPersonalData={!!personalStats?.interestingStats?.[1]}
-                    />
-                  </div>
+              </div>
+
+              {/* Birthday Block */}
+              <div className="relative">
+                <div 
+                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                  style={{
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                  }}
+                >
                   <MemoizedChartComponent 
                     key={`${individualStatsMode[2] ? 'personal' : 'group'}-${(individualStatsMode[2] && personalStats?.interestingStats?.[2]) ? personalStats.interestingStats[2].type : groupStats.interestingStats[2].type}-2`}
                     stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]} 
@@ -2042,51 +2046,31 @@ export default function RectangularDashboard() {
                     hasPersonalData={!!personalStats?.interestingStats?.[2]}
                   />
                 </div>
-                
-                {/* Bottom row - Workout Times (full width rectangle) */}
-                <div className="w-full">
-                  <MemoizedChartComponent 
-                    key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
-                    stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
-                    index={3} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                    onClick={() => toggleIndividualStat(3)}
-                    isPersonalMode={individualStatsMode[3]}
-                    hasPersonalData={!!personalStats?.interestingStats?.[3]}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-0">
-                <div className="p-4 bg-gray-900/30 rounded-lg h-32">
-                  <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                  <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                  <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                </div>
-                <div className="grid grid-cols-2 gap-0">
-                  <div className="p-4 bg-gray-900/30 rounded-lg h-32">
-                    <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                    <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                    <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                  </div>
-                  <div className="p-4 bg-gray-900/30 rounded-lg h-32">
-                    <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                    <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                    <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                  </div>
-                </div>
-                <div className="p-4 bg-gray-900/30 rounded-lg h-20">
-                  <div className="animate-pulse bg-gray-800 h-4 mb-3 rounded w-24"></div>
-                  <div className="animate-pulse bg-gray-700 h-8 mb-2 rounded w-16"></div>
-                  <div className="animate-pulse bg-gray-600 h-3 rounded w-20"></div>
-                </div>
-              </div>
-            )}
               </div>
             </div>
-          </div>
-        </div>
+
+            {/* Workout Times - Full width block */}
+            <div className="relative">
+              <div 
+                className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                style={{
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <MemoizedChartComponent 
+                  key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
+                  stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
+                  index={3} 
+                  getLayoutClasses={getLayoutClasses}
+                  userProfile={profile}
+                  onClick={() => toggleIndividualStat(3)}
+                  isPersonalMode={individualStatsMode[3]}
+                  hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
       </div>
     </div>
