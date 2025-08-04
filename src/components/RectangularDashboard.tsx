@@ -1484,7 +1484,7 @@ export default function RectangularDashboard() {
                   <img 
                     src="/logo.png" 
                     alt="The Commitment" 
-                    className="h-6 w-auto drop-shadow-lg"
+                    className="h-12 w-auto drop-shadow-lg"
                   />
                 </div>
                 
@@ -1509,24 +1509,18 @@ export default function RectangularDashboard() {
           
           {/* Greeting with username and motivational text */}
           <div 
-            className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-            style={{
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-            }}
+            className="mx-1 mb-1"
           >
             <div className="relative">
               <div className="py-6 px-4">
-                <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                  Motivation
-                </h3>
-                <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
+                <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress
                     const currentUserMember = groupMembers.find(member => member.isCurrentUser)
                     const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
                     
                     return (
-                      <p className="text-sm text-white/80 font-medium drop-shadow">
+                      <p className="text-lg text-white/90 font-medium drop-shadow leading-relaxed">
                         {hasAchievedTarget 
                           ? getTargetAchievedMessage(currentTime.getHours())
                           : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
@@ -1733,14 +1727,11 @@ export default function RectangularDashboard() {
                   }
 
                   return (
-                    <div key={chat.id} className={`px-4 py-3 ${
-                      chat.is_own_message ? '' : ''
-                    } ${isWorkoutMessage ? 'border-l-2 border-green-500/50' : 'border-l-2 border-gray-600/30'}`}
+                    <div key={chat.id} className="p-2 mx-2 mb-2 text-sm rounded-xl"
                     style={{
                       background: chat.is_own_message 
-                        ? 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)' 
-                        : 'linear-gradient(135deg, #151515 0%, #080808 100%)',
-                      borderRadius: '0px'
+                        ? 'rgba(255, 255, 255, 0.08)' 
+                        : 'rgba(255, 255, 255, 0.05)'
                     }}>
                       {isWorkoutMessage && workoutData ? (
                         // Special workout completion display
