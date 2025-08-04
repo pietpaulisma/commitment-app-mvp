@@ -532,7 +532,7 @@ export default function MobileWorkoutLogger() {
                   <button
                     key={exercise.id}
                     onClick={() => quickAddExercise(exercise)}
-                    className="bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white p-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border border-white/20 mb-1"
+                    className="bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white p-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border border-gray-600 mb-1"
                   >
                     <div className="text-center">
                       <div className="text-lg font-black mb-1" style={{ color: getUserColor() }}>{exercise.points_per_unit}</div>
@@ -553,7 +553,7 @@ export default function MobileWorkoutLogger() {
                       <button
                         key={exercise.id}
                         onClick={() => quickAddExercise(exercise, 5)}
-                        className="w-full bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white p-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border border-white/20 mb-1"
+                        className="w-full bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white p-3 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border border-gray-600 mb-1"
                       >
                         <div className="flex justify-between items-center">
                           <div className="text-left">
@@ -587,7 +587,7 @@ export default function MobileWorkoutLogger() {
                   <select 
                     value={selectedExercise?.id || ''} 
                     onChange={(e) => handleExerciseChange(e.target.value)}
-                    className="w-full px-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white mx-1"
+                    className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white mx-1"
                   >
                     <option value="">Select an exercise...</option>
                     <optgroup label="Regular Exercises">
@@ -641,7 +641,7 @@ export default function MobileWorkoutLogger() {
                         min="0" 
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white mx-1"
+                        className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white mx-1"
                         placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
                         required
                       />
@@ -657,7 +657,7 @@ export default function MobileWorkoutLogger() {
                           min="0" 
                           value={weight}
                           onChange={(e) => setWeight(e.target.value)}
-                          className="w-full px-4 py-3 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white mx-1"
+                          className="w-full px-4 py-3 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white mx-1"
                           placeholder="Enter weight (optional)"
                         />
                       </div>
@@ -665,7 +665,7 @@ export default function MobileWorkoutLogger() {
 
                     {/* Points Preview */}
                     {quantity && (
-                      <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-white/20 shadow-lg mx-1">
+                      <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-gray-600 shadow-lg mx-1">
                         <div className="flex justify-between items-center">
                           <div>
                             <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Points Earned</div>
@@ -702,13 +702,13 @@ export default function MobileWorkoutLogger() {
             <div className="px-1">
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-1 mb-3 mx-1">
-                <div className="bg-black/30 backdrop-blur-sm p-3 border border-white/20 rounded-xl shadow-lg">
+                <div className="bg-black/30 backdrop-blur-sm p-3 border border-gray-600 rounded-xl shadow-lg">
                   <div className="text-center">
                     <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getTotalPoints()}</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Total Points</div>
                   </div>
                 </div>
-                <div className="bg-black/30 backdrop-blur-sm p-3 border border-white/20 rounded-xl shadow-lg">
+                <div className="bg-black/30 backdrop-blur-sm p-3 border border-gray-600 rounded-xl shadow-lg">
                   <div className="text-center">
                     <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getRecoveryPercentage()}%</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Recovery</div>
@@ -718,7 +718,7 @@ export default function MobileWorkoutLogger() {
 
               {/* Recovery Warning */}
               {getRecoveryPercentage() > 25 && (
-                <div className="bg-black/30 backdrop-blur-sm border border-white/20 rounded-xl p-3 mb-3 mx-1">
+                <div className="bg-black/30 backdrop-blur-sm border border-gray-600 rounded-xl p-3 mb-3 mx-1">
                   <div className="text-center">
                     <div className="text-sm font-medium mb-1" style={{ color: getUserColor() }}>Recovery Notice</div>
                     <div className="text-xs text-gray-400">
@@ -747,7 +747,7 @@ export default function MobileWorkoutLogger() {
                       const progressPercentage = Math.min(100, (log.points / Math.max(1, log.points)) * 100) // Always 100% for logged exercises
                       
                       return (
-                        <div key={log.id} className="bg-black/30 backdrop-blur-sm relative overflow-hidden rounded-xl mb-1 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 mx-1">
+                        <div key={log.id} className="bg-black/30 backdrop-blur-sm relative overflow-hidden rounded-xl mb-1 shadow-lg border border-gray-600 hover:shadow-xl transition-all duration-300 mx-1">
                           {/* Liquid gradient background for logged exercise */}
                           <div 
                             className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
