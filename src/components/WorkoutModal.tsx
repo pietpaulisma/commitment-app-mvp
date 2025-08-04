@@ -484,7 +484,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-6 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-3 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
             ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
             : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
@@ -511,7 +511,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-6 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
+              className="w-full p-4 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -568,7 +568,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-6 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-3 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
             ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
             : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
@@ -595,7 +595,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-6 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
+              className="w-full p-4 hover:scale-105 transition-all duration-300 relative rounded-lg hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -1310,7 +1310,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                     }}
                                   />
                                   
-                                  <div className="relative p-6">
+                                  <div className="relative p-4">
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center space-x-3">
                                         {getExerciseIcon(workout.exercises)}
