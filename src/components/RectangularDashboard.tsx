@@ -1586,7 +1586,7 @@ export default function RectangularDashboard() {
           {/* Main container */}
           <div className="relative">
             
-            <div className="relative px-4 py-8 z-10" style={{ marginLeft: '4px' }}>
+            <div className="relative py-8 z-10" style={{ paddingLeft: '20px', paddingRight: '16px' }}>
               <div className="flex items-center justify-between">
                 {/* Logo */}
                 <div>
@@ -1621,7 +1621,7 @@ export default function RectangularDashboard() {
             className="mx-1 mb-6"
           >
             <div className="relative">
-              <div className="py-12 px-4" style={{ marginLeft: '4px' }}>
+              <div className="py-12" style={{ paddingLeft: '20px', paddingRight: '16px' }}>
                 <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress
@@ -1643,7 +1643,7 @@ export default function RectangularDashboard() {
 
           {/* Epic Data Metrics with Dynamic Colors */}
           <div className="mx-1 mb-4">
-            <div className="flex flex-col gap-2 px-4">
+            <div className="flex flex-col gap-2" style={{ paddingLeft: '20px' }}>
               {/* Days Since Donation */}
               <div className={`
                 inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border w-fit
