@@ -31,68 +31,54 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
     const hour = currentTime.getHours()
     const minute = currentTime.getMinutes()
     
-    if (hour >= 2 && hour < 5) {
-      // Pre-Dawn (2:00–5:00): "Blue Hour Ghost" / "Steel Bloom"
+    if (hour >= 0 && hour < 5) {
+      // 🌃 Late Night (00:00 – 05:00): Quiet, introspective, low energy
       return {
-        primary: '#4a5568',  // Desaturated indigo
-        secondary: '#6b7280', // Ice grey
-        accent: '#9ca3af'    // Cold mauve
+        primary: '#1A2980',  // Midnight blue
+        secondary: '#26D0CE', // Soft teal
+        accent: '#1A2980'    // Midnight blue accent
       }
-    } else if (hour >= 5 && hour < 6 || (hour === 6 && minute < 30)) {
-      // Early Morning (5:00–6:30): "Mist Quartz" / "Frostlight"
+    } else if (hour >= 5 && hour < 7) {
+      // 🌅 Dawn (05:00 – 07:00): Fresh, awakening, gentle light
       return {
-        primary: '#6366f1',  // Slate blue
-        secondary: '#c4b5fd', // Brighter smoky lavender
-        accent: '#fecaca'    // Warmer silver-pink
+        primary: '#2C3E50',  // Deep blue
+        secondary: '#FD746C', // Soft coral sunrise
+        accent: '#FF9068'    // Warm coral
       }
-    } else if ((hour === 6 && minute >= 30) || hour === 7 || (hour === 8 && minute === 0)) {
-      // Sunrise (6:30–8:00): "Peach Ember" / "Aurora Bloom" 
+    } else if (hour >= 7 && hour < 11) {
+      // 🌞 Morning (07:00 – 11:00): Energetic, bright, productive
       return {
-        primary: '#f87171',  // Warmer dusky rose
-        secondary: '#f59e0b', // Richer golden apricot
-        accent: '#22d3ee'    // Brighter sky cyan
-      }
-    } else if (hour >= 8 && hour < 11) {
-      // Late Morning (8:00–11:00): "Lemon Sky" / "Daybreak Linen"
-      return {
-        primary: '#fde047',  // Brighter buttercream yellow
-        secondary: '#93c5fd', // Clearer powder blue
-        accent: '#86efac'    // Fresh pale mint
+        primary: '#FFEEAD',  // Light buttery yellow
+        secondary: '#FF6F61', // Optimistic coral
+        accent: '#FFEEAD'    // Light buttery yellow accent
       }
     } else if (hour >= 11 && hour < 14) {
-      // Noon (11:00–14:00): "Zenith Chrome" / "Solar Pulse"
+      // ☀️ Midday (11:00 – 14:00): Peak alertness, high brightness
       return {
-        primary: '#0284c7',  // Vivid cerulean
-        secondary: '#f8fafc', // Searing white
-        accent: '#f59e0b'    // White-hot amber
+        primary: '#FDEB71',  // Radiant yellow
+        secondary: '#F8D800', // Golden sunbeam
+        accent: '#FDEB71'    // Radiant yellow accent
       }
     } else if (hour >= 14 && hour < 17) {
-      // Late Afternoon (14:00–17:00): "Bright Daylight" / "Azure Sun"
+      // 🌤 Afternoon (14:00 – 17:00): Warm, mellow, starting to wind down
       return {
-        primary: '#0ea5e9',  // Bright sky blue
-        secondary: '#fbbf24', // Vibrant golden yellow
-        accent: '#06b6d4'    // Electric cyan
+        primary: '#FAD0C4',  // Peach-pink
+        secondary: '#FFD1FF', // Soft violet haze
+        accent: '#FAD0C4'    // Peach-pink accent
       }
-    } else if (hour >= 17 && hour < 19 || (hour === 19 && minute < 30)) {
-      // Sunset (17:00–19:30): "Saffron Mirage" / "Crimson Dusk"
+    } else if (hour >= 17 && hour < 20) {
+      // 🌇 Evening (17:00 – 20:00): Reflective, slowing down, golden hour
       return {
-        primary: '#dc2626',  // Deep crimson
-        secondary: '#ea580c', // Burnt orange
-        accent: '#f97316'    // Saffron/hot pink
-      }
-    } else if ((hour === 19 && minute >= 30) || hour === 20 || (hour === 21 && minute === 0)) {
-      // Nightfall (19:30–21:00): "Indigo Spill" / "Twilight Velvet"
-      return {
-        primary: '#1e3a8a',  // Deep cobalt
-        secondary: '#581c87', // Deep purple (wine-black)
-        accent: '#f59e0b'    // Rose gold
+        primary: '#FF9A8B',  // Soft red-orange
+        secondary: '#FF6A88', // Dusty pink
+        accent: '#FF99AC'    // Calm cherry
       }
     } else {
-      // Night (21:00–2:00): "Obsidian Echo" / "Midnight Petrol"
+      // 🌌 Night (20:00 – 00:00): Calm, restful, focused
       return {
-        primary: '#1f2937',  // Graphite blue
-        secondary: '#111827', // Ink violet
-        accent: '#374151'    // Ultramarine fog
+        primary: '#434343',  // Smoky gray
+        secondary: '#000000', // Deep black
+        accent: '#434343'    // Smoky gray accent
       }
     }
   }
