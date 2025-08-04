@@ -511,7 +511,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-l-3xl rounded-r-xl hover:shadow-lg"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-3xl hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -597,7 +597,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-l-3xl rounded-r-xl hover:shadow-lg"
+              className="w-full p-3 hover:scale-105 transition-all duration-300 relative rounded-3xl hover:shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
