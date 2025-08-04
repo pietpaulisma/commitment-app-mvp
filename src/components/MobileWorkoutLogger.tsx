@@ -427,7 +427,7 @@ export default function MobileWorkoutLogger() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-2 border-gray-800 mx-auto" style={{ borderTopColor: getUserColor() }}></div>
+          <div className="animate-spin h-8 w-8 border-2 border-white/10 mx-auto" style={{ borderTopColor: getUserColor() }}></div>
           <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
@@ -461,7 +461,7 @@ export default function MobileWorkoutLogger() {
       <div className="min-h-screen bg-black pb-20">
       {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
-        <div className="bg-black border-b border-gray-800 relative overflow-hidden">
+        <div className="bg-black/50 backdrop-blur-sm border-b border-white/10 relative overflow-hidden rounded-t-2xl shadow-lg">
           {/* Stacked gradient progress bar background with subtle animation */}
           <div 
             className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -500,16 +500,16 @@ export default function MobileWorkoutLogger() {
 
       {/* Flexible Rest Day Section */}
       {hasFlexibleRestDay && (
-        <div className="bg-black border-t border-gray-800">
+        <div className="bg-black border-t border-white/10">
           <div className="px-4 py-6">
-            <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-600/30 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-600/30 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-bold text-green-400 mb-1">🎉 Flexible Rest Day Earned!</div>
                   <div className="text-xs text-gray-300">You crushed Monday's double target. Use this to skip any day this week.</div>
                 </div>
                 <button 
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
                   onClick={useFlexibleRestDay}
                 >
                   Use Rest Day
@@ -532,7 +532,7 @@ export default function MobileWorkoutLogger() {
                   <button
                     key={exercise.id}
                     onClick={() => quickAddExercise(exercise)}
-                    className="bg-gray-900/30 hover:bg-gray-900/40 text-white p-4 rounded-lg transition-all duration-300 hover:scale-105"
+                    className="bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white p-4 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border border-white/5"
                   >
                     <div className="text-center">
                       <div className="text-lg font-black mb-1" style={{ color: getUserColor() }}>{exercise.points_per_unit}</div>
@@ -553,7 +553,7 @@ export default function MobileWorkoutLogger() {
                       <button
                         key={exercise.id}
                         onClick={() => quickAddExercise(exercise, 5)}
-                        className="w-full bg-gray-900/30 hover:bg-gray-900/40 text-white p-4 rounded-lg transition-all duration-300 hover:scale-105"
+                        className="w-full bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white p-4 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl border border-white/5"
                       >
                         <div className="flex justify-between items-center">
                           <div className="text-left">
@@ -587,7 +587,7 @@ export default function MobileWorkoutLogger() {
                   <select 
                     value={selectedExercise?.id || ''} 
                     onChange={(e) => handleExerciseChange(e.target.value)}
-                    className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
+                    className="w-full px-4 py-4 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white"
                   >
                     <option value="">Select an exercise...</option>
                     <optgroup label="Regular Exercises">
@@ -610,7 +610,7 @@ export default function MobileWorkoutLogger() {
                 {selectedExercise && (
                   <>
                     {/* Exercise Info Card */}
-                    <div className="bg-gray-900/30 rounded-lg p-4">
+                    <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/5">
                       <div className="flex justify-between items-center">
                         <div>
                           <div className="text-sm font-medium text-white">{selectedExercise.name}</div>
@@ -624,7 +624,7 @@ export default function MobileWorkoutLogger() {
                         </div>
                       </div>
                       {selectedExercise.type === 'recovery' && (
-                        <div className="text-xs text-gray-500 mt-2 border-t border-gray-800 pt-2">
+                        <div className="text-xs text-gray-500 mt-2 border-t border-white/10 pt-2">
                           Recovery exercises help with rest and mobility
                         </div>
                       )}
@@ -641,7 +641,7 @@ export default function MobileWorkoutLogger() {
                         min="0" 
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
+                        className="w-full px-4 py-4 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white"
                         placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
                         required
                       />
@@ -657,7 +657,7 @@ export default function MobileWorkoutLogger() {
                           min="0" 
                           value={weight}
                           onChange={(e) => setWeight(e.target.value)}
-                          className="w-full px-4 py-4 border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 text-white"
+                          className="w-full px-4 py-4 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-black/30 backdrop-blur-sm text-white"
                           placeholder="Enter weight (optional)"
                         />
                       </div>
@@ -665,7 +665,7 @@ export default function MobileWorkoutLogger() {
 
                     {/* Points Preview */}
                     {quantity && (
-                      <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-800">
+                      <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 shadow-lg">
                         <div className="flex justify-between items-center">
                           <div>
                             <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Points Earned</div>
@@ -682,7 +682,7 @@ export default function MobileWorkoutLogger() {
                     {/* Submit Button */}
                     <button 
                       type="submit"
-                      className="w-full text-black py-4 px-4 rounded-lg transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 btn-hover"
+                      className="w-full text-black py-4 px-4 rounded-xl transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 btn-hover"
                       style={{ backgroundColor: getUserColor() }}
                     >
                       LOG WORKOUT
@@ -701,14 +701,14 @@ export default function MobileWorkoutLogger() {
             
             <div className="px-4">
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-0 mb-6 border border-gray-800 rounded-lg overflow-hidden">
-                <div className="bg-gray-900/30 p-4 border-r border-gray-800">
+              <div className="grid grid-cols-2 gap-0 mb-6 border border-white/10 rounded-xl overflow-hidden">
+                <div className="bg-black/30 backdrop-blur-sm p-4 border-r border-white/10 shadow-lg">
                   <div className="text-center">
                     <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getTotalPoints()}</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Total Points</div>
                   </div>
                 </div>
-                <div className="bg-gray-900/30 p-4">
+                <div className="bg-black/30 backdrop-blur-sm p-4 shadow-lg">
                   <div className="text-center">
                     <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getRecoveryPercentage()}%</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Recovery</div>
@@ -718,7 +718,7 @@ export default function MobileWorkoutLogger() {
 
               {/* Recovery Warning */}
               {getRecoveryPercentage() > 25 && (
-                <div className="bg-gray-900/30 border border-gray-800 rounded-lg p-4 mb-6">
+                <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6">
                   <div className="text-center">
                     <div className="text-sm font-medium mb-1" style={{ color: getUserColor() }}>Recovery Notice</div>
                     <div className="text-xs text-gray-400">
@@ -736,7 +736,7 @@ export default function MobileWorkoutLogger() {
                 </div>
                 
                 {todaysLogs.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-900/30 rounded-lg">
+                  <div className="text-center py-8 bg-black/30 backdrop-blur-sm rounded-xl">
                     <p className="text-gray-400 font-medium">No workouts logged yet</p>
                     <p className="text-gray-500 text-sm mt-1">Start your first workout above</p>
                   </div>
@@ -747,7 +747,7 @@ export default function MobileWorkoutLogger() {
                       const progressPercentage = Math.min(100, (log.points / Math.max(1, log.points)) * 100) // Always 100% for logged exercises
                       
                       return (
-                        <div key={log.id} className="bg-gray-900/30 relative overflow-hidden">
+                        <div key={log.id} className="bg-black/30 backdrop-blur-sm relative overflow-hidden rounded-xl mb-3 shadow-lg border border-white/5 hover:shadow-xl transition-all duration-300">
                           {/* Liquid gradient background for logged exercise */}
                           <div 
                             className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
