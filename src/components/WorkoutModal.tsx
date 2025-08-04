@@ -484,10 +484,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-1 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-2xl mb-1 shadow-2xl border border-white/5 hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
-            ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
-            : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
+            ? 'bg-black/80 backdrop-blur-xl hover:bg-black/90'
+            : 'bg-black/70 backdrop-blur-xl hover:bg-black/80'
         }`}
       >
         <div className="flex">
@@ -568,10 +568,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-1 shadow-2xl border-2 border-white/20 hover:shadow-xl hover:scale-[1.02] ${
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-2xl mb-1 shadow-2xl border border-white/5 hover:shadow-xl hover:scale-[1.02] ${
           exercise.todayCount > 0
-            ? 'bg-black/40 backdrop-blur-sm hover:bg-black/60'
-            : 'bg-black/30 backdrop-blur-sm hover:bg-black/50'
+            ? 'bg-black/80 backdrop-blur-xl hover:bg-black/90'
+            : 'bg-black/70 backdrop-blur-xl hover:bg-black/80'
         }`}
       >
         <div className="flex">
