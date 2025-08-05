@@ -1585,7 +1585,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               const updatedExercise = {
                                 ...selectedExercise,
                                 points_per_unit: intensity.points,
-                                name: selectedExercise.name.replace(/\(.*\)/, `(${intensity.name})`)
+                                name: selectedExercise.name.replace(/\(.*\)/, '(' + intensity.name + ')')
                               }
                               setSelectedExercise(updatedExercise)
                             }}
@@ -1874,8 +1874,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         </div>
 
-        {/* Workout Input Overlay - Modern Redesigned */}
-        {workoutInputOpen && selectedWorkoutExercise && (
+        {/* Workout Input Overlay - Temporarily removed for deployment */}
+        {false && workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black text-white z-[110] overflow-hidden">
             {/* Subtle background pattern */}
             <div className="absolute inset-0 opacity-3">
