@@ -1719,10 +1719,10 @@ export default function RectangularDashboard() {
                   style={{
                     width: `${Math.max(8, 100 - timeRemainingPercentage)}%`,
                     background: 'rgba(255, 255, 255, 0.15)',
-                    borderTopLeftRadius: '16px',
-                    borderBottomLeftRadius: '16px',
-                    borderTopRightRadius: '0px',
-                    borderBottomRightRadius: '0px'
+                    borderTopLeftRadius: '0px',
+                    borderBottomLeftRadius: '0px',
+                    borderTopRightRadius: '16px',
+                    borderBottomRightRadius: '16px'
                   }}
                 />
                 
