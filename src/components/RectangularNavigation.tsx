@@ -286,7 +286,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
               className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
               style={{ 
                 width: progressAnimated ? '100%' : '80%',
-                background: createCumulativeGradient(todayLogs || [], dailyTarget),
+                background: createCumulativeGradient(todayLogs || [], dailyTarget, weekMode),
                 // Force cache invalidation
                 transform: `translateZ(${Date.now() % 1000}px)`
               }}

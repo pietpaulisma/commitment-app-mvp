@@ -747,7 +747,7 @@ export default function MobileWorkoutLogger() {
                       const progressPercentage = Math.min(100, (log.points / Math.max(1, dailyTarget)) * 100) // Percentage of daily target this exercise represents
                       
                       return (
-                        <div key={log.id} className="bg-gray-900/30 backdrop-blur-xl relative overflow-hidden rounded-3xl mb-1 shadow-2xl border border-white/5 hover:shadow-xl transition-all duration-300 mx-1">
+                        <div key={log.id} className="bg-gray-900/30 backdrop-blur-xl relative overflow-hidden rounded-3xl shadow-2xl border border-white/5 hover:shadow-xl transition-all duration-300 mx-1">
                           {/* Liquid gradient background for logged exercise */}
                           <div 
                             className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"

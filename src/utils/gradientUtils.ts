@@ -9,8 +9,32 @@ export interface LogEntry {
   }
 }
 
-export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: number): string => {
+export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: number, mode?: string): string => {
   const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+  
+  // If insane mode is selected, return a flaming red gradient
+  if (mode === 'insane') {
+    if (total === 0 || !todayLogs || todayLogs.length === 0) {
+      return `linear-gradient(to right, #000000 0%, #000000 100%)`
+    }
+    
+    const totalProgress = Math.min(100, (total / dailyTarget) * 100)
+    const fadeOutStart = totalProgress
+    const fadeOutEnd = Math.min(100, totalProgress + 20)
+    
+    // Create flaming red gradient
+    const gradientStops = [
+      `#dc2626 0%`,          // Red-600
+      `#ef4444 ${totalProgress * 0.3}%`,  // Red-500 
+      `#f87171 ${totalProgress * 0.6}%`,  // Red-400
+      `#dc262666 ${totalProgress}%`,      // Fade start
+      `#00000033 ${fadeOutStart + 5}%`,   // Light fade
+      `#000000 ${fadeOutEnd}%`,           // Full black
+      `#000000 100%`
+    ]
+    
+    return `linear-gradient(to right, ${gradientStops.join(', ')})`
+  }
   
   // Debug logging
   console.log('=== Shared Gradient Debug ===')

@@ -114,7 +114,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
   const [sportsExpanded, setSportsExpanded] = useState(false)
-  const [favoritesExpanded, setFavoritesExpanded] = useState(true)
+  const [favoritesExpanded, setFavoritesExpanded] = useState(false)
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState<string[]>([])
   const [favoritesLoading, setFavoritesLoading] = useState(false)
   const [showSportSelection, setShowSportSelection] = useState(false)
@@ -1556,7 +1556,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             await recalculateTargetWithMode('insane')
                           }}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
-                            weekMode === 'insane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                            weekMode === 'insane' ? 'text-white bg-red-600/30' : 'text-red-400 hover:text-red-300'
                           }`}
                         >
                           <FireIcon className="w-4 h-4" />
