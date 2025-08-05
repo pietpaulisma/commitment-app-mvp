@@ -532,14 +532,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           </div>
           
           {/* Reorder icon for favorites */}
-          <div className="flex items-center justify-center w-12">
-            <button
-              className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 shadow-lg"
-              aria-label="Reorder favorite"
-            >
-              <Bars3Icon className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0"
+            aria-label="Reorder favorite"
+          >
+            <Bars3Icon className="w-4 h-4" />
+          </button>
         </div>
       </div>
     )
@@ -615,21 +613,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           
           {/* Star icon button */}
           {showFavorite && (
-            <div className="flex items-center justify-center w-12">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggleFavorite(exercise.id)
-                }}
-                className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 flex items-center justify-center transition-all duration-200 shadow-lg"
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleFavorite(exercise.id)
+              }}
+              className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 flex items-center justify-center transition-all duration-200 shadow-lg flex-shrink-0"
             >
               {isFavorite ? (
                 <StarIconSolid className="w-4 h-4 text-yellow-400" />
               ) : (
                 <StarIcon className="w-4 h-4 text-gray-400 hover:text-yellow-400" />
               )}
-              </button>
-            </div>
+            </button>
           )}
         </div>
       </div>
