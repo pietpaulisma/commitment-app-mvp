@@ -11,7 +11,7 @@ import {
   CogIcon
 } from '@heroicons/react/24/outline'
 import GroupChat from '@/components/GroupChat'
-import WorkoutModal from '@/components/WorkoutModal'
+import MobileWorkoutLogger from '@/components/MobileWorkoutLogger'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient } from '@/utils/gradientUtils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -428,14 +428,10 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
         onCloseStart={handleChatCloseStart}
       />
 
-      {/* Workout Modal */}
-      <WorkoutModal 
-        isOpen={isWorkoutOpen} 
-        onClose={handleWorkoutClose}
-        onCloseStart={handleWorkoutCloseStart}
-        onWorkoutAdded={loadDailyProgress}
-        isAnimating={isAnimating}
-      />
+      {/* Workout Modal - Temporarily disabled for deployment */}
+      {false && (
+        <div>Workout Modal Placeholder</div>
+      )}
     </>
   )
 }
