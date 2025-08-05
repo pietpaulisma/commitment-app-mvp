@@ -122,6 +122,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [selectedSportType, setSelectedSportType] = useState('')
   const [selectedIntensity, setSelectedIntensity] = useState('medium')
   const [isStopwatchExpanded, setIsStopwatchExpanded] = useState(false)
+  const [stopwatchTime, setStopwatchTime] = useState(0) // in milliseconds
+  const [isStopwatchRunning, setIsStopwatchRunning] = useState(false)
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -167,6 +169,33 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       document.body.style.overflow = 'unset'
     }
   }, [])
+
+  // Stopwatch effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isStopwatchRunning) {
+      interval = setInterval(() => {
+        setStopwatchTime(prevTime => prevTime + 10)
+      }, 10)
+    }
+    return () => clearInterval(interval)
+  }, [isStopwatchRunning])
+
+  // Format stopwatch time
+  const formatTime = (ms: number) => {
+    const minutes = Math.floor(ms / 60000)
+    const seconds = Math.floor((ms % 60000) / 1000)
+    const centiseconds = Math.floor((ms % 1000) / 10)
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`
+  }
+
+  // Stopwatch controls
+  const startStopwatch = () => setIsStopwatchRunning(true)
+  const pauseStopwatch = () => setIsStopwatchRunning(false)
+  const resetStopwatch = () => {
+    setIsStopwatchRunning(false)
+    setStopwatchTime(0)
+  }
 
   const handleClose = () => {
     console.log('Starting close animation')
@@ -1880,7 +1909,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         {/* Workout Input Overlay - Exact Counter.tsx Implementation */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black text-white z-[110] overflow-hidden">
+          <div className="fixed inset-0 bg-black text-white z-[110] overflow-hidden animate-in zoom-in-95 duration-300 ease-out">
             {/* Subtle background pattern */}
             <div className="absolute inset-0 opacity-3">
               <div className="absolute inset-0" style={{ 
@@ -1889,34 +1918,52 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               }}></div>
             </div>
 
-            {/* Header with gradient that fills based on progress */}
-            <div 
-              className="relative p-4 flex items-center justify-between backdrop-blur-sm border-b border-white/10"
-              style={{
-                background: `linear-gradient(to right, rgba(99, 102, 241, 0.15) ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100)}%, rgba(0, 0, 0, 0.5) ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100)}%)`
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <MoonIcon className="w-6 h-6" />
-                <div>
-                  <div className="font-medium text-base">{selectedWorkoutExercise.name}</div>
-                  <div className="text-sm text-white/60">{isDecreasedExercise ? '0.5x' : '1x'} weight</div>
+            {/* Header styled like clicked exercise button */}
+            <div className="relative overflow-hidden transition-all duration-300 mb-1">
+              <div className="flex items-center">
+                {/* Main content area with progress bar - styled like exercise button */}
+                <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/5 bg-gray-800 backdrop-blur-xl">
+                  {/* Liquid gradient progress bar background - matches exercise button */}
+                  <div 
+                    className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                    style={{ 
+                      width: '100%',
+                      background: `linear-gradient(to right, 
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} 0%, 
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} ${Math.max(0, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100) - 5)}%, 
+                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}dd ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100)}%, 
+                        #000000 ${Math.min(100, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100) + 3)}%)`
+                    }}
+                  />
+                  
+                  {/* Header content - styled like exercise button */}
+                  <div className="w-full p-3 relative">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {getExerciseIcon(selectedWorkoutExercise)}
+                        <div>
+                          <div className="font-medium text-white text-left">{selectedWorkoutExercise.name}</div>
+                          <div className="text-sm text-white/60">{isDecreasedExercise ? '0.5x' : '1x'} weight</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-sans font-bold text-white">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</div>
+                        <div className="text-sm text-white/60">
+                          {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight}w
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                
+                {/* Close button */}
+                <button 
+                  onClick={() => setWorkoutInputOpen(false)}
+                  className="w-12 h-12 rounded-3xl bg-gray-800 backdrop-blur-xl border border-white/5 hover:bg-gray-700 transition-colors flex items-center justify-center"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
               </div>
-              
-              <div className="text-center">
-                <div className="text-2xl font-sans font-bold">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</div>
-                <div className="text-sm text-white/60">
-                  {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight}w
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => setWorkoutInputOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
             </div>
 
             {/* Stopwatch Section */}
@@ -1928,10 +1975,43 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 <div className="flex items-center gap-3">
                   <ClockIcon className="w-5 h-5 text-cyan-400" />
                   <span className="font-medium">Stopwatch</span>
-                  <span className="font-sans text-cyan-400">00:00.00</span>
+                  <span className="font-sans text-cyan-400">{formatTime(stopwatchTime)}</span>
                 </div>
                 {isStopwatchExpanded ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
               </button>
+              
+              {isStopwatchExpanded && (
+                <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  {/* Large time display */}
+                  <div className="text-center">
+                    <div className="font-sans text-6xl font-bold text-cyan-400 tracking-wider">
+                      {formatTime(stopwatchTime)}
+                    </div>
+                  </div>
+                  
+                  {/* Controls */}
+                  <div className="flex justify-center gap-3">
+                    <button
+                      onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
+                      className={`relative overflow-hidden bg-gradient-to-b border shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.4)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_4px_rgba(0,0,0,0.2)] active:scale-[0.98] transition-all duration-150 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/4 before:to-transparent before:pointer-events-none px-6 py-3 rounded-xl flex items-center gap-2 ${
+                        isStopwatchRunning 
+                          ? 'from-orange-600 via-orange-700 to-orange-800 border-orange-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_8px_rgba(234,88,12,0.3)]' 
+                          : 'from-green-600 via-green-700 to-green-800 border-green-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_8px_rgba(34,197,94,0.3)]'
+                      }`}
+                    >
+                      {isStopwatchRunning ? '⏸️' : '▶️'}
+                      {isStopwatchRunning ? 'Pause' : 'Start'}
+                    </button>
+                    
+                    <button
+                      onClick={resetStopwatch}
+                      className="relative overflow-hidden bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 border border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.4)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_4px_rgba(0,0,0,0.2)] hover:from-zinc-600 hover:via-zinc-700 hover:to-zinc-800 active:from-zinc-800 active:via-zinc-900 active:to-black active:scale-[0.98] transition-all duration-150 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/4 before:to-transparent before:pointer-events-none px-6 py-3 rounded-xl flex items-center gap-2"
+                    >
+                      🔄 Reset
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 p-3 flex flex-col gap-3">
@@ -1974,7 +2054,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-1">
                 {[
                   { action: () => setWorkoutCount(Math.max(0, workoutCount - 10)), label: '-10' },
                   { action: () => setWorkoutCount(Math.max(0, workoutCount - 5)), label: '-5' },
@@ -1997,7 +2077,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="text-sm text-white/60 font-medium uppercase tracking-wider">Weight Selection (kg)</div>
                 </div>
                 
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1">
                   {[
                     { label: 'body', value: 0, multiplier: 1.0 },
                     { label: '5', value: 5, multiplier: 1.25 },
@@ -2150,7 +2230,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   }
                 }}
                 disabled={loading || workoutCount <= 0}
-                className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_6px_24px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_32px_rgba(99,102,241,0.5)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_2px_12px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.98] py-4 rounded-xl font-bold transition-all duration-200 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/15 before:to-transparent before:pointer-events-none"
+                className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_6px_24px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_32px_rgba(99,102,241,0.5)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_2px_12px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.98] py-4 rounded-xl font-black transition-all duration-200 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/15 before:to-transparent before:pointer-events-none"
               >
                 <span className="relative z-10">Submit • {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points</span>
               </button>
