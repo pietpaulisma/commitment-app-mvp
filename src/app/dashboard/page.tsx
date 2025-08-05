@@ -29,8 +29,6 @@ export default function Dashboard() {
       <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" />
       
       <div className="relative min-h-screen">
-      
-      
       {/* Components with transparent/relative positioning */}
       <div className="relative z-10">
         <RectangularNavigation 

@@ -1626,7 +1626,7 @@ export default function RectangularDashboard() {
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
-      <div className="min-h-screen pb-8">
+      <div className="pb-8">
 
         {/* Demo Mode Indicator */}
       {isDemoMode && (
