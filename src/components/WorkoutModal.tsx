@@ -1928,7 +1928,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col" style={{height: 'calc(100vh - 120px)'}}>
                 {/* Counter Section */}
                 <div className="flex-1 flex flex-col gap-1">
                   {/* Main counter with - and + buttons */}
@@ -1936,11 +1936,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
                       className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white text-4xl font-bold transition-all duration-200 shadow-lg rounded-2xl"
+                      style={{borderRadius: '16px'}}
                     >
                       −
                     </button>
                     
-                    <div className="bg-gray-800 rounded-2xl shadow-lg flex items-center justify-center">
+                    <div className="bg-gray-800 rounded-2xl shadow-lg flex items-center justify-center" style={{borderRadius: '16px'}}>
                       <input
                         type="number"
                         value={workoutCount || 0}
@@ -1953,6 +1954,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 1)}
                       className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white text-4xl font-bold transition-all duration-200 shadow-lg rounded-2xl"
+                      style={{borderRadius: '16px'}}
                     >
                       +
                     </button>
@@ -1964,24 +1966,28 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 10))}
                       className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      style={{borderRadius: '16px'}}
                     >
                       -10
                     </button>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 5))}
                       className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      style={{borderRadius: '16px'}}
                     >
                       -5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
                       className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      style={{borderRadius: '16px'}}
                     >
                       +5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
                       className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      style={{borderRadius: '16px'}}
                     >
                       +10
                     </button>
@@ -2000,6 +2006,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             className={`flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                               selectedWeight === 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                             }`}
+                            style={{borderRadius: '16px'}}
                           >
                             <span className="text-white">Body</span>
                             {lockedWeight === 0 && (
@@ -2015,6 +2022,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               className={`flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                                 selectedWeight === weight ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                               }`}
+                              style={{borderRadius: '16px'}}
                             >
                               <span className="text-white">{weight}</span>
                               {lockedWeight === weight && (
@@ -2033,6 +2041,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               className={`flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                                 selectedWeight === weight ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                               }`}
+                              style={{borderRadius: '16px'}}
                             >
                               <span className="text-white">{weight}</span>
                               {lockedWeight === weight && (
@@ -2086,7 +2095,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 )}
 
                 {/* Submit Button */}
-                <div className="mt-auto">
+                <div className="h-24">
                   <button
                     onClick={async () => {
                       if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
@@ -2140,6 +2149,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }}
                     disabled={loading || workoutCount <= 0}
                     className="h-24 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 disabled:opacity-50 text-white font-bold text-2xl transition-all duration-200 shadow-lg rounded-2xl"
+                    style={{borderRadius: '16px'}}
                   >
                     {loading ? 'Submitting...' : `Submit ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
                   </button>
