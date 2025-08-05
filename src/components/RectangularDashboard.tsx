@@ -1662,45 +1662,24 @@ export default function RectangularDashboard() {
       {/* Logo and Quote Box */}
       <div className="mx-1 mb-1 mt-8">
         <div 
-          className="aspect-[2/1] bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+          className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl py-4 px-6"
           style={{
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
           }}
         >
-          <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-            {/* Logo and Settings */}
-            <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
               <img 
                 src="/logo.png" 
                 alt="The Commitment" 
-                className="h-12 w-auto drop-shadow-lg"
+                className="h-8 w-auto drop-shadow-lg"
               />
               <Link 
                 href="/profile" 
                 className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2"
               >
-                <Cog6ToothIcon className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
+                <Cog6ToothIcon className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
               </Link>
             </div>
-            
-            {/* Quote */}
-            {groupStartDate && (
-              <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
-                {(() => {
-                  // Find current user's progress
-                  const currentUserMember = groupMembers.find(member => member.isCurrentUser)
-                  const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
-                  
-                  return (
-                    <p className="text-lg text-white/90 font-medium drop-shadow leading-relaxed">
-                      {hasAchievedTarget 
-                        ? getTargetAchievedMessage(currentTime.getHours())
-                        : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
-                    </p>
-                  )
-                })()}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -1773,6 +1752,34 @@ export default function RectangularDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Motivational Quote */}
+          {groupStartDate && (
+            <div className="mx-1 mb-1">
+              <div 
+                className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl py-6 px-6"
+                style={{
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
+                  {(() => {
+                    // Find current user's progress
+                    const currentUserMember = groupMembers.find(member => member.isCurrentUser)
+                    const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+                    
+                    return (
+                      <p className="text-lg text-white/90 font-medium drop-shadow leading-relaxed">
+                        {hasAchievedTarget 
+                          ? getTargetAchievedMessage(currentTime.getHours())
+                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
+                      </p>
+                    )
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Streaks Box */}
           <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
