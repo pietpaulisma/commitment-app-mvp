@@ -22,7 +22,9 @@ import {
   TrashIcon,
   Bars3Icon,
   ChatBubbleLeftRightIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  ChevronUpIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
@@ -118,6 +120,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [selectedSport, setSelectedSport] = useState('')
   const [selectedSportType, setSelectedSportType] = useState('')
   const [selectedIntensity, setSelectedIntensity] = useState('medium')
+  const [isStopwatchExpanded, setIsStopwatchExpanded] = useState(false)
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -1874,105 +1877,282 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         </div>
 
-        {/* Simple Workout Input - Basic version until syntax error resolved */}
+        {/* Workout Input Overlay - Exact Counter.tsx Implementation */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black text-white z-[110] flex items-center justify-center p-4">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">{selectedWorkoutExercise.name}</h3>
-                <button 
-                  onClick={() => setWorkoutInputOpen(false)}
-                  className="p-2 hover:bg-gray-800 rounded"
-                >
-                  <XMarkIcon className="w-6 h-6" />
-                </button>
+          <div className="fixed inset-0 bg-black text-white z-[110] overflow-hidden">
+            {/* Subtle background pattern */}
+            <div className="absolute inset-0 opacity-3">
+              <div className="absolute inset-0" style={{ 
+                backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 0%, transparent 25%), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 25%)',
+                backgroundSize: '100px 100px'
+              }}></div>
+            </div>
+
+            {/* Header with gradient that fills based on progress */}
+            <div 
+              className="relative p-4 flex items-center justify-between backdrop-blur-sm border-b border-white/10"
+              style={{
+                background: `linear-gradient(to right, rgba(99, 102, 241, 0.15) ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100)}%, rgba(0, 0, 0, 0.5) ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100)}%)`
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <MoonIcon className="w-6 h-6" />
+                <div>
+                  <div className="font-medium text-base">{selectedWorkoutExercise.name}</div>
+                  <div className="text-sm text-white/60">{isDecreasedExercise ? '0.5x' : '1x'} weight</div>
+                </div>
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {selectedWorkoutExercise.is_time_based ? 'Duration' : 'Count'} ({selectedWorkoutExercise.unit})
-                  </label>
-                  <input
-                    type="number"
-                    value={workoutCount}
-                    onChange={(e) => setWorkoutCount(parseInt(e.target.value) || 0)}
-                    className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white"
-                    min="0"
-                  />
+              <div className="text-center">
+                <div className="text-2xl font-sans font-bold">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</div>
+                <div className="text-sm text-white/60">
+                  {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight}w
                 </div>
-
-                {selectedWorkoutExercise.is_weighted && (
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Weight (kg)</label>
-                    <input
-                      type="number"
-                      value={selectedWeight}
-                      onChange={(e) => setSelectedWeight(parseInt(e.target.value) || 0)}
-                      className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white"
-                      min="0"
-                    />
-                  </div>
-                )}
-
-                <div className="text-center p-4 bg-gray-800 rounded">
-                  <div className="text-2xl font-bold text-blue-400">
-                    {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points
-                  </div>
-                </div>
-
-                <button
-                  onClick={async () => {
-                    if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
-                    
-                    setLoading(true)
-                    try {
-                      const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                      
-                      const { error } = await supabase
-                        .from('logs')
-                        .insert({
-                          user_id: user.id,
-                          group_id: profile?.group_id,
-                          exercise_id: selectedWorkoutExercise.id,
-                          count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
-                          weight: selectedWeight,
-                          duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
-                          points: points,
-                          date: new Date().toISOString().split('T')[0],
-                          timestamp: Date.now(),
-                          is_decreased: isDecreasedExercise
-                        })
-                      
-                      if (error) {
-                        alert('Error logging workout: ' + error.message)
-                      } else {
-                        // Refresh data
-                        if (onWorkoutAdded) {
-                          onWorkoutAdded()
-                        }
-                        loadDailyProgress()
-                        loadTodaysWorkouts()
-                        
-                        // Reset and close
-                        setWorkoutInputOpen(false)
-                        setWorkoutCount(0)
-                        setSelectedWeight(0)
-                        setIsDecreasedExercise(false)
-                      }
-                    } catch (error) {
-                      console.error('Error saving workout:', error)
-                      alert('An error occurred while saving your workout.')
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  disabled={loading || workoutCount <= 0}
-                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white py-3 px-4 rounded font-medium"
-                >
-                  {loading ? 'Submitting...' : 'Log Workout'}
-                </button>
               </div>
+              
+              <button 
+                onClick={() => setWorkoutInputOpen(false)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Stopwatch Section */}
+            <div className="border-b border-white/10 backdrop-blur-sm">
+              <button
+                onClick={() => setIsStopwatchExpanded(!isStopwatchExpanded)}
+                className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <ClockIcon className="w-5 h-5 text-cyan-400" />
+                  <span className="font-medium">Stopwatch</span>
+                  <span className="font-sans text-cyan-400">00:00.00</span>
+                </div>
+                {isStopwatchExpanded ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <div className="flex-1 p-3 flex flex-col gap-3">
+              {/* Interactive Counter Display */}
+              <div className="relative flex items-center justify-center h-32 group">
+                {/* Background glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-purple-500/8 rounded-3xl blur-xl"></div>
+                
+                {/* Number display with interactive click zones */}
+                <div className="relative w-full h-full flex items-center justify-center rounded-3xl bg-gradient-to-b from-zinc-800/60 to-zinc-900/60 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] overflow-hidden">
+                  {/* Left click zone (decrement) */}
+                  <button
+                    onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
+                    className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/8 active:bg-white/12 transition-all duration-150 active:scale-95 touch-manipulation"
+                  >
+                    <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">−</span>
+                  </button>
+                  
+                  {/* Right click zone (increment) */}
+                  <button
+                    onClick={() => setWorkoutCount(workoutCount + 1)}
+                    className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/8 active:bg-white/12 transition-all duration-150 active:scale-95 touch-manipulation"
+                  >
+                    <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">+</span>
+                  </button>
+                  
+                  {/* Number display */}
+                  <div className="relative z-0 w-full h-full flex items-center justify-center">
+                    <span 
+                      className="font-sans font-black tabular-nums text-white leading-none tracking-tight drop-shadow-2xl" 
+                      style={{ 
+                        fontSize: '5rem',
+                        textShadow: '0 0 40px rgba(255,255,255,0.2)' 
+                      }}
+                    >
+                      {workoutCount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { action: () => setWorkoutCount(Math.max(0, workoutCount - 10)), label: '-10' },
+                  { action: () => setWorkoutCount(Math.max(0, workoutCount - 5)), label: '-5' },
+                  { action: () => setWorkoutCount(workoutCount + 5), label: '+5' },
+                  { action: () => setWorkoutCount(workoutCount + 10), label: '+10' }
+                ].map((button, index) => (
+                  <button
+                    key={index}
+                    onClick={button.action}
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
+                  >
+                    <span className="text-2xl font-bold">{button.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Weight Selector Section */}
+              <div className="space-y-2">
+                <div className="text-center">
+                  <div className="text-sm text-white/60 font-medium uppercase tracking-wider">Weight Selection (kg)</div>
+                </div>
+                
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'body', value: 0, multiplier: 1.0 },
+                    { label: '5', value: 5, multiplier: 1.25 },
+                    { label: '10', value: 10, multiplier: 1.5 },
+                    { label: '15', value: 15, multiplier: 1.75 },
+                    { label: '20', value: 20, multiplier: 2.0 },
+                    { label: '25', value: 25, multiplier: 2.25 },
+                    { label: '30', value: 30, multiplier: 2.5 },
+                    { label: '35', value: 35, multiplier: 2.75 }
+                  ].map((button, index) => {
+                    const isSelected = selectedWeight === button.value
+                    const isLocked = lockedWeight === button.value
+                    
+                    let buttonStyle = ''
+                    if (isLocked) {
+                      buttonStyle = 'relative overflow-hidden bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 border-2 border-amber-300 shadow-[inset_0_2px_0_rgba(255,255,255,0.3),inset_0_0_25px_rgba(245,158,11,0.3),0_0_25px_rgba(245,158,11,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.35),inset_0_0_30px_rgba(245,158,11,0.35),0_0_30px_rgba(245,158,11,0.7)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.4),inset_0_0_35px_rgba(245,158,11,0.4),0_0_20px_rgba(245,158,11,0.5)] hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 active:from-amber-500 active:via-amber-600 active:to-amber-700 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/20 before:via-white/8 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-amber-600/20 after:to-transparent after:pointer-events-none'
+                    } else if (isSelected) {
+                      buttonStyle = 'relative overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 border-2 border-indigo-400 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),inset_0_0_20px_rgba(99,102,241,0.2),0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.25),inset_0_0_25px_rgba(99,102,241,0.25),0_0_25px_rgba(99,102,241,0.5)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.3),inset_0_0_30px_rgba(99,102,241,0.3),0_0_15px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/15 before:via-white/5 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-indigo-600/20 after:to-transparent after:pointer-events-none'
+                    } else {
+                      buttonStyle = 'relative overflow-hidden bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 border-2 border-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.3)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_1px_4px_rgba(0,0,0,0.1)] hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 active:from-slate-700 active:via-slate-800 active:to-slate-900 active:scale-[0.95] transition-all duration-150 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/3 before:to-transparent before:pointer-events-none'
+                    }
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          if (isSelected && !isLocked) {
+                            setLockedWeight(button.value)
+                          } else if (isLocked) {
+                            setLockedWeight(null)
+                            setSelectedWeight(0)
+                          } else {
+                            setSelectedWeight(button.value)
+                          }
+                        }}
+                        className={`${buttonStyle} aspect-square rounded-3xl relative`}
+                      >
+                        {isLocked && (
+                          <div className="absolute top-2 right-2 z-20">
+                            <LockClosedIcon className="w-4 h-4 text-amber-900 drop-shadow-sm" />
+                          </div>
+                        )}
+                        
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={`relative z-10 font-bold ${button.label === 'body' ? 'text-xl' : 'text-3xl'} ${isLocked ? 'text-amber-900' : ''}`}>
+                            {button.label}
+                          </span>
+                        </div>
+                        
+                        <span className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 text-xs z-10 ${isLocked ? 'text-amber-900/60' : 'text-white/30'}`}>
+                          ×{button.multiplier}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom section with calculation and submit */}
+            <div className="p-4 space-y-4 border-t border-white/10 backdrop-blur-sm">
+              {/* Decreased/Regular toggle */}
+              {selectedWorkoutExercise.supports_decreased && (
+                <button
+                  onClick={() => setIsDecreasedExercise(!isDecreasedExercise)}
+                  className={`w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl transition-all duration-200 backdrop-blur-sm relative overflow-hidden ${
+                    isDecreasedExercise 
+                      ? 'bg-gradient-to-b from-amber-600/40 via-amber-700/40 to-amber-800/40 border border-amber-500/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/5 before:to-transparent before:pointer-events-none' 
+                      : 'bg-gradient-to-b from-zinc-800/30 via-zinc-900/30 to-black/30 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:from-zinc-800/40 hover:via-zinc-900/40 hover:to-black/40 before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/3 before:to-transparent before:pointer-events-none'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all relative z-10 ${
+                    isDecreasedExercise 
+                      ? 'bg-amber-400 border-amber-400' 
+                      : 'border-white/30 bg-transparent'
+                  }`}>
+                    {isDecreasedExercise && <CheckIcon className="w-3 h-3 text-black" />}
+                  </div>
+                  <span className="font-medium relative z-10 text-center flex-1">
+                    {isDecreasedExercise ? 'Decreased (0.5x weight)' : 'Regular (1x weight)'}
+                  </span>
+                </button>
+              )}
+
+              {/* Calculation breakdown */}
+              <div className="text-center space-y-3 px-4 py-6">
+                <div className="text-sm text-white/50 font-medium">CALCULATION</div>
+                <div className="text-2xl font-sans tracking-wide">
+                  <span className="text-white font-bold">{workoutCount}</span>
+                  <span className="text-white/40 mx-3">+</span>
+                  <span className="text-indigo-400 font-bold">{isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight}</span>
+                  <span className="text-white/40 mx-3">=</span>
+                  <span className="text-white font-black text-3xl">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)}</span>
+                </div>
+                <div className="text-xs text-white/40 font-sans">
+                  Base: {workoutCount} • Weight: {selectedWeight}{isDecreasedExercise ? ' × 0.5' : ''}
+                </div>
+              </div>
+              
+              {/* Submit button */}
+              <button
+                onClick={async () => {
+                  if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
+                  
+                  setLoading(true)
+                  try {
+                    const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    
+                    const { error } = await supabase
+                      .from('logs')
+                      .insert({
+                        user_id: user.id,
+                        group_id: profile?.group_id,
+                        exercise_id: selectedWorkoutExercise.id,
+                        count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
+                        weight: selectedWeight,
+                        duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
+                        points: points,
+                        date: new Date().toISOString().split('T')[0],
+                        timestamp: Date.now(),
+                        is_decreased: isDecreasedExercise
+                      })
+                    
+                    if (error) {
+                      alert('Error logging workout: ' + error.message)
+                    } else {
+                      // Refresh data
+                      if (onWorkoutAdded) {
+                        onWorkoutAdded()
+                      }
+                      loadDailyProgress()
+                      loadTodaysWorkouts()
+                      
+                      // Reset and close
+                      setWorkoutInputOpen(false)
+                      setWorkoutCount(0)
+                      setSelectedWeight(lockedWeight || 0)
+                      setIsDecreasedExercise(false)
+                      
+                      // Haptic feedback
+                      if (navigator.vibrate) {
+                        navigator.vibrate(100)
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Error saving workout:', error)
+                    alert('An error occurred while saving your workout.')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading || workoutCount <= 0}
+                className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_6px_24px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_32px_rgba(99,102,241,0.5)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_2px_12px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.98] py-4 rounded-xl font-bold transition-all duration-200 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/15 before:to-transparent before:pointer-events-none"
+              >
+                <span className="relative z-10">Submit • {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points</span>
+              </button>
             </div>
           </div>
         )}
