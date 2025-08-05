@@ -525,7 +525,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }
                   </span>
                   <span className="font-thin text-gray-500 ml-1">
-                    /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                    {('/' + exercise.unit.replace('minute', 'min').replace('hour', 'h'))}
                   </span>
                 </div>
               </div>
@@ -605,7 +605,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }
                   </span>
                   <span className="font-thin text-gray-500 ml-1">
-                    /{exercise.unit.replace('minute', 'min').replace('hour', 'h')}
+                    {('/' + exercise.unit.replace('minute', 'min').replace('hour', 'h'))}
                   </span>
                 </div>
               </div>
@@ -2169,10 +2169,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }
                   }}
                   disabled={loading || workoutCount <= 0}
-                  className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_6px_24px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_32px_rgba(99,102,241,0.5)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_2px_12px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-bold transition-all duration-200 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/15 before:to-transparent before:pointer-events-none"
+                  className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-bold transition-all duration-200 touch-manipulation"
                 >
                   <span className="relative z-10">
-                    {loading ? 'Submitting...' : `Submit • ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points`}
+                    {loading ? 'Submitting...' : 'Submit ' + calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) + ' points'}
                   </span>
                 </button>
               </div>
