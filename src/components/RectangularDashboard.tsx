@@ -1781,45 +1781,28 @@ export default function RectangularDashboard() {
           )}
 
           {/* Streaks Box */}
-          <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
-            {/* Days Since Donation */}
-            <div className="relative">
-              <div 
-                className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                style={{
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                }}
-              >
-                <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                    Streaks
-                  </h3>
-                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-6xl font-black text-white drop-shadow-lg">
+          <div className="mx-1 mb-1">
+            <div 
+              className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+              style={{
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+              }}
+            >
+              <div className="relative z-10 py-6 px-6">
+                <h3 className="text-xs font-light text-white/80 mb-6 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
+                  Streaks
+                </h3>
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
                       {daysSinceDonation}
                     </div>
                     <p className="text-sm font-medium text-white/60 drop-shadow">
                       days since donation
                     </p>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Insane Streak */}
-            <div className="relative">
-              <div 
-                className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                style={{
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                }}
-              >
-                <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                    Streaks
-                  </h3>
-                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-6xl font-black text-white drop-shadow-lg">
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
                       {insaneStreak}
                     </div>
                     <p className="text-sm font-medium text-white/60 drop-shadow">
