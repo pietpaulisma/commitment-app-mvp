@@ -1687,9 +1687,7 @@ export default function RectangularDashboard() {
       
       {/* Dashboard Content */}
       {groupStartDate && (
-        <div className="relative overflow-hidden mt-2">
-
-
+        <div className="relative overflow-hidden">
           {/* Two Square Blocks: DAY and Time Remaining */}
           <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
             {/* DAY Block */}
