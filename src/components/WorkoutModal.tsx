@@ -1281,12 +1281,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           return (
                             <div 
                               key={`${workout.exercise_id}-${workout.weight || 0}`} 
-                              className="relative bg-black/30 backdrop-blur-sm overflow-hidden cursor-pointer hover:bg-black/50 transition-all duration-300 rounded-3xl mb-6 shadow-2xl hover:shadow-xl hover:scale-[1.02] border-2 border-white/20"
+                              className="relative overflow-hidden cursor-pointer transition-all duration-300 mb-6 hover:scale-[1.02]"
                               onClick={() => handleWorkoutClick(workout)}
                             >
                               <div className="flex items-center gap-2">
                                 {/* Main content area with progress bar - matches header layout */}
-                                <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/5 bg-gray-800 backdrop-blur-xl rounded-3xl">
+                                <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/5 bg-gray-800 backdrop-blur-xl">
                                   {/* Liquid gradient progress bar background */}
                                   <div 
                                     className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
