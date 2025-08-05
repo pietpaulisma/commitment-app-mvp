@@ -1659,96 +1659,56 @@ export default function RectangularDashboard() {
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
-      {/* Header with Logo and Settings - Glass */}
-      <div className="sticky top-0 z-[70] mb-1 mt-8">
-        
-        <div className="relative">
-          {/* Main container */}
-          <div className="relative">
-            
-            <div className="relative py-8 z-10" style={{ marginLeft: '20px', paddingLeft: '16px', paddingRight: '16px' }}>
-              <div className="flex items-center justify-between">
-                {/* Logo */}
-                <div>
-                  <img 
-                    src="/logo.png" 
-                    alt="The Commitment" 
-                    className="h-12 w-auto drop-shadow-lg"
-                  />
-                </div>
-                
-                {/* Settings Icon */}
-                <Link 
-                  href="/profile" 
-                  className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2"
-                >
-                  <Cog6ToothIcon className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
-                </Link>
-              </div>
+      {/* Logo and Quote Box */}
+      <div className="mx-1 mb-1 mt-8">
+        <div 
+          className="aspect-[2/1] bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+          style={{
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+          }}
+        >
+          <div className="relative z-10 p-6 h-full flex flex-col justify-between">
+            {/* Logo and Settings */}
+            <div className="flex items-center justify-between">
+              <img 
+                src="/logo.png" 
+                alt="The Commitment" 
+                className="h-12 w-auto drop-shadow-lg"
+              />
+              <Link 
+                href="/profile" 
+                className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2"
+              >
+                <Cog6ToothIcon className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
+              </Link>
             </div>
+            
+            {/* Quote */}
+            {groupStartDate && (
+              <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
+                {(() => {
+                  // Find current user's progress
+                  const currentUserMember = groupMembers.find(member => member.isCurrentUser)
+                  const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+                  
+                  return (
+                    <p className="text-lg text-white/90 font-medium drop-shadow leading-relaxed">
+                      {hasAchievedTarget 
+                        ? getTargetAchievedMessage(currentTime.getHours())
+                        : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
+                    </p>
+                  )
+                })()}
+              </div>
+            )}
           </div>
         </div>
       </div>
       
-      {/* Time-Based Challenge Header */}
+      {/* Dashboard Content */}
       {groupStartDate && (
-        <div 
-          className="relative overflow-hidden mt-2"
-        >
-          
-          {/* Greeting with username and motivational text */}
-          <div 
-            className="mx-1 mb-6"
-          >
-            <div className="relative">
-              <div className="py-12" style={{ marginLeft: '20px', paddingLeft: '16px', paddingRight: '16px' }}>
-                <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
-                  {(() => {
-                    // Find current user's progress
-                    const currentUserMember = groupMembers.find(member => member.isCurrentUser)
-                    const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
-                    
-                    return (
-                      <p className="text-lg text-white/90 font-medium drop-shadow leading-relaxed">
-                        {hasAchievedTarget 
-                          ? getTargetAchievedMessage(currentTime.getHours())
-                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
-                      </p>
-                    )
-                  })()}
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="relative overflow-hidden mt-2">
 
-          {/* Epic Data Metrics with Dynamic Colors */}
-          <div className="mx-1 mb-4">
-            <div className="flex flex-col gap-2">
-              {/* Days Since Donation */}
-              <div className={`
-                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border w-fit
-                ${getProgressiveColor(daysSinceDonation, 'bg')}
-                ${getProgressiveColor(daysSinceDonation, 'border')}
-                transition-all duration-300
-              `}>
-                <span className={`text-sm font-medium ${getProgressiveColor(daysSinceDonation, 'text')}`}>
-                  {daysSinceDonation} days since donation
-                </span>
-              </div>
-
-              {/* Insane Streak */}
-              <div className={`
-                inline-flex items-center px-3 py-2 rounded-2xl backdrop-blur-sm border w-fit
-                ${getProgressiveColor(insaneStreak, 'bg')}
-                ${getProgressiveColor(insaneStreak, 'border')}
-                transition-all duration-300
-              `}>
-                <span className={`text-sm font-medium ${getProgressiveColor(insaneStreak, 'text')}`}>
-                  {insaneStreak} day{insaneStreak !== 1 ? 's' : ''} insane streak
-                </span>
-              </div>
-            </div>
-          </div>
 
           {/* Two Square Blocks: DAY and Time Remaining */}
           <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
@@ -1808,6 +1768,57 @@ export default function RectangularDashboard() {
                     <div className="text-3xl font-black text-white">
                       {timeLeft}
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Streaks Box */}
+          <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
+            {/* Days Since Donation */}
+            <div className="relative">
+              <div 
+                className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                style={{
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <div className="relative z-10 py-6 px-4 h-full">
+                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
+                    Streaks
+                  </h3>
+                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
+                    <div className="text-6xl font-black text-white drop-shadow-lg">
+                      {daysSinceDonation}
+                    </div>
+                    <p className="text-sm font-medium text-white/60 drop-shadow">
+                      days since donation
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Insane Streak */}
+            <div className="relative">
+              <div 
+                className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                style={{
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <div className="relative z-10 py-6 px-4 h-full">
+                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
+                    Streaks
+                  </h3>
+                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
+                    <div className="text-6xl font-black text-white drop-shadow-lg">
+                      {insaneStreak}
+                    </div>
+                    <p className="text-sm font-medium text-white/60 drop-shadow">
+                      days insane streak
+                    </p>
                   </div>
                 </div>
               </div>
