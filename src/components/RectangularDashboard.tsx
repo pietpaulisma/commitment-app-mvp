@@ -139,7 +139,7 @@ type RecentActivity = {
 
 // Constant colors array to avoid useMemo issues
 const CHART_COLORS = [
-  'text-orange-400',
+  'text-white',
   'text-green-400', 
   'text-purple-400',
   'text-gray-400',
@@ -253,7 +253,6 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
           </div>
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-white leading-none mb-1">
-              <span className="text-2xl font-thin">€</span>
               <span className="text-6xl font-black">{stat.value}</span>
             </div>
             {stat.name && (
@@ -368,7 +367,6 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden border border-gray-700/30`}>
         <div className="p-3 h-full flex flex-col justify-center text-center">
           <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
-          <div className="text-3xl mb-2">⏰</div>
           <div className={`text-2xl font-black ${accentColor} mb-1 leading-none`}>
             {stat.time}
           </div>
@@ -503,9 +501,6 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
               <div className="flex items-baseline gap-2">
                 <span className={`text-4xl font-black ${accentColor}`}>
                   {recordDay.points}
-                </span>
-                <span className={`text-xl font-thin ${accentColor} ml-1`}>
-                  PT
                 </span>
                 <span className="text-xs text-gray-500">MAX {recordDay.day}</span>
               </div>
