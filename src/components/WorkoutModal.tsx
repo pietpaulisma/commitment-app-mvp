@@ -618,7 +618,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 e.stopPropagation()
                 toggleFavorite(exercise.id)
               }}
-              className="w-10 h-10 rounded-full bg-gray-900 hover:bg-gray-800 flex items-center justify-center transition-all duration-200 shadow-lg flex-shrink-0"
+              className="w-12 h-12 bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
             >
               {isFavorite ? (
                 <StarIconSolid className="w-4 h-4 text-yellow-400" />
