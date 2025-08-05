@@ -1661,7 +1661,7 @@ export default function RectangularDashboard() {
       )}
       
       {/* Logo and Quote Box */}
-      <div className="mx-1 mb-1 mt-8">
+      <div className="mx-1 mb-1" style={{ marginTop: 'max(8px, env(safe-area-inset-top))' }}>
         <div 
           className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl py-4 px-6"
           style={{
