@@ -1928,11 +1928,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-col" style={{height: 'calc(100vh - 120px)'}}>
+              <div className="flex flex-col p-1">
                 {/* Counter Section */}
-                <div className="flex-1 flex flex-col gap-1">
+                <div className="flex flex-col gap-1 mb-4">
                   {/* Main counter with - and + buttons */}
-                  <div className="grid grid-cols-3 gap-1 flex-1">
+                  <div className="grid grid-cols-3 gap-1" style={{minHeight: '120px'}}>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
                       className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white text-4xl font-bold transition-all duration-200 shadow-lg rounded-2xl"
@@ -1962,31 +1962,31 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   
 
                   {/* Quick adjustment buttons - dashboard grid layout */}
-                  <div className="grid grid-cols-4 gap-1 flex-1">
+                  <div className="grid grid-cols-4 gap-1 mb-4">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 10))}
-                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                       style={{borderRadius: '16px'}}
                     >
                       -10
                     </button>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 5))}
-                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                       style={{borderRadius: '16px'}}
                     >
                       -5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
-                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                       style={{borderRadius: '16px'}}
                     >
                       +5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
-                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                       style={{borderRadius: '16px'}}
                     >
                       +10
@@ -1996,14 +1996,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                 {/* Weight & Difficulty Options */}
                 {(selectedWorkoutExercise.is_weighted || selectedWorkoutExercise.supports_decreased) && (
-                  <div className="flex-1 flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 mb-4">
                     {/* Weight Options */}
                     {selectedWorkoutExercise.is_weighted && (
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="grid grid-cols-4 gap-1 flex-1">
+                      <div className="flex flex-col gap-1">
+                        <div className="grid grid-cols-4 gap-1 mb-1">
                           <button
                             onClick={() => handleWeightClick(0)}
-                            className={`flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
+                            className={`aspect-square flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                               selectedWeight === 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                             }`}
                             style={{borderRadius: '16px'}}
@@ -2019,7 +2019,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             <button
                               key={weight}
                               onClick={() => handleWeightClick(weight)}
-                              className={`flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
+                              className={`aspect-square flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                                 selectedWeight === weight ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                               }`}
                               style={{borderRadius: '16px'}}
@@ -2033,12 +2033,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             </button>
                           ))}
                         </div>
-                        <div className="grid grid-cols-4 gap-1 flex-1">
+                        <div className="grid grid-cols-4 gap-1">
                           {[20, 25, 30, 35].map((weight) => (
                             <button
                               key={weight}
                               onClick={() => handleWeightClick(weight)}
-                              className={`flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
+                              className={`aspect-square flex items-center justify-center text-lg font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                                 selectedWeight === weight ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                               }`}
                               style={{borderRadius: '16px'}}
@@ -2095,7 +2095,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 )}
 
                 {/* Submit Button */}
-                <div className="h-24">
+                <div className="mt-auto p-1">
                   <button
                     onClick={async () => {
                       if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
