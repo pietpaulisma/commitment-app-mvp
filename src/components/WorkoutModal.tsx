@@ -2179,10 +2179,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
           </div>
         )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Sport Selection Modal */}
         {showSportSelection && (
