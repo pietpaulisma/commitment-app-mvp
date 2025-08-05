@@ -452,7 +452,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
           className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
           style={{ 
             background: getUserColorGradient(userProfile?.personal_color, 'organic'),
-            width: `${progressPercentage}%`
+            width: `${progressPercentage}%`,
+            borderTopLeftRadius: '16px',
+            borderBottomLeftRadius: '16px'
           }}
         />
         
