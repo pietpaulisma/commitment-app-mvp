@@ -1964,33 +1964,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {selectedWorkoutExercise.unit}{selectedWorkoutExercise.unit !== 'rep' && 's'}
                   </div>
 
-                  {/* Quick adjustment buttons - perfect round circles */}
-                  <div className="flex justify-center gap-3">
+                  {/* Quick adjustment buttons - dashboard grid layout */}
+                  <div className="grid grid-cols-4 gap-1 px-4">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 10))}
-                      className="w-12 h-12 bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg"
-                      style={{borderRadius: '50%'}}
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       -10
                     </button>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 5))}
-                      className="w-12 h-12 bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg"
-                      style={{borderRadius: '50%'}}
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       -5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
-                      className="w-12 h-12 bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg"
-                      style={{borderRadius: '50%'}}
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       +5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
-                      className="w-12 h-12 bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg"
-                      style={{borderRadius: '50%'}}
+                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       +10
                     </button>
@@ -2004,14 +2000,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {selectedWorkoutExercise.is_weighted && (
                       <div>
                         <h4 className="text-white font-semibold text-center mb-3 text-xs uppercase tracking-wide">Weight</h4>
-                        <div className="flex justify-center">
-                          <div className="flex flex-wrap justify-center gap-2 max-w-xs">
+                        <div className="px-4">
+                          <div className="grid grid-cols-4 gap-1 mb-1">
                             <button
                               onClick={() => handleWeightClick(0)}
-                              className={`w-12 h-12 flex items-center justify-center text-xs font-bold transition-all duration-200 shadow-lg relative ${
+                              className={`aspect-square flex items-center justify-center text-xs font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                                 selectedWeight === 0 ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                               }`}
-                              style={{borderRadius: '50%'}}
                             >
                               <span className="text-white">Body</span>
                               {lockedWeight === 0 && (
@@ -2020,14 +2015,31 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                 </div>
                               )}
                             </button>
-                            {[5, 10, 15, 20, 25, 30, 35].map((weight) => (
+                            {[5, 10, 15].map((weight) => (
                               <button
                                 key={weight}
                                 onClick={() => handleWeightClick(weight)}
-                                className={`w-12 h-12 flex items-center justify-center text-xs font-bold transition-all duration-200 shadow-lg relative ${
+                                className={`aspect-square flex items-center justify-center text-xs font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
                                   selectedWeight === weight ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
                                 }`}
-                                style={{borderRadius: '50%'}}
+                              >
+                                <span className="text-white">{weight}</span>
+                                {lockedWeight === weight && (
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
+                                    <div className="w-1 h-1 bg-black rounded-sm"></div>
+                                  </div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-4 gap-1">
+                            {[20, 25, 30, 35].map((weight) => (
+                              <button
+                                key={weight}
+                                onClick={() => handleWeightClick(weight)}
+                                className={`aspect-square flex items-center justify-center text-xs font-bold transition-all duration-200 shadow-lg relative rounded-2xl ${
+                                  selectedWeight === weight ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-800 hover:bg-gray-700'
+                                }`}
                               >
                                 <span className="text-white">{weight}</span>
                                 {lockedWeight === weight && (
