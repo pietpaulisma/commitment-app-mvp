@@ -1875,8 +1875,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         {/* Workout Input Overlay - Modern Redesigned */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[110] flex items-center justify-center p-4">
-            <div className="relative bg-black/70 backdrop-blur-xl border border-white/5 rounded-3xl w-96 h-[36rem] overflow-hidden shadow-2xl">
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[110]">
+            <div className="relative bg-black/70 backdrop-blur-xl border border-white/5 w-full h-full overflow-hidden shadow-2xl">
               
               {/* Header - Modern Exercise Button Style with Progress Bar */}
               <div className="relative bg-black/40 backdrop-blur-sm border-b border-white/10 overflow-hidden rounded-t-3xl">
@@ -1963,25 +1963,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="grid grid-cols-4 gap-1 flex-1">
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 10))}
-                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       -10
                     </button>
                     <button
                       onClick={() => setWorkoutCount(Math.max(0, workoutCount - 5))}
-                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       -5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 5)}
-                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       +5
                     </button>
                     <button
                       onClick={() => setWorkoutCount(workoutCount + 10)}
-                      className="aspect-square bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
+                      className="bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-white font-bold text-sm transition-all duration-200 shadow-lg rounded-2xl"
                     >
                       +10
                     </button>
