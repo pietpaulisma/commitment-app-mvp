@@ -1874,7 +1874,108 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         </div>
 
-        {/* Workout Input Overlay - Temporarily removed due to build syntax error */}
+        {/* Simple Workout Input - Basic version until syntax error resolved */}
+        {workoutInputOpen && selectedWorkoutExercise && (
+          <div className="fixed inset-0 bg-black text-white z-[110] flex items-center justify-center p-4">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">{selectedWorkoutExercise.name}</h3>
+                <button 
+                  onClick={() => setWorkoutInputOpen(false)}
+                  className="p-2 hover:bg-gray-800 rounded"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {selectedWorkoutExercise.is_time_based ? 'Duration' : 'Count'} ({selectedWorkoutExercise.unit})
+                  </label>
+                  <input
+                    type="number"
+                    value={workoutCount}
+                    onChange={(e) => setWorkoutCount(parseInt(e.target.value) || 0)}
+                    className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white"
+                    min="0"
+                  />
+                </div>
+
+                {selectedWorkoutExercise.is_weighted && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Weight (kg)</label>
+                    <input
+                      type="number"
+                      value={selectedWeight}
+                      onChange={(e) => setSelectedWeight(parseInt(e.target.value) || 0)}
+                      className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white"
+                      min="0"
+                    />
+                  </div>
+                )}
+
+                <div className="text-center p-4 bg-gray-800 rounded">
+                  <div className="text-2xl font-bold text-blue-400">
+                    {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points
+                  </div>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
+                    
+                    setLoading(true)
+                    try {
+                      const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                      
+                      const { error } = await supabase
+                        .from('logs')
+                        .insert({
+                          user_id: user.id,
+                          group_id: profile?.group_id,
+                          exercise_id: selectedWorkoutExercise.id,
+                          count: selectedWorkoutExercise.unit === 'rep' ? workoutCount : 0,
+                          weight: selectedWeight,
+                          duration: selectedWorkoutExercise.is_time_based ? workoutCount : 0,
+                          points: points,
+                          date: new Date().toISOString().split('T')[0],
+                          timestamp: Date.now(),
+                          is_decreased: isDecreasedExercise
+                        })
+                      
+                      if (error) {
+                        alert('Error logging workout: ' + error.message)
+                      } else {
+                        // Refresh data
+                        if (onWorkoutAdded) {
+                          onWorkoutAdded()
+                        }
+                        loadDailyProgress()
+                        loadTodaysWorkouts()
+                        
+                        // Reset and close
+                        setWorkoutInputOpen(false)
+                        setWorkoutCount(0)
+                        setSelectedWeight(0)
+                        setIsDecreasedExercise(false)
+                      }
+                    } catch (error) {
+                      console.error('Error saving workout:', error)
+                      alert('An error occurred while saving your workout.')
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  disabled={loading || workoutCount <= 0}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white py-3 px-4 rounded font-medium"
+                >
+                  {loading ? 'Submitting...' : 'Log Workout'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Sport Selection Modal */}
         {showSportSelection && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[120] flex items-center justify-center p-4">
