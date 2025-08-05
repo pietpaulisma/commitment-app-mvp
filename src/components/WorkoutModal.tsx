@@ -484,20 +484,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]"
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-1 shadow-2xl border border-white/5 hover:shadow-xl hover:scale-[1.02] ${
+          exercise.todayCount > 0
+            ? 'bg-gray-900/40 backdrop-blur-xl hover:bg-gray-900/50'
+            : 'bg-gray-900/30 backdrop-blur-xl hover:bg-gray-900/40'
+        }`}
       >
-        {/* Pill-shaped background */}
-        <div 
-          className="absolute left-0 top-0 bottom-0 right-12 rounded-3xl shadow-2xl border border-white/5" 
-          style={{
-            background: exercise.todayCount > 0 ? 'rgba(55, 65, 81, 0.4)' : 'rgba(55, 65, 81, 0.3)',
-            backdropFilter: 'blur(12px)'
-          }} 
-        />
-        
         <div className="flex items-center">
           {/* Main content area with progress bar */}
-          <div className="flex-1 relative overflow-hidden pr-12">
+          <div className="flex-1 relative overflow-hidden">
             {/* Liquid gradient progress bar background */}
             <div 
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -540,13 +535,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-        {/* Reorder icon for favorites - positioned absolutely outside pill */}
-        <button
-          className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gray-800/90 hover:bg-gray-700/90 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 border border-white/30 shadow-lg z-10"
-          aria-label="Reorder favorite"
-        >
-          <Bars3Icon className="w-4 h-4" />
-        </button>
+          {/* Reorder icon for favorites */}
+          <div className="flex items-center justify-center w-12">
+            <button
+              className="w-10 h-10 rounded-full bg-gray-800/90 hover:bg-gray-700/90 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 border border-white/30 shadow-lg"
+              aria-label="Reorder favorite"
+            >
+              <Bars3Icon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -573,20 +570,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={exercise.id}
-        className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]"
+        className={`w-full relative overflow-hidden transition-all duration-300 rounded-3xl mb-1 shadow-2xl border border-white/5 hover:shadow-xl hover:scale-[1.02] ${
+          exercise.todayCount > 0
+            ? 'bg-gray-900/40 backdrop-blur-xl hover:bg-gray-900/50'
+            : 'bg-gray-900/30 backdrop-blur-xl hover:bg-gray-900/40'
+        }`}
       >
-        {/* Pill-shaped background */}
-        <div 
-          className="absolute left-0 top-0 bottom-0 right-12 rounded-3xl shadow-2xl border border-white/5" 
-          style={{
-            background: exercise.todayCount > 0 ? 'rgba(55, 65, 81, 0.4)' : 'rgba(55, 65, 81, 0.3)',
-            backdropFilter: 'blur(12px)'
-          }} 
-        />
-        
         <div className="flex items-center">
           {/* Main content area with progress bar */}
-          <div className="flex-1 relative overflow-hidden pr-12">
+          <div className="flex-1 relative overflow-hidden">
             {/* Liquid gradient progress bar background */}
             <div 
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -629,21 +621,23 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </button>
           </div>
           
-        {/* Star icon button - positioned absolutely outside pill */}
-        {showFavorite && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              toggleFavorite(exercise.id)
-            }}
-            className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gray-800/90 hover:bg-gray-700/90 flex items-center justify-center transition-all duration-200 border border-white/30 shadow-lg z-10"
+          {/* Star icon button */}
+          {showFavorite && (
+            <div className="flex items-center justify-center w-12">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleFavorite(exercise.id)
+                }}
+                className="w-10 h-10 rounded-full bg-gray-800/90 hover:bg-gray-700/90 flex items-center justify-center transition-all duration-200 border border-white/30 shadow-lg"
             >
               {isFavorite ? (
                 <StarIconSolid className="w-4 h-4 text-yellow-400" />
               ) : (
                 <StarIcon className="w-4 h-4 text-gray-400 hover:text-yellow-400" />
               )}
-            </button>
+              </button>
+            </div>
           )}
         </div>
       </div>
