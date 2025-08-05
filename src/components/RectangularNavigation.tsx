@@ -374,20 +374,6 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
         </div>
       )}
 
-      
-      {/* Mobile Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
-      {isScrolled && (
-        <nav 
-          className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
-          <div className="flex justify-start items-center py-6 px-4 pr-20">
-            {/* Logo now handled by dashboard page for smooth transitions */}
-          </div>
-          {/* Border positioned below logo area */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-28 lg:ml-32"></div>
-        </nav>
-      )}
 
       {/* Fixed Profile Icon - Desktop */}
       {!hideSettingsIcons && (
@@ -408,17 +394,6 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
         </div>
       )}
 
-      
-      {/* Desktop Sticky Header - Only appears when scrolled - Logo handled by dashboard */}
-      {isScrolled && (
-        <nav className="hidden lg:block fixed top-0 left-0 right-0 z-30 bg-black/95 backdrop-blur-md transition-opacity duration-500">
-          <div className="flex justify-start items-center py-6 px-8 pr-32 max-w-7xl mx-auto">
-            {/* Logo now handled by dashboard page for smooth transitions */}
-          </div>
-          {/* Border positioned below logo area */}
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-800 ml-28 lg:ml-32"></div>
-        </nav>
-      )}
 
 
       {/* Group Chat Modal */}
