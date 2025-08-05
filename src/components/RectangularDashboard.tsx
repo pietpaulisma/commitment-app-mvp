@@ -1622,9 +1622,13 @@ export default function RectangularDashboard() {
   const colors = getAccentColors()
 
   return (
-    <div className="min-h-screen pb-8">
+    <>
+      {/* Inject chart animation styles */}
+      <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
+      
+      <div className="min-h-screen pb-8">
 
-      {/* Demo Mode Indicator */}
+        {/* Demo Mode Indicator */}
       {isDemoMode && (
         <div className="bg-orange-900/20 border-b border-orange-600/50 px-4 py-2">
           <div className="flex items-center justify-between">
@@ -1655,9 +1659,6 @@ export default function RectangularDashboard() {
           </div>
         </div>
       )}
-      
-      {/* Inject chart animation styles */}
-      <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
       {/* Logo and Quote Box */}
       <div className="mx-1 mb-1 mt-8">
@@ -2102,6 +2103,6 @@ export default function RectangularDashboard() {
         )}
 
       </div>
-    </div>
+    </>
   )
 }
