@@ -608,12 +608,6 @@ const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonal
           <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: userProfile?.personal_color || '#c084fc' }}></div>
         </div>
       )}
-      {/* Tap indicator for available personal data */}
-      {onClick && hasPersonalData && !isPersonalMode && (
-        <div className="absolute top-2 right-2 z-20 opacity-60 animate-pulse">
-          <div className="text-xs text-gray-400">👆</div>
-        </div>
-      )}
       {/* Add "(You)" to title for personal mode */}
       <div className="relative">
         {children}
