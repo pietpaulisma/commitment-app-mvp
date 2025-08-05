@@ -533,7 +533,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           
           {/* Reorder icon for favorites */}
           <button
-            className="w-10 h-10 bg-gray-900 hover:bg-gray-800 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}"
+            className="w-10 h-10 bg-gray-900 hover:bg-gray-800 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
             aria-label="Reorder favorite"
           >
             <Bars3Icon className="w-4 h-4" />
