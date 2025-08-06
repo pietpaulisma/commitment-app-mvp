@@ -15,8 +15,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
   const pathname = usePathname()
-  const [hasRedirected, setHasRedirected] = useState(false)
-  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [hasChecked, setHasChecked] = useState(false)
+  const mountedRef = useRef(false)
 
   const createSupremeAdminProfile = async () => {
     try {
@@ -30,8 +30,6 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         updated_at: new Date().toISOString()
       }
       
-      console.log('📝 Profile data to update:', profileData)
-      
       const { data, error } = await supabase
         .from('profiles')
         .update(profileData)
@@ -40,111 +38,95 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
       if (error) {
         console.error('❌ Error updating supreme admin profile:', error)
-        console.error('❌ Error details:', error.message, error.code)
-        // If update fails, redirect to onboarding as fallback
-        router.push('/onboarding/welcome')
       } else {
         console.log('✅ Supreme admin profile updated successfully:', data)
-        // Add a small delay to ensure database consistency
-        setTimeout(() => {
-          console.log('🚀 Redirecting to dashboard...')
-          router.push('/dashboard')
-        }, 1000)
       }
     } catch (error) {
       console.error('💥 Exception updating supreme admin profile:', error)
-      router.push('/onboarding/welcome')
     }
   }
 
   useEffect(() => {
-    console.log('🔍 OnboardingGuard useEffect triggered')
-    console.log('📊 Auth state:', { authLoading, profileLoading, userEmail: user?.email, hasProfile: !!profile, pathname, hasRedirected })
-    
-    // Clear any existing timeout
-    if (redirectTimeoutRef.current) {
-      clearTimeout(redirectTimeoutRef.current)
-      redirectTimeoutRef.current = null
-    }
-
-    // Don't redirect while loading - be more patient on refresh
-    if (authLoading || profileLoading) {
-      console.log('⏳ Still loading, waiting...')
-      return
-    }
-
-    // Don't redirect if no user (let other auth guards handle this)
-    if (!user) {
-      console.log('👤 No user found, skipping...')
-      setHasRedirected(false) // Reset redirect flag if no user
-      return
-    }
-
-    // Don't redirect if we're already in onboarding or auth pages
-    const isOnboardingPage = pathname?.startsWith('/onboarding')
-    const isAuthPage = pathname === '/login' || pathname === '/signup'
-    if (isOnboardingPage || isAuthPage) {
-      console.log('📄 Already on onboarding/auth page, skipping redirect')
-      return
-    }
-
-    // Don't redirect if we've already redirected recently
-    if (hasRedirected) {
-      console.log('🚫 Already redirected recently, skipping...')
-      return
-    }
-
-    // Special handling for supreme admin account (pre-existing account)
-    // This needs to happen BEFORE checking regular onboarding logic
-    if (user?.email === 'klipperdeklip@gmail.com' && profile && !profile.onboarding_completed) {
-      console.log('🔥 SUPREME ADMIN DETECTED! Updating profile for klipperdeklip@gmail.com')
-      createSupremeAdminProfile()
-      return
-    }
-
-    // CRITICAL FIX: More robust profile checking to prevent redirect loops
-    // If user has profile and completed onboarding, allow access (no redirect needed)
-    if (profile && profile.onboarding_completed) {
-      console.log('✅ User has completed onboarding, allowing access')
-      setHasRedirected(false) // Reset redirect flag for successful access
-      return
-    }
-
-    // NEW: Give more time for profile to load, especially on refresh
-    // Only redirect if we've been waiting for a reasonable time AND definitely have no onboarding
-    if (profile && profile.onboarding_completed === false) {
-      console.log('⚠️  User has not completed onboarding, redirecting to welcome page')
-      setHasRedirected(true)
-      router.push('/onboarding/welcome')
-      return
-    }
-
-    // CRITICAL FIX: Only redirect if no profile after a significant delay
-    // This prevents redirect loops on page refresh when profile is temporarily null
-    if (user && !profile && !profileLoading && !authLoading) {
-      console.log('⚠️  Scheduling potential redirect for missing profile...')
-      // Set a longer timeout to wait for profile to load
-      redirectTimeoutRef.current = setTimeout(() => {
-        // Double-check conditions before redirecting
-        if (!profile && user && !profileLoading && !authLoading && !hasRedirected) {
-          console.log('🆕 User exists but no profile found after extended wait, redirecting to welcome page')
-          setHasRedirected(true)
-          router.push('/onboarding/welcome')
-        }
-      }, 2000) // Increased delay to 2 seconds
-      return
-    }
-
-  }, [user, profile, authLoading, profileLoading, pathname, router, hasRedirected])
-
-  // Cleanup effect
-  useEffect(() => {
+    mountedRef.current = true
     return () => {
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current)
-      }
+      mountedRef.current = false
     }
   }, [])
+
+  useEffect(() => {
+    // Only check once we're mounted and have stable auth state
+    if (!mountedRef.current || authLoading || profileLoading) {
+      return
+    }
+
+    // Skip checks if already checked this mount cycle
+    if (hasChecked) {
+      return
+    }
+
+    console.log('🔍 OnboardingGuard check:', {
+      userEmail: user?.email,
+      hasProfile: !!profile,
+      profileCompleted: profile?.onboarding_completed,
+      pathname
+    })
+
+    // Don't interfere with auth pages or root page
+    const isAuthPage = ['/login', '/signup', '/'].includes(pathname)
+    const isOnboardingPage = pathname?.startsWith('/onboarding')
+    
+    if (isAuthPage || isOnboardingPage) {
+      console.log('📄 On auth/onboarding page, skipping guard')
+      setHasChecked(true)
+      return
+    }
+
+    // Only act if we have a user
+    if (!user) {
+      console.log('👤 No user, skipping guard')
+      setHasChecked(true)
+      return
+    }
+
+    // Special handling for supreme admin
+    if (user.email === 'klipperdeklip@gmail.com' && profile && !profile.onboarding_completed) {
+      console.log('🔥 Supreme admin needs onboarding completion')
+      createSupremeAdminProfile()
+      setHasChecked(true)
+      return
+    }
+
+    // Check if onboarding is completed
+    if (profile && profile.onboarding_completed === true) {
+      console.log('✅ Onboarding completed, allowing access')
+      setHasChecked(true)
+      return
+    }
+
+    // Redirect to onboarding if needed
+    if (profile && profile.onboarding_completed === false) {
+      console.log('⚠️  Need to complete onboarding')
+      router.push('/onboarding')
+      setHasChecked(true)
+      return
+    }
+
+    // No profile - redirect to onboarding
+    if (user && !profile) {
+      console.log('🆕 No profile found, redirecting to onboarding')
+      router.push('/onboarding')
+      setHasChecked(true)
+      return
+    }
+
+    setHasChecked(true)
+  }, [user, profile, authLoading, profileLoading, pathname, router, hasChecked])
+
+  // Reset check flag when user changes
+  useEffect(() => {
+    setHasChecked(false)
+  }, [user?.id])
+
 
   // Show loading state while checking onboarding status
   if (authLoading || profileLoading) {
