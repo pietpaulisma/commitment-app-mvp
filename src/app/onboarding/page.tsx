@@ -452,10 +452,12 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
               style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
             >
               <div className="space-y-8">
-                <div>
-                  <h1 className="text-6xl md:text-8xl font-black bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent mb-4">
-                    COMMITMENT
-                  </h1>
+                <div className="flex justify-center">
+                  <img 
+                    src="/logo.png" 
+                    alt="The Commitment" 
+                    className="h-16 md:h-20 w-auto drop-shadow-2xl"
+                  />
                 </div>
               </div>
               
