@@ -9,6 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
   const router = useRouter()
 
   const fillDemoCredentials = (email: string, password: string) => {
@@ -81,12 +82,25 @@ export default function Login() {
         return
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
-      router.push('/dashboard')
+      if (isSignUp) {
+        // Sign up new user
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        })
+        if (error) throw error
+        setMessage('Check your email to confirm your account!')
+        setLoading(false)
+        return
+      } else {
+        // Sign in existing user
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
+        router.push('/dashboard')
+      }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'An error occurred')
     } finally {
@@ -99,7 +113,7 @@ export default function Login() {
       <div className="max-w-md w-full px-4">
         <div className="bg-gray-900/30 border border-gray-800 p-6">
           <h2 className="text-2xl font-bold text-center mb-6 text-white">
-            Sign In
+            {isSignUp ? 'Create Account' : 'Sign In'}
           </h2>
           
           {message && (
@@ -145,16 +159,16 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-orange-400 text-black py-4 px-4 hover:bg-orange-500 transition-colors font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Loading...' : 'Sign In'}
+              {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
             </button>
           </form>
           
           <div className="mt-4 text-center">
             <button
-              onClick={() => router.push('/onboarding/welcome')}
+              onClick={() => setIsSignUp(!isSignUp)}
               className="text-orange-400 hover:text-orange-300 text-sm font-bold"
             >
-              New to the system? → BEGIN COMMITMENT
+              {isSignUp ? '← Back to Sign In' : 'Need an account? → Create Account'}
             </button>
           </div>
 
