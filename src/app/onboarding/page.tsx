@@ -214,12 +214,42 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   const revealNextSentence = () => {
     if (revealedSentences < welcomeSentences.length) {
       setRevealedSentences(revealedSentences + 1)
+      
+      // Auto-scroll to show the new content after a short delay for animation
+      setTimeout(() => {
+        const newSentenceCount = revealedSentences + 1
+        if (newSentenceCount > 2) { // Start scrolling after 2nd sentence
+          // Get viewport height to make intelligent scroll decisions
+          const viewportHeight = window.innerHeight
+          const scrollAmount = Math.min(120, viewportHeight * 0.15) // Scroll 15% of viewport or 120px max
+          
+          window.scrollBy({
+            top: scrollAmount,
+            behavior: 'smooth'
+          })
+        }
+      }, 300) // Wait for animation to start
     }
   }
 
   const revealNextRuleCard = () => {
     if (revealedRuleCards < ruleCards.length) {
       setRevealedRuleCards(revealedRuleCards + 1)
+      
+      // Enhanced auto-scroll for rule cards
+      setTimeout(() => {
+        const newCardCount = revealedRuleCards + 1
+        if (newCardCount > 1) { // Start scrolling after first card
+          // Get viewport height and make intelligent scroll for rule cards
+          const viewportHeight = window.innerHeight
+          const scrollAmount = Math.min(200, viewportHeight * 0.25) // Scroll 25% of viewport or 200px max for larger cards
+          
+          window.scrollBy({
+            top: scrollAmount,
+            behavior: 'smooth'
+          })
+        }
+      }, 400) // Wait a bit longer for card animation
     }
   }
 
