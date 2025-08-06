@@ -147,6 +147,10 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             setFinalWarningCompleted(true)
             setTimeout(() => {
               setScreenIntensity(0.2)
+              // Automatically proceed to next step after completion
+              setTimeout(() => {
+                nextStep()
+              }, 2000) // Wait 2 seconds to show completion state
             }, 1000)
           }
           
@@ -1263,20 +1267,24 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       {currentStep === 2 && showHoldButton && (
         <div className="fixed bottom-8 left-4 right-4 flex justify-center z-50">
           <button
-            className="relative overflow-hidden min-w-[280px] bg-white text-black font-black text-xl py-4 px-8 rounded-full border-4 border-gray-800"
+            className="relative overflow-hidden min-w-[280px] font-black text-xl py-4 px-8 rounded-full border-4"
             onMouseDown={startHolding}
             onMouseUp={stopHolding}
             onMouseLeave={stopHolding}
             onTouchStart={startHolding}
             onTouchEnd={stopHolding}
-            onClick={holdProgress >= 100 ? () => nextStep() : undefined}
+            disabled={holdProgress >= 100}
             style={{
               background: holdProgress >= 100 
                 ? '#22C55E' // Bright green when complete
                 : '#FFFFFF', // White background - very visible
               color: holdProgress >= 100 ? '#FFFFFF' : '#000000',
-              boxShadow: '0 0 20px rgba(255, 255, 255, 0.5)', // White glow to make it super visible
-              cursor: 'pointer'
+              borderColor: holdProgress >= 100 ? '#16A34A' : '#374151',
+              boxShadow: holdProgress >= 100 
+                ? '0 0 20px rgba(34, 197, 94, 0.5)' 
+                : '0 0 20px rgba(255, 255, 255, 0.5)', // White glow to make it super visible
+              cursor: holdProgress >= 100 ? 'default' : 'pointer',
+              transition: 'all 0.3s ease'
             }}
           >
             {/* Red progress fill overlay that goes from left to right */}
@@ -1289,7 +1297,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             />
             
             <span className="relative z-10">
-              {holdProgress >= 100 ? 'COMMITTED!' : 'HOLD TO COMMIT'}
+              {holdProgress >= 100 ? '🔥 COMMITTED! 🔥' : 'HOLD TO COMMIT'}
             </span>
           </button>
         </div>
