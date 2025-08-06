@@ -1909,11 +1909,11 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         </div>
       )}
 
-      {/* Hold button - positioned at bottom like other buttons - EXCITING 3D DESIGN */}
+      {/* Hold button - positioned at bottom like other buttons - matches commit button style */}
       {currentStep === 2 && showHoldButton && (
         <div className="fixed bottom-8 left-4 right-4 flex justify-center z-50">
           <button
-            className="relative overflow-hidden w-64 h-64 font-black text-lg rounded-full transform transition-all duration-200 active:scale-95"
+            className="relative overflow-hidden w-full max-w-md font-black text-lg py-4 px-8 rounded-xl"
             onMouseDown={startHolding}
             onMouseUp={stopHolding}
             onMouseLeave={stopHolding}
@@ -1922,62 +1922,28 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             disabled={holdProgress >= 100}
             style={{
               background: holdProgress >= 100 
-                ? 'linear-gradient(145deg, #22C55E, #16A34A)' 
-                : 'linear-gradient(145deg, #DC2626, #991B1B)',
-              color: '#FFFFFF',
-              border: '4px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: holdProgress >= 100 
-                ? `
-                  0 8px 32px rgba(34, 197, 94, 0.4),
-                  0 4px 16px rgba(34, 197, 94, 0.3),
-                  inset 0 2px 4px rgba(255, 255, 255, 0.3),
-                  inset 0 -2px 4px rgba(0, 0, 0, 0.2)
-                `
-                : `
-                  0 8px 32px rgba(220, 38, 38, 0.4),
-                  0 4px 16px rgba(220, 38, 38, 0.3),
-                  inset 0 2px 4px rgba(255, 255, 255, 0.3),
-                  inset 0 -2px 4px rgba(0, 0, 0, 0.2)
-                `,
-              cursor: holdProgress >= 100 ? 'default' : 'pointer',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-              transform: isHolding ? 'scale(0.98)' : 'scale(1)'
+                ? 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)' 
+                : 'linear-gradient(135deg, #B91C1C 0%, #7F1D1D 100%)',
+              border: '1px solid rgba(185, 28, 28, 0.4)',
+              boxShadow: '0 0 15px rgba(185, 28, 28, 0.3)',
+              color: '#FFFFFF'
             }}
           >
-            {/* Circular progress fill overlay */}
+            {/* Red flaming gradient fill overlay */}
             <div 
-              className="absolute inset-2 rounded-full transition-all duration-100"
+              className="absolute left-0 top-0 bottom-0 rounded-xl transition-all duration-100"
               style={{ 
+                width: `${holdProgress}%`,
                 background: holdProgress > 0 && holdProgress < 100 
-                  ? `conic-gradient(from 0deg, #EF4444 0%, #EF4444 ${holdProgress * 3.6}deg, rgba(255, 255, 255, 0.1) ${holdProgress * 3.6}deg, rgba(255, 255, 255, 0.1) 360deg)`
+                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)'
                   : 'transparent',
-                opacity: holdProgress > 0 && holdProgress < 100 ? 1 : 0
+                opacity: holdProgress > 0 && holdProgress < 100 ? 0.8 : 0
               }}
             />
             
-            {/* Inner content circle */}
-            <div className="absolute inset-4 rounded-full flex items-center justify-center"
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
-              }}
-            >
-              <span className="relative z-10 text-center leading-tight">
-                {holdProgress >= 100 ? (
-                  <div>
-                    <div className="text-2xl mb-2">🔥</div>
-                    <div>COMMITTED!</div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-sm mb-1">HOLD</div>
-                    <div className="text-sm">TO</div>
-                    <div className="text-sm">COMMIT</div>
-                  </div>
-                )}
-              </span>
-            </div>
+            <span className="relative z-10">
+              {holdProgress >= 100 ? '🔥 COMMITTED! 🔥' : 'HOLD TO COMMIT'}
+            </span>
           </button>
         </div>
       )}
