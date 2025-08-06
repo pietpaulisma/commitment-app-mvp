@@ -1154,7 +1154,354 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
           </motion.div>
         )
 
-      // Simplified other cases for now
+      case 5:
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-2xl mx-auto px-4"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black">FINAL GROUP CONFIRMATION</h2>
+              <p className="text-xl md:text-2xl text-gray-300 font-bold">You are joining: <span className="text-white font-black">ELITE WARRIORS</span></p>
+            </div>
+            
+            <div className="bg-gray-900/50 border border-red-600/50 rounded-2xl p-6 backdrop-blur-sm space-y-6">
+              <div className="text-center">
+                <h3 className="text-2xl md:text-3xl font-black text-red-400 mb-6">GROUP COMMITMENT</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-6">
+                  <div className="bg-gray-800/50 rounded-xl p-4">
+                    <p className="text-gray-400 font-bold mb-1">Members</p>
+                    <p className="text-2xl font-black">12/15</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-4">
+                    <p className="text-gray-400 font-bold mb-1">Daily Penalty</p>
+                    <p className="text-2xl font-black text-red-400">€10.00</p>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-xl p-4">
+                    <p className="text-gray-400 font-bold mb-1">Days Active</p>
+                    <p className="text-2xl font-black">47</p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800/50 rounded-xl p-4 mb-6">
+                  <p className="text-gray-400 font-bold mb-1">Money in Pot</p>
+                  <p className="text-3xl font-black text-green-400">€2,340.00</p>
+                  <p className="text-gray-500 text-sm font-medium">From missed workouts</p>
+                </div>
+
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <p className="text-gray-400 font-bold mb-1">Group Admin</p>
+                  <p className="font-black text-lg">💀 COMMANDER_X</p>
+                </div>
+              </div>
+              
+              <div className="border-t border-gray-600 pt-6">
+                <h4 className="text-red-400 font-black text-xl mb-3">FINANCIAL COMMITMENT</h4>
+                <p className="text-gray-300 text-lg font-bold">
+                  Miss a workout day = €10 penalty to the group pot.<br/>
+                  No exceptions. No mercy. No refunds.
+                </p>
+              </div>
+              
+              <div className="bg-red-950/50 border border-red-600 rounded-xl p-4">
+                <div className="flex items-center justify-center space-x-3 mb-3">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                  <span className="text-red-400 font-black text-xl">POINT OF NO RETURN</span>
+                </div>
+                <p className="text-gray-300 font-bold">
+                  By proceeding, you enter a binding commitment with real financial consequences.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )
+
+      case 6:
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-lg mx-auto px-4"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black">Choose Your Avatar</h2>
+              <p className="text-2xl md:text-3xl text-red-400 font-black">FOR LIFE. Choose wisely.</p>
+              <p className="text-lg md:text-xl text-gray-300 font-bold">This emoji will represent you forever in the system</p>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Quick selection emojis */}
+              <div>
+                <h3 className="text-xl font-black mb-4 text-gray-300">Quick Select</h3>
+                <div className="grid grid-cols-4 gap-3 md:gap-4">
+                  {['💪', '🔥', '⚡', '🎯', '🏆', '💀', '🚀', '⭐', '👑', '🔱', '⚔️', '🌟'].map((emoji) => (
+                    <motion.button
+                      key={emoji}
+                      onClick={() => {
+                        setSelectedEmoji(emoji)
+                        setSelectedEmojiInput('')
+                      }}
+                      className={`aspect-square text-4xl md:text-5xl rounded-xl border-2 transition-all ${
+                        selectedEmoji === emoji 
+                          ? 'border-red-500 bg-red-600/20 shadow-lg' 
+                          : 'border-gray-600 bg-gray-800/50 hover:border-gray-500 hover:bg-gray-700/50'
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      animate={{
+                        boxShadow: selectedEmoji === emoji ? '0 15px 40px rgba(220, 38, 38, 0.4)' : '0 5px 20px rgba(0, 0, 0, 0.2)'
+                      }}
+                    >
+                      {emoji}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom emoji input */}
+              <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
+                <h3 className="text-xl font-black mb-4 text-gray-300">Or enter any emoji</h3>
+                <input
+                  type="text"
+                  placeholder="Enter any emoji (e.g., 🦾, 🥊, 🏃‍♂️)"
+                  value={selectedEmojiInput}
+                  onChange={(e) => {
+                    const input = e.target.value
+                    // Only allow single emoji or clear
+                    if (input.length <= 2) { // Emojis can be 1-2 characters
+                      setSelectedEmojiInput(input)
+                      if (input) {
+                        setSelectedEmoji('')
+                      }
+                    }
+                  }}
+                  className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-center text-4xl font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all placeholder:text-base"
+                  maxLength={2}
+                />
+                <p className="text-gray-500 text-sm font-medium mt-3">Paste or type any emoji you want</p>
+              </div>
+            </div>
+            
+            {(selectedEmoji || selectedEmojiInput) && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 md:p-6 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700"
+              >
+                <p className="text-gray-300 mb-2 text-lg font-bold">
+                  Your avatar: <span className="text-4xl md:text-5xl">{selectedEmoji || selectedEmojiInput}</span>
+                </p>
+                <p className="text-red-400 font-black text-lg">Permanent. Unchangeable. Forever.</p>
+              </motion.div>
+            )}
+          </motion.div>
+        )
+
+      case 7:
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-lg mx-auto px-4"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black">Choose Your Color</h2>
+              <p className="text-2xl md:text-3xl text-red-400 font-black">FOR LIFE. This represents you.</p>
+              <p className="text-lg md:text-xl text-gray-300 font-bold">Your identity color in the system - choose carefully</p>
+            </div>
+            
+            <div className="grid grid-cols-5 gap-3 md:gap-4">
+              {colors.map((color) => (
+                <motion.button
+                  key={color}
+                  onClick={() => setSelectedColor(color)}
+                  className={`aspect-square rounded-xl transition-all border-4 ${
+                    selectedColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                  }`}
+                  style={{ 
+                    background: `linear-gradient(135deg, ${color} 0%, ${color}CC 50%, ${color}99 100%)`,
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{
+                    boxShadow: selectedColor === color ? `0 15px 40px ${color}60` : '0 5px 20px rgba(0, 0, 0, 0.2)'
+                  }}
+                />
+              ))}
+            </div>
+            
+            {selectedColor && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 md:p-6 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700"
+              >
+                <div 
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full mx-auto mb-4"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${selectedColor} 0%, ${selectedColor}CC 50%, ${selectedColor}99 100%)`,
+                    boxShadow: `0 0 30px ${selectedColor}60`
+                  }}
+                />
+                <p className="text-gray-300 mb-2 text-lg font-bold">Your identity color</p>
+                <p className="text-red-400 font-black text-lg">Locked in forever</p>
+              </motion.div>
+            )}
+          </motion.div>
+        )
+
+      case 8:
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-md mx-auto px-4"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black">Your Birthday Challenge</h2>
+              <p className="text-xl md:text-2xl text-gray-300 font-bold">On your birthday, you must earn DOUBLE the points</p>
+              <p className="text-lg md:text-xl text-red-400 font-bold">The system remembers everything</p>
+            </div>
+            
+            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
+              <input
+                type="date"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium focus:border-red-500 focus:outline-none backdrop-blur-sm text-center transition-all"
+              />
+            </div>
+            
+            {birthday && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-6 bg-red-950/50 border border-red-600 rounded-2xl backdrop-blur-sm"
+              >
+                <p className="text-red-400 font-black text-xl mb-2">Birthday Challenge Activated</p>
+                <p className="text-gray-300 font-bold text-lg">Double points required on {new Date(birthday).toLocaleDateString()}</p>
+                <p className="text-gray-400 font-medium mt-2">The system will not forget</p>
+              </motion.div>
+            )}
+          </motion.div>
+        )
+
+      case 9:
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-md mx-auto px-4"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black">Choose Your Identity</h2>
+              <p className="text-xl md:text-2xl text-gray-300 font-bold">This is how your group will know you</p>
+            </div>
+            
+            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
+              <input
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm text-center transition-all"
+              />
+            </div>
+            
+            {username && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-center space-x-4 p-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700"
+              >
+                <span className="text-4xl">{selectedEmoji || selectedEmojiInput}</span>
+                <span 
+                  className="w-8 h-8 rounded-full"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${selectedColor} 0%, ${selectedColor}CC 50%, ${selectedColor}99 100%)`,
+                    boxShadow: `0 0 15px ${selectedColor}60`
+                  }}
+                />
+                <span className="font-black text-xl">{username}</span>
+              </motion.div>
+            )}
+          </motion.div>
+        )
+
+      case 10:
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-2xl mx-auto px-4"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+          >
+            <div className="space-y-4">
+              <div className="w-16 h-16 bg-green-600 rounded-2xl mx-auto flex items-center justify-center mb-6">
+                <span className="text-2xl">✓</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black">COMMITMENT LOCKED</h2>
+              <p className="text-xl md:text-2xl text-gray-300 font-bold">Your transformation journey begins now</p>
+            </div>
+            
+            <div className="bg-gray-900/50 border border-green-600/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-green-400 mb-4">PROFILE COMPLETE</h3>
+                  
+                  <div className="flex items-center justify-center space-x-4 p-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700 mb-6">
+                    <span className="text-4xl">{selectedEmoji || selectedEmojiInput}</span>
+                    <span 
+                      className="w-8 h-8 rounded-full"
+                      style={{ 
+                        background: `linear-gradient(135deg, ${selectedColor} 0%, ${selectedColor}CC 50%, ${selectedColor}99 100%)`,
+                        boxShadow: `0 0 15px ${selectedColor}60`
+                      }}
+                    />
+                    <span className="font-black text-xl">{username}</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <p className="text-gray-400 font-bold mb-1">Group</p>
+                      <p className="font-black">ELITE WARRIORS</p>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <p className="text-gray-400 font-bold mb-1">Birthday Challenge</p>
+                      <p className="font-black">{birthday ? new Date(birthday).toLocaleDateString() : 'Not set'}</p>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <p className="text-gray-400 font-bold mb-1">Commitment Level</p>
+                      <p className="font-black text-red-400">100%</p>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-xl p-4">
+                      <p className="text-gray-400 font-bold mb-1">Daily Penalty</p>
+                      <p className="font-black text-red-400">€10.00</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-gray-600 pt-6 text-center">
+                  <p className="text-gray-300 text-lg font-bold mb-4">
+                    The system is now active. Your group is watching.<br/>
+                    There's no turning back.
+                  </p>
+                  <p className="text-red-400 font-black text-xl">
+                    Welcome to the commitment lifestyle.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )
+
       default:
         return (
           <div className="text-center">
@@ -1185,6 +1532,18 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       return 'CREATE ACCOUNT'
     } else if (currentStep === 4) {
       return 'JOIN GROUP'
+    } else if (currentStep === 5) {
+      return 'I ACCEPT AND COMMIT'
+    } else if (currentStep === 6) {
+      return 'LOCK IN AVATAR'
+    } else if (currentStep === 7) {
+      return 'LOCK IN COLOR'
+    } else if (currentStep === 8) {
+      return 'ACCEPT BIRTHDAY CHALLENGE'
+    } else if (currentStep === 9) {
+      return 'FINALIZE IDENTITY'
+    } else if (currentStep === 10) {
+      return 'BEGIN COMMITMENT'
     } else {
       return 'COMMIT'
     }
