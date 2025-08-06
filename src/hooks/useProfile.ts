@@ -19,6 +19,10 @@ export type UserProfile = {
   custom_icon: string
   first_name: string | null
   last_name: string | null
+  birth_date: string | null
+  last_donation_date: string | null
+  total_donated: number
+  donation_rate: number
   onboarding_completed: boolean
   created_at: string
   updated_at: string
@@ -61,6 +65,10 @@ export function useProfile() {
               custom_icon: '💪',
               first_name: isOnboardingDemo ? null : 'Demo',
               last_name: isOnboardingDemo ? null : 'User',
+              birth_date: null,
+              last_donation_date: null,
+              total_donated: 0,
+              donation_rate: 0.10,
               onboarding_completed: !isOnboardingDemo, // Onboarding demo goes through onboarding
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()

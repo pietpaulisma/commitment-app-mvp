@@ -74,9 +74,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return colorArray[colorIndex]
   }
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
-  const [selectedExercise, setSelectedExercise] = useState<ExerciseWithProgress | null>(null)
-  const [quantity, setQuantity] = useState('')
-  const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
 
   // Helper function to get user's personal color or default
@@ -120,7 +117,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [showSportSelection, setShowSportSelection] = useState(false)
   const [selectedSport, setSelectedSport] = useState('')
   const [selectedSportType, setSelectedSportType] = useState('')
-  const [selectedIntensity, setSelectedIntensity] = useState('medium')
   const [isStopwatchExpanded, setIsStopwatchExpanded] = useState(false)
   const [stopwatchTime, setStopwatchTime] = useState(0) // in milliseconds
   const [isStopwatchRunning, setIsStopwatchRunning] = useState(false)
@@ -819,76 +815,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }
 
-  const calculatePoints = () => {
-    if (!selectedExercise || !quantity) return 0
-    
-    const quantityValue = parseFloat(quantity) || 0
-    const weightValue = parseFloat(weight) || 0
-    
-    let points = quantityValue * selectedExercise.points_per_unit
-    
-    if (selectedExercise.is_weighted && weightValue > 0) {
-      points *= (weightValue / 100 + 1)
-    }
-    
-    return Math.round(points)
-  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedExercise || !quantity || !user) return
-
-    setLoading(true)
-    try {
-      const points = calculatePoints()
-      const weightValue = parseFloat(weight) || 0
-
-      const { error } = await supabase
-        .from('logs')
-        .insert({
-          user_id: user.id,
-          group_id: profile?.group_id,
-          exercise_id: selectedExercise.id,
-          count: selectedExercise.unit === 'rep' ? parseFloat(quantity) : 0,
-          weight: weightValue,
-          duration: selectedExercise.is_time_based ? parseFloat(quantity) : 0,
-          points: points,
-          date: new Date().toISOString().split('T')[0],
-          timestamp: Date.now()
-        })
-
-      if (error) {
-        alert('Error logging workout: ' + error.message)
-      } else {
-        // Reset form
-        setQuantity('')
-        setWeight('')
-        setSelectedExercise(null)
-        
-        // Call callback to refresh data
-        if (onWorkoutAdded) {
-          onWorkoutAdded()
-        }
-        
-        // Refresh daily progress
-        loadDailyProgress()
-        loadTodaysWorkouts()
-        
-        // Close modal
-        onClose()
-        
-        // Haptic feedback on mobile
-        if (navigator.vibrate) {
-          navigator.vibrate(100)
-        }
-      }
-    } catch (error) {
-      console.error('Error:', error)
-      alert('An error occurred while logging your workout.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSubmitToGroup = async () => {
     if (!user || !profile?.group_id || dailyProgress <= 0) return
@@ -1210,11 +1137,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           overflow: 'hidden' // Prevent background scrolling
         }}
       >
-        {/* Header - EXACT COPY from Dashboard LOG WORKOUT Button */}
+        {/* Header - Reduced height for PWA */}
         <div className="sticky top-0">
           <div className="flex items-center">
-            {/* Progress Bar Section - EXACT copy from RectangularNavigation.tsx line 129-161 */}
-            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
+            {/* Progress Bar Section - Reduced height for PWA */}
+            <div className={`flex-1 relative h-12 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
               {/* Liquid gradient progress background with subtle animation */}
               <div 
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -1567,340 +1494,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 </div>
               )}
-              
-              {/* Exercise Input Form - Completely Redesigned */}
-              {selectedExercise && (
-                <div className="bg-black mt-6">
-                  {/* Points Header with Gradient */}
-                  <div className="relative overflow-hidden">
-                    {/* Gradient Background */}
-                    <div 
-                      className="absolute inset-0"
-                      style={{
-                        background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 50%, transparent 100%)`
-                      }}
-                    />
-                    <div className="relative p-6">
-                      <div className="text-center">
-                        <div className="flex justify-center items-center space-x-3 mb-3">
-                          {getExerciseIcon(selectedExercise)}
-                          <h3 className="text-2xl font-bold text-white">{selectedExercise.name}</h3>
-                        </div>
-                        <div className="text-6xl font-black mb-2" style={{ color: getCategoryColor(selectedExercise.type, selectedExercise.id) }}>
-                          {calculatePoints()}
-                        </div>
-                        <div className="text-lg text-white font-medium">
-                          POINTS EARNED
-                        </div>
-                        <div className="text-sm text-gray-300">
-                          {selectedExercise.points_per_unit} pts per {selectedExercise.unit}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Intensity Selector for Sport */}
-                  {selectedExercise.id.startsWith('sport_') && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Intensity Level</label>
-                      <div className="space-y-2">
-                        {[
-                          { id: 'light', name: 'Light', points: 125, emoji: '🚶' },
-                          { id: 'medium', name: 'Medium', points: 250, emoji: '🏃' },
-                          { id: 'intense', name: 'Intense', points: 375, emoji: '💨' }
-                        ].map((intensity) => (
-                          <button
-                            key={intensity.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedIntensity(intensity.id)
-                              // Update the exercise with new points
-                              const updatedExercise = {
-                                ...selectedExercise,
-                                points_per_unit: intensity.points,
-                                name: selectedExercise.name.replace(/\(.*\)/, '(' + intensity.name + ')')
-                              }
-                              setSelectedExercise(updatedExercise)
-                            }}
-                            className={`w-full p-3 text-left transition-colors border ${
-                              selectedIntensity === intensity.id
-                                ? 'bg-purple-900/50 border-blue-500 text-blue-300'
-                                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <span className="text-lg">{intensity.emoji}</span>
-                                <span className="font-medium">{intensity.name}</span>
-                              </div>
-                              <span className="text-sm font-bold">
-                                {intensity.points} pts/min
-                              </span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Main Counter Section with Gradient */}
-                  <div className="p-6">
-                    <div className="relative overflow-hidden rounded-2xl mb-6">
-                      {/* Gradient Background */}
-                      <div 
-                        className="absolute inset-0"
-                        style={{
-                          background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}10 100%)`
-                        }}
-                      />
-                      
-                      <div className="relative p-8">
-                        <div className="text-center mb-8">
-                          <div className="text-8xl font-black text-white mb-4" style={{ textShadow: '0 0 30px rgba(255,255,255,0.2)' }}>
-                            {quantity || (selectedExercise?.is_time_based ? '5' : '1')}
-                          </div>
-                          <div className="text-xl text-white font-medium uppercase tracking-wider">
-                            {selectedExercise.unit}{selectedExercise.unit !== 'rep' && 's'}
-                          </div>
-                        </div>
-
-                        {/* Control Buttons */}
-                        <div className="flex items-center justify-center gap-6 mb-8">
-                          <button
-                            type="button"
-                            onClick={() => setQuantity(Math.max(selectedExercise.is_time_based ? 5 : 1, parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) - (selectedExercise.is_time_based ? 5 : 1)).toString())}
-                            className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
-                            style={{
-                              background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 100%)`,
-                              boxShadow: `0 10px 30px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
-                            }}
-                          >
-                            −
-                          </button>
-                          
-                          <button
-                            type="button"
-                            onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + (selectedExercise.is_time_based ? 5 : 1)).toString())}
-                            className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
-                            style={{
-                              background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
-                              boxShadow: `0 10px 30px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40`
-                            }}
-                          >
-                            +
-                          </button>
-                        </div>
-
-                        {/* Quick Add Buttons */}
-                        <div className="flex justify-center gap-3">
-                          {selectedExercise.is_time_based ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 15).toString())}
-                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
-                                style={{
-                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
-                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
-                                }}
-                              >
-                                +15min
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 30).toString())}
-                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
-                                style={{
-                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
-                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
-                                }}
-                              >
-                                +30min
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 5).toString())}
-                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
-                                style={{
-                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
-                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
-                                }}
-                              >
-                                +5
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 10).toString())}
-                                className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
-                                style={{
-                                  background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
-                                  border: `2px solid ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60`
-                                }}
-                              >
-                                +10
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Weight & Modifiers Section */}
-                  {(selectedExercise.is_weighted || selectedExercise.supports_decreased) && (
-                    <div className="px-6 pb-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Weight Selection */}
-                        {selectedExercise.is_weighted && (
-                          <div className="relative overflow-hidden rounded-xl">
-                            <div 
-                              className="absolute inset-0 opacity-30"
-                              style={{
-                                background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 0%, transparent 100%)`
-                              }}
-                            />
-                            <div className="relative p-4">
-                              <div className="text-center text-white font-medium mb-3">Weight</div>
-                              <div className="grid grid-cols-2 gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setWeight('0')}
-                                  className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                                    weight === '0' || weight === '' 
-                                      ? 'text-white shadow-lg' 
-                                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
-                                  }`}
-                                  style={weight === '0' || weight === '' ? {
-                                    background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
-                                    boxShadow: `0 4px 15px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
-                                  } : {}}
-                                >
-                                  Body
-                                </button>
-                                {[10, 15, 20, 25].map((w) => (
-                                  <button
-                                    key={w}
-                                    type="button"
-                                    onClick={() => setWeight(w.toString())}
-                                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                                      weight === w.toString() 
-                                        ? 'text-white shadow-lg' 
-                                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
-                                    }`}
-                                    style={weight === w.toString() ? {
-                                      background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
-                                      boxShadow: `0 4px 15px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
-                                    } : {}}
-                                  >
-                                    {w}kg
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Decreased Exercise Option */}
-                        {selectedExercise.supports_decreased && (
-                          <div className="relative overflow-hidden rounded-xl">
-                            <div 
-                              className="absolute inset-0 opacity-30"
-                              style={{
-                                background: `linear-gradient(135deg, #f59e0b20 0%, transparent 100%)`
-                              }}
-                            />
-                            <div className="relative p-4">
-                              <div className="text-center text-white font-medium mb-3">Difficulty</div>
-                              <div className="space-y-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setWeight('')} // Using weight state for this toggle
-                                  className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                                    weight !== 'decreased' 
-                                      ? 'text-white shadow-lg' 
-                                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
-                                  }`}
-                                  style={weight !== 'decreased' ? {
-                                    background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
-                                    boxShadow: `0 4px 15px ${getCategoryColor(selectedExercise.type, selectedExercise.id)}30`
-                                  } : {}}
-                                >
-                                  Regular
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setWeight('decreased')}
-                                  className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                                    weight === 'decreased' 
-                                      ? 'text-white shadow-lg' 
-                                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
-                                  }`}
-                                  style={weight === 'decreased' ? {
-                                    background: `linear-gradient(135deg, #f59e0b80 0%, #f59e0b60 100%)`,
-                                    boxShadow: `0 4px 15px #f59e0b30`
-                                  } : {}}
-                                >
-                                  <div>Decreased</div>
-                                  <div className="text-xs opacity-75">+50% pts</div>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Slide to Commit Button */}
-                  <div className="p-6 pt-0">
-                    <div className="relative overflow-hidden rounded-2xl">
-                      {/* Gradient Background */}
-                      <div 
-                        className="absolute inset-0"
-                        style={{
-                          background: `linear-gradient(90deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 100%)`
-                        }}
-                      />
-                      
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSubmit(e as any);
-                        }}
-                        disabled={loading || parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) <= 0}
-                        className="relative w-full py-6 px-8 text-black font-black text-xl tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-black/20 rounded-full flex items-center justify-center">
-                              <div className="w-0 h-0 border-l-[8px] border-l-black/60 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
-                            </div>
-                            <span>SLIDE TO COMMIT</span>
-                          </div>
-                          <div className="text-2xl">
-                            {loading ? '⏳' : '🚀'}
-                          </div>
-                        </div>
-                        
-                        {/* Shimmer Effect */}
-                        <div 
-                          className="absolute inset-0 opacity-30"
-                          style={{
-                            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
-                            animation: 'shimmer 2s infinite'
-                          }}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </>
           )}
 
@@ -1937,7 +1530,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   />
                   
                   {/* Header content - styled like exercise button */}
-                  <div className="w-full p-3 relative">
+                  <div className="w-full p-2 relative">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         {getExerciseIcon(selectedWorkoutExercise)}
@@ -1959,7 +1552,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 {/* Close button */}
                 <button 
                   onClick={() => setWorkoutInputOpen(false)}
-                  className="w-12 h-12 rounded-3xl bg-gray-800 backdrop-blur-xl border border-white/5 hover:bg-gray-700 transition-colors flex items-center justify-center"
+                  className="w-10 h-10 rounded-3xl bg-gray-800 backdrop-blur-xl border border-white/5 hover:bg-gray-700 transition-colors flex items-center justify-center"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>
@@ -2230,7 +1823,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   }
                 }}
                 disabled={loading || workoutCount <= 0}
-                className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_6px_24px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_32px_rgba(99,102,241,0.5)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_2px_12px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.98] py-4 rounded-xl font-black transition-all duration-200 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/15 before:to-transparent before:pointer-events-none"
+                className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_12px_40px_rgba(99,102,241,0.5)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_16px_48px_rgba(99,102,241,0.7)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_6px_20px_rgba(99,102,241,0.4)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.96] hover:scale-[1.03] py-8 rounded-3xl font-black text-lg transition-all duration-200 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/15 before:to-transparent before:pointer-events-none"
               >
                 <span className="relative z-10">Submit • {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points</span>
               </button>

@@ -1146,12 +1146,49 @@ export default function RectangularDashboard() {
         }
       })
 
-      // 3. Birthday (fake data for now)
-      const nextBirthdayDays = Math.floor(Math.random() * 365) + 1
-      const nextBirthdayDate = new Date()
-      nextBirthdayDate.setDate(nextBirthdayDate.getDate() + nextBirthdayDays)
-      const monthName = nextBirthdayDate.toLocaleString('default', { month: 'long' })
-      const dayNum = nextBirthdayDate.getDate()
+      // 3. Next Birthday in Group - find the next upcoming birthday
+      const { data: memberProfiles } = await supabase
+        .from('profiles')
+        .select('email, birth_date')
+        .in('id', memberIds)
+        .not('birth_date', 'is', null)
+      
+      let nextBirthdayDays = 0
+      let monthName = 'None Set'
+      let dayNum = ''
+      let nextBirthdayPerson = 'No birthdays'
+      
+      if (memberProfiles && memberProfiles.length > 0) {
+        const today = new Date()
+        let closestBirthday: Date | null = null
+        let closestPerson = ''
+        
+        memberProfiles.forEach(member => {
+          if (member.birth_date) {
+            const birthDate = new Date(member.birth_date)
+            const nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+            
+            // If birthday has passed this year, set it to next year
+            if (nextBirthday < today) {
+              nextBirthday.setFullYear(today.getFullYear() + 1)
+            }
+            
+            // Check if this is the closest birthday
+            if (!closestBirthday || nextBirthday < closestBirthday) {
+              closestBirthday = nextBirthday
+              closestPerson = member.email?.split('@')[0] || 'Member'
+            }
+          }
+        })
+        
+        if (closestBirthday) {
+          const diffTime = closestBirthday.getTime() - today.getTime()
+          nextBirthdayDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+          monthName = closestBirthday.toLocaleString('default', { month: 'long' })
+          dayNum = closestBirthday.getDate().toString()
+          nextBirthdayPerson = closestPerson
+        }
+      }
 
       // 4. Workout Times
       const { data: timeLogs } = await supabase
@@ -1187,10 +1224,10 @@ export default function RectangularDashboard() {
         },
         birthday: {
           title: 'Next Birthday',
-          subtitle: members[0]?.email?.split('@')[0] || 'Member', // Person whose birthday it is
+          subtitle: nextBirthdayPerson, // Person whose birthday it is
           value: nextBirthdayDays,
           daysUntil: nextBirthdayDays,
-          name: `${monthName} ${dayNum}`,
+          name: nextBirthdayDays > 0 ? `${monthName} ${dayNum}` : 'None set',
           doublePoints: true,
           type: 'countdown_bar'
         },
@@ -1259,15 +1296,39 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution)
-      const personalMoneyContribution = totalPersonalPoints * 0.10
+      // 2. Personal Money Pot (your contribution) - use real donation rate from profile
+      const donationRate = profile?.donation_rate || 0.10
+      const personalMoneyContribution = totalPersonalPoints * donationRate
 
-      // 3. Personal Birthday (fake data for now, could be user's actual birthday)
-      const nextBirthdayDays = Math.floor(Math.random() * 365) + 1
-      const nextBirthdayDate = new Date()
-      nextBirthdayDate.setDate(nextBirthdayDate.getDate() + nextBirthdayDays)
-      const monthName = nextBirthdayDate.toLocaleString('default', { month: 'long' })
-      const dayNum = nextBirthdayDate.getDate()
+      // 3. Personal Birthday - use real birth date from profile
+      let nextBirthdayDays = 0
+      let monthName = 'Not Set'
+      let dayNum = ''
+      
+      if (profile?.birth_date) {
+        const birthDate = new Date(profile.birth_date)
+        const today = new Date()
+        
+        // Calculate next birthday
+        const nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+        
+        // If birthday has passed this year, set it to next year
+        if (nextBirthday < today) {
+          nextBirthday.setFullYear(today.getFullYear() + 1)
+        }
+        
+        // Calculate days until next birthday
+        const diffTime = nextBirthday.getTime() - today.getTime()
+        nextBirthdayDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        monthName = nextBirthday.toLocaleString('default', { month: 'long' })
+        dayNum = nextBirthday.getDate().toString()
+      } else {
+        // No birthday set - show placeholder
+        nextBirthdayDays = 0
+        monthName = 'Not Set'
+        dayNum = ''
+      }
 
       // 4. Personal Workout Times
       const { data: allPersonalLogs } = await supabase
@@ -1306,11 +1367,11 @@ export default function RectangularDashboard() {
             layout: 'square' // Bottom left - square
           },
           {
-            title: 'Your Birthday',
+            title: profile?.birth_date ? 'Your Birthday' : 'Set Birthday',
             subtitle: profile?.email?.split('@')[0] || 'You',
-            value: nextBirthdayDays,
-            daysUntil: nextBirthdayDays,
-            name: `${monthName} ${dayNum}`,
+            value: profile?.birth_date ? nextBirthdayDays : 0,
+            daysUntil: profile?.birth_date ? nextBirthdayDays : 0,
+            name: profile?.birth_date ? `${monthName} ${dayNum}` : 'Tap to set',
             doublePoints: true,
             type: 'countdown_bar',
             layout: 'square' // Bottom right - square  
