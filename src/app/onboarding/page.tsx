@@ -177,7 +177,44 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       window.addEventListener('scroll', handleScroll)
       handleScroll()
       
-      return () => window.removeEventListener('scroll', handleScroll)
+      // Auto-scroll gradually through the final warning content
+      let scrollTimer: NodeJS.Timeout
+      const autoScrollDelay = setTimeout(() => {
+        const startAutoScroll = () => {
+          const scrollHeight = document.documentElement.scrollHeight
+          const clientHeight = document.documentElement.clientHeight
+          const maxScrollTop = scrollHeight - clientHeight
+          
+          if (maxScrollTop > 0) {
+            // Scroll gradually to bottom over 8 seconds
+            const scrollDuration = 8000
+            const scrollStep = maxScrollTop / (scrollDuration / 100)
+            let currentScrollTop = 0
+            
+            scrollTimer = setInterval(() => {
+              currentScrollTop += scrollStep
+              
+              if (currentScrollTop >= maxScrollTop) {
+                currentScrollTop = maxScrollTop
+                clearInterval(scrollTimer)
+              }
+              
+              window.scrollTo({
+                top: currentScrollTop,
+                behavior: 'smooth'
+              })
+            }, 100)
+          }
+        }
+        
+        startAutoScroll()
+      }, 2000) // Wait 2 seconds before starting auto-scroll
+      
+      return () => {
+        window.removeEventListener('scroll', handleScroll)
+        clearTimeout(autoScrollDelay)
+        if (scrollTimer) clearInterval(scrollTimer)
+      }
     }
   }, [currentStep])
 
@@ -222,10 +259,10 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       // Auto-scroll to show the new content after a short delay for animation
       setTimeout(() => {
         const newSentenceCount = revealedSentences + 1
-        if (newSentenceCount > 2) { // Start scrolling after 2nd sentence
-          // Get viewport height to make intelligent scroll decisions
+        if (newSentenceCount >= 2) { // Start scrolling from 2nd sentence
+          // More aggressive scrolling to ensure content is visible
           const viewportHeight = window.innerHeight
-          const scrollAmount = Math.min(120, viewportHeight * 0.15) // Scroll 15% of viewport or 120px max
+          const scrollAmount = Math.max(150, viewportHeight * 0.25) // Scroll 25% of viewport or 150px min
           
           window.scrollBy({
             top: scrollAmount,
@@ -243,10 +280,10 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       // Enhanced auto-scroll for rule cards
       setTimeout(() => {
         const newCardCount = revealedRuleCards + 1
-        if (newCardCount > 1) { // Start scrolling after first card
-          // Get viewport height and make intelligent scroll for rule cards
+        if (newCardCount >= 1) { // Start scrolling from first card
+          // More aggressive scrolling for rule cards since they're larger
           const viewportHeight = window.innerHeight
-          const scrollAmount = Math.min(200, viewportHeight * 0.25) // Scroll 25% of viewport or 200px max for larger cards
+          const scrollAmount = Math.max(220, viewportHeight * 0.35) // Scroll 35% of viewport or 220px min for larger cards
           
           window.scrollBy({
             top: scrollAmount,
