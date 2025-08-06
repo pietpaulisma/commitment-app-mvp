@@ -858,111 +858,163 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       case 2:
         return (
           <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-2xl mx-auto px-4 relative"
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="text-center space-y-8 max-w-4xl mx-auto px-4 relative min-h-screen"
+            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
           >
-            <div className="space-y-4 relative z-10">
-              <h2 className="text-4xl md:text-5xl font-black">FINAL WARNING</h2>
-              <p className="text-xl md:text-2xl text-gray-300 font-bold">
-                This is your last chance to back out
-              </p>
-            </div>
+            {/* Header - only show when not in hold mode */}
+            {!showHoldButton && (
+              <div className="space-y-4 relative z-10 pointer-events-none">
+                <motion.div
+                  animate={{ 
+                    boxShadow: `0 15px 40px rgba(220, 38, 38, ${0.5 + screenIntensity * 0.3})` 
+                  }}
+                  className="w-16 h-16 bg-red-600 rounded-2xl mx-auto flex items-center justify-center"
+                >
+                  <AlertTriangle className="w-8 h-8 text-white" />
+                </motion.div>
+                <h2 className="text-4xl md:text-5xl font-black">FINAL COMMITMENT</h2>
+              </div>
+            )}
             
-            <div className="space-y-8 relative z-10">
-              <div className="bg-red-950/50 border border-red-600 rounded-2xl p-8">
-                <div className="space-y-6">
-                  <div className="text-center">
-                    <div className="w-20 h-20 bg-red-600 rounded-full mx-auto flex items-center justify-center mb-6">
-                      <AlertTriangle className="w-10 h-10 text-white" />
+            {/* Content area - only show when not in hold mode */}
+            {!showHoldButton && (
+              <div className="space-y-8 relative z-10 pointer-events-auto min-h-screen pb-32">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-gradient-to-br from-red-950/50 to-red-900/30 border border-red-500/30 rounded-2xl p-6 md:p-8 backdrop-blur-sm max-w-2xl mx-auto"
+                >
+                  <div className="text-center space-y-6">
+                    <div className="space-y-4 text-lg md:text-xl font-normal text-gray-300">
+                      <p>This is where most people <span className="font-bold">back out</span>.</p>
+                      <p>You've read the rules. You understand the system.</p>
+                      <p>From here on out, <span className="font-bold">every rep matters</span>. <span className="font-bold">Every miss costs</span>.</p>
+                      <p>The group is <span className="font-bold">watching</span>. So is the system.</p>
                     </div>
                     
-                    <div className="space-y-4">
-                      <h3 className="text-2xl font-black text-red-400">
-                        COMMITMENT IS PERMANENT
-                      </h3>
-                      <div className="text-gray-300 font-bold space-y-3">
-                        <p>• Once you commit, there's no backing out</p>
-                        <p>• Miss a workout = €10 penalty to your group</p>
-                        <p>• Your group will see everything you do</p>
-                        <p>• This becomes your daily lifestyle</p>
-                        <p>• Failure means letting down your accountability partners</p>
-                      </div>
+                    <div className="space-y-4 text-lg md:text-xl font-normal text-gray-300">
+                      <p>There's <span className="font-bold">no pause button</span>. <span className="font-bold">No ghosting</span>.</p>
+                      <p>You don't join to <span className="font-bold">try</span> — you join to <span className="font-bold">change</span>.</p>
                     </div>
-                  </div>
-                  
-                  {currentQuote && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-6"
-                    >
-                      <p className="text-2xl md:text-3xl font-black text-red-400">
-                        {currentQuote}
-                      </p>
-                    </motion.div>
-                  )}
-                  
-                  {holdProgress > 0 && (
-                    <div className="space-y-4">
-                      <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
-                        <motion.div 
-                          className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full"
-                          style={{ width: `${holdProgress}%` }}
-                          transition={{ duration: 0.1 }}
-                        />
-                      </div>
-                      <p className="text-center text-gray-400 font-bold">
-                        Hold to confirm your commitment... {Math.round(holdProgress)}%
-                      </p>
-                    </div>
-                  )}
-                  
-                  {holdProgress >= 100 && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center space-y-6"
-                    >
-                      <div className="text-6xl">🔥</div>
-                      <div className="space-y-2">
-                        <p className="text-2xl font-black text-green-400">COMMITMENT LOCKED IN</p>
-                        <p className="text-gray-300 font-bold">Welcome to the lifestyle. There's no going back now.</p>
+                    
+                    {/* Additional content to require scrolling */}
+                    <div className="space-y-8 py-8">
+                      {/* Separator */}
+                      <div className="text-center text-gray-500 text-2xl">
+                        ⸻
                       </div>
                       
-                      <motion.button
-                        onClick={nextStep}
-                        className="px-8 py-4 bg-green-600 hover:bg-green-700 border-2 border-green-400 rounded-2xl text-white font-black text-xl transition-colors"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        CONTINUE TO SETUP
-                      </motion.button>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-              
-              {!finalWarningCompleted && (
-                <div className="text-center space-y-4">
-                  <div 
-                    className="inline-block px-8 py-4 bg-red-600 hover:bg-red-700 border-2 border-red-400 rounded-2xl cursor-pointer select-none transition-colors"
-                    onMouseDown={startHolding}
-                    onMouseUp={stopHolding}
-                    onMouseLeave={stopHolding}
-                    onTouchStart={startHolding}
-                    onTouchEnd={stopHolding}
-                  >
-                    <span className="text-white text-xl font-black">
-                      HOLD TO COMMIT
-                    </span>
+                      <div className="space-y-6 text-lg text-gray-300">
+                        <h3 className="text-2xl font-black text-red-400">THE REALITY CHECK</h3>
+                        <div className="space-y-4">
+                          <p>Most fitness apps let you lie to yourself. This one doesn't.</p>
+                          <p>Most groups let you disappear quietly. This one doesn't.</p>
+                          <p>Most systems let you quit when it gets hard. This one doesn't.</p>
+                        </div>
+                      </div>
+
+                      {/* Separator */}
+                      <div className="text-center text-gray-500 text-2xl">
+                        ⸻
+                      </div>
+                      
+                      {/* Lock in terms */}
+                      <div className="bg-black/30 border border-red-600/50 rounded-xl p-6 backdrop-blur-sm">
+                        <div className="flex items-center space-x-3 mb-4 justify-center">
+                          <span className="text-2xl">🔐</span>
+                          <span className="text-red-400 font-black text-xl">LOCK IN TERMS</span>
+                        </div>
+                        
+                        <div className="text-left space-y-3 text-gray-200 text-base md:text-lg font-bold">
+                          <p>• Daily discipline is required</p>
+                          <p>• Late logs = €10 penalty</p>
+                          <p>• Only approved exercises count</p>
+                          <p>• Excuses are tracked</p>
+                          <p>• Your data is visible to your group</p>
+                          <p>• There is no exit button</p>
+                          <p>• Your commitment is binding</p>
+                          <p>• The system never forgets</p>
+                        </div>
+                      </div>
+
+                      {/* More content */}
+                      <div className="space-y-6 text-lg text-gray-300">
+                        <h3 className="text-2xl font-black text-red-400">WHAT HAPPENS NEXT</h3>
+                        <div className="space-y-4">
+                          <p>You'll join your group. They'll see your progress every day.</p>
+                          <p>You'll choose your identity - avatar and color. <span className="font-bold text-red-400">For life.</span></p>
+                          <p>You'll start earning points immediately. Miss a day? Pay the price.</p>
+                          <p>There's no trial period. No refunds. No second chances.</p>
+                        </div>
+                      </div>
+                      
+                      {/* Separator */}
+                      <div className="text-center text-gray-500 text-2xl">
+                        ⸻
+                      </div>
+                      
+                      <div className="space-y-4 text-lg md:text-xl font-bold text-gray-300 text-center">
+                        <p>If you're not ready, leave now.</p>
+                        <p>If you are — scroll down to commit, and never look back.</p>
+                      </div>
+                      
+                      {/* Separator */}
+                      <div className="text-center text-gray-500 text-2xl">
+                        ⸻
+                      </div>
+                      
+                      <div className="space-y-4 text-lg md:text-xl font-bold text-gray-300 text-center">
+                        <p>This is your last chance to opt out.</p>
+                        <p className="text-red-400">Are you ready to live by this level of accountability?</p>
+                        
+                        {!hasScrolledToBottom && (
+                          <motion.div 
+                            className="pt-8"
+                            animate={{ opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <p className="text-gray-500 text-base">↓ Scroll down to continue ↓</p>
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-gray-500 text-sm font-medium">
-                    Hold the button above for 15 seconds to confirm your commitment
-                  </p>
-                </div>
-              )}
-            </div>
+                </motion.div>
+              </div>
+            )}
+
+            {/* Floating quotes overlay during holding - appears over everything */}
+            {showHoldButton && currentQuote && (
+              <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
+                <AnimatePresence>
+                  <motion.div
+                    key={currentQuote}
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 1.2, y: -20 }}
+                    className="text-center"
+                  >
+                    <p
+                      className={`font-black ${
+                        screenIntensity > 0.7 ? 'text-red-300' : 'text-red-500'
+                      }`}
+                      style={{
+                        textShadow: `0 0 ${screenIntensity * 40}px rgba(220, 38, 38, ${0.8 + screenIntensity * 0.2})`,
+                        fontSize: `${2 + screenIntensity * 3}rem`,
+                        fontWeight: Math.min(900, 700 + screenIntensity * 200),
+                        letterSpacing: `${screenIntensity * 0.1}em`,
+                        transform: `scale(${1 + screenIntensity * 0.3})`
+                      }}
+                    >
+                      {currentQuote}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            )}
           </motion.div>
         )
 
@@ -1100,7 +1152,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         </div>
       </div>
 
-      {/* Navigation Button - Hide for step 2 since it has its own hold button */}
+      {/* Navigation Button - Hide for step 2 since it has its own buttons */}
       {currentStep !== 2 && (
         <div className="fixed bottom-8 left-0 right-0 flex justify-center z-20">
           <motion.button
@@ -1140,6 +1192,105 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
           </span>
         </motion.button>
       </div>
+      )}
+
+      {/* Two buttons for final warning step - only show when not holding AND when scrolled to bottom */}
+      {currentStep === 2 && !showHoldButton && hasScrolledToBottom && (
+        <div className="fixed bottom-8 left-0 right-0 flex justify-center z-50 px-4 pointer-events-none">
+          <div className="flex space-x-4 w-full max-w-lg pointer-events-auto">
+            {/* I refuse button - blue */}
+            <motion.button
+              onClick={() => onGoToLogin?.()}
+              className="relative overflow-hidden flex-1"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                borderRadius: '9999px',
+                padding: '12px 24px',
+                border: '1px solid rgba(37, 99, 235, 0.4)',
+                boxShadow: '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                cursor: 'pointer'
+              }}
+              animate={{
+                boxShadow: [
+                  '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                  '0 0 25px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                  '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-white text-lg font-black tracking-wide relative z-10">
+                I refuse
+              </span>
+            </motion.button>
+
+            {/* I Commit button - red */}
+            <motion.button
+              onClick={() => setShowHoldButton(true)}
+              className="relative overflow-hidden flex-1"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 80%, #7F1D1D 100%)',
+                borderRadius: '9999px',
+                padding: '12px 24px',
+                border: '1px solid rgba(220, 38, 38, 0.6)',
+                boxShadow: '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                cursor: 'pointer'
+              }}
+              animate={{
+                boxShadow: [
+                  '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                  '0 0 25px rgba(220, 38, 38, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                  '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-white text-lg font-black tracking-wide relative z-10">
+                I Commit
+              </span>
+            </motion.button>
+          </div>
+        </div>
+      )}
+
+      {/* Hold button - positioned at bottom like other buttons - BRIGHT AND VISIBLE */}
+      {currentStep === 2 && showHoldButton && (
+        <div className="fixed bottom-8 left-4 right-4 flex justify-center z-50">
+          <button
+            className="relative overflow-hidden min-w-[280px] bg-white text-black font-black text-xl py-4 px-8 rounded-full border-4 border-gray-800"
+            onMouseDown={startHolding}
+            onMouseUp={stopHolding}
+            onMouseLeave={stopHolding}
+            onTouchStart={startHolding}
+            onTouchEnd={stopHolding}
+            onClick={holdProgress >= 100 ? () => nextStep() : undefined}
+            style={{
+              background: holdProgress >= 100 
+                ? '#22C55E' // Bright green when complete
+                : '#FFFFFF', // White background - very visible
+              color: holdProgress >= 100 ? '#FFFFFF' : '#000000',
+              boxShadow: '0 0 20px rgba(255, 255, 255, 0.5)', // White glow to make it super visible
+              cursor: 'pointer'
+            }}
+          >
+            {/* Red progress fill overlay that goes from left to right */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 bg-red-600 rounded-full transition-all duration-100"
+              style={{ 
+                width: `${holdProgress}%`,
+                opacity: holdProgress > 0 && holdProgress < 100 ? 1 : 0
+              }}
+            />
+            
+            <span className="relative z-10">
+              {holdProgress >= 100 ? 'COMMITTED!' : 'HOLD TO COMMIT'}
+            </span>
+          </button>
+        </div>
       )}
     </div>
   )
