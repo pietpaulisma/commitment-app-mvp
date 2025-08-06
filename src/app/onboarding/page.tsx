@@ -825,6 +825,117 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
           </motion.div>
         )
 
+      case 2:
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-2xl mx-auto px-4 relative"
+          >
+            <div className="space-y-4 relative z-10">
+              <h2 className="text-4xl md:text-5xl font-black">FINAL WARNING</h2>
+              <p className="text-xl md:text-2xl text-gray-300 font-bold">
+                This is your last chance to back out
+              </p>
+            </div>
+            
+            <div className="space-y-8 relative z-10">
+              <div className="bg-red-950/50 border border-red-600 rounded-2xl p-8">
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-red-600 rounded-full mx-auto flex items-center justify-center mb-6">
+                      <AlertTriangle className="w-10 h-10 text-white" />
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-black text-red-400">
+                        COMMITMENT IS PERMANENT
+                      </h3>
+                      <div className="text-gray-300 font-bold space-y-3">
+                        <p>• Once you commit, there's no backing out</p>
+                        <p>• Miss a workout = €10 penalty to your group</p>
+                        <p>• Your group will see everything you do</p>
+                        <p>• This becomes your daily lifestyle</p>
+                        <p>• Failure means letting down your accountability partners</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {currentQuote && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center py-6"
+                    >
+                      <p className="text-2xl md:text-3xl font-black text-red-400">
+                        {currentQuote}
+                      </p>
+                    </motion.div>
+                  )}
+                  
+                  {holdProgress > 0 && (
+                    <div className="space-y-4">
+                      <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full"
+                          style={{ width: `${holdProgress}%` }}
+                          transition={{ duration: 0.1 }}
+                        />
+                      </div>
+                      <p className="text-center text-gray-400 font-bold">
+                        Hold to confirm your commitment... {Math.round(holdProgress)}%
+                      </p>
+                    </div>
+                  )}
+                  
+                  {holdProgress >= 100 && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center space-y-6"
+                    >
+                      <div className="text-6xl">🔥</div>
+                      <div className="space-y-2">
+                        <p className="text-2xl font-black text-green-400">COMMITMENT LOCKED IN</p>
+                        <p className="text-gray-300 font-bold">Welcome to the lifestyle. There's no going back now.</p>
+                      </div>
+                      
+                      <motion.button
+                        onClick={nextStep}
+                        className="px-8 py-4 bg-green-600 hover:bg-green-700 border-2 border-green-400 rounded-2xl text-white font-black text-xl transition-colors"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        CONTINUE TO SETUP
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+              
+              {!finalWarningCompleted && (
+                <div className="text-center space-y-4">
+                  <div 
+                    className="inline-block px-8 py-4 bg-red-600 hover:bg-red-700 border-2 border-red-400 rounded-2xl cursor-pointer select-none transition-colors"
+                    onMouseDown={startHolding}
+                    onMouseUp={stopHolding}
+                    onMouseLeave={stopHolding}
+                    onTouchStart={startHolding}
+                    onTouchEnd={stopHolding}
+                  >
+                    <span className="text-white text-xl font-black">
+                      HOLD TO COMMIT
+                    </span>
+                  </div>
+                  <p className="text-gray-500 text-sm font-medium">
+                    Hold the button above for 15 seconds to confirm your commitment
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )
+
       // Simplified other cases for now
       default:
         return (
@@ -850,6 +961,8 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       } else {
         return 'CONFIRM ALL RULES'
       }
+    } else if (currentStep === 2) {
+      return holdProgress >= 100 ? 'CONTINUE' : 'HOLD BUTTON ABOVE'
     } else if (currentStep === 3) {
       return 'CREATE ACCOUNT'
     } else if (currentStep === 4) {
@@ -872,6 +985,10 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         setAttemptedProceedWithIncomplete(false)
       } else {
         setAttemptedProceedWithIncomplete(true)
+      }
+    } else if (currentStep === 2) {
+      if (holdProgress >= 100) {
+        nextStep()
       }
     } else if (currentStep === 3) {
       handleSignUp()
@@ -953,17 +1070,18 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         </div>
       </div>
 
-      {/* Navigation Button */}
-      <div className="fixed bottom-8 left-0 right-0 flex justify-center z-20">
-        <motion.button
-          onClick={handleButtonClick}
-          disabled={
-            isLoading || !(
-              (currentStep === 0 && currentRuleCard === 0 && revealedSentences < welcomeSentences.length) ||
-              (currentStep === 0 && currentRuleCard === 1 && revealedRuleCards < ruleCards.length && (revealedRuleCards === 0 || confirmedRuleCards[revealedRuleCards - 1])) ||
-              canClickCommitButton()
-            )
-          }
+      {/* Navigation Button - Hide for step 2 since it has its own hold button */}
+      {currentStep !== 2 && (
+        <div className="fixed bottom-8 left-0 right-0 flex justify-center z-20">
+          <motion.button
+            onClick={handleButtonClick}
+            disabled={
+              isLoading || !(
+                (currentStep === 0 && currentRuleCard === 0 && revealedSentences < welcomeSentences.length) ||
+                (currentStep === 0 && currentRuleCard === 1 && revealedRuleCards < ruleCards.length && (revealedRuleCards === 0 || confirmedRuleCards[revealedRuleCards - 1])) ||
+                canClickCommitButton()
+              )
+            }
           className="relative overflow-hidden"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -992,6 +1110,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
           </span>
         </motion.button>
       </div>
+      )}
     </div>
   )
 }
