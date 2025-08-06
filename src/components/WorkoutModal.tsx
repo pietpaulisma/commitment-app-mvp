@@ -75,7 +75,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [selectedExercise, setSelectedExercise] = useState<ExerciseWithProgress | null>(null)
-  const [quantity, setQuantity] = useState('0')
+  const [quantity, setQuantity] = useState('')
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -861,7 +861,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         alert('Error logging workout: ' + error.message)
       } else {
         // Reset form
-        setQuantity('0')
+        setQuantity('')
         setWeight('')
         setSelectedExercise(null)
         
@@ -1657,7 +1657,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <div className="relative p-8">
                         <div className="text-center mb-8">
                           <div className="text-8xl font-black text-white mb-4" style={{ textShadow: '0 0 30px rgba(255,255,255,0.2)' }}>
-                            {quantity || '0'}
+                            {quantity || (selectedExercise?.is_time_based ? '5' : '1')}
                           </div>
                           <div className="text-xl text-white font-medium uppercase tracking-wider">
                             {selectedExercise.unit}{selectedExercise.unit !== 'rep' && 's'}
@@ -1668,7 +1668,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         <div className="flex items-center justify-center gap-6 mb-8">
                           <button
                             type="button"
-                            onClick={() => setQuantity(Math.max(0, parseFloat(quantity || '0') - (selectedExercise.is_time_based ? 5 : 1)).toString())}
+                            onClick={() => setQuantity(Math.max(selectedExercise.is_time_based ? 5 : 1, parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) - (selectedExercise.is_time_based ? 5 : 1)).toString())}
                             className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
                             style={{
                               background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 100%)`,
@@ -1680,7 +1680,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           
                           <button
                             type="button"
-                            onClick={() => setQuantity((parseFloat(quantity || '0') + (selectedExercise.is_time_based ? 5 : 1)).toString())}
+                            onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + (selectedExercise.is_time_based ? 5 : 1)).toString())}
                             className="w-20 h-20 rounded-full flex items-center justify-center text-white text-3xl font-bold transition-all duration-300 hover:scale-110 active:scale-95"
                             style={{
                               background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}80 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}60 100%)`,
@@ -1697,7 +1697,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             <>
                               <button
                                 type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || '0') + 15).toString())}
+                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 15).toString())}
                                 className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
                                 style={{
                                   background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
@@ -1708,7 +1708,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || '0') + 30).toString())}
+                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 30).toString())}
                                 className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
                                 style={{
                                   background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
@@ -1722,7 +1722,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             <>
                               <button
                                 type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || '0') + 5).toString())}
+                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 5).toString())}
                                 className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
                                 style={{
                                   background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
@@ -1733,7 +1733,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setQuantity((parseFloat(quantity || '0') + 10).toString())}
+                                onClick={() => setQuantity((parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) + 10).toString())}
                                 className="px-6 py-3 rounded-full text-white font-bold transition-all duration-300 hover:scale-105"
                                 style={{
                                   background: `linear-gradient(135deg, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}40 0%, ${getCategoryColor(selectedExercise.type, selectedExercise.id)}20 100%)`,
@@ -1870,7 +1870,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           e.preventDefault();
                           handleSubmit(e as any);
                         }}
-                        disabled={loading || !quantity || parseFloat(quantity) <= 0}
+                        disabled={loading || parseFloat(quantity || (selectedExercise?.is_time_based ? '5' : '1')) <= 0}
                         className="relative w-full py-6 px-8 text-black font-black text-xl tracking-wider transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
                           textShadow: '0 2px 4px rgba(0,0,0,0.3)'
