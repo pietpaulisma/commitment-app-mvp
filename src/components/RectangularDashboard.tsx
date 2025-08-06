@@ -760,7 +760,7 @@ export default function RectangularDashboard() {
       }
     }
   `
-  const { user, loading: authLoading, isDemoMode, exitDemoMode } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
   const [recentChats, setRecentChats] = useState<RecentChat[]>([])
@@ -1680,37 +1680,6 @@ export default function RectangularDashboard() {
       
       <div className="pb-8">
 
-        {/* Demo Mode Indicator */}
-      {isDemoMode && (
-        <div className="bg-orange-900/20 border-b border-orange-600/50 px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-              <span className="text-orange-200 text-sm font-medium">
-                Demo Mode Active - Testing with mock data
-              </span>
-            </div>
-            <button
-              onClick={exitDemoMode}
-              className="text-xs px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #ea580c 0%, #dc2626 100%)',
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                boxShadow: `
-                  inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                  inset 0 -1px 0 rgba(0, 0, 0, 0.1),
-                  0 4px 12px rgba(0, 0, 0, 0.3),
-                  0 2px 4px rgba(234, 88, 12, 0.4)
-                `,
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
-                color: '#ffffff'
-              }}
-            >
-              Exit Demo Mode
-            </button>
-          </div>
-        </div>
-      )}
       
       {/* Logo and Quote Box */}
       <div className="mx-1 mb-1" style={{ marginTop: '8px' }}>

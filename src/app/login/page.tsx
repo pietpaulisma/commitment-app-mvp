@@ -14,10 +14,6 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
   const router = useRouter()
 
-  const fillDemoCredentials = (email: string, password: string) => {
-    setEmail(email)
-    setPassword(password)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,63 +22,6 @@ export default function Login() {
     setMessage('')
 
     try {
-      // Demo mode - bypass auth for testing
-      if (email === 'demo@test.com' && password === 'demo123') {
-        console.log('Demo user login detected')
-        // Set demo user in localStorage for testing
-        const demoData = {
-          id: 'demo-user-id',
-          email: 'demo@test.com',
-          role: 'user'
-        }
-        localStorage.setItem('demo-user', JSON.stringify(demoData))
-        console.log('Demo user stored:', localStorage.getItem('demo-user'))
-        
-        // Force a page reload to trigger AuthContext re-check
-        setTimeout(() => {
-          console.log('Reloading page to trigger auth check...')
-          window.location.href = '/dashboard'
-        }, 100)
-        return
-      }
-
-      // Admin demo mode
-      if (email === 'admin@test.com' && password === 'admin123') {
-        console.log('Demo admin login detected')
-        const adminData = {
-          id: 'admin-user-id',
-          email: 'admin@test.com',
-          role: 'supreme_admin'
-        }
-        localStorage.setItem('demo-user', JSON.stringify(adminData))
-        console.log('Demo admin stored:', localStorage.getItem('demo-user'))
-        
-        // Force a page reload to trigger AuthContext re-check
-        setTimeout(() => {
-          console.log('Reloading page to trigger auth check...')
-          window.location.href = '/dashboard'
-        }, 100)
-        return
-      }
-
-      // Onboarding demo mode - for testing onboarding flow
-      if (email === 'onboarding@test.com' && password === 'demo123') {
-        console.log('Onboarding demo user login detected')
-        const onboardingData = {
-          id: 'onboarding-user-id',
-          email: 'onboarding@test.com',
-          role: 'user'
-        }
-        localStorage.setItem('demo-user', JSON.stringify(onboardingData))
-        console.log('Onboarding demo user stored:', localStorage.getItem('demo-user'))
-        
-        // Force a page reload to trigger AuthContext re-check and onboarding redirect
-        setTimeout(() => {
-          console.log('Reloading page to trigger onboarding flow...')
-          window.location.href = '/dashboard' // OnboardingGuard will redirect to onboarding
-        }, 100)
-        return
-      }
 
       if (isSignUp) {
         // Sign up new user
@@ -226,39 +165,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Demo Credentials */}
-        <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
-          <h3 className="text-sm font-medium text-white mb-4 text-center">Demo Accounts (for testing):</h3>
-          <div className="space-y-2 text-sm">
-            <button 
-              onClick={() => fillDemoCredentials('demo@test.com', 'demo123')}
-              className="w-full flex justify-between items-center p-3 hover:bg-gray-700/50 rounded-xl transition-colors"
-              disabled={loading}
-            >
-              <span className="text-gray-400">User Demo:</span>
-              <span className="font-mono text-xs text-red-400">demo@test.com / demo123</span>
-            </button>
-            <button 
-              onClick={() => fillDemoCredentials('admin@test.com', 'admin123')}
-              className="w-full flex justify-between items-center p-3 hover:bg-gray-700/50 rounded-xl transition-colors"
-              disabled={loading}
-            >
-              <span className="text-gray-400">Admin Demo:</span>
-              <span className="font-mono text-xs text-red-400">admin@test.com / admin123</span>
-            </button>
-            <button 
-              onClick={() => fillDemoCredentials('onboarding@test.com', 'demo123')}
-              className="w-full flex justify-between items-center p-3 hover:bg-gray-700/50 rounded-xl transition-colors"
-              disabled={loading}
-            >
-              <span className="text-gray-400">Onboarding Test:</span>
-              <span className="font-mono text-xs text-red-400">onboarding@test.com / demo123</span>
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 mt-4 text-center">
-            Click any demo account to auto-fill
-          </p>
-        </div>
       </motion.div>
     </div>
   )

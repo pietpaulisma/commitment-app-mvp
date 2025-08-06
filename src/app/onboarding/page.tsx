@@ -370,23 +370,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   }
 
   const handleSignUp = async () => {
-    // Demo/testing mode - skip account creation if fields are empty
-    if (!email.trim() || !password.trim()) {
-      console.log('Creating demo user for testing')
-      // Create a demo user session for testing
-      const testUser = {
-        id: 'test-onboarding-user-' + Date.now(),
-        email: email.trim() || 'test@onboarding.com',
-        role: 'user'
-      }
-      localStorage.setItem('demo-user', JSON.stringify(testUser))
-      
-      // Small delay to ensure localStorage is set
-      setTimeout(() => {
-        nextStep()
-      }, 100)
-      return
-    }
 
     if (password !== passwordConfirm) {
       setError('Passwords do not match')
@@ -449,16 +432,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     setError('')
 
     try {
-      // Check if we're in demo mode
-      const demoUser = localStorage.getItem('demo-user')
-      if (demoUser) {
-        console.log('Demo mode: skipping invite code validation')
-        // In demo mode, just proceed to next step
-        setTimeout(() => {
-          nextStep()
-        }, 1000) // Simulate some loading time
-        return
-      }
 
       // First, ensure the user profile exists
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -551,16 +524,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     setError('')
     
     try {
-      // Check if we're in demo mode
-      const demoUser = localStorage.getItem('demo-user')
-      if (demoUser) {
-        console.log('Demo mode: skipping profile database update')
-        // In demo mode, just proceed to completion
-        setTimeout(() => {
-          onComplete?.()
-        }, 1000)
-        return
-      }
 
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -622,16 +585,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     setError('')
 
     try {
-      // Check if we're in demo mode
-      const demoUser = localStorage.getItem('demo-user')
-      if (demoUser) {
-        console.log('Demo mode: skipping profile database update')
-        // In demo mode, just proceed to completion
-        setTimeout(() => {
-          onComplete?.()
-        }, 1000)
-        return
-      }
 
       const { error: updateError } = await supabase
         .from('profiles')

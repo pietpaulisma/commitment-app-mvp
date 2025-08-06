@@ -42,45 +42,6 @@ export function useProfile() {
         return
       }
 
-      // Handle demo users (only on client side)
-      if (typeof window !== 'undefined') {
-        const demoUser = localStorage.getItem('demo-user')
-        if (demoUser) {
-          try {
-            const userData = JSON.parse(demoUser)
-            
-            // Check if this is the onboarding demo user for onboarding testing
-            const isOnboardingDemo = userData.email === 'onboarding@test.com'
-            
-            setProfile({
-              id: userData.id,
-              email: userData.email,
-              role: userData.role,
-              group_id: null,
-              preferred_weight: 70,
-              is_weekly_mode: false,
-              location: '',
-              use_ip_location: false,
-              personal_color: '#3b82f6',
-              custom_icon: '💪',
-              first_name: isOnboardingDemo ? null : 'Demo',
-              last_name: isOnboardingDemo ? null : 'User',
-              birth_date: null,
-              last_donation_date: null,
-              total_donated: 0,
-              donation_rate: 0.10,
-              onboarding_completed: !isOnboardingDemo, // Onboarding demo goes through onboarding
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            setLoading(false)
-            return
-          } catch (error) {
-            console.error('Error parsing demo user profile:', error)
-            localStorage.removeItem('demo-user')
-          }
-        }
-      }
 
       try {
         const { data, error } = await supabase
