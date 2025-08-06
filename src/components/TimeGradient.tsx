@@ -8,7 +8,6 @@ interface TimeGradientProps {
 
 export default function TimeGradient({ className = '' }: TimeGradientProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [animationOffset, setAnimationOffset] = useState(0)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -16,15 +15,6 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
     }, 60000) // Update every minute
 
     return () => clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    // Create slow, continuous animation
-    const animationTimer = setInterval(() => {
-      setAnimationOffset(prev => (prev + 0.5) % 360)
-    }, 100) // Update every 100ms for smooth movement
-
-    return () => clearInterval(animationTimer)
   }, [])
 
   const getTimeBasedColors = () => {
@@ -103,75 +93,23 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
   return (
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
-      {/* Main organic sunrise/sunset blob */}
+      {/* Static time-based gradient - no animations */}
       <div
-        className="absolute inset-0 opacity-75"
+        className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 800px 600px at ${blobPositionX + Math.sin(animationOffset * 0.02) * 3}% ${blobPositionY + Math.cos(animationOffset * 0.015) * 2}%, 
+            radial-gradient(ellipse 800px 600px at ${blobPositionX}% ${blobPositionY}%, 
               ${colors.primary} 0%, 
               ${colors.secondary}90 20%, 
               ${colors.accent}75 40%, 
               ${colors.primary}60 60%, 
-              transparent 75%)
-          `,
-          filter: 'blur(0.5px)',
-          transform: `scale(${1 + Math.sin(animationOffset * 0.01) * 0.05})`,
-          transition: 'transform 0.3s ease-out'
-        }}
-      />
-      
-      {/* Secondary organic blob layer with different colors */}
-      <div
-        className="absolute inset-0 opacity-60"
-        style={{
-          background: `
-            radial-gradient(ellipse 650px 450px at ${blobPositionX + 25 + Math.cos(animationOffset * 0.018) * 4}% ${blobPositionY - 8 + Math.sin(animationOffset * 0.012) * 3}%, 
-              ${colors.accent} 0%, 
-              ${colors.primary}80 25%, 
-              ${colors.secondary}65 50%, 
+              transparent 75%),
+            radial-gradient(ellipse 650px 450px at ${blobPositionX + 25}% ${blobPositionY - 8}%, 
+              ${colors.accent}60 0%, 
+              ${colors.primary}40 25%, 
+              ${colors.secondary}30 50%, 
               transparent 70%)
-          `,
-          filter: 'blur(1px)',
-          transform: `scale(${1 + Math.cos(animationOffset * 0.008) * 0.04})`,
-          transition: 'transform 0.3s ease-out'
-        }}
-      />
-
-      {/* Third layer for more color variation */}
-      <div
-        className="absolute inset-0 opacity-45"
-        style={{
-          background: `
-            radial-gradient(ellipse 500px 350px at ${blobPositionX - 10 + Math.sin(animationOffset * 0.025) * 5}% ${blobPositionY + 15 + Math.cos(animationOffset * 0.02) * 4}%, 
-              ${colors.secondary} 0%, 
-              ${colors.accent}70 30%, 
-              ${colors.primary}55 60%, 
-              transparent 75%)
-          `,
-          filter: 'blur(2px)',
-          transform: `scale(${1 + Math.sin(animationOffset * 0.012) * 0.03})`,
-          transition: 'transform 0.3s ease-out'
-        }}
-      />
-
-      {/* Fourth layer for depth and movement */}
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          background: `
-            radial-gradient(ellipse 400px 280px at ${blobPositionX + 35 + Math.cos(animationOffset * 0.022) * 6}% ${blobPositionY - 25 + Math.sin(animationOffset * 0.016) * 5}%, 
-              ${colors.primary} 0%, 
-              ${colors.secondary}60 40%, 
-              transparent 65%),
-            radial-gradient(ellipse 350px 200px at ${blobPositionX + 8 + Math.sin(animationOffset * 0.028) * 4}% ${blobPositionY + 5 + Math.cos(animationOffset * 0.014) * 3}%, 
-              ${colors.accent}70 0%, 
-              ${colors.primary}50 50%, 
-              transparent 70%)
-          `,
-          filter: 'blur(3px)',
-          transform: `scale(${1 + Math.cos(animationOffset * 0.009) * 0.02})`,
-          transition: 'transform 0.3s ease-out'
+          `
         }}
       />
     </div>
