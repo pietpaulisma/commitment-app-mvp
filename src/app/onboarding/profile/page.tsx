@@ -13,6 +13,7 @@ export default function ProfileSetupPage() {
   const [username, setUsername] = useState('')
   const [personalColor, setPersonalColor] = useState('#ef4444') // Default red
   const [customIcon, setCustomIcon] = useState('💪') // Default muscle
+  const [birthDate, setBirthDate] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -45,6 +46,11 @@ export default function ProfileSetupPage() {
     
     if (!username.trim()) {
       setError('Username is required to continue.')
+      return
+    }
+    
+    if (!birthDate) {
+      setError('Birthday is required to continue.')
       return
     }
 
@@ -102,7 +108,8 @@ export default function ProfileSetupPage() {
           username: username.trim(),
           onboarding_completed: true,
           ...(personalColor && { personal_color: personalColor }),
-          ...(customIcon && { custom_icon: customIcon })
+          ...(customIcon && { custom_icon: customIcon }),
+          ...(birthDate && { birth_date: birthDate })
         })
         .eq('id', user?.id)
 
@@ -193,6 +200,24 @@ export default function ProfileSetupPage() {
             />
             <div className="text-xs text-gray-500 mt-1">
               This will be your display name in the group
+            </div>
+          </div>
+
+          {/* Birthday field */}
+          <div>
+            <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
+              Birthday
+            </label>
+            <input
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
+              disabled={isSubmitting}
+              required
+            />
+            <div className="text-xs text-gray-500 mt-1">
+              Used for birthday celebrations in your group
             </div>
           </div>
 

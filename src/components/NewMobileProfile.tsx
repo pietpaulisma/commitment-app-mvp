@@ -3,9 +3,8 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 import { 
   CogIcon,
   UserGroupIcon,
@@ -13,16 +12,13 @@ import {
   ClipboardDocumentListIcon,
   AdjustmentsHorizontalIcon,
   ArrowRightOnRectangleIcon,
-  XMarkIcon,
-  CakeIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 export default function NewMobileProfile() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
-  const [birthDate, setBirthDate] = useState('')
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -30,33 +26,6 @@ export default function NewMobileProfile() {
     }
   }, [user, authLoading, router])
 
-  useEffect(() => {
-    if (profile?.birth_date) {
-      setBirthDate(profile.birth_date)
-    }
-  }, [profile])
-
-  const handleSaveBirthday = async () => {
-    if (!user || !birthDate) return
-    
-    setSaving(true)
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ birth_date: birthDate })
-        .eq('id', user.id)
-      
-      if (error) throw error
-      
-      // Refresh the page to update the profile data
-      window.location.reload()
-    } catch (error) {
-      console.error('Error updating birthday:', error)
-      alert('Failed to update birthday')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   if (authLoading || profileLoading) {
     return (
@@ -174,43 +143,6 @@ export default function NewMobileProfile() {
           </div>
         )}
 
-        {/* Personal Settings Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-6">Personal Settings</h2>
-          <div className="space-y-4">
-            {/* Birthday Setting */}
-            <div className="w-full bg-white/5 border border-gray-700 text-white py-5 px-6 rounded-xl">
-              <div className="flex items-center gap-4 mb-4">
-                <CakeIcon className="w-6 h-6 text-pink-400" />
-                <div className="flex-1">
-                  <div className="font-semibold text-white">Birthday</div>
-                  <div className="text-sm text-gray-400">Set your birth date for dashboard display</div>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-pink-400 transition-colors"
-                  placeholder="Select your birthday"
-                />
-                <button
-                  onClick={handleSaveBirthday}
-                  disabled={saving || !birthDate || birthDate === profile?.birth_date}
-                  className="bg-pink-600 hover:bg-pink-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  {saving ? '...' : 'Save'}
-                </button>
-              </div>
-              {profile?.birth_date && (
-                <div className="mt-2 text-xs text-gray-400">
-                  Current: {new Date(profile.birth_date).toLocaleDateString()}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
         {/* Sign Out Button */}
         <div className="pt-8">
