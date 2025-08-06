@@ -366,6 +366,43 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         return
       }
 
+      // First, ensure the user profile exists
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        throw new Error('User not authenticated')
+      }
+
+      // Check if profile exists, create if it doesn't
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError && profileError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        console.log('Creating profile for user:', user.email)
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            username: user.email?.split('@')[0] || 'User',
+            role: 'user',
+            preferred_weight: 70,
+            is_weekly_mode: false,
+            location: 'Unknown',
+            personal_color: '#3b82f6',
+            custom_icon: '💪'
+          })
+
+        if (createError) {
+          console.error('Error creating profile:', createError)
+          throw new Error('Failed to create user profile')
+        }
+      }
+
+      // Now try to join the group
       const { data, error } = await supabase.rpc('join_group_via_invite', {
         p_invite_code: inviteCode.trim().toUpperCase()
       })
