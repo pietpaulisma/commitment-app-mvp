@@ -1502,7 +1502,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         {/* Workout Input Overlay - Exact Counter.tsx Implementation */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black text-white z-[110] overflow-hidden animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <div className="fixed inset-0 bg-black text-white z-[110] overflow-y-auto animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {/* Subtle background pattern */}
             <div className="absolute inset-0 opacity-3">
               <div className="absolute inset-0" style={{ 
@@ -1512,9 +1512,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
 
             {/* Header styled like clicked exercise button */}
-            <div className="relative overflow-hidden transition-all duration-300 mb-1 px-4 pt-2">
-              {/* Single exercise button with integrated X */}
-              <div className="relative overflow-hidden rounded-3xl shadow-2xl border border-white/5 bg-gray-800 backdrop-blur-xl">
+            <div className="relative overflow-hidden transition-all duration-300 mb-4 px-4 pt-4">
+              {/* Compact exercise button with integrated X */}
+              <div className="relative overflow-hidden rounded-2xl shadow-xl border border-white/10 bg-gray-800/90 backdrop-blur-xl h-14">
                   {/* Liquid gradient progress bar background - matches exercise button */}
                   <div 
                     className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -1529,30 +1529,22 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   />
                   
                 {/* Header content with integrated X button */}
-                <div className="w-full p-3 relative">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1">
-                      {getExerciseIcon(selectedWorkoutExercise)}
-                      <div className="flex-1">
-                        <div className="font-medium text-white text-left">{selectedWorkoutExercise.name}</div>
-                        <div className="text-sm text-white/60">{isDecreasedExercise ? '0.5x' : '1x'} weight</div>
-                      </div>
+                <div className="w-full px-4 py-2 relative flex items-center h-full">
+                  <div className="flex items-center space-x-3 flex-1">
+                    {getExerciseIcon(selectedWorkoutExercise)}
+                    <div className="font-medium text-white text-left">{selectedWorkoutExercise.name}</div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-white">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="text-2xl font-sans font-bold text-white">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</div>
-                        <div className="text-sm text-white/60">
-                          {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight}w
-                        </div>
-                      </div>
-                      {/* Integrated X button */}
-                      <button 
-                        onClick={() => setWorkoutInputOpen(false)}
-                        className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center"
-                      >
-                        <XMarkIcon className="w-5 h-5" />
-                      </button>
-                    </div>
+                    {/* Integrated X button */}
+                    <button 
+                      onClick={() => setWorkoutInputOpen(false)}
+                      className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-200 flex items-center justify-center"
+                    >
+                      <XMarkIcon className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1770,7 +1762,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               </div>
               
               {/* Submit button */}
-              <div className="px-4 pb-8 pt-4">
+              <div className="px-4 pt-6" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
                 <button
                 onClick={async () => {
                   if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
