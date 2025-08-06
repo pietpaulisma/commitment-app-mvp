@@ -277,20 +277,36 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     if (revealedRuleCards < ruleCards.length) {
       setRevealedRuleCards(revealedRuleCards + 1)
       
-      // Enhanced auto-scroll for rule cards
+      // Very aggressive auto-scroll for rule cards to ensure confirm button is visible
       setTimeout(() => {
         const newCardCount = revealedRuleCards + 1
         if (newCardCount >= 1) { // Start scrolling from first card
-          // More aggressive scrolling for rule cards since they're larger
-          const viewportHeight = window.innerHeight
-          const scrollAmount = Math.max(220, viewportHeight * 0.35) // Scroll 35% of viewport or 220px min for larger cards
+          // Try to find the latest card and scroll it fully into view with extra padding
+          const ruleCardElements = document.querySelectorAll('[data-rule-card]')
+          const latestCard = ruleCardElements[newCardCount - 1] as HTMLElement
           
-          window.scrollBy({
-            top: scrollAmount,
-            behavior: 'smooth'
-          })
+          if (latestCard) {
+            // Scroll the card into view with extra bottom padding to show confirm button
+            const cardRect = latestCard.getBoundingClientRect()
+            const viewportHeight = window.innerHeight
+            const desiredBottomPadding = viewportHeight * 0.3 // 30% of viewport as padding below the card
+            
+            window.scrollBy({
+              top: cardRect.bottom + desiredBottomPadding - viewportHeight,
+              behavior: 'smooth'
+            })
+          } else {
+            // Fallback to aggressive fixed scroll
+            const viewportHeight = window.innerHeight
+            const scrollAmount = Math.max(400, viewportHeight * 0.6) // Scroll 60% of viewport or 400px min
+            
+            window.scrollBy({
+              top: scrollAmount,
+              behavior: 'smooth'
+            })
+          }
         }
-      }, 400) // Wait a bit longer for card animation
+      }, 500) // Wait a bit longer to ensure the card is fully rendered
     }
   }
 
