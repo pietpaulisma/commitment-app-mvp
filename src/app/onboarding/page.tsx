@@ -17,7 +17,11 @@ export default function OnboardingPage() {
   const { user } = useAuth()
   
   const handleOnboardingComplete = () => {
-    router.push('/dashboard')
+    console.log('Onboarding completed, redirecting to dashboard...')
+    // Add a small delay to ensure state is settled
+    setTimeout(() => {
+      router.push('/dashboard')
+    }, 100)
   }
 
   const handleGoToLogin = () => {
@@ -58,6 +62,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   const [showHoldButton, setShowHoldButton] = useState(false)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
   const [selectedEmojiInput, setSelectedEmojiInput] = useState('')
+  const [groupInfo, setGroupInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -232,6 +237,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       setRevealedSentences(0)
       setHasScrolledToBottom(false)
     } else {
+      console.log('Onboarding nextStep completed, calling onComplete callback')
       onComplete?.()
     }
   }
@@ -463,6 +469,36 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       if (error) throw error
 
       if (data.success) {
+        // Fetch the full group information after successfully joining
+        const { data: groupData, error: groupError } = await supabase
+          .from('groups')
+          .select('*')
+          .eq('id', data.group_id)
+          .single()
+
+        // Get member count separately
+        const { count: memberCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('group_id', data.group_id)
+
+        // Get group admin info
+        const { data: adminData } = await supabase
+          .from('profiles')
+          .select('username, custom_icon')
+          .eq('id', groupData?.created_by)
+          .single()
+
+        if (groupError) {
+          console.error('Error fetching group info:', groupError)
+        } else if (groupData) {
+          setGroupInfo({
+            ...groupData,
+            member_count: memberCount || 0,
+            group_admin: adminData
+          })
+        }
+
         nextStep()
       } else {
         throw new Error(data.error || 'Failed to join group')
@@ -1180,7 +1216,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
           >
             <div className="space-y-4">
               <h2 className="text-4xl md:text-5xl font-black">FINAL GROUP CONFIRMATION</h2>
-              <p className="text-xl md:text-2xl text-gray-300 font-bold">You are joining: <span className="text-white font-black">ELITE WARRIORS</span></p>
+              <p className="text-xl md:text-2xl text-gray-300 font-bold">You are joining: <span className="text-white font-black">{groupInfo?.name || 'LOADING...'}</span></p>
             </div>
             
             <div className="bg-gray-900/50 border border-red-600/50 rounded-2xl p-6 backdrop-blur-sm space-y-6">
@@ -1190,27 +1226,29 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-6">
                   <div className="bg-gray-800/50 rounded-xl p-4">
                     <p className="text-gray-400 font-bold mb-1">Members</p>
-                    <p className="text-2xl font-black">12/15</p>
+                    <p className="text-2xl font-black">{groupInfo?.member_count || '1'}</p>
                   </div>
                   <div className="bg-gray-800/50 rounded-xl p-4">
                     <p className="text-gray-400 font-bold mb-1">Daily Penalty</p>
-                    <p className="text-2xl font-black text-red-400">€10.00</p>
+                    <p className="text-2xl font-black text-red-400">€{groupInfo?.daily_penalty || '10.00'}</p>
                   </div>
                   <div className="bg-gray-800/50 rounded-xl p-4">
                     <p className="text-gray-400 font-bold mb-1">Days Active</p>
-                    <p className="text-2xl font-black">47</p>
+                    <p className="text-2xl font-black">{groupInfo ? Math.floor((new Date().getTime() - new Date(groupInfo.created_at).getTime()) / (1000 * 60 * 60 * 24)) : '0'}</p>
                   </div>
                 </div>
 
                 <div className="bg-gray-800/50 rounded-xl p-4 mb-6">
                   <p className="text-gray-400 font-bold mb-1">Money in Pot</p>
-                  <p className="text-3xl font-black text-green-400">€2,340.00</p>
+                  <p className="text-3xl font-black text-green-400">€{groupInfo?.current_pot_amount ? groupInfo.current_pot_amount.toFixed(2) : '0.00'}</p>
                   <p className="text-gray-500 text-sm font-medium">From missed workouts</p>
                 </div>
 
                 <div className="bg-gray-800/50 rounded-xl p-4">
                   <p className="text-gray-400 font-bold mb-1">Group Admin</p>
-                  <p className="font-black text-lg">💀 COMMANDER_X</p>
+                  <p className="font-black text-lg">
+                    {groupInfo?.group_admin?.custom_icon || '👑'} {groupInfo?.group_admin?.username || 'ADMIN'}
+                  </p>
                 </div>
               </div>
               
@@ -1487,7 +1525,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                     <div className="bg-gray-800/50 rounded-xl p-4">
                       <p className="text-gray-400 font-bold mb-1">Group</p>
-                      <p className="font-black">ELITE WARRIORS</p>
+                      <p className="font-black">{groupInfo?.name || 'UNKNOWN'}</p>
                     </div>
                     <div className="bg-gray-800/50 rounded-xl p-4">
                       <p className="text-gray-400 font-bold mb-1">Birthday Challenge</p>
