@@ -65,6 +65,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   const [groupInfo, setGroupInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
 
   const finalWarningQuotes = [
     "Are you sure...",
@@ -169,59 +170,92 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   // Handle scroll detection for final commitment page
   useEffect(() => {
     if (currentStep === 2) {
+      // Reset scroll state when entering step 2
+      setHasScrolledToBottom(false)
+      
       const handleScroll = () => {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop
         const scrollHeight = document.documentElement.scrollHeight
         const clientHeight = document.documentElement.clientHeight
         
-        if (scrollTop + clientHeight >= scrollHeight - 50) {
-          setHasScrolledToBottom(true)
+        // Only consider scrolled to bottom if there's actually content to scroll
+        // and user has scrolled significantly
+        if (scrollHeight > clientHeight + 100) { // Only if page is taller than viewport + 100px
+          if (scrollTop + clientHeight >= scrollHeight - 50) {
+            setHasScrolledToBottom(true)
+          } else {
+            setHasScrolledToBottom(false)
+          }
+        } else {
+          // If content doesn't require scrolling, don't show buttons yet
+          setHasScrolledToBottom(false)
         }
       }
 
       window.addEventListener('scroll', handleScroll)
-      handleScroll()
+      // Wait a bit before first check to ensure content is fully rendered
+      setTimeout(() => {
+        handleScroll()
+      }, 500)
       
-      // Auto-scroll gradually through the final warning content
-      let scrollTimer: NodeJS.Timeout
-      const autoScrollDelay = setTimeout(() => {
-        const startAutoScroll = () => {
-          const scrollHeight = document.documentElement.scrollHeight
-          const clientHeight = document.documentElement.clientHeight
-          const maxScrollTop = scrollHeight - clientHeight
-          
-          if (maxScrollTop > 0) {
-            // Scroll gradually to bottom over 8 seconds
-            const scrollDuration = 8000
-            const scrollStep = maxScrollTop / (scrollDuration / 100)
-            let currentScrollTop = 0
-            
-            scrollTimer = setInterval(() => {
-              currentScrollTop += scrollStep
-              
-              if (currentScrollTop >= maxScrollTop) {
-                currentScrollTop = maxScrollTop
-                clearInterval(scrollTimer)
-              }
-              
-              window.scrollTo({
-                top: currentScrollTop,
-                behavior: 'smooth'
-              })
-            }, 100)
-          }
-        }
-        
-        startAutoScroll()
-      }, 2000) // Wait 2 seconds before starting auto-scroll
+      // Remove auto-scroll for step 2 - user should manually scroll
       
       return () => {
         window.removeEventListener('scroll', handleScroll)
-        clearTimeout(autoScrollDelay)
-        if (scrollTimer) clearInterval(scrollTimer)
       }
     }
   }, [currentStep])
+
+  // Global mouse/touch event listeners for slider dragging
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isDragging && currentStep === 1) {
+        const sliderElement = document.querySelector('[data-slider-track]') as HTMLElement
+        if (sliderElement) {
+          const rect = sliderElement.getBoundingClientRect()
+          const percentage = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+          setSliderValue(Math.round(percentage))
+          if (Math.round(percentage) === 100) {
+            setAttemptedProceedWithIncomplete(false)
+          }
+        }
+      }
+    }
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (isDragging && currentStep === 1) {
+        e.preventDefault() // Prevent scrolling while dragging
+        const sliderElement = document.querySelector('[data-slider-track]') as HTMLElement
+        if (sliderElement) {
+          const touch = e.touches[0]
+          const rect = sliderElement.getBoundingClientRect()
+          const percentage = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100))
+          setSliderValue(Math.round(percentage))
+          if (Math.round(percentage) === 100) {
+            setAttemptedProceedWithIncomplete(false)
+          }
+        }
+      }
+    }
+
+    const handleGlobalEnd = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleGlobalMouseMove)
+      document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false })
+      document.addEventListener('mouseup', handleGlobalEnd)
+      document.addEventListener('touchend', handleGlobalEnd)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('touchmove', handleGlobalTouchMove)
+      document.removeEventListener('mouseup', handleGlobalEnd)
+      document.removeEventListener('touchend', handleGlobalEnd)
+    }
+  }, [isDragging, currentStep])
 
   const nextStep = () => {
     if (currentStep === 0 && currentRuleCard === 0) {
@@ -845,24 +879,60 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                     />
                   </div>
                   
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={sliderValue}
-                    onChange={(e) => {
-                      setSliderValue(Number(e.target.value))
-                      if (Number(e.target.value) === 100) {
-                        setAttemptedProceedWithIncomplete(false)
+                  {/* Touch-friendly slider overlay */}
+                  <div
+                    data-slider-track
+                    className="absolute inset-0 w-full h-8 cursor-pointer"
+                    style={{ zIndex: 10 }}
+                    onMouseDown={(e) => {
+                      setIsDragging(true)
+                      const updateSlider = (clientX: number) => {
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+                        setSliderValue(Math.round(percentage))
+                        if (Math.round(percentage) === 100) {
+                          setAttemptedProceedWithIncomplete(false)
+                        }
+                      }
+                      updateSlider(e.clientX)
+                    }}
+                    onTouchStart={(e) => {
+                      setIsDragging(true)
+                      const updateSlider = (clientX: number) => {
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+                        setSliderValue(Math.round(percentage))
+                        if (Math.round(percentage) === 100) {
+                          setAttemptedProceedWithIncomplete(false)
+                        }
+                      }
+                      const touch = e.touches[0]
+                      updateSlider(touch.clientX)
+                    }}
+                    onMouseMove={(e) => {
+                      if (isDragging) {
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const percentage = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+                        setSliderValue(Math.round(percentage))
+                        if (Math.round(percentage) === 100) {
+                          setAttemptedProceedWithIncomplete(false)
+                        }
                       }
                     }}
-                    className="absolute inset-0 w-full h-8 opacity-0 cursor-pointer"
-                    style={{ 
-                      zIndex: 10,
-                      margin: 0,
-                      WebkitAppearance: 'none',
-                      appearance: 'none'
+                    onTouchMove={(e) => {
+                      if (isDragging) {
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const touch = e.touches[0]
+                        const percentage = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100))
+                        setSliderValue(Math.round(percentage))
+                        if (Math.round(percentage) === 100) {
+                          setAttemptedProceedWithIncomplete(false)
+                        }
+                      }
                     }}
+                    onMouseUp={() => setIsDragging(false)}
+                    onMouseLeave={() => setIsDragging(false)}
+                    onTouchEnd={() => setIsDragging(false)}
                   />
                   
                   <motion.div 
