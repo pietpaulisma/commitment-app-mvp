@@ -1909,11 +1909,11 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         </div>
       )}
 
-      {/* Hold button - positioned at bottom like other buttons - BRIGHT AND VISIBLE */}
+      {/* Hold button - positioned at bottom like other buttons - EXCITING 3D DESIGN */}
       {currentStep === 2 && showHoldButton && (
         <div className="fixed bottom-8 left-4 right-4 flex justify-center z-50">
           <button
-            className="relative overflow-hidden min-w-[280px] font-black text-xl py-4 px-8 rounded-full border-4"
+            className="relative overflow-hidden w-64 h-64 font-black text-lg rounded-full transform transition-all duration-200 active:scale-95"
             onMouseDown={startHolding}
             onMouseUp={stopHolding}
             onMouseLeave={stopHolding}
@@ -1922,29 +1922,62 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             disabled={holdProgress >= 100}
             style={{
               background: holdProgress >= 100 
-                ? '#22C55E' // Bright green when complete
-                : '#FFFFFF', // White background - very visible
-              color: holdProgress >= 100 ? '#FFFFFF' : '#000000',
-              borderColor: holdProgress >= 100 ? '#16A34A' : '#374151',
+                ? 'linear-gradient(145deg, #22C55E, #16A34A)' 
+                : 'linear-gradient(145deg, #DC2626, #991B1B)',
+              color: '#FFFFFF',
+              border: '4px solid rgba(255, 255, 255, 0.2)',
               boxShadow: holdProgress >= 100 
-                ? '0 0 20px rgba(34, 197, 94, 0.5)' 
-                : '0 0 20px rgba(255, 255, 255, 0.5)', // White glow to make it super visible
+                ? `
+                  0 8px 32px rgba(34, 197, 94, 0.4),
+                  0 4px 16px rgba(34, 197, 94, 0.3),
+                  inset 0 2px 4px rgba(255, 255, 255, 0.3),
+                  inset 0 -2px 4px rgba(0, 0, 0, 0.2)
+                `
+                : `
+                  0 8px 32px rgba(220, 38, 38, 0.4),
+                  0 4px 16px rgba(220, 38, 38, 0.3),
+                  inset 0 2px 4px rgba(255, 255, 255, 0.3),
+                  inset 0 -2px 4px rgba(0, 0, 0, 0.2)
+                `,
               cursor: holdProgress >= 100 ? 'default' : 'pointer',
-              transition: 'all 0.3s ease'
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+              transform: isHolding ? 'scale(0.98)' : 'scale(1)'
             }}
           >
-            {/* Red progress fill overlay that goes from left to right */}
+            {/* Circular progress fill overlay */}
             <div 
-              className="absolute left-0 top-0 bottom-0 bg-red-600 rounded-full transition-all duration-100"
+              className="absolute inset-2 rounded-full transition-all duration-100"
               style={{ 
-                width: `${holdProgress}%`,
+                background: holdProgress > 0 && holdProgress < 100 
+                  ? `conic-gradient(from 0deg, #EF4444 0%, #EF4444 ${holdProgress * 3.6}deg, rgba(255, 255, 255, 0.1) ${holdProgress * 3.6}deg, rgba(255, 255, 255, 0.1) 360deg)`
+                  : 'transparent',
                 opacity: holdProgress > 0 && holdProgress < 100 ? 1 : 0
               }}
             />
             
-            <span className="relative z-10">
-              {holdProgress >= 100 ? '🔥 COMMITTED! 🔥' : 'HOLD TO COMMIT'}
-            </span>
+            {/* Inner content circle */}
+            <div className="absolute inset-4 rounded-full flex items-center justify-center"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
+            >
+              <span className="relative z-10 text-center leading-tight">
+                {holdProgress >= 100 ? (
+                  <div>
+                    <div className="text-2xl mb-2">🔥</div>
+                    <div>COMMITTED!</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="text-sm mb-1">HOLD</div>
+                    <div className="text-sm">TO</div>
+                    <div className="text-sm">COMMIT</div>
+                  </div>
+                )}
+              </span>
+            </div>
           </button>
         </div>
       )}
