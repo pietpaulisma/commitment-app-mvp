@@ -276,8 +276,21 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   }
 
   const handleSignUp = async () => {
+    // Demo/testing mode - skip account creation if fields are empty
     if (!email.trim() || !password.trim()) {
-      setError('Email and password are required')
+      console.log('Creating demo user for testing')
+      // Create a demo user session for testing
+      const testUser = {
+        id: 'test-onboarding-user-' + Date.now(),
+        email: email.trim() || 'test@onboarding.com',
+        role: 'user'
+      }
+      localStorage.setItem('demo-user', JSON.stringify(testUser))
+      
+      // Small delay to ensure localStorage is set
+      setTimeout(() => {
+        nextStep()
+      }, 100)
       return
     }
 
@@ -290,7 +303,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password,
         options: {
@@ -302,8 +315,28 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
 
       if (error) throw error
       
-      // Continue to next step after successful signup
-      nextStep()
+      // Check if user was created successfully
+      if (data.user) {
+        console.log('User created:', data.user.email)
+        
+        // If user needs email confirmation, show message
+        if (!data.session && data.user && !data.user.email_confirmed_at) {
+          setError('Please check your email and click the confirmation link, then try logging in.')
+          setIsLoading(false)
+          return
+        }
+        
+        // If user is immediately signed in (confirmation disabled), continue
+        if (data.session) {
+          nextStep()
+        } else {
+          // For email confirmation flow, redirect to login
+          setError('Account created! Please check your email for confirmation, then use the login screen.')
+          setTimeout(() => {
+            onGoToLogin?.()
+          }, 3000)
+        }
+      }
     } catch (error: any) {
       console.error('Signup failed:', error)
       setError(error.message || 'Failed to create account')
@@ -322,6 +355,17 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     setError('')
 
     try {
+      // Check if we're in demo mode
+      const demoUser = localStorage.getItem('demo-user')
+      if (demoUser) {
+        console.log('Demo mode: skipping invite code validation')
+        // In demo mode, just proceed to next step
+        setTimeout(() => {
+          nextStep()
+        }, 1000) // Simulate some loading time
+        return
+      }
+
       const { data, error } = await supabase.rpc('join_group_via_invite', {
         p_invite_code: inviteCode.trim().toUpperCase()
       })
@@ -351,6 +395,17 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     setError('')
 
     try {
+      // Check if we're in demo mode
+      const demoUser = localStorage.getItem('demo-user')
+      if (demoUser) {
+        console.log('Demo mode: skipping profile database update')
+        // In demo mode, just proceed to completion
+        setTimeout(() => {
+          onComplete?.()
+        }, 1000)
+        return
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -766,13 +821,14 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             <div className="space-y-4">
               <h2 className="text-4xl font-black">Create Your Account</h2>
               <p className="text-xl text-gray-300 font-bold">Enter your credentials to lock in your commitment.</p>
+              <p className="text-sm text-gray-400 font-medium">Leave fields empty to skip account creation for testing</p>
             </div>
             
             <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
               <div className="space-y-4">
                 <input
                   type="email"
-                  placeholder="Email address"
+                  placeholder="Email address (optional for testing)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
@@ -780,7 +836,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                 />
                 <input
                   type="password"
-                  placeholder="Create password"
+                  placeholder="Create password (optional for testing)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
