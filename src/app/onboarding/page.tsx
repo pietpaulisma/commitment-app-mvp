@@ -271,8 +271,9 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       setRevealedSentences(0)
       setHasScrolledToBottom(false)
     } else {
-      console.log('Onboarding nextStep completed, calling onComplete callback')
-      onComplete?.()
+      console.log('Onboarding nextStep completed, updating profile and calling onComplete callback')
+      // Set onboarding completion flag before calling onComplete
+      handleFinalCompletion()
     }
   }
 
@@ -540,6 +541,72 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     } catch (error: any) {
       console.error('Error joining via invite code:', error)
       setError(error.message || 'Invalid or expired invite code')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleFinalCompletion = async () => {
+    setIsLoading(true)
+    setError('')
+    
+    try {
+      // Check if we're in demo mode
+      const demoUser = localStorage.getItem('demo-user')
+      if (demoUser) {
+        console.log('Demo mode: skipping profile database update')
+        // In demo mode, just proceed to completion
+        setTimeout(() => {
+          onComplete?.()
+        }, 1000)
+        return
+      }
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        throw new Error('User not authenticated')
+      }
+
+      // Update profile with all collected data and mark onboarding as complete
+      const profileData = {
+        username: username.trim() || user.email?.split('@')[0] || 'User',
+        onboarding_completed: true,
+        personal_color: selectedColor || '#3b82f6',
+        custom_icon: selectedEmoji || selectedEmojiInput || '💪',
+        birth_date: birthday || null,
+        updated_at: new Date().toISOString()
+      }
+
+      console.log('Updating profile with completion data:', profileData)
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Profile update error:', updateError)
+        // Try fallback with minimal data
+        const { error: basicUpdateError } = await supabase
+          .from('profiles')
+          .update({
+            username: profileData.username,
+            onboarding_completed: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+          
+        if (basicUpdateError) {
+          throw basicUpdateError
+        }
+      }
+
+      console.log('Profile updated successfully, completing onboarding')
+      onComplete?.()
+    } catch (error: any) {
+      console.error('Final completion failed:', error)
+      setError(error.message || 'Failed to complete onboarding')
     } finally {
       setIsLoading(false)
     }
@@ -1620,6 +1687,19 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                   <p className="text-red-400 font-black text-xl">
                     Welcome to the commitment lifestyle.
                   </p>
+                  
+                  {error && (
+                    <div className="mt-4 p-4 bg-red-950/50 border border-red-600 rounded-xl">
+                      <p className="text-red-400 font-bold">Error: {error}</p>
+                    </div>
+                  )}
+                  
+                  {isLoading && (
+                    <div className="mt-4 text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-400 mx-auto"></div>
+                      <p className="text-gray-400 mt-2">Completing onboarding...</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
