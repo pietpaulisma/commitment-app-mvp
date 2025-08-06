@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { motion } from 'motion/react'
+import { AlertTriangle } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -92,6 +94,9 @@ export default function Login() {
         setMessage('Check your email to confirm your account!')
         setLoading(false)
         return
+      } else if (isSignUp) {
+        // New user signup - redirect to new onboarding
+        router.push('/onboarding')
       } else {
         // Sign in existing user
         const { error } = await supabase.auth.signInWithPassword({
@@ -108,102 +113,153 @@ export default function Login() {
     }
   }
 
+  const handleSignUp = () => {
+    router.push('/onboarding')
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="max-w-md w-full px-4">
-        <div className="bg-gray-900/30 border border-gray-800 p-6">
-          <h2 className="text-2xl font-bold text-center mb-6 text-white">
-            {isSignUp ? 'Create Account' : 'Sign In'}
-          </h2>
-          
-          {message && (
-            <div className={`mb-4 p-3 border text-sm ${
-              message.includes('Check your email') 
-                ? 'bg-green-900/20 text-green-400 border-green-800'
-                : 'bg-red-900/20 text-red-400 border-red-800'
-            }`}>
-              {message}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Email
-              </label>
-              <input 
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-orange-400 text-sm bg-gray-800 text-white"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Password
-              </label>
-              <input 
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-orange-400 text-sm bg-gray-800 text-white"
-                placeholder="Enter your password"
-                required
-                minLength={6}
-              />
-            </div>
-            <button 
-              type="submit"
-              disabled={loading}
-              className="w-full bg-orange-400 text-black py-4 px-4 hover:bg-orange-500 transition-colors font-black text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
-            </button>
-          </form>
-          
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-orange-400 hover:text-orange-300 text-sm font-bold"
-            >
-              {isSignUp ? '← Back to Sign In' : 'Need an account? → Create Account'}
-            </button>
+    <div 
+      className="min-h-screen text-white relative overflow-hidden flex items-center justify-center"
+      style={{
+        background: '#000000',
+        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif'
+      }}
+    >
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        className="text-center space-y-8 max-w-md mx-auto px-4 w-full"
+      >
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="w-16 h-16 bg-red-600 rounded-2xl mx-auto flex items-center justify-center mb-6">
+            <AlertTriangle className="w-8 h-8 text-white" />
           </div>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-800/50 border border-gray-700">
-            <h3 className="text-sm font-medium text-white mb-2">Demo Accounts (for testing):</h3>
-            <div className="space-y-2 text-sm">
-              <button 
-                onClick={() => fillDemoCredentials('demo@test.com', 'demo123')}
-                className="w-full flex justify-between items-center p-2 hover:bg-gray-700 transition-colors"
-              >
-                <span className="text-gray-400">User Demo:</span>
-                <span className="font-mono text-xs text-orange-400">demo@test.com / demo123</span>
-              </button>
-              <button 
-                onClick={() => fillDemoCredentials('admin@test.com', 'admin123')}
-                className="w-full flex justify-between items-center p-2 hover:bg-gray-700 transition-colors"
-              >
-                <span className="text-gray-400">Admin Demo:</span>
-                <span className="font-mono text-xs text-orange-400">admin@test.com / admin123</span>
-              </button>
-              <button 
-                onClick={() => fillDemoCredentials('onboarding@test.com', 'demo123')}
-                className="w-full flex justify-between items-center p-2 hover:bg-gray-700 transition-colors"
-              >
-                <span className="text-gray-400">Onboarding Test:</span>
-                <span className="font-mono text-xs text-red-400">onboarding@test.com / demo123</span>
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Click any demo account to auto-fill
+          
+          <div>
+            <h1 className="text-4xl md:text-5xl font-black mb-4">COMMITMENT</h1>
+            <p className="text-xl md:text-2xl text-gray-300 font-bold">
+              Welcome back to <span className="text-red-400 underline">the lifestyle</span>
             </p>
           </div>
         </div>
-      </div>
+
+        {/* Error/Success Messages */}
+        {message && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-4 border rounded-2xl text-sm font-bold ${
+              message.includes('Check your email') 
+                ? 'bg-green-900/50 text-green-400 border-green-600'
+                : 'bg-red-900/50 text-red-400 border-red-600'
+            }`}
+          >
+            {message}
+          </motion.div>
+        )}
+
+        {/* Login Form */}
+        <motion.div
+          className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 md:p-8 backdrop-blur-sm"
+          animate={{
+            boxShadow: '0 15px 40px rgba(220, 38, 38, 0.2)'
+          }}
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
+                disabled={loading}
+              />
+              
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
+                disabled={loading}
+                minLength={6}
+              />
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={loading}
+              className="w-full relative overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                background: 'linear-gradient(135deg, #B91C1C 0%, #7F1D1D 100%)',
+                borderRadius: '12px',
+                padding: '16px',
+                border: '1px solid rgba(185, 28, 28, 0.4)',
+                boxShadow: '0 0 15px rgba(185, 28, 28, 0.3)'
+              }}
+            >
+              <span className="text-white text-lg font-black">
+                {loading ? 'SIGNING IN...' : 'LOGIN TO CONTINUE'}
+              </span>
+            </motion.button>
+          </form>
+        </motion.div>
+
+        {/* Sign up link */}
+        <div className="text-center">
+          <p className="text-gray-500 font-medium">
+            Don't have an account?{' '}
+            <motion.button
+              onClick={handleSignUp}
+              className="text-gray-400 hover:text-red-400 underline font-medium transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Sign up here
+            </motion.button>
+          </p>
+        </div>
+
+        {/* Demo Credentials */}
+        <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
+          <h3 className="text-sm font-medium text-white mb-4 text-center">Demo Accounts (for testing):</h3>
+          <div className="space-y-2 text-sm">
+            <button 
+              onClick={() => fillDemoCredentials('demo@test.com', 'demo123')}
+              className="w-full flex justify-between items-center p-3 hover:bg-gray-700/50 rounded-xl transition-colors"
+              disabled={loading}
+            >
+              <span className="text-gray-400">User Demo:</span>
+              <span className="font-mono text-xs text-red-400">demo@test.com / demo123</span>
+            </button>
+            <button 
+              onClick={() => fillDemoCredentials('admin@test.com', 'admin123')}
+              className="w-full flex justify-between items-center p-3 hover:bg-gray-700/50 rounded-xl transition-colors"
+              disabled={loading}
+            >
+              <span className="text-gray-400">Admin Demo:</span>
+              <span className="font-mono text-xs text-red-400">admin@test.com / admin123</span>
+            </button>
+            <button 
+              onClick={() => fillDemoCredentials('onboarding@test.com', 'demo123')}
+              className="w-full flex justify-between items-center p-3 hover:bg-gray-700/50 rounded-xl transition-colors"
+              disabled={loading}
+            >
+              <span className="text-gray-400">Onboarding Test:</span>
+              <span className="font-mono text-xs text-red-400">onboarding@test.com / demo123</span>
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Click any demo account to auto-fill
+          </p>
+        </div>
+      </motion.div>
     </div>
   )
 }
