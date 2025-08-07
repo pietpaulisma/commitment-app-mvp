@@ -712,7 +712,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       points *= 1.5
     }
     
-    return (Math.round(points * 100) / 100) // Round to 2 decimal places
+    return Math.ceil(points) // Round up to avoid decimal submission errors
   }
 
   const loadExercises = async () => {
