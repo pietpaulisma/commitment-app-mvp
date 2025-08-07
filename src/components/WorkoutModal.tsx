@@ -337,7 +337,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     const exercise = exercises.find(ex => ex.id === workout.exercise_id)
     if (exercise) {
       setSelectedWorkoutExercise(exercise)
-      setWorkoutCount('')
+      setWorkoutCount(0)
       setSelectedWeight(workout.weight || 0)
       setWorkoutInputOpen(true)
       // Scroll to top of modal
@@ -1638,7 +1638,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     key={index}
                     onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-2xl flex items-center justify-center"
                   >
                     <span className="text-2xl font-bold">{button.label}</span>
                   </button>
@@ -1688,7 +1688,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             setSelectedWeight(button.value)
                           }
                         }}
-                        className={`${buttonStyle} aspect-square rounded-3xl relative`}
+                        className={`${buttonStyle} aspect-square rounded-2xl relative`}
                       >
                         {isLocked && (
                           <div className="absolute top-2 right-2 z-20">
@@ -1738,23 +1738,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </button>
               )}
 
-              {/* Calculation breakdown - Compact */}
-              <div className="text-center space-y-1 px-4 py-3">
-                <div className="text-xs text-white/50 font-medium">CALCULATION</div>
-                <div className="text-lg font-sans tracking-wide">
-                  <span className="text-white font-bold">{workoutCount}</span>
-                  <span className="text-white/40 mx-2">+</span>
-                  <span className="text-indigo-400 font-bold">{isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight}</span>
-                  <span className="text-white/40 mx-2">=</span>
-                  <span className="text-white font-black text-xl">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)}</span>
-                </div>
+              {/* Calculation breakdown - Even more compact */}
+              <div className="text-center space-y-1 px-4 py-2">
                 <div className="text-xs text-white/40 font-sans">
-                  Base: {workoutCount} • Weight: {selectedWeight}{isDecreasedExercise ? ' × 0.5' : ''}
+                  {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight} = {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts
                 </div>
               </div>
               
-              {/* Submit button */}
-              <div className="px-4 pt-6" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+              {/* Submit button - Fixed positioning */}
+              <div className="px-4 py-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 <button
                 onClick={async () => {
                   if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
@@ -1807,7 +1799,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   }
                 }}
                 disabled={loading || workoutCount <= 0}
-                className="w-full relative overflow-hidden border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl hover:scale-105 active:scale-95 py-8 rounded-3xl font-black text-2xl transition-all duration-200 touch-manipulation"
+                className={`w-full relative overflow-hidden shadow-2xl hover:scale-105 active:scale-95 py-6 rounded-3xl font-black text-xl transition-all duration-200 touch-manipulation ${
+                  calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
+                    ? 'bg-gradient-to-r from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 text-white'
+                    : 'border border-white/10 bg-black/70 backdrop-blur-xl text-white/60'
+                }`}
               >
                 <span className="relative z-10">SUBMIT • {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</span>
                 </button>
