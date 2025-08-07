@@ -1490,9 +1490,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         </div>
 
-        {/* Workout Input Overlay - Exact Counter.tsx Implementation */}
+        {/* Workout Input Overlay - Fixed Layout */}
         {workoutInputOpen && selectedWorkoutExercise && (
-          <div className="fixed inset-0 bg-black text-white z-[110] overflow-y-auto animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <div className="fixed inset-0 bg-black text-white z-[110] flex flex-col animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {/* Subtle background pattern */}
             <div className="absolute inset-0 opacity-3">
               <div className="absolute inset-0" style={{ 
@@ -1588,7 +1588,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               )}
             </div>
 
-            <div className="flex-1 p-3 flex flex-col gap-3">
+            <div className="flex-1 p-3 flex flex-col gap-3 overflow-y-auto">
               {/* Interactive Counter Display */}
               <div className="relative flex items-center justify-center h-32 group">
                 {/* Background glow effect */}
@@ -1638,7 +1638,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     key={index}
                     onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-xl flex items-center justify-center"
                   >
                     <span className="text-2xl font-bold">{button.label}</span>
                   </button>
@@ -1688,7 +1688,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             setSelectedWeight(button.value)
                           }
                         }}
-                        className={`${buttonStyle} aspect-square rounded-3xl relative`}
+                        className={`${buttonStyle} aspect-square rounded-xl relative`}
                       >
                         {isLocked && (
                           <div className="absolute top-2 right-2 z-20">
@@ -1713,8 +1713,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               )}
             </div>
 
-            {/* Bottom section with calculation and submit */}
-            <div className="p-4 space-y-4 border-t border-white/10 backdrop-blur-sm">
+            {/* Bottom section with calculation and submit - Fixed at bottom */}
+            <div className="flex-shrink-0 p-4 space-y-2 border-t border-white/10 backdrop-blur-sm">
               {/* Decreased/Regular toggle */}
               {selectedWorkoutExercise.supports_decreased && (
                 <button
@@ -1738,15 +1738,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </button>
               )}
 
-              {/* Calculation breakdown - Minimal */}
-              <div className="text-center px-4 py-1">
+              {/* Calculation breakdown - Inline */}
+              <div className="text-center">
                 <div className="text-xs text-white/40 font-sans">
                   {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight} = {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts
                 </div>
               </div>
               
-              {/* Submit button - Fixed positioning */}
-              <div className="px-4 py-2" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              {/* Submit button - Always at bottom */}
+              <div style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 <button
                 onClick={async () => {
                   if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
