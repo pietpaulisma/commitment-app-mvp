@@ -949,7 +949,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     
     // Reset state and open workout input popup
     setSelectedWorkoutExercise(exercise)
-    setWorkoutCount(defaultQuantity || (exercise.is_time_based ? 5 : 1)) // Smart defaults: 5 for time-based, 1 for reps
+    setWorkoutCount(defaultQuantity || 0) // All exercises start at 0
     setSelectedWeight(lockedWeight || 0) // Use locked weight if available
     setIsDecreasedExercise(false)
     setWorkoutInputOpen(true)

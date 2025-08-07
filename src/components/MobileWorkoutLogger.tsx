@@ -417,7 +417,7 @@ export default function MobileWorkoutLogger() {
     return Math.round((getRecoveryPoints() / total) * 100)
   }
 
-  const quickAddExercise = (exercise: Exercise, defaultQuantity: number = 10) => {
+  const quickAddExercise = (exercise: Exercise, defaultQuantity: number = 0) => {
     setSelectedExercise(exercise)
     setQuantity(defaultQuantity.toString())
     setWeight('')
