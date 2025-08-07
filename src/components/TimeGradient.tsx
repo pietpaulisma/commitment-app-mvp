@@ -98,15 +98,15 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 80% 50% at ${blobPositionX}% 100%, 
-              ${colors.primary}25 0%, 
-              transparent 50%),
-            radial-gradient(ellipse 70% 45% at ${blobPositionX + 20}% 100%, 
-              ${colors.secondary}20 0%, 
-              transparent 50%),
-            radial-gradient(ellipse 60% 40% at ${blobPositionX + 10}% 100%, 
-              ${colors.accent}15 0%, 
-              transparent 50%)
+            radial-gradient(ellipse 100% 60% at ${blobPositionX}% 100%, 
+              ${colors.primary}40 0%, 
+              transparent 40%),
+            radial-gradient(ellipse 90% 55% at ${blobPositionX + 20}% 100%, 
+              ${colors.secondary}35 0%, 
+              transparent 35%),
+            radial-gradient(ellipse 80% 50% at ${blobPositionX + 10}% 100%, 
+              ${colors.accent}30 0%, 
+              transparent 30%)
           `
         }}
       />
