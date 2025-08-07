@@ -8,6 +8,41 @@ interface TimeGradientProps {
 
 export default function TimeGradient({ className = '' }: TimeGradientProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [gradientVariation, setGradientVariation] = useState({
+    size1: { width: 120, height: 70 },
+    size2: { width: 110, height: 65 },
+    size3: { width: 100, height: 60 },
+    pos1: 65,
+    pos2: 60,
+    pos3: 70,
+    offsetX1: 25,
+    offsetX2: 45,
+    offsetX3: 35
+  })
+
+  useEffect(() => {
+    // Randomize gradient shape on mount
+    setGradientVariation({
+      size1: { 
+        width: 100 + Math.random() * 40, // 100-140%
+        height: 60 + Math.random() * 20   // 60-80%
+      },
+      size2: { 
+        width: 90 + Math.random() * 30,   // 90-120%
+        height: 55 + Math.random() * 20   // 55-75%
+      },
+      size3: { 
+        width: 80 + Math.random() * 40,   // 80-120%
+        height: 50 + Math.random() * 25   // 50-75%
+      },
+      pos1: 55 + Math.random() * 20,      // 55-75%
+      pos2: 50 + Math.random() * 20,      // 50-70%
+      pos3: 60 + Math.random() * 20,      // 60-80%
+      offsetX1: 15 + Math.random() * 20,  // 15-35%
+      offsetX2: 35 + Math.random() * 20,  // 35-55%
+      offsetX3: 25 + Math.random() * 20   // 25-45%
+    })
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -98,16 +133,16 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 120% 70% at ${blobPositionX}% 65%, 
+            radial-gradient(ellipse ${gradientVariation.size1.width}% ${gradientVariation.size1.height}% at ${blobPositionX + gradientVariation.offsetX1 - 25}% ${gradientVariation.pos1}%, 
               ${colors.primary} 0%, 
               ${colors.primary}CC 20%, 
               ${colors.primary}80 40%, 
               transparent 60%),
-            radial-gradient(ellipse 110% 65% at ${blobPositionX + 20}% 60%, 
+            radial-gradient(ellipse ${gradientVariation.size2.width}% ${gradientVariation.size2.height}% at ${blobPositionX + gradientVariation.offsetX2 - 20}% ${gradientVariation.pos2}%, 
               ${colors.secondary}DD 0%, 
               ${colors.secondary}99 25%, 
               transparent 50%),
-            radial-gradient(ellipse 100% 60% at ${blobPositionX + 10}% 70%, 
+            radial-gradient(ellipse ${gradientVariation.size3.width}% ${gradientVariation.size3.height}% at ${blobPositionX + gradientVariation.offsetX3 - 15}% ${gradientVariation.pos3}%, 
               ${colors.accent}BB 0%, 
               ${colors.accent}77 30%, 
               transparent 50%)
