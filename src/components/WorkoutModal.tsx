@@ -1555,10 +1555,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               </button>
               
               {isStopwatchExpanded && (
-                <div className="px-4 pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
-                  {/* Large time display - Compact */}
+                <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  {/* Large time display */}
                   <div className="text-center">
-                    <div className="font-sans text-3xl font-bold text-cyan-400 tracking-wider">
+                    <div className="font-sans text-6xl font-bold text-cyan-400 tracking-wider">
                       {formatTime(stopwatchTime)}
                     </div>
                   </div>
@@ -1589,8 +1589,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
 
             <div className="flex-1 p-3 flex flex-col gap-3">
-              {/* Interactive Counter Display - Compact */}
-              <div className="relative flex items-center justify-center h-20 group">
+              {/* Interactive Counter Display */}
+              <div className="relative flex items-center justify-center h-32 group">
                 {/* Background glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-purple-500/8 rounded-3xl blur-xl"></div>
                 
@@ -1617,7 +1617,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <span 
                       className="font-sans font-black tabular-nums text-white leading-none tracking-tight drop-shadow-2xl" 
                       style={{ 
-                        fontSize: '3rem',
+                        fontSize: '5rem',
                         textShadow: '0 0 40px rgba(255,255,255,0.2)' 
                       }}
                     >
@@ -1638,9 +1638,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     key={index}
                     onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation h-12 rounded-2xl flex items-center justify-center"
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
                   >
-                    <span className="text-lg font-bold">{button.label}</span>
+                    <span className="text-2xl font-bold">{button.label}</span>
                   </button>
                 ))}
               </div>
@@ -1688,7 +1688,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             setSelectedWeight(button.value)
                           }
                         }}
-                        className={`${buttonStyle} h-14 rounded-2xl relative`}
+                        className={`${buttonStyle} aspect-square rounded-3xl relative`}
                       >
                         {isLocked && (
                           <div className="absolute top-2 right-2 z-20">
@@ -1807,9 +1807,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   }
                 }}
                 disabled={loading || workoutCount <= 0}
-                className="w-full relative overflow-hidden bg-gradient-to-b from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_12px_40px_rgba(99,102,241,0.5)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_16px_48px_rgba(99,102,241,0.7)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_6px_20px_rgba(99,102,241,0.4)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.96] hover:scale-[1.03] py-8 rounded-3xl font-black text-lg transition-all duration-200 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/15 before:to-transparent before:pointer-events-none"
+                className="w-full relative overflow-hidden border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl hover:scale-105 active:scale-95 py-8 rounded-3xl font-black text-2xl transition-all duration-200 touch-manipulation"
               >
-                <span className="relative z-10">Submit • {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} points</span>
+                <span className="relative z-10">SUBMIT • {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</span>
                 </button>
               </div>
             </div>
