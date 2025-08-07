@@ -1171,7 +1171,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             
             {/* Content area - only show when not in hold mode */}
             {!showHoldButton && (
-              <div className="space-y-8 relative z-10 pointer-events-auto min-h-screen pb-32">
+              <div className="space-y-8 relative z-10 pointer-events-auto min-h-screen">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1274,6 +1274,69 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                     </div>
                   </div>
                 </motion.div>
+                
+                {/* Two buttons for final warning step - positioned below content */}
+                {hasScrolledToBottom && (
+                  <div className="relative z-50 px-4 pb-8 pointer-events-none">
+                    <div className="flex space-x-4 w-full max-w-lg mx-auto pointer-events-auto">
+                      {/* I refuse button - blue */}
+                      <motion.button
+                        onClick={() => onGoToLogin?.()}
+                        className="relative overflow-hidden flex-1"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{
+                          background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                          borderRadius: '9999px',
+                          padding: '12px 24px',
+                          border: '1px solid rgba(37, 99, 235, 0.4)',
+                          boxShadow: '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          cursor: 'pointer'
+                        }}
+                        animate={{
+                          boxShadow: [
+                            '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 0 25px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                          ]
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <span className="text-white text-lg font-black tracking-wide relative z-10">
+                          I refuse
+                        </span>
+                      </motion.button>
+
+                      {/* I Commit button - red */}
+                      <motion.button
+                        onClick={() => setShowHoldButton(true)}
+                        className="relative overflow-hidden flex-1"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{
+                          background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 80%, #7F1D1D 100%)',
+                          borderRadius: '9999px',
+                          padding: '12px 24px',
+                          border: '1px solid rgba(220, 38, 38, 0.6)',
+                          boxShadow: '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          cursor: 'pointer'
+                        }}
+                        animate={{
+                          boxShadow: [
+                            '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 0 25px rgba(220, 38, 38, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                          ]
+                        }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <span className="text-white text-lg font-black tracking-wide relative z-10">
+                          I Commit
+                        </span>
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1859,68 +1922,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       </div>
       )}
 
-      {/* Two buttons for final warning step - only show when not holding AND when scrolled to bottom */}
-      {currentStep === 2 && !showHoldButton && hasScrolledToBottom && (
-        <div className="fixed bottom-8 left-0 right-0 flex justify-center z-50 px-4 pointer-events-none">
-          <div className="flex space-x-4 w-full max-w-lg pointer-events-auto">
-            {/* I refuse button - blue */}
-            <motion.button
-              onClick={() => onGoToLogin?.()}
-              className="relative overflow-hidden flex-1"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                borderRadius: '9999px',
-                padding: '12px 24px',
-                border: '1px solid rgba(37, 99, 235, 0.4)',
-                boxShadow: '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                cursor: 'pointer'
-              }}
-              animate={{
-                boxShadow: [
-                  '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                  '0 0 25px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                  '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <span className="text-white text-lg font-black tracking-wide relative z-10">
-                I refuse
-              </span>
-            </motion.button>
-
-            {/* I Commit button - red */}
-            <motion.button
-              onClick={() => setShowHoldButton(true)}
-              className="relative overflow-hidden flex-1"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 80%, #7F1D1D 100%)',
-                borderRadius: '9999px',
-                padding: '12px 24px',
-                border: '1px solid rgba(220, 38, 38, 0.6)',
-                boxShadow: '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                cursor: 'pointer'
-              }}
-              animate={{
-                boxShadow: [
-                  '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                  '0 0 25px rgba(220, 38, 38, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                  '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <span className="text-white text-lg font-black tracking-wide relative z-10">
-                I Commit
-              </span>
-            </motion.button>
-          </div>
-        </div>
-      )}
 
       {/* Hold button - positioned at bottom like other buttons - matches commit button style */}
       {currentStep === 2 && showHoldButton && (
