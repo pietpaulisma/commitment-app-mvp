@@ -659,18 +659,12 @@ export default function MobileWorkoutLogger() {
                       </div>
                     )}
 
-                    {/* Points Preview */}
+                    {/* Points Preview - Compact */}
                     {quantity && (
-                      <div className="bg-gray-900/30 backdrop-blur-xl rounded-3xl p-3 border border-white/5 shadow-2xl mx-1">
+                      <div className="bg-gray-900/30 backdrop-blur-xl rounded-2xl p-2 border border-white/5 mx-1">
                         <div className="flex justify-between items-center">
-                          <div>
-                            <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Points Earned</div>
-                            <div className="text-sm text-white">This workout</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-4xl font-black" style={{ color: getUserColor() }}>{calculatePoints()}</div>
-                            <div className="text-xs text-gray-400">points</div>
-                          </div>
+                          <span className="text-xs text-gray-400">Points:</span>
+                          <span className="text-lg font-bold" style={{ color: getUserColor() }}>{calculatePoints()}</span>
                         </div>
                       </div>
                     )}
