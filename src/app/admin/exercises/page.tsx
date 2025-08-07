@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import ExerciseForm from '@/components/ExerciseForm'
+import TimeGradient from '@/components/TimeGradient'
 import { supabase } from '@/lib/supabase'
 
 type Exercise = {
@@ -101,7 +102,11 @@ export default function ExerciseManagementPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <>
+      {/* Time-based gradient background with increased intensity */}
+      <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" intensity={1.2} />
+      
+      <div className="fixed inset-0 bg-black/80 z-50 flex flex-col">
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-black">
         <div>
@@ -210,5 +215,6 @@ export default function ExerciseManagementPage() {
         }}
       />
     </div>
+    </>
   )
 }

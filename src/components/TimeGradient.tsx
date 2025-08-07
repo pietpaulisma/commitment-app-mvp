@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 
 interface TimeGradientProps {
   className?: string
+  intensity?: number // Multiplier for opacity (default 1.0, use 1.2 for +20% opacity)
 }
 
-export default function TimeGradient({ className = '' }: TimeGradientProps) {
+export default function TimeGradient({ className = '', intensity = 1.0 }: TimeGradientProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [gradientVariation, setGradientVariation] = useState({
     size1: { width: 120, height: 70 },
@@ -146,7 +147,8 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
               ${colors.accent}BB 0%, 
               ${colors.accent}77 30%, 
               transparent 50%)
-          `
+          `,
+          opacity: intensity
         }}
       />
     </div>
