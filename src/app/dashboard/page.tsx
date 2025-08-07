@@ -6,7 +6,7 @@ import RectangularNavigation from '@/components/RectangularNavigation'
 import RectangularDashboard from '@/components/RectangularDashboard'
 import TimeGradient from '@/components/TimeGradient'
 
-// DEV TEST: This change should only appear on dev site
+// DEV TEST: Environment variables added - should build successfully now
 export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
