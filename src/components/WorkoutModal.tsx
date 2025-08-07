@@ -1555,10 +1555,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               </button>
               
               {isStopwatchExpanded && (
-                <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
-                  {/* Large time display */}
+                <div className="px-4 pb-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                  {/* Large time display - Compact */}
                   <div className="text-center">
-                    <div className="font-sans text-6xl font-bold text-cyan-400 tracking-wider">
+                    <div className="font-sans text-3xl font-bold text-cyan-400 tracking-wider">
                       {formatTime(stopwatchTime)}
                     </div>
                   </div>
@@ -1589,8 +1589,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
 
             <div className="flex-1 p-3 flex flex-col gap-3">
-              {/* Interactive Counter Display */}
-              <div className="relative flex items-center justify-center h-32 group">
+              {/* Interactive Counter Display - Compact */}
+              <div className="relative flex items-center justify-center h-20 group">
                 {/* Background glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-purple-500/8 rounded-3xl blur-xl"></div>
                 
@@ -1617,7 +1617,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <span 
                       className="font-sans font-black tabular-nums text-white leading-none tracking-tight drop-shadow-2xl" 
                       style={{ 
-                        fontSize: '5rem',
+                        fontSize: '3rem',
                         textShadow: '0 0 40px rgba(255,255,255,0.2)' 
                       }}
                     >
@@ -1638,9 +1638,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     key={index}
                     onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation h-12 rounded-2xl flex items-center justify-center"
                   >
-                    <span className="text-2xl font-bold">{button.label}</span>
+                    <span className="text-lg font-bold">{button.label}</span>
                   </button>
                 ))}
               </div>
@@ -1688,7 +1688,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             setSelectedWeight(button.value)
                           }
                         }}
-                        className={`${buttonStyle} aspect-square rounded-3xl relative`}
+                        className={`${buttonStyle} h-14 rounded-2xl relative`}
                       >
                         {isLocked && (
                           <div className="absolute top-2 right-2 z-20">
@@ -1738,15 +1738,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </button>
               )}
 
-              {/* Calculation breakdown */}
-              <div className="text-center space-y-3 px-4 py-6">
-                <div className="text-sm text-white/50 font-medium">CALCULATION</div>
-                <div className="text-2xl font-sans tracking-wide">
+              {/* Calculation breakdown - Compact */}
+              <div className="text-center space-y-1 px-4 py-3">
+                <div className="text-xs text-white/50 font-medium">CALCULATION</div>
+                <div className="text-lg font-sans tracking-wide">
                   <span className="text-white font-bold">{workoutCount}</span>
-                  <span className="text-white/40 mx-3">+</span>
+                  <span className="text-white/40 mx-2">+</span>
                   <span className="text-indigo-400 font-bold">{isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight}</span>
-                  <span className="text-white/40 mx-3">=</span>
-                  <span className="text-white font-black text-3xl">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)}</span>
+                  <span className="text-white/40 mx-2">=</span>
+                  <span className="text-white font-black text-xl">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)}</span>
                 </div>
                 <div className="text-xs text-white/40 font-sans">
                   Base: {workoutCount} • Weight: {selectedWeight}{isDecreasedExercise ? ' × 0.5' : ''}
