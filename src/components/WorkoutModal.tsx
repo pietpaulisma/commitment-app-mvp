@@ -1638,7 +1638,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     key={index}
                     onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-2xl flex items-center justify-center"
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
                   >
                     <span className="text-2xl font-bold">{button.label}</span>
                   </button>
@@ -1688,7 +1688,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             setSelectedWeight(button.value)
                           }
                         }}
-                        className={`${buttonStyle} aspect-square rounded-2xl relative`}
+                        className={`${buttonStyle} aspect-square rounded-3xl relative`}
                       >
                         {isLocked && (
                           <div className="absolute top-2 right-2 z-20">
@@ -1738,15 +1738,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </button>
               )}
 
-              {/* Calculation breakdown - Even more compact */}
-              <div className="text-center space-y-1 px-4 py-2">
+              {/* Calculation breakdown - Minimal */}
+              <div className="text-center px-4 py-1">
                 <div className="text-xs text-white/40 font-sans">
                   {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight} = {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts
                 </div>
               </div>
               
               {/* Submit button - Fixed positioning */}
-              <div className="px-4 py-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              <div className="px-4 py-2" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 <button
                 onClick={async () => {
                   if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
