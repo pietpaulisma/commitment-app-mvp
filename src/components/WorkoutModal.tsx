@@ -1638,7 +1638,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     key={index}
                     onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-full flex items-center justify-center"
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation w-20 h-20 rounded-full flex items-center justify-center"
                   >
                     <span className="text-2xl font-bold">{button.label}</span>
                   </button>
@@ -1688,7 +1688,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             setSelectedWeight(button.value)
                           }
                         }}
-                        className={`${buttonStyle} aspect-square rounded-full relative`}
+                        className={`${buttonStyle} w-20 h-20 rounded-full relative`}
                       >
                         {isLocked && (
                           <div className="absolute top-2 right-2 z-20">
