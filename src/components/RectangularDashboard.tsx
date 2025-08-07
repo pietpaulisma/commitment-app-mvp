@@ -1009,7 +1009,7 @@ export default function RectangularDashboard() {
       // Get all group members
       const { data: allMembers } = await supabase
         .from('profiles')
-        .select('id, email, created_at')
+        .select('id, email, username, personal_color, created_at')
         .eq('group_id', profile.group_id)
 
       if (!allMembers) return
@@ -1073,7 +1073,7 @@ export default function RectangularDashboard() {
       // Get all group members first
       const { data: members } = await supabase
         .from('profiles')
-        .select('id, email')
+        .select('id, email, username, personal_color')
         .eq('group_id', profile.group_id)
 
       if (!members || members.length === 0) return null

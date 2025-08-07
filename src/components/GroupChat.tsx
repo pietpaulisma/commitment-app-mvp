@@ -33,6 +33,7 @@ type ChatMessage = {
   created_at: string
   user_email?: string
   user_role?: string
+  username?: string
   reactions?: MessageReaction[]
 }
 
@@ -242,7 +243,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                 // Get user info for the new message
                 const { data: userInfo } = await supabase
                   .from('profiles')
-                  .select('email, role')
+                  .select('email, role, username')
                   .eq('id', payload.new.user_id)
                   .single()
 
@@ -256,6 +257,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                   created_at: payload.new.created_at,
                   user_email: userInfo?.email || 'Unknown',
                   user_role: userInfo?.role || 'user',
+                  username: userInfo?.username,
                   reactions: []
                 }
 
@@ -367,7 +369,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           message_type,
           image_url,
           created_at,
-          profiles (email, role)
+          profiles (email, role, username)
         `)
         .eq('group_id', profile.group_id)
         .order('created_at', { ascending: true })
@@ -385,6 +387,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         created_at: msg.created_at,
         user_email: msg.profiles?.email || 'Unknown',
         user_role: msg.profiles?.role || 'user',
+        username: msg.profiles?.username,
         reactions: []
       })) || []
 
@@ -459,6 +462,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         created_at: new Date().toISOString(),
         user_email: profile.email,
         user_role: profile.role,
+        username: profile.username,
         reactions: []
       }
 

@@ -59,16 +59,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       return
     }
 
-    // Skip checks if already checked this mount cycle
-    if (hasChecked) {
-      return
-    }
-
     console.log('🔍 OnboardingGuard check:', {
       userEmail: user?.email,
       hasProfile: !!profile,
       profileCompleted: profile?.onboarding_completed,
-      pathname
+      pathname,
+      hasChecked
     })
 
     // Don't interfere with auth pages or root page
@@ -76,55 +72,56 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     const isOnboardingPage = pathname?.startsWith('/onboarding')
     
     if (isAuthPage || isOnboardingPage) {
-      console.log('📄 On auth/onboarding page, skipping guard')
-      setHasChecked(true)
+      console.log('📄 On auth/onboarding page, allowing access')
       return
     }
 
-    // Only act if we have a user
+    // If no user, let other auth guards handle it
     if (!user) {
       console.log('👤 No user, skipping guard')
-      setHasChecked(true)
       return
     }
 
     // Special handling for supreme admin
     if (user.email === 'klipperdeklip@gmail.com' && profile && !profile.onboarding_completed) {
       console.log('🔥 Supreme admin needs onboarding completion')
-      createSupremeAdminProfile()
-      setHasChecked(true)
+      if (!hasChecked) {
+        createSupremeAdminProfile()
+        setHasChecked(true)
+      }
       return
     }
 
-    // Check if onboarding is completed
+    // CRITICAL: If user has completed onboarding, always allow access
     if (profile && profile.onboarding_completed === true) {
       console.log('✅ Onboarding completed, allowing access')
-      setHasChecked(true)
       return
     }
 
-    // Redirect to onboarding if needed
-    if (profile && profile.onboarding_completed === false) {
-      console.log('⚠️  Need to complete onboarding')
+    // Only redirect if we're certain onboarding is not completed AND we haven't checked yet
+    if (profile && profile.onboarding_completed === false && !hasChecked) {
+      console.log('⚠️  Profile exists but onboarding not completed, redirecting')
+      setHasChecked(true)
       router.push('/onboarding')
-      setHasChecked(true)
       return
     }
 
-    // No profile - redirect to onboarding
-    if (user && !profile) {
-      console.log('🆕 No profile found, redirecting to onboarding')
+    // Only redirect for missing profile if we haven't checked yet and we're sure
+    if (user && !profile && !profileLoading && !hasChecked) {
+      console.log('🆕 No profile found after loading, redirecting to onboarding')
+      setHasChecked(true)
       router.push('/onboarding')
-      setHasChecked(true)
       return
     }
 
-    setHasChecked(true)
+    console.log('🤷 No redirect needed, allowing access')
   }, [user, profile, authLoading, profileLoading, pathname, router, hasChecked])
 
-  // Reset check flag when user changes
+  // Reset check flag when user ID actually changes (not just during loading)
   useEffect(() => {
-    setHasChecked(false)
+    if (user?.id) {
+      setHasChecked(false)
+    }
   }, [user?.id])
 
 
