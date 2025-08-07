@@ -93,21 +93,19 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
 
   return (
     <div className={`absolute inset-0 bg-black overflow-hidden ${className}`}>
-      {/* Static time-based gradient - no animations */}
+      {/* Half-screen time-based gradient - similar to onboarding */}
       <div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 800px 600px at ${blobPositionX}% ${blobPositionY}%, 
-              ${colors.primary} 0%, 
-              ${colors.secondary}90 20%, 
-              ${colors.accent}75 40%, 
-              ${colors.primary}60 60%, 
-              transparent 75%),
-            radial-gradient(ellipse 650px 450px at ${blobPositionX + 25}% ${blobPositionY - 8}%, 
-              ${colors.accent}60 0%, 
-              ${colors.primary}40 25%, 
-              ${colors.secondary}30 50%, 
+            radial-gradient(ellipse 60% 40% at ${blobPositionX}% 100%, 
+              ${colors.primary}15 0%, 
+              transparent 70%),
+            radial-gradient(ellipse 50% 35% at ${blobPositionX + 20}% 100%, 
+              ${colors.secondary}12 0%, 
+              transparent 70%),
+            radial-gradient(ellipse 40% 30% at ${blobPositionX + 10}% 100%, 
+              ${colors.accent}10 0%, 
               transparent 70%)
           `
         }}
