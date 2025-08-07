@@ -18,35 +18,49 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const [hasChecked, setHasChecked] = useState(false)
   const mountedRef = useRef(false)
 
-  // TEMPORARY: Disable OnboardingGuard completely to test if it's the issue
-  console.log('⚠️ OnboardingGuard TEMPORARILY DISABLED for debugging')
-  return <>{children}</>
+  // Re-enabled with better supreme admin handling
 
   const createSupremeAdminProfile = async () => {
     try {
-      console.log('🔥 Updating supreme admin profile for:', user?.email, 'ID:', user?.id)
+      console.log('🔥 Creating/updating supreme admin profile for:', user?.email, 'ID:', user?.id)
       
       const profileData = {
+        id: user?.id,
+        email: user?.email,
         username: 'Matthijs',
         custom_icon: '🔥',
         personal_color: '#ef4444',
         onboarding_completed: true,
+        role: 'supreme_admin',
+        preferred_weight: 75,
+        is_weekly_mode: false,
+        location: 'Amsterdam',
+        use_ip_location: false,
+        first_name: 'Matthijs',
+        last_name: null,
+        birth_date: null,
+        last_donation_date: null,
+        total_donated: 0,
+        donation_rate: 0.10,
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
       
+      // Try upsert (insert or update)
       const { data, error } = await supabase
         .from('profiles')
-        .update(profileData)
-        .eq('id', user?.id)
+        .upsert(profileData)
         .select()
 
       if (error) {
-        console.error('❌ Error updating supreme admin profile:', error)
+        console.error('❌ Error upserting supreme admin profile:', error)
       } else {
-        console.log('✅ Supreme admin profile updated successfully:', data)
+        console.log('✅ Supreme admin profile created/updated successfully:', data)
+        // Force page reload to refresh profile data
+        window.location.reload()
       }
     } catch (error) {
-      console.error('💥 Exception updating supreme admin profile:', error)
+      console.error('💥 Exception creating supreme admin profile:', error)
     }
   }
 
@@ -91,11 +105,16 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       return
     }
 
-    // Special case for supreme admin
-    if (user.email === 'klipperdeklip@gmail.com' && profile && !profile.onboarding_completed) {
-      console.log('🔥 Supreme admin detected - completing onboarding automatically')
-      createSupremeAdminProfile()
-      return
+    // Special case for supreme admin - handle missing profile or incomplete onboarding
+    if (user.email === 'klipperdeklip@gmail.com') {
+      if (!profile || !profile.onboarding_completed) {
+        console.log('🔥 Supreme admin detected - creating/updating profile automatically')
+        createSupremeAdminProfile()
+        return
+      } else {
+        console.log('✅ Supreme admin profile is complete')
+        return
+      }
     }
 
     // DEBUG: Let's see exactly what the profile looks like
