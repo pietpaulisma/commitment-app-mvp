@@ -576,8 +576,20 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   }
 
   const handleCompleteProfile = async () => {
-    if (!username.trim()) {
+    const trimmedUsername = username.trim()
+    
+    if (!trimmedUsername) {
       setError('Username is required')
+      return
+    }
+    
+    if (trimmedUsername.length > 13) {
+      setError('Username must be 13 characters or less')
+      return
+    }
+    
+    if (trimmedUsername.includes(' ')) {
+      setError('Username cannot contain spaces')
       return
     }
 
@@ -647,7 +659,8 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       case 8:
         return birthday
       case 9:
-        return username.trim()
+        const trimmedUsername = username.trim()
+        return trimmedUsername && trimmedUsername.length <= 13 && !trimmedUsername.includes(' ')
       case 10:
         return true
       default:

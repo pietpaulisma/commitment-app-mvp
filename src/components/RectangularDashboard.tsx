@@ -1544,7 +1544,7 @@ export default function RectangularDashboard() {
               message, 
               created_at, 
               user_id,
-              profiles!inner(email, role)
+              profiles!inner(email, role, username)
             `)
             .eq('group_id', profile.group_id)
             .order('created_at', { ascending: false })
@@ -1554,6 +1554,7 @@ export default function RectangularDashboard() {
             ...chat,
             user_email: chat.profiles.email,
             user_role: chat.profiles.role,
+            username: chat.profiles.username,
             is_own_message: chat.user_id === user.id
           })) || []
 
