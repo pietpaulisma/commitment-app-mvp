@@ -733,6 +733,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           exercises (*)
         `)
         .eq('group_id', profile.group_id)
+        .order('exercises(name)')
 
       if (exerciseError) {
         console.error('Error loading group exercises:', exerciseError)
@@ -750,7 +751,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       console.log('Total exercises in database:', allExercises?.length || 0)
       console.log('All exercise names:', allExercises?.map(ex => ex.name) || [])
 
-      const exerciseList = groupExercises?.map(ge => ge.exercises).filter(Boolean) || []
+      const exerciseList = (groupExercises?.map(ge => ge.exercises).filter(Boolean) || [])
+        .sort((a, b) => a.name.localeCompare(b.name))
       console.log('Exercises available for workout logging:', exerciseList.length)
       console.log('Available exercise names:', exerciseList.map(ex => ex.name))
       
