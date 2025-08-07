@@ -93,31 +93,6 @@ const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'line
   return gradientMap[colorClass] || colorClass
 }
 
-// Helper function to create gradient from user's personal color
-const getUserColorGradient = (personalColor: string, type: 'organic' | 'linear' = 'organic') => {
-  if (!personalColor) return getGradientStyle('bg-purple-400', type)
-  
-  // Convert hex to RGB for gradient calculation
-  const hex = personalColor.replace('#', '')
-  const r = parseInt(hex.substr(0, 2), 16)
-  const g = parseInt(hex.substr(2, 2), 16)
-  const b = parseInt(hex.substr(4, 2), 16)
-  
-  if (type === 'organic') {
-    // Create organic radial gradient with darker variations
-    const darker1 = `rgb(${Math.max(0, r - 30)}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)})`
-    const darker2 = `rgb(${Math.max(0, r - 60)}, ${Math.max(0, g - 60)}, ${Math.max(0, b - 60)})`
-    const darker3 = `rgb(${Math.max(0, r - 90)}, ${Math.max(0, g - 90)}, ${Math.max(0, b - 90)})`
-    
-    return `radial-gradient(ellipse 200% 100% at 50% 0%, ${personalColor} 0%, ${darker1} 30%, ${darker2} 60%, ${darker3} 100%)`
-  } else {
-    // Create linear gradient
-    const darker1 = `rgb(${Math.max(0, r - 40)}, ${Math.max(0, g - 40)}, ${Math.max(0, b - 40)})`
-    const darker2 = `rgb(${Math.max(0, r - 80)}, ${Math.max(0, g - 80)}, ${Math.max(0, b - 80)})`
-    
-    return `linear-gradient(135deg, ${personalColor} 0%, ${darker1} 50%, ${darker2} 100%)`
-  }
-}
 
 type RecentChat = {
   id: string
@@ -293,7 +268,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                     key={i}
                     className="aspect-square rounded transition-all duration-500"
                     style={{
-                      background: isHigh ? getUserColorGradient(userProfile?.personal_color) : 
+                      background: isHigh ? getGradientStyle('bg-purple-400') : 
                                  intensity > 30 ? getGradientStyle('bg-gray-500') : getGradientStyle('bg-gray-700'),
                       animationDelay: `${i * 30}ms`,
                       animation: 'fadeInScale 0.6s ease-out forwards'
@@ -335,9 +310,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                       width: '100%',
                       background: `linear-gradient(to right, 
                         ${i === 0 
-                          ? `${userProfile?.personal_color || '#c084fc'} 0%, 
-                             ${userProfile?.personal_color || '#c084fc'}dd ${Math.max(0, member.percentage - 15)}%, 
-                             ${userProfile?.personal_color || '#c084fc'}66 ${member.percentage}%, 
+                          ? `#c084fc 0%, 
+                             #c084fcdd ${Math.max(0, member.percentage - 15)}%, 
+                             #c084fc66 ${member.percentage}%, 
                              #374151 ${Math.min(100, member.percentage + 20)}%`
                           : `#6b7280 0%, #6b7280dd ${Math.max(0, member.percentage - 15)}%, #6b728066 ${member.percentage}%, #374151 ${Math.min(100, member.percentage + 20)}%`
                         })`,
@@ -409,9 +384,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                         width: '100%',
                         background: `linear-gradient(to right, 
                           ${isTop 
-                            ? `${userProfile?.personal_color || '#c084fc'} 0%, 
-                               ${userProfile?.personal_color || '#c084fc'}dd ${Math.max(0, percentage - 15)}%, 
-                               ${userProfile?.personal_color || '#c084fc'}66 ${percentage}%, 
+                            ? `#c084fc 0%, 
+                               #c084fcdd ${Math.max(0, percentage - 15)}%, 
+                               #c084fc66 ${percentage}%, 
                                #374151 ${Math.min(100, percentage + 20)}%`
                             : `#6b7280 0%, #6b7280dd ${Math.max(0, percentage - 15)}%, #6b728066 ${percentage}%, #374151 ${Math.min(100, percentage + 20)}%`
                           })`,
@@ -451,7 +426,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
         <div 
           className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
           style={{ 
-            background: getUserColorGradient(userProfile?.personal_color, 'organic'),
+            background: getGradientStyle('bg-purple-400'),
             width: `${progressPercentage}%`,
             borderTopLeftRadius: '16px',
             borderBottomLeftRadius: '16px'
@@ -475,7 +450,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
               <div className="w-3 h-3 bg-white rounded-full relative">
                 <div 
                   className="absolute top-0.5 left-0.5 w-2 h-1.5 rounded-t-full"
-                  style={{ backgroundColor: userProfile?.personal_color || '#c084fc' }}
+                  style={{ backgroundColor: '#c084fc' }}
                 ></div>
               </div>
               <span className="text-sm font-bold">{stat.subtitle}</span>
@@ -524,7 +499,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                   <div
                     className="w-0.5 transition-all duration-700"
                     style={{ 
-                      background: isRecord ? getUserColorGradient(userProfile?.personal_color, 'linear') : getGradientStyle('bg-gray-500'),
+                      background: isRecord ? getGradientStyle('bg-purple-400') : getGradientStyle('bg-gray-500'),
                       height: `${height}px`,
                       animationDelay: `${i * 20}ms`,
                       animation: 'slideUpScale 0.8s ease-out forwards',
@@ -536,7 +511,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                     <div 
                       className="w-2 h-2 rounded-full -mt-1 animate-pulse"
                       style={{ 
-                        background: getUserColorGradient(userProfile?.personal_color, 'linear'),
+                        background: getGradientStyle('bg-purple-400'),
                         animationDelay: `${(i * 20) + 400}ms`
                       }}
                     />
@@ -592,7 +567,7 @@ const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonal
   hasPersonalData?: boolean,
   userProfile: any
 }) => {
-  const personalBorderColor = isPersonalMode && userProfile?.personal_color ? userProfile.personal_color + '60' : 'transparent'
+  const personalBorderColor = isPersonalMode ? '#c084fc60' : 'transparent'
   
   return (
     <div 
@@ -607,7 +582,7 @@ const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonal
       {/* Personal mode indicator */}
       {isPersonalMode && (
         <div className="absolute top-2 right-2 z-20">
-          <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: userProfile?.personal_color || '#c084fc' }}></div>
+          <div className="w-3 h-3 rounded-full shadow-lg" style={{ backgroundColor: '#c084fc' }}></div>
         </div>
       )}
       {/* Add "(You)" to title for personal mode */}
@@ -1907,7 +1882,7 @@ export default function RectangularDashboard() {
                                 y={76 - (progressPercentage / 100) * 72}
                                 width="72"
                                 height={(progressPercentage / 100) * 72}
-                                fill="#ef4444"
+                                fill={member.personal_color || "#ef4444"}
                                 clipPath={`url(#circle-clip-${progressPercentage})`}
                                 className="transition-all duration-1000 ease-out"
                               />

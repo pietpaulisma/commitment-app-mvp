@@ -39,10 +39,6 @@ export default function MobileWorkoutLogger() {
   const [weekStartDate, setWeekStartDate] = useState<Date | null>(null)
   const [progressAnimated, setProgressAnimated] = useState(false)
 
-  // Helper function to get user's personal color or default
-  const getUserColor = () => {
-    return userProfile?.personal_color || '#f97316' // Default to orange
-  }
 
   // Get category colors - single tint for progress bar, variations for individual exercises
   const getCategoryColor = (type: string, exerciseId: string, forProgressBar = false) => {

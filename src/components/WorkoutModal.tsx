@@ -76,21 +76,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Helper function to get user's personal color or default
-  const getUserColor = () => {
-    return profile?.personal_color || '#f97316' // Default to orange
-  }
-
-  // Helper function to get darker version of user's color for hover states
-  const getUserColorHover = () => {
-    const color = getUserColor()
-    // Convert hex to RGB and darken it
-    const hex = color.replace('#', '')
-    const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - 20)
-    const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - 20)
-    const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - 20)
-    return `rgb(${r}, ${g}, ${b})`
-  }
   const [exercisesLoading, setExercisesLoading] = useState(false)
   const [isAnimatedIn, setIsAnimatedIn] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -1118,10 +1103,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           100% { transform: translateX(100%); }
         }
         .focus-ring:focus {
-          ring-color: ${getUserColor()};
+          ring-color: #f97316;
         }
         .btn-hover:hover {
-          background-color: ${getUserColorHover()} !important;
+          background-color: #ea580c !important;
         }
       `}</style>
       
