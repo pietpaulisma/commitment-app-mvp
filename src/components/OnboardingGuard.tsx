@@ -18,6 +18,10 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const [hasChecked, setHasChecked] = useState(false)
   const mountedRef = useRef(false)
 
+  // TEMPORARY: Disable OnboardingGuard completely to test if it's the issue
+  console.log('⚠️ OnboardingGuard TEMPORARILY DISABLED for debugging')
+  return <>{children}</>
+
   const createSupremeAdminProfile = async () => {
     try {
       console.log('🔥 Updating supreme admin profile for:', user?.email, 'ID:', user?.id)
@@ -54,9 +58,21 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   }, [])
 
   useEffect(() => {
+    console.log('🚀 OnboardingGuard useEffect triggered:', {
+      authLoading,
+      profileLoading,
+      userEmail: user?.email,
+      userId: user?.id,
+      hasProfile: !!profile,
+      onboardingCompleted: profile?.onboarding_completed,
+      onboardingCompletedType: typeof profile?.onboarding_completed,
+      pathname,
+      timestamp: new Date().toISOString()
+    })
+
     // Wait for both auth and profile to fully load
     if (authLoading || profileLoading) {
-      console.log('⏳ Still loading auth or profile, waiting...')
+      console.log('⏳ Still loading, will check again when loaded')
       return
     }
 
@@ -65,38 +81,46 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     const isOnboardingPage = pathname?.startsWith('/onboarding')
     
     if (isAuthPage || isOnboardingPage) {
-      console.log('📄 On auth/onboarding page, skipping check')
+      console.log('📄 On auth/onboarding page, skipping redirect check')
       return
     }
 
-    console.log('🔍 OnboardingGuard final check:', {
-      userEmail: user?.email,
-      hasProfile: !!profile,
-      onboardingCompleted: profile?.onboarding_completed,
-      pathname
-    })
-
     // No user = redirect handled by other guards
     if (!user) {
-      console.log('👤 No authenticated user')
+      console.log('👤 No authenticated user, letting other guards handle')
       return
     }
 
     // Special case for supreme admin
     if (user.email === 'klipperdeklip@gmail.com' && profile && !profile.onboarding_completed) {
-      console.log('🔥 Supreme admin - completing onboarding')
+      console.log('🔥 Supreme admin detected - completing onboarding automatically')
       createSupremeAdminProfile()
       return
     }
 
+    // DEBUG: Let's see exactly what the profile looks like
+    console.log('🔬 Profile analysis:', {
+      profile: profile,
+      hasProfile: !!profile,
+      onboardingCompleted: profile?.onboarding_completed,
+      onboardingCompletedExact: profile?.onboarding_completed === true,
+      onboardingCompletedTruthy: !!profile?.onboarding_completed
+    })
+
     // Has profile and completed onboarding = allow access
     if (profile && profile.onboarding_completed) {
-      console.log('✅ Has completed profile, allowing access')
+      console.log('✅ Profile exists with completed onboarding - ALLOWING ACCESS')
       return
     }
 
-    // Has user but incomplete/missing profile = needs onboarding  
-    console.log('⚠️  User needs onboarding, redirecting')
+    // If we get here, something is wrong
+    console.log('❌ REDIRECTING TO ONBOARDING - Reason analysis:', {
+      hasUser: !!user,
+      hasProfile: !!profile,
+      onboardingStatus: profile?.onboarding_completed,
+      willRedirect: true
+    })
+    
     router.replace('/onboarding')
   }, [user, profile, authLoading, profileLoading, pathname, router])
 
