@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient, getExerciseTypeGradient, getButtonGradient, getButtonShadow } from '@/utils/gradientUtils'
+import TimeGradient from './TimeGradient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
@@ -1124,6 +1125,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           overflow: 'hidden' // Prevent background scrolling
         }}
       >
+        {/* Time-based gradient background with glass layer effect */}
+        <TimeGradient className="absolute inset-0 z-[-1] pointer-events-none" intensity={1.2} />
         {/* Header - Reduced height for PWA */}
         <div className="sticky top-0">
           <div className="flex items-center">
