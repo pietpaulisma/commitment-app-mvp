@@ -38,23 +38,23 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
     } else if (hour >= 7 && hour < 11) {
       // 🌞 Morning (07:00 – 11:00): Energetic, bright, productive
       return {
-        primary: '#FFEEAD',  // Light buttery yellow
-        secondary: '#FF6F61', // Optimistic coral
-        accent: '#FFEEAD'    // Light buttery yellow accent
+        primary: '#FFFACD',  // Bright creamy yellow
+        secondary: '#FFFF99', // Bright light yellow
+        accent: '#FFFFFF'    // Pure white accent
       }
     } else if (hour >= 11 && hour < 14) {
       // ☀️ Midday (11:00 – 14:00): Peak alertness, high brightness
       return {
-        primary: '#FDEB71',  // Radiant yellow
-        secondary: '#F8D800', // Golden sunbeam
-        accent: '#FDEB71'    // Radiant yellow accent
+        primary: '#FFFF66',  // Bright vibrant yellow
+        secondary: '#FFFF99', // Light bright yellow
+        accent: '#FFFFFF'    // Pure white accent
       }
     } else if (hour >= 14 && hour < 17) {
       // 🌤 Afternoon (14:00 – 17:00): Warm, mellow, starting to wind down
       return {
-        primary: '#FAD0C4',  // Peach-pink
-        secondary: '#FFD1FF', // Soft violet haze
-        accent: '#FAD0C4'    // Peach-pink accent
+        primary: '#FFFACD',  // Light yellow cream
+        secondary: '#FFFFE0', // Light yellow
+        accent: '#FFFFFF'    // Pure white accent
       }
     } else if (hour >= 17 && hour < 20) {
       // 🌇 Evening (17:00 – 20:00): Reflective, slowing down, golden hour
@@ -98,16 +98,16 @@ export default function TimeGradient({ className = '' }: TimeGradientProps) {
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 120% 70% at ${blobPositionX}% 100%, 
+            radial-gradient(ellipse 120% 70% at ${blobPositionX}% 85%, 
               ${colors.primary} 0%, 
               ${colors.primary}CC 20%, 
               ${colors.primary}80 40%, 
               transparent 60%),
-            radial-gradient(ellipse 110% 65% at ${blobPositionX + 20}% 100%, 
+            radial-gradient(ellipse 110% 65% at ${blobPositionX + 20}% 80%, 
               ${colors.secondary}DD 0%, 
               ${colors.secondary}99 25%, 
               transparent 50%),
-            radial-gradient(ellipse 100% 60% at ${blobPositionX + 10}% 100%, 
+            radial-gradient(ellipse 100% 60% at ${blobPositionX + 10}% 90%, 
               ${colors.accent}BB 0%, 
               ${colors.accent}77 30%, 
               transparent 50%)
