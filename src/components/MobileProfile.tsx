@@ -126,8 +126,8 @@ export default function MobileProfile() {
     return null
   }
 
-  // Get username from email (part before @)
-  const username = profile.email.split('@')[0]
+  // Use actual username from profile
+  const username = profile.username || profile.email.split('@')[0]
 
   return (
     <div className="min-h-screen bg-black pb-20">

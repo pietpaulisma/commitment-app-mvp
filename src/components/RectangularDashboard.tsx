@@ -1142,7 +1142,7 @@ export default function RectangularDashboard() {
         if (points > maxPoints) {
           maxPoints = points
           const user = members.find(m => m.id === userId)
-          biggestContributor = user?.email.split('@')[0] || 'Unknown'
+          biggestContributor = user?.username || user?.email.split('@')[0] || 'Unknown'
         }
       })
 
@@ -1176,7 +1176,7 @@ export default function RectangularDashboard() {
             // Check if this is the closest birthday
             if (!closestBirthday || nextBirthday < closestBirthday) {
               closestBirthday = nextBirthday
-              closestPerson = member.email?.split('@')[0] || 'Member'
+              closestPerson = member.username || member.email?.split('@')[0] || 'Member'
             }
           }
         })
@@ -1368,7 +1368,7 @@ export default function RectangularDashboard() {
           },
           {
             title: profile?.birth_date ? 'Your Birthday' : 'Set Birthday',
-            subtitle: profile?.email?.split('@')[0] || 'You',
+            subtitle: profile?.username || 'You',
             value: profile?.birth_date ? nextBirthdayDays : 0,
             daysUntil: profile?.birth_date ? nextBirthdayDays : 0,
             name: profile?.birth_date ? `${monthName} ${dayNum}` : 'Tap to set',
@@ -1792,7 +1792,7 @@ export default function RectangularDashboard() {
                       <p className="text-lg text-white/90 font-medium drop-shadow leading-relaxed">
                         {hasAchievedTarget 
                           ? getTargetAchievedMessage(currentTime.getHours())
-                          : getHourlyMessage(currentTime.getHours())}, {user?.email?.split('@')[0] || 'champion'}!
+                          : getHourlyMessage(currentTime.getHours())}, {profile?.username || user?.email?.split('@')[0] || 'champion'}!
                       </p>
                     )
                   })()}
@@ -1924,7 +1924,7 @@ export default function RectangularDashboard() {
                           {/* Person name */}
                           <div className="mt-2 text-center">
                             <span className="text-white/80 text-xs font-light" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                              {member.isCurrentUser ? 'You' : member.email.split('@')[0]}
+                              {member.isCurrentUser ? 'You' : (member.username || member.email.split('@')[0])}
                             </span>
                           </div>
                     </div>
@@ -1993,7 +1993,7 @@ export default function RectangularDashboard() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
                             <span className="font-medium text-white mr-2">
-                              {chat.is_own_message ? 'You' : chat.user_email.split('@')[0]}:
+                              {chat.is_own_message ? 'You' : (chat.username || chat.user_email.split('@')[0])}:
                             </span>
                             <span>{displayText}</span>
                           </div>

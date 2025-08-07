@@ -9,6 +9,7 @@ export type UserRole = 'supreme_admin' | 'group_admin' | 'user'
 export type UserProfile = {
   id: string
   email: string
+  username: string
   role: UserRole
   group_id: string | null
   preferred_weight: number
