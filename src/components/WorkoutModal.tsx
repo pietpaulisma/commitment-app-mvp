@@ -1125,8 +1125,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           overflow: 'hidden' // Prevent background scrolling
         }}
       >
-        {/* Time-based gradient background with very subtle glass layer effect */}
-        <TimeGradient className="absolute inset-0 z-[-1] pointer-events-none" intensity={0.28} />
+        {/* Time-based gradient background with minimal glass layer effect */}
+        <TimeGradient className="absolute inset-0 z-[-1] pointer-events-none" intensity={0.1} />
         {/* Header - Reduced height for PWA */}
         <div className="sticky top-0">
           <div className="flex items-center">
