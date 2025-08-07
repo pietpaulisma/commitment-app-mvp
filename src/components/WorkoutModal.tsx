@@ -1655,23 +1655,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 ))}
               </div>
 
-              {/* Weight Selector Section */}
-              <div className="space-y-2">
-                <div className="text-center">
-                  <div className="text-sm text-white/60 font-medium uppercase tracking-wider">Weight Selection (kg)</div>
-                </div>
-                
-                <div className="grid grid-cols-4 gap-1">
-                  {[
-                    { label: 'body', value: 0, multiplier: 1.0 },
-                    { label: '5', value: 5, multiplier: 1.25 },
-                    { label: '10', value: 10, multiplier: 1.5 },
-                    { label: '15', value: 15, multiplier: 1.75 },
-                    { label: '20', value: 20, multiplier: 2.0 },
-                    { label: '25', value: 25, multiplier: 2.25 },
-                    { label: '30', value: 30, multiplier: 2.5 },
-                    { label: '35', value: 35, multiplier: 2.75 }
-                  ].map((button, index) => {
+              {/* Weight Selector Section - only show for weighted exercises */}
+              {selectedWorkoutExercise.is_weighted && (
+                <div className="space-y-2">
+                  <div className="text-center">
+                    <div className="text-sm text-white/60 font-medium uppercase tracking-wider">Weight Selection (kg)</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 gap-1">
+                    {[
+                      { label: 'body', value: 0, multiplier: 1.0 },
+                      { label: '5', value: 5, multiplier: 1.25 },
+                      { label: '10', value: 10, multiplier: 1.5 },
+                      { label: '15', value: 15, multiplier: 1.75 },
+                      { label: '20', value: 20, multiplier: 2.0 },
+                      { label: '25', value: 25, multiplier: 2.25 },
+                      { label: '30', value: 30, multiplier: 2.5 },
+                      { label: '35', value: 35, multiplier: 2.75 }
+                    ].map((button, index) => {
                     const isSelected = selectedWeight === button.value
                     const isLocked = lockedWeight === button.value
                     
@@ -1716,9 +1717,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         </span>
                       </button>
                     )
-                  })}
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Bottom section with calculation and submit */}
