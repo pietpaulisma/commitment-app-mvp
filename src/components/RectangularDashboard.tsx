@@ -1741,7 +1741,7 @@ export default function RectangularDashboard() {
                     return (
                       <div>
                         <p className="text-sm text-white/90 font-medium drop-shadow leading-relaxed mb-2">
-                          "{message.quote}, {profile?.username || 'champion'}!"
+                          "{message.quote}"
                         </p>
                         <p className="text-xs text-white/60 font-normal text-right">
                           — {message.author}
