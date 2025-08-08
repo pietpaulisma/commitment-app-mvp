@@ -120,7 +120,7 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
         
         {/* Time remaining display matching DAY component layout */}
         <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-          <div className="text-6xl font-black text-white drop-shadow-lg">
+          <div className="text-3xl font-black text-white drop-shadow-lg">
             {timeRemainingString}
           </div>
           <p className="text-sm font-medium text-white/90 drop-shadow">
