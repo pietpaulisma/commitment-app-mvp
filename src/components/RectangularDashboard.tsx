@@ -1118,7 +1118,7 @@ export default function RectangularDashboard() {
         if (points > maxPoints) {
           maxPoints = points
           const user = members.find(m => m.id === userId)
-          biggestContributor = user?.username || user?.email.split('@')[0] || 'Unknown'
+          biggestContributor = user?.username || 'User'
         }
       })
 
@@ -1152,7 +1152,7 @@ export default function RectangularDashboard() {
             // Check if this is the closest birthday
             if (!closestBirthday || nextBirthday < closestBirthday) {
               closestBirthday = nextBirthday
-              closestPerson = member.username || member.email?.split('@')[0] || 'Member'
+              closestPerson = member.username || 'Member'
             }
           }
         })
@@ -1877,7 +1877,7 @@ export default function RectangularDashboard() {
                           {/* Person name */}
                           <div className="mt-2 text-center">
                             <span className="text-white/80 text-xs font-light" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                              {member.isCurrentUser ? 'You' : (member.username || member.email.split('@')[0])}
+                              {member.isCurrentUser ? 'You' : (member.username || 'User')}
                             </span>
                           </div>
                     </div>
@@ -1946,7 +1946,7 @@ export default function RectangularDashboard() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
                             <span className="font-medium text-white mr-2">
-                              {chat.is_own_message ? 'You' : (chat.username || chat.user_email.split('@')[0])}:
+                              {chat.is_own_message ? 'You' : (chat.username || 'User')}:
                             </span>
                             <span>{displayText}</span>
                           </div>

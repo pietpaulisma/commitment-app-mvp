@@ -83,7 +83,7 @@ const WorkoutCompletionMessage = ({ message, workoutData }: WorkoutCompletionMes
           <div className="flex-1">
             <div className="font-bold text-green-400 text-sm">Workout Completed! 🎉</div>
             <div className="text-xs text-gray-400">
-              {workoutData.username || workoutData.user_email?.split('@')[0] || 'User'} crushed their target
+              {workoutData.username || 'User'} crushed their target
             </div>
           </div>
           <div className="text-right">
@@ -791,7 +791,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                     {message.user_id !== user?.id && (
                       <div className="mb-1">
                         <span className={`text-xs font-semibold ${getUserColor(message.user_email || '', message.user_role || 'user')}`}>
-                          {message.username || message.user_email?.split('@')[0] || 'Unknown'}
+                          {message.username || 'User'}
                         </span>
                       </div>
                     )}
