@@ -7,6 +7,7 @@ import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
+import TimeDisplay from './TimeDisplay'
 
 // Helper function to get hilarious hourly commitment messages
 const getHourlyMessage = (hour: number): string => {
@@ -1713,39 +1714,9 @@ export default function RectangularDashboard() {
               </div>
             </div>
 
-            {/* Time Remaining Block */}
+            {/* Time Display Block */}
             <div className="relative">
-              <div 
-                className="relative aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                style={{
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                }}
-              >
-                {/* Time remaining bar - solid color representing time left */}
-                <div 
-                  className="absolute right-0 top-0 bottom-0 transition-all duration-1000"
-                  style={{
-                    width: `${Math.max(8, 100 - timeRemainingPercentage)}%`,
-                    background: 'rgba(255, 255, 255, 0.15)',
-                    borderTopLeftRadius: '0px',
-                    borderBottomLeftRadius: '0px',
-                    borderTopRightRadius: '16px',
-                    borderBottomRightRadius: '16px'
-                  }}
-                />
-                
-                {/* Time Content */}
-                <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                    Time
-                  </h3>
-                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-3xl font-black text-white">
-                      {timeLeft}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <TimeDisplay className="aspect-square" />
             </div>
           </div>
 
