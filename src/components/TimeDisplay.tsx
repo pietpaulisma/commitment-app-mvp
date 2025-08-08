@@ -80,11 +80,13 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
     second: '2-digit'
   })
 
-  // Calculate day progress (0-100%) for the fill width
+  // Calculate time remaining until end of day (for countdown fill)
   const hour = currentTime.getHours()
   const minute = currentTime.getMinutes()
   const second = currentTime.getSeconds()
-  const dayProgress = ((hour * 3600 + minute * 60 + second) / (24 * 3600)) * 100
+  const totalSecondsElapsed = hour * 3600 + minute * 60 + second
+  const totalSecondsInDay = 24 * 3600
+  const timeRemainingPercentage = ((totalSecondsInDay - totalSecondsElapsed) / totalSecondsInDay) * 100
 
   return (
     <div 
@@ -93,11 +95,11 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
       }}
     >
-      {/* Gradient background fill - partial fill based on day progress */}
+      {/* Gradient background fill - countdown bar (time remaining) */}
       <div 
         className="absolute right-0 top-0 bottom-0 transition-all duration-1000"
         style={{
-          width: `${Math.max(8, dayProgress)}%`,
+          width: `${Math.max(8, timeRemainingPercentage)}%`,
           background: `linear-gradient(135deg, 
             ${colors.primary}60 0%, 
             ${colors.secondary}60 50%, 
