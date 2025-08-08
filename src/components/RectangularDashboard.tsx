@@ -1822,12 +1822,12 @@ export default function RectangularDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-wrap justify-start gap-4 py-4 px-4">
+              <div className="flex flex-wrap justify-start gap-2 py-4 px-2">
                 {groupMembers.map((member) => {
                   const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
                       
                   return (
-                        <div key={member.id} className="flex flex-col items-start mx-2">
+                        <div key={member.id} className="flex flex-col items-center">
                           {/* Bigger circular progress */}
                           <div className="relative w-20 h-20">
                             {/* Background circle */}
