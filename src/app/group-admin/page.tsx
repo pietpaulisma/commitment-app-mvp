@@ -800,7 +800,7 @@ export default function GroupAdminDashboard() {
                               </label>
                               <div className="bg-gray-800/50 border border-gray-700 p-4 rounded">
                                 <p className="text-sm text-gray-400 mb-4">
-                                  Choose which day requires only 15 minutes of recovery exercises (other exercises are optional)
+                                  Choose which day requires only 25% of the normal target through recovery exercises only
                                 </p>
                                 <div className="grid grid-cols-7 gap-2">
                                   {[
@@ -830,7 +830,7 @@ export default function GroupAdminDashboard() {
                                   ))}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-3">
-                                  Recovery Day: Only 15 minutes of recovery exercises required (yoga, stretching, meditation)
+                                  Recovery Day: 25% of normal daily target, achieved only through recovery exercises (yoga, stretching, meditation)
                                 </p>
                               </div>
                             </div>

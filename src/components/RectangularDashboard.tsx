@@ -899,7 +899,7 @@ export default function RectangularDashboard() {
       case 'rest':
         return { title: 'Rest Day', subtitle: 'No exercises required', color: colors.primary }
       case 'recovery':
-        return { title: 'Recovery Day', subtitle: '15 min recovery exercises', color: 'text-green-400' }
+        return { title: 'Recovery Day', subtitle: '25% target, recovery only', color: 'text-green-400' }
       default:
         return { title: 'Training Day', subtitle: 'Complete your daily target', color: colors.primary }
     }

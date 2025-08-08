@@ -39,7 +39,31 @@ export default function MobileWorkoutLogger() {
   const [hasFlexibleRestDay, setHasFlexibleRestDay] = useState(false)
   const [weekStartDate, setWeekStartDate] = useState<Date | null>(null)
   const [progressAnimated, setProgressAnimated] = useState(false)
+  const [isRecoveryDay, setIsRecoveryDay] = useState(false)
 
+  // Helper function to check if today is a recovery day
+  const checkIfRecoveryDay = async () => {
+    if (!userProfile?.group_id) return false
+    
+    try {
+      const { data: groupSettings } = await supabase
+        .from('group_settings')
+        .select('recovery_days')
+        .eq('group_id', userProfile.group_id)
+        .maybeSingle()
+      
+      const today = new Date()
+      const currentDayOfWeek = today.getDay()
+      const recoveryDays = groupSettings?.recovery_days || [5]
+      const isRecovery = recoveryDays.includes(currentDayOfWeek)
+      
+      setIsRecoveryDay(isRecovery)
+      return isRecovery
+    } catch (error) {
+      console.error('Error checking recovery day:', error)
+      return false
+    }
+  }
 
   // Get category colors - single tint for progress bar, variations for individual exercises
   const getCategoryColor = (type: string, exerciseId: string, forProgressBar = false) => {
@@ -238,6 +262,7 @@ export default function MobileWorkoutLogger() {
       if (user) {
         await loadTodaysLogs(user.id)
         await checkFlexibleRestDay(user.id)
+        await checkIfRecoveryDay()
       }
     } catch (error) {
       console.error('Error loading data:', error)
@@ -334,7 +359,23 @@ export default function MobileWorkoutLogger() {
       const todayString = new Date().toISOString().split('T')[0]
       const totalPoints = getTotalPoints()
       const recoveryPoints = getRecoveryPoints()
-      const isComplete = totalPoints >= dailyTarget
+      
+      // Get group settings to check if today is a recovery day
+      const { data: groupSettings } = await supabase
+        .from('group_settings')
+        .select('recovery_days')
+        .eq('group_id', userProfile.group_id)
+        .maybeSingle()
+      
+      const today = new Date()
+      const currentDayOfWeek = today.getDay()
+      const recoveryDays = groupSettings?.recovery_days || [5]
+      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
+      
+      // On recovery days, only recovery points count towards completion
+      const isComplete = isRecoveryDay 
+        ? recoveryPoints >= dailyTarget 
+        : totalPoints >= dailyTarget
 
       await supabase
         .from('daily_checkins')
@@ -391,6 +432,7 @@ export default function MobileWorkoutLogger() {
         setSelectedExercise(null)
         await loadTodaysLogs(user.id)
         await updateDailyCheckin()
+        await checkIfRecoveryDay() // Refresh recovery day status
         // Show success with haptic feedback on mobile
         if (navigator.vibrate) {
           navigator.vibrate(100)
@@ -468,7 +510,9 @@ export default function MobileWorkoutLogger() {
             className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
             style={{ 
               width: progressAnimated ? '100%' : '80%',
-              background: createCumulativeGradient(todaysLogs || [], dailyTarget),
+              background: isRecoveryDay 
+                ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
+                : createCumulativeGradient(todaysLogs || [], dailyTarget),
               // Force cache invalidation
               transform: `translateZ(${Date.now() % 1000}px)`
             }}
@@ -479,16 +523,25 @@ export default function MobileWorkoutLogger() {
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-baseline space-x-1">
-                  <span className="text-4xl font-black text-white">{getTotalPoints()}</span>
+                  <span className="text-4xl font-black text-white">
+                    {isRecoveryDay ? getRecoveryPoints() : getTotalPoints()}
+                  </span>
                   <span className="text-2xl font-thin text-white">PT</span>
                 </div>
                 <p className="text-sm font-medium -mt-1 text-white">
-                  {getTotalPoints() >= dailyTarget ? "Target Complete!" : `${Math.max(0, dailyTarget - getTotalPoints())} remaining`}
+                  {isRecoveryDay 
+                    ? (getRecoveryPoints() >= dailyTarget 
+                        ? "Recovery Target Complete!" 
+                        : `${Math.max(0, dailyTarget - getRecoveryPoints())} recovery pts remaining`)
+                    : (getTotalPoints() >= dailyTarget 
+                        ? "Target Complete!" 
+                        : `${Math.max(0, dailyTarget - getTotalPoints())} remaining`)
+                  }
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-black text-white">
-                  {Math.round((getTotalPoints() / dailyTarget) * 100)}%
+                  {Math.round((isRecoveryDay ? getRecoveryPoints() : getTotalPoints()) / dailyTarget * 100)}%
                 </div>
                 <div className="text-sm font-medium -mt-1 text-white">
                   complete
