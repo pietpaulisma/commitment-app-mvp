@@ -1232,7 +1232,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           return (
                             <div 
                               key={`${workout.exercise_id}-${workout.weight || 0}`} 
-                              className="relative overflow-hidden cursor-pointer transition-all duration-300 mb-6 hover:scale-[1.02]"
+                              className="relative overflow-hidden cursor-pointer transition-all duration-300 mb-1 hover:scale-[1.02]"
                               onClick={() => handleWorkoutClick(workout)}
                             >
                               <div className="flex items-center gap-2">
