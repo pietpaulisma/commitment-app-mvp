@@ -12,30 +12,30 @@ import TimeDisplay from './TimeDisplay'
 // Helper function to get hilarious hourly commitment messages with fake attributions
 const getHourlyMessage = (hour: number): { quote: string, author: string } => {
   const messages = [
-    { quote: "Still up? That's commitment... or insomnia", author: "Arnold Schwarzenegger" }, // 12AM
-    { quote: "3AM thoughts: 'I should be working out right now'", author: "Gandhi" }, // 1AM
-    { quote: "Night owl or fitness vampire? Either way, you're here", author: "H.P. Baxxter" }, // 2AM
-    { quote: "The dedication is real... or you have a sleeping problem", author: "The Rock" }, // 3AM
-    { quote: "Rise and grind? More like rise and why am I awake?", author: "Einstein" }, // 4AM
-    { quote: "Early bird gets the gains... and questionable life choices", author: "Tony Robbins" }, // 5AM
-    { quote: "Morning champion! Coffee first, then conquer the world", author: "Napoleon" }, // 6AM
-    { quote: "Another day, another chance to pretend you like burpees", author: "Buddha" }, // 7AM
-    { quote: "Breakfast of champions: protein and pure determination", author: "Gordon Ramsay" }, // 8AM
-    { quote: "9-to-5 warrior reporting for duty (and squats)", author: "Sun Tzu" }, // 9AM
-    { quote: "Mid-morning motivation: you're crushing it, literally", author: "Oprah" }, // 10AM
-    { quote: "Pre-lunch power hour - fuel up that commitment engine", author: "Elon Musk" }, // 11AM
-    { quote: "Lunch break legend! Time to digest your goals", author: "Confucius" }, // 12PM
-    { quote: "Post-lunch commitment: fighting the food coma like a champ", author: "Bruce Lee" }, // 1PM
-    { quote: "Afternoon achiever! When others nap, you attack", author: "Shakespeare" }, // 2PM
-    { quote: "3PM slump? More like 3PM pump - let's go!", author: "Kanye West" }, // 3PM
-    { quote: "Almost there warrior - the finish line tastes like victory", author: "Usain Bolt" }, // 4PM
-    { quote: "5 o'clock somewhere, commitment o'clock everywhere", author: "Socrates" }, // 5PM
-    { quote: "Evening excellence! When others Netflix, you commit", author: "Steve Jobs" }, // 6PM
-    { quote: "Dinner and dedication - the perfect recipe for success", author: "Julia Child" }, // 7PM
-    { quote: "Prime time performer! Your commitment show is rated #1", author: "David Hasselhoff" }, // 8PM
-    { quote: "Night shift ninja - slaying goals in the darkness", author: "Batman" }, // 9PM
-    { quote: "Late-night legend! When the world sleeps, you sweep", author: "Tesla" }, // 10PM
-    { quote: "Almost midnight warrior - tomorrow's gains start tonight", author: "Chuck Norris" } // 11PM
+    { quote: "I'LL BE BACK... after this midnight workout, because I NEVER STOP!", author: "Arnold Schwarzenegger" }, // 12AM
+    { quote: "Be the change you wish to see in your abs... even at 3AM", author: "Gandhi" }, // 1AM
+    { quote: "RESPECT TO THE MAN IN THE ICE! Night workouts are HYPER HYPER!", author: "H.P. Baxxter" }, // 2AM
+    { quote: "Can you smell what The Rock is cooking? IT'S SUCCESS AT 3AM, BABY!", author: "The Rock" }, // 3AM
+    { quote: "Insanity is doing the same thing and expecting different abs... wait, that's not how relativity works", author: "Einstein" }, // 4AM
+    { quote: "UNLEASH THE POWER WITHIN! Even if it's 5AM and you're questioning your life choices!", author: "Tony Robbins" }, // 5AM
+    { quote: "I came, I saw, I conquered... this morning workout before my enemies even woke up", author: "Napoleon" }, // 6AM
+    { quote: "Suffering is attachment to not wanting to do burpees... but the path to enlightenment is through 10 more reps", author: "Buddha" }, // 7AM
+    { quote: "THIS BREAKFAST IS RAW! Just like your determination should be, you donut!", author: "Gordon Ramsay" }, // 8AM
+    { quote: "The supreme art of war is to subdue your laziness without even fighting... but first, squats", author: "Sun Tzu" }, // 9AM
+    { quote: "YOU GET GAINS! AND YOU GET GAINS! EVERYBODY GETS GAINS!", author: "Oprah" }, // 10AM
+    { quote: "Great wall of gains can be seen from space... probably. I built one brick at a time", author: "Jackie Chan" }, // 11AM
+    { quote: "Lunch tastes better when seasoned with the wisdom of completed workouts", author: "Confucius" }, // 12PM
+    { quote: "Be like water... flowing around excuses and into the gym", author: "Bruce Lee" }, // 1PM
+    { quote: "To workout or not to workout... that is NOT the question. The answer is always workout", author: "Shakespeare" }, // 2PM
+    { quote: "I'M A GENIUS! And geniuses work out at 3PM when everyone else is slacking", author: "Kanye West" }, // 3PM
+    { quote: "I am speed... especially when running away from my responsibilities to the gym", author: "Lightning McQueen" }, // 4PM
+    { quote: "The unexamined workout is not worth living... but examined or not, DO THE WORKOUT", author: "Socrates" }, // 5PM
+    { quote: "Think different... like working out while others are watching Netflix", author: "Steve Jobs" }, // 6PM
+    { quote: "Bam! A little workout spice makes everything nice, even your evening routine", author: "Emeril Lagasse" }, // 7PM
+    { quote: "Don't hassle the Hoff... especially when I'm crushing my evening workout routine, baby!", author: "David Hasselhoff" }, // 8PM
+    { quote: "I'm Batman... and Batman never skips leg day, even in the darkness", author: "Batman" }, // 9PM
+    { quote: "The power of alternating current is nothing compared to the power of alternating workout days", author: "Tesla" }, // 10PM
+    { quote: "Chuck Norris doesn't do push-ups... he pushes the Earth down. But you should still do yours", author: "Chuck Norris" } // 11PM
   ]
   return messages[hour] || messages[0]
 }
@@ -43,30 +43,30 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
 // Helper function to get hourly messages for when daily target is achieved with fake attributions
 const getTargetAchievedMessage = (hour: number): { quote: string, author: string } => {
   const messages = [
-    { quote: "Midnight warrior! Target crushed while others dream", author: "Muhammad Ali" }, // 12AM
-    { quote: "1AM legend! Your dedication knows no bedtime", author: "Thomas Edison" }, // 1AM
-    { quote: "2AM champion! Even the night shift is impressed", author: "Mike Tyson" }, // 2AM
-    { quote: "3AM victor! This is what peak commitment looks like", author: "Yoda" }, // 3AM
-    { quote: "4AM conqueror! Dawn hasn't even thought about breaking", author: "Alexander the Great" }, // 4AM
-    { quote: "5AM destroyer! You've already won before sunrise", author: "Jocko Willink" }, // 5AM
-    { quote: "6AM dominator! Morning coffee tastes like victory", author: "Ernest Hemingway" }, // 6AM
-    { quote: "7AM crusher! Started strong, staying stronger", author: "Vince Lombardi" }, // 7AM
-    { quote: "8AM annihilator! Breakfast of champions, indeed", author: "Michael Jordan" }, // 8AM
-    { quote: "9AM terminator! Work day? More like victory lap", author: "Schwarzenegger" }, // 9AM
-    { quote: "10AM obliterator! Mid-morning and you're unstoppable", author: "Kobe Bryant" }, // 10AM
-    { quote: "11AM devastator! Pre-lunch power move complete", author: "Julius Caesar" }, // 11AM
-    { quote: "12PM eliminator! Lunch tastes better when you've won", author: "Gordon Ramsay" }, // 12PM
-    { quote: "1PM liquidator! Post-lunch slump? Not for legends", author: "Serena Williams" }, // 1PM
-    { quote: "2PM eradicator! Afternoon energy of a champion", author: "Tiger Woods" }, // 2PM
-    { quote: "3PM pulverizer! 3PM and still crushing dreams", author: "Floyd Mayweather" }, // 3PM
-    { quote: "4PM vaporizer! Almost evening, already victorious", author: "Conor McGregor" }, // 4PM
-    { quote: "5PM atomizer! 5 o'clock champion reporting for duty", author: "John Cena" }, // 5PM
-    { quote: "6PM disintegrator! Evening excellence achieved", author: "LeBron James" }, // 6PM
-    { quote: "7PM demolisher! Dinner and total domination", author: "Genghis Khan" }, // 7PM
-    { quote: "8PM exterminator! Prime time belongs to you", author: "Will Smith" }, // 8PM
-    { quote: "9PM annihilator! Night shift ninja strikes again", author: "Jackie Chan" }, // 9PM
-    { quote: "10PM destroyer! Late night legend status confirmed", author: "The Undertaker" }, // 10PM
-    { quote: "11PM obliterator! Almost midnight and still winning", author: "Rocky Balboa" } // 11PM
+    { quote: "Float like a butterfly, sting like a bee, and CRUSH midnight goals like ME!", author: "Muhammad Ali" }, // 12AM
+    { quote: "Genius is 1% inspiration, 99% perspiration... and you just NAILED both at 1AM!", author: "Thomas Edison" }, // 1AM
+    { quote: "Everyone has a plan until they get hit... but YOU hit your target first, KNOCKOUT!", author: "Mike Tyson" }, // 2AM
+    { quote: "Strong with the Force, you are. Complete your daily target, you have. Proud, I am", author: "Yoda" }, // 3AM
+    { quote: "I came, I saw, I conquered the ENTIRE known world... but you conquered your 4AM target!", author: "Alexander the Great" }, // 4AM
+    { quote: "GOOD. You got after it at 5AM. Discipline equals freedom. Target: DESTROYED", author: "Jocko Willink" }, // 5AM
+    { quote: "Write drunk, edit sober... workout consistently, achieve greatness at 6AM", author: "Ernest Hemingway" }, // 6AM
+    { quote: "Winners never quit, and quitters never win... and you just WON the morning!", author: "Vince Lombardi" }, // 7AM
+    { quote: "I took it personal... when people said they couldn't hit targets. But you? You DIFFERENT", author: "Michael Jordan" }, // 8AM
+    { quote: "GET TO THE CHOPPER! Because you just TERMINATED your daily target!", author: "Arnold Schwarzenegger" }, // 9AM
+    { quote: "Mamba mentality means attacking every single day... and you just DOMINATED this one", author: "Kobe Bryant" }, // 10AM
+    { quote: "Veni, vidi, vici... I came, I saw, I conquered Rome. You conquered your 11AM target", author: "Julius Caesar" }, // 11AM
+    { quote: "WHERE'S THE LAMB SAUCE?! Oh wait, you brought the SAUCE with this target completion!", author: "Gordon Ramsay" }, // 12PM
+    { quote: "I don't like to lose... and clearly neither do you. Target SERVED at 1PM!", author: "Serena Williams" }, // 1PM
+    { quote: "The way I see it, if you want the rainbow, you gotta put up with the rain... TARGET ACHIEVED!", author: "Tiger Woods" }, // 2PM
+    { quote: "HARD WORK! DEDICATION! I'm TBE - The Best Ever, but you're TBE at hitting targets!", author: "Floyd Mayweather" }, // 3PM
+    { quote: "We're not here to take part, we're here to take over... and you TOOK OVER this target!", author: "Conor McGregor" }, // 4PM
+    { quote: "AND HIS NAME IS... TARGET CRUSHER! You can't see me, but you can see VICTORY!", author: "John Cena" }, // 5PM
+    { quote: "I'm not a businessman, I'm a business, man... and your business is CRUSHING TARGETS!", author: "LeBron James" }, // 6PM
+    { quote: "I conquered the largest continuous land empire in history... impressive, but have you seen this target completion?", author: "Genghis Khan" }, // 7PM
+    { quote: "Welcome to Earth! *punches target completion button* Now THAT'S how we do it!", author: "Will Smith" }, // 8PM
+    { quote: "I don't want no trouble... but if trouble is hitting targets, then BRING THE TROUBLE!", author: "Jackie Chan" }, // 9PM
+    { quote: "Rest in Peace... to your excuses. The Undertaker of targets has ARRIVED", author: "The Undertaker" }, // 10PM
+    { quote: "It ain't about how hard you hit, it's about how hard you can get hit and keep moving forward... TARGET DOWN!", author: "Rocky Balboa" } // 11PM
   ]
   return messages[hour] || messages[0]
 }
