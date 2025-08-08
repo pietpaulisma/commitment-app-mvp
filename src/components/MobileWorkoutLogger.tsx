@@ -731,13 +731,13 @@ export default function MobileWorkoutLogger() {
                     <p className="text-gray-500 text-sm mt-1">Start your first workout above</p>
                   </div>
                 ) : (
-                  <div className="space-y-1">
+                  <div>
                     {todaysLogs.slice(0, 5).map(log => {
                       const exerciseColor = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
                       const progressPercentage = Math.min(100, (log.points / Math.max(1, dailyTarget)) * 100) // Percentage of daily target this exercise represents
                       
                       return (
-                        <div key={log.id} className="bg-gray-900/30 backdrop-blur-xl relative overflow-hidden rounded-3xl shadow-2xl border border-white/5 hover:shadow-xl transition-all duration-300 mx-1">
+                        <div key={log.id} className="bg-gray-900/30 backdrop-blur-xl relative overflow-hidden rounded-3xl shadow-2xl border border-white/5 hover:shadow-xl transition-all duration-300 mb-1">
                           {/* Liquid gradient background for logged exercise */}
                           <div 
                             className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
