@@ -82,12 +82,12 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
   const totalSecondsInDay = 24 * 3600
   const timeRemainingPercentage = ((totalSecondsInDay - totalSecondsElapsed) / totalSecondsInDay) * 100
   
-  // Format time remaining as "16h 34m 48s"
+  // Format time remaining as "00:00:00"
   const secondsRemaining = totalSecondsInDay - totalSecondsElapsed
   const hoursRemaining = Math.floor(secondsRemaining / 3600)
   const minutesRemaining = Math.floor((secondsRemaining % 3600) / 60)
   const secsRemaining = secondsRemaining % 60
-  const timeRemainingString = `${hoursRemaining}h ${minutesRemaining}m ${secsRemaining}s`
+  const timeRemainingString = `${hoursRemaining.toString().padStart(2, '0')}:${minutesRemaining.toString().padStart(2, '0')}:${secsRemaining.toString().padStart(2, '0')}`
 
   return (
     <div 
@@ -118,11 +118,14 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
           TIME
         </h3>
         
-        {/* Time remaining display with white text */}
+        {/* Time remaining display matching DAY component layout */}
         <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-          <div className="text-2xl font-black tracking-wider text-white drop-shadow-lg">
+          <div className="text-6xl font-black text-white drop-shadow-lg">
             {timeRemainingString}
           </div>
+          <p className="text-sm font-medium text-white/90 drop-shadow">
+            remaining
+          </p>
         </div>
       </div>
     </div>
