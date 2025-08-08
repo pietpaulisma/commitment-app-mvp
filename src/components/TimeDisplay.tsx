@@ -73,20 +73,21 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
   }
 
   const colors = getTimeBasedColors()
-  const timeString = currentTime.toLocaleTimeString('en-US', { 
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit', 
-    second: '2-digit'
-  })
-
-  // Calculate time remaining until end of day (for countdown fill)
+  
+  // Calculate time remaining until end of day
   const hour = currentTime.getHours()
   const minute = currentTime.getMinutes()
   const second = currentTime.getSeconds()
   const totalSecondsElapsed = hour * 3600 + minute * 60 + second
   const totalSecondsInDay = 24 * 3600
   const timeRemainingPercentage = ((totalSecondsInDay - totalSecondsElapsed) / totalSecondsInDay) * 100
+  
+  // Format time remaining as "16h 34m 48s"
+  const secondsRemaining = totalSecondsInDay - totalSecondsElapsed
+  const hoursRemaining = Math.floor(secondsRemaining / 3600)
+  const minutesRemaining = Math.floor((secondsRemaining % 3600) / 60)
+  const secsRemaining = secondsRemaining % 60
+  const timeRemainingString = `${hoursRemaining}h ${minutesRemaining}m ${secsRemaining}s`
 
   return (
     <div 
@@ -117,10 +118,10 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
           TIME
         </h3>
         
-        {/* Time display with white text */}
+        {/* Time remaining display with white text */}
         <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-          <div className="text-3xl font-black tracking-wider text-white drop-shadow-lg">
-            {timeString}
+          <div className="text-2xl font-black tracking-wider text-white drop-shadow-lg">
+            {timeRemainingString}
           </div>
         </div>
       </div>

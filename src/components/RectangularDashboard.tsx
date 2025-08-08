@@ -9,64 +9,64 @@ import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import TimeDisplay from './TimeDisplay'
 
-// Helper function to get hilarious hourly commitment messages
-const getHourlyMessage = (hour: number): string => {
+// Helper function to get hilarious hourly commitment messages with fake attributions
+const getHourlyMessage = (hour: number): { quote: string, author: string } => {
   const messages = [
-    "Still up? That's commitment... or insomnia", // 12AM
-    "3AM thoughts: 'I should be working out right now'", // 1AM
-    "Night owl or fitness vampire? Either way, you're here", // 2AM
-    "The dedication is real... or you have a sleeping problem", // 3AM
-    "Rise and grind? More like rise and why am I awake?", // 4AM
-    "Early bird gets the gains... and questionable life choices", // 5AM
-    "Morning champion! Coffee first, then conquer the world", // 6AM
-    "Another day, another chance to pretend you like burpees", // 7AM
-    "Breakfast of champions: protein and pure determination", // 8AM
-    "9-to-5 warrior reporting for duty (and squats)", // 9AM
-    "Mid-morning motivation: you're crushing it, literally", // 10AM
-    "Pre-lunch power hour - fuel up that commitment engine", // 11AM
-    "Lunch break legend! Time to digest your goals", // 12PM
-    "Post-lunch commitment: fighting the food coma like a champ", // 1PM
-    "Afternoon achiever! When others nap, you attack", // 2PM
-    "3PM slump? More like 3PM pump - let's go!", // 3PM
-    "Almost there warrior - the finish line tastes like victory", // 4PM
-    "5 o'clock somewhere, commitment o'clock everywhere", // 5PM
-    "Evening excellence! When others Netflix, you commit", // 6PM
-    "Dinner and dedication - the perfect recipe for success", // 7PM
-    "Prime time performer! Your commitment show is rated #1", // 8PM
-    "Night shift ninja - slaying goals in the darkness", // 9PM
-    "Late-night legend! When the world sleeps, you sweep", // 10PM
-    "Almost midnight warrior - tomorrow's gains start tonight" // 11PM
+    { quote: "Still up? That's commitment... or insomnia", author: "Arnold Schwarzenegger" }, // 12AM
+    { quote: "3AM thoughts: 'I should be working out right now'", author: "Gandhi" }, // 1AM
+    { quote: "Night owl or fitness vampire? Either way, you're here", author: "H.P. Baxxter" }, // 2AM
+    { quote: "The dedication is real... or you have a sleeping problem", author: "The Rock" }, // 3AM
+    { quote: "Rise and grind? More like rise and why am I awake?", author: "Einstein" }, // 4AM
+    { quote: "Early bird gets the gains... and questionable life choices", author: "Tony Robbins" }, // 5AM
+    { quote: "Morning champion! Coffee first, then conquer the world", author: "Napoleon" }, // 6AM
+    { quote: "Another day, another chance to pretend you like burpees", author: "Buddha" }, // 7AM
+    { quote: "Breakfast of champions: protein and pure determination", author: "Gordon Ramsay" }, // 8AM
+    { quote: "9-to-5 warrior reporting for duty (and squats)", author: "Sun Tzu" }, // 9AM
+    { quote: "Mid-morning motivation: you're crushing it, literally", author: "Oprah" }, // 10AM
+    { quote: "Pre-lunch power hour - fuel up that commitment engine", author: "Elon Musk" }, // 11AM
+    { quote: "Lunch break legend! Time to digest your goals", author: "Confucius" }, // 12PM
+    { quote: "Post-lunch commitment: fighting the food coma like a champ", author: "Bruce Lee" }, // 1PM
+    { quote: "Afternoon achiever! When others nap, you attack", author: "Shakespeare" }, // 2PM
+    { quote: "3PM slump? More like 3PM pump - let's go!", author: "Kanye West" }, // 3PM
+    { quote: "Almost there warrior - the finish line tastes like victory", author: "Usain Bolt" }, // 4PM
+    { quote: "5 o'clock somewhere, commitment o'clock everywhere", author: "Socrates" }, // 5PM
+    { quote: "Evening excellence! When others Netflix, you commit", author: "Steve Jobs" }, // 6PM
+    { quote: "Dinner and dedication - the perfect recipe for success", author: "Julia Child" }, // 7PM
+    { quote: "Prime time performer! Your commitment show is rated #1", author: "David Hasselhoff" }, // 8PM
+    { quote: "Night shift ninja - slaying goals in the darkness", author: "Batman" }, // 9PM
+    { quote: "Late-night legend! When the world sleeps, you sweep", author: "Tesla" }, // 10PM
+    { quote: "Almost midnight warrior - tomorrow's gains start tonight", author: "Chuck Norris" } // 11PM
   ]
   return messages[hour] || messages[0]
 }
 
-// Helper function to get hourly messages for when daily target is achieved
-const getTargetAchievedMessage = (hour: number): string => {
+// Helper function to get hourly messages for when daily target is achieved with fake attributions
+const getTargetAchievedMessage = (hour: number): { quote: string, author: string } => {
   const messages = [
-    "Midnight warrior! Target crushed while others dream", // 12AM
-    "1AM legend! Your dedication knows no bedtime", // 1AM
-    "2AM champion! Even the night shift is impressed", // 2AM
-    "3AM victor! This is what peak commitment looks like", // 3AM
-    "4AM conqueror! Dawn hasn't even thought about breaking", // 4AM
-    "5AM destroyer! You've already won before sunrise", // 5AM
-    "6AM dominator! Morning coffee tastes like victory", // 6AM
-    "7AM crusher! Started strong, staying stronger", // 7AM
-    "8AM annihilator! Breakfast of champions, indeed", // 8AM
-    "9AM terminator! Work day? More like victory lap", // 9AM
-    "10AM obliterator! Mid-morning and you're unstoppable", // 10AM
-    "11AM devastator! Pre-lunch power move complete", // 11AM
-    "12PM eliminator! Lunch tastes better when you've won", // 12PM
-    "1PM liquidator! Post-lunch slump? Not for legends", // 1PM
-    "2PM eradicator! Afternoon energy of a champion", // 2PM
-    "3PM pulverizer! 3PM and still crushing dreams", // 3PM
-    "4PM vaporizer! Almost evening, already victorious", // 4PM
-    "5PM atomizer! 5 o'clock champion reporting for duty", // 5PM
-    "6PM disintegrator! Evening excellence achieved", // 6PM
-    "7PM demolisher! Dinner and total domination", // 7PM
-    "8PM exterminator! Prime time belongs to you", // 8PM
-    "9PM annihilator! Night shift ninja strikes again", // 9PM
-    "10PM destroyer! Late night legend status confirmed", // 10PM
-    "11PM obliterator! Almost midnight and still winning" // 11PM
+    { quote: "Midnight warrior! Target crushed while others dream", author: "Muhammad Ali" }, // 12AM
+    { quote: "1AM legend! Your dedication knows no bedtime", author: "Thomas Edison" }, // 1AM
+    { quote: "2AM champion! Even the night shift is impressed", author: "Mike Tyson" }, // 2AM
+    { quote: "3AM victor! This is what peak commitment looks like", author: "Yoda" }, // 3AM
+    { quote: "4AM conqueror! Dawn hasn't even thought about breaking", author: "Alexander the Great" }, // 4AM
+    { quote: "5AM destroyer! You've already won before sunrise", author: "Jocko Willink" }, // 5AM
+    { quote: "6AM dominator! Morning coffee tastes like victory", author: "Ernest Hemingway" }, // 6AM
+    { quote: "7AM crusher! Started strong, staying stronger", author: "Vince Lombardi" }, // 7AM
+    { quote: "8AM annihilator! Breakfast of champions, indeed", author: "Michael Jordan" }, // 8AM
+    { quote: "9AM terminator! Work day? More like victory lap", author: "Schwarzenegger" }, // 9AM
+    { quote: "10AM obliterator! Mid-morning and you're unstoppable", author: "Kobe Bryant" }, // 10AM
+    { quote: "11AM devastator! Pre-lunch power move complete", author: "Julius Caesar" }, // 11AM
+    { quote: "12PM eliminator! Lunch tastes better when you've won", author: "Gordon Ramsay" }, // 12PM
+    { quote: "1PM liquidator! Post-lunch slump? Not for legends", author: "Serena Williams" }, // 1PM
+    { quote: "2PM eradicator! Afternoon energy of a champion", author: "Tiger Woods" }, // 2PM
+    { quote: "3PM pulverizer! 3PM and still crushing dreams", author: "Floyd Mayweather" }, // 3PM
+    { quote: "4PM vaporizer! Almost evening, already victorious", author: "Conor McGregor" }, // 4PM
+    { quote: "5PM atomizer! 5 o'clock champion reporting for duty", author: "John Cena" }, // 5PM
+    { quote: "6PM disintegrator! Evening excellence achieved", author: "LeBron James" }, // 6PM
+    { quote: "7PM demolisher! Dinner and total domination", author: "Genghis Khan" }, // 7PM
+    { quote: "8PM exterminator! Prime time belongs to you", author: "Will Smith" }, // 8PM
+    { quote: "9PM annihilator! Night shift ninja strikes again", author: "Jackie Chan" }, // 9PM
+    { quote: "10PM destroyer! Late night legend status confirmed", author: "The Undertaker" }, // 10PM
+    { quote: "11PM obliterator! Almost midnight and still winning", author: "Rocky Balboa" } // 11PM
   ]
   return messages[hour] || messages[0]
 }
@@ -1734,13 +1734,19 @@ export default function RectangularDashboard() {
                     // Find current user's progress
                     const currentUserMember = groupMembers.find(member => member.isCurrentUser)
                     const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
+                    const message = hasAchievedTarget 
+                      ? getTargetAchievedMessage(currentTime.getHours())
+                      : getHourlyMessage(currentTime.getHours())
                     
                     return (
-                      <p className="text-lg text-white/90 font-medium drop-shadow leading-relaxed">
-                        {hasAchievedTarget 
-                          ? getTargetAchievedMessage(currentTime.getHours())
-                          : getHourlyMessage(currentTime.getHours())}, {profile?.username || user?.email?.split('@')[0] || 'champion'}!
-                      </p>
+                      <div>
+                        <p className="text-sm text-white/90 font-medium drop-shadow leading-relaxed mb-2">
+                          "{message.quote}, {profile?.username || user?.email?.split('@')[0] || 'champion'}!"
+                        </p>
+                        <p className="text-xs text-white/60 font-normal text-right">
+                          — {message.author}
+                        </p>
+                      </div>
                     )
                   })()}
                 </div>
