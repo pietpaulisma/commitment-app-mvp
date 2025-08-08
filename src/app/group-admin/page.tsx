@@ -200,7 +200,8 @@ export default function GroupAdminDashboard() {
     if (group) {
       setSettingsForm({
         start_date: group.start_date,
-        week_mode: groupSettings?.week_mode || 'sane' // Default to sane mode
+        week_mode: groupSettings?.week_mode || 'sane', // Default to sane mode
+        recovery_days: groupSettings?.recovery_days || [5] // Default to Friday (5)
       })
     }
     setEditingSettings(true)
@@ -242,6 +243,7 @@ export default function GroupAdminDashboard() {
             .from('group_settings')
             .update({
               week_mode: settingsForm.week_mode,
+              recovery_days: settingsForm.recovery_days,
               updated_at: new Date().toISOString()
             })
             .eq('group_id', group.id)
@@ -258,7 +260,7 @@ export default function GroupAdminDashboard() {
               penalty_amount: 10,
               recovery_percentage: 25,
               rest_days: [1], // Monday
-              recovery_days: [5], // Friday
+              recovery_days: settingsForm.recovery_days || [5], // Friday by default
               accent_color: 'blue',
               week_mode: settingsForm.week_mode
             })
@@ -790,6 +792,48 @@ export default function GroupAdminDashboard() {
                                 </div>
                               </div>
                             )}
+
+                            {/* Recovery Day Selection */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wide">
+                                Recovery Day Configuration
+                              </label>
+                              <div className="bg-gray-800/50 border border-gray-700 p-4 rounded">
+                                <p className="text-sm text-gray-400 mb-4">
+                                  Choose which day requires only 15 minutes of recovery exercises (other exercises are optional)
+                                </p>
+                                <div className="grid grid-cols-7 gap-2">
+                                  {[
+                                    { day: 0, name: 'Sun' },
+                                    { day: 1, name: 'Mon' },
+                                    { day: 2, name: 'Tue' },
+                                    { day: 3, name: 'Wed' },
+                                    { day: 4, name: 'Thu' },
+                                    { day: 5, name: 'Fri' },
+                                    { day: 6, name: 'Sat' }
+                                  ].map(({ day, name }) => (
+                                    <button
+                                      key={day}
+                                      type="button"
+                                      onClick={() => setSettingsForm(prev => ({ 
+                                        ...prev, 
+                                        recovery_days: [day] 
+                                      }))}
+                                      className={`p-3 text-center border transition-colors ${
+                                        (settingsForm.recovery_days || [5]).includes(day)
+                                          ? 'border-green-500 bg-green-900/30 text-green-400'
+                                          : 'border-gray-600 bg-gray-800/30 text-gray-400 hover:border-gray-500'
+                                      }`}
+                                    >
+                                      <div className="font-bold text-sm">{name}</div>
+                                    </button>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-3">
+                                  Recovery Day: Only 15 minutes of recovery exercises required (yoga, stretching, meditation)
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <div className="text-center py-8 text-gray-400">

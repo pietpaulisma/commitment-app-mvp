@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient } from '@/utils/gradientUtils'
+import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 
 type Exercise = {
   id: string
@@ -255,21 +256,25 @@ export default function MobileWorkoutLogger() {
         .single()
 
       if (group?.start_date) {
-        // Calculate today's target using correct formula
-        const today = new Date()
-        const daysSinceStart = Math.floor((today.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-        const target = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
-        
-        setDailyTarget(target)
-
-        // Get group settings for other features (penalty amount, etc.) but don't use for target calculation
+        // Get group settings for recovery/rest days and week mode
         const { data: groupSettings } = await supabase
           .from('group_settings')
           .select('*')
           .eq('group_id', profile.group_id)
           .maybeSingle()
 
-        const todayString = today.toISOString().split('T')[0]
+        // Calculate today's target using centralized utility
+        const daysSinceStart = getDaysSinceStart(group.start_date)
+        const target = calculateDailyTarget({
+          daysSinceStart,
+          weekMode: groupSettings?.week_mode || 'sane',
+          restDays: groupSettings?.rest_days || [1],
+          recoveryDays: groupSettings?.recovery_days || [5]
+        })
+        
+        setDailyTarget(target)
+
+        const todayString = new Date().toISOString().split('T')[0]
         const { data: existingCheckin } = await supabase
           .from('daily_checkins')
           .select('*')
