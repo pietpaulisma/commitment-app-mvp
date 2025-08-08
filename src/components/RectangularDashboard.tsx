@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
 import TimeDisplay from './TimeDisplay'
+import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
+import { useWeekMode } from '@/contexts/WeekModeContext'
 
 // Helper function to get hilarious hourly commitment messages with fake attributions
 const getHourlyMessage = (hour: number): { quote: string, author: string } => {
@@ -628,6 +630,8 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
 // Personal stats component with user accent colors
 
 export default function RectangularDashboard() {
+  const { weekMode } = useWeekMode()
+  
   // Get time-of-day gradient - same as dashboard background
   const getTimeOfDayGradient = () => {
     const now = new Date()
@@ -1022,16 +1026,23 @@ export default function RectangularDashboard() {
         .eq('id', profile.group_id)
         .single()
 
-      // Calculate today's target using correct formula (with Monday doubling)
-      let dailyTarget = 1 // Default fallback (base target = 1)
+      // Get group settings for proper target calculation
+      const { data: groupSettings } = await supabase
+        .from('group_settings')
+        .select('*')
+        .eq('group_id', profile.group_id)
+        .maybeSingle()
+
+      // Calculate today's target using centralized utility
+      let dailyTarget = 1 // Default fallback
       if (group?.start_date) {
-        const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-        const baseTarget = 1 + Math.max(0, daysSinceStart) // Core app rule: base 1, increment 1
-        
-        // Check if today is Monday (1) - if so, double the target
-        const today = new Date()
-        const isMonday = today.getDay() === 1
-        dailyTarget = isMonday ? baseTarget * 2 : baseTarget
+        const daysSinceStart = getDaysSinceStart(group.start_date)
+        dailyTarget = calculateDailyTarget({
+          daysSinceStart,
+          weekMode,
+          restDays: groupSettings?.rest_days || [1],
+          recoveryDays: groupSettings?.recovery_days || [5]
+        })
       }
 
       // Get today's logs for all members in one query
