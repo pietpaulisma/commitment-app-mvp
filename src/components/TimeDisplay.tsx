@@ -87,26 +87,28 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
       }}
     >
+      {/* Gradient background fill - similar to time remaining bar */}
+      <div 
+        className="absolute right-0 top-0 bottom-0 transition-all duration-1000 rounded-2xl"
+        style={{
+          width: '100%',
+          background: `linear-gradient(135deg, 
+            ${colors.primary}40 0%, 
+            ${colors.secondary}40 50%, 
+            ${colors.accent}40 100%)`,
+          borderRadius: '16px'
+        }}
+      />
+      
       <div className="relative z-10 py-6 px-4 h-full">
         {/* TIME label */}
         <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
           TIME
         </h3>
         
-        {/* Time display with gradient fill */}
+        {/* Time display with white text */}
         <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-          <div 
-            className="text-3xl font-black tracking-wider drop-shadow-lg"
-            style={{
-              background: `linear-gradient(135deg, 
-                ${colors.primary} 0%, 
-                ${colors.secondary} 50%, 
-                ${colors.accent} 100%)`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}
-          >
+          <div className="text-3xl font-black tracking-wider text-white drop-shadow-lg">
             {timeString}
           </div>
         </div>
