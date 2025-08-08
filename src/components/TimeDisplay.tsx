@@ -80,6 +80,12 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
     second: '2-digit'
   })
 
+  // Calculate day progress (0-100%) for the fill width
+  const hour = currentTime.getHours()
+  const minute = currentTime.getMinutes()
+  const second = currentTime.getSeconds()
+  const dayProgress = ((hour * 3600 + minute * 60 + second) / (24 * 3600)) * 100
+
   return (
     <div 
       className={`relative bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl ${className}`}
@@ -87,16 +93,19 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
       }}
     >
-      {/* Gradient background fill - similar to time remaining bar */}
+      {/* Gradient background fill - partial fill based on day progress */}
       <div 
-        className="absolute right-0 top-0 bottom-0 transition-all duration-1000 rounded-2xl"
+        className="absolute right-0 top-0 bottom-0 transition-all duration-1000"
         style={{
-          width: '100%',
+          width: `${Math.max(8, dayProgress)}%`,
           background: `linear-gradient(135deg, 
-            ${colors.primary}40 0%, 
-            ${colors.secondary}40 50%, 
-            ${colors.accent}40 100%)`,
-          borderRadius: '16px'
+            ${colors.primary}60 0%, 
+            ${colors.secondary}60 50%, 
+            ${colors.accent}60 100%)`,
+          borderTopLeftRadius: '0px',
+          borderBottomLeftRadius: '0px',
+          borderTopRightRadius: '16px',
+          borderBottomRightRadius: '16px'
         }}
       />
       
