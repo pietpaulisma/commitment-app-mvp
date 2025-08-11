@@ -1735,7 +1735,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {isDecreasedExercise && <CheckIcon className="w-3 h-3 text-black" />}
                   </div>
                   <span className="font-medium relative z-10 text-center flex-1">
-                    {isDecreasedExercise ? 'Decreased (0.5x weight)' : 'Regular (1x weight)'}
+                    {isDecreasedExercise ? 'Decreased (1.5x points)' : 'Regular (1x points)'}
                   </span>
                 </button>
               )}
