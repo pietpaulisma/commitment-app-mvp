@@ -1911,7 +1911,7 @@ export default function RectangularDashboard() {
                               <span className="text-white font-black text-lg leading-tight">
                                 {progressPercentage}%
                               </span>
-                              <span className="text-white/60 text-xs font-light uppercase tracking-wide">
+                              <span className="text-white/60 text-xs font-light tracking-wide">
                                 {weekMode}
                               </span>
                             </div>
