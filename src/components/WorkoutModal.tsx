@@ -106,6 +106,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [isStopwatchExpanded, setIsStopwatchExpanded] = useState(false)
   const [stopwatchTime, setStopwatchTime] = useState(0) // in milliseconds
   const [isStopwatchRunning, setIsStopwatchRunning] = useState(false)
+  const [stopwatchStartTime, setStopwatchStartTime] = useState(0) // timestamp when started
+  const [stopwatchPausedDuration, setStopwatchPausedDuration] = useState(0) // accumulated paused time
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -152,16 +154,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }, [])
 
-  // Stopwatch effect
+  // Stopwatch effect - date-based for background tab support
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isStopwatchRunning) {
       interval = setInterval(() => {
-        setStopwatchTime(prevTime => prevTime + 10)
+        const now = Date.now()
+        const elapsed = now - stopwatchStartTime - stopwatchPausedDuration
+        setStopwatchTime(Math.max(0, elapsed))
       }, 10)
     }
     return () => clearInterval(interval)
-  }, [isStopwatchRunning])
+  }, [isStopwatchRunning, stopwatchStartTime, stopwatchPausedDuration])
 
   // Format stopwatch time
   const formatTime = (ms: number) => {
@@ -172,11 +176,28 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   // Stopwatch controls
-  const startStopwatch = () => setIsStopwatchRunning(true)
-  const pauseStopwatch = () => setIsStopwatchRunning(false)
+  const startStopwatch = () => {
+    const now = Date.now()
+    if (stopwatchStartTime === 0) {
+      // First start - set initial timestamp
+      setStopwatchStartTime(now)
+    } else {
+      // Resume - add the pause duration to accumulated paused time
+      setStopwatchPausedDuration(prev => prev + (now - stopwatchStartTime - stopwatchTime))
+      setStopwatchStartTime(now)
+    }
+    setIsStopwatchRunning(true)
+  }
+  
+  const pauseStopwatch = () => {
+    setIsStopwatchRunning(false)
+  }
+  
   const resetStopwatch = () => {
     setIsStopwatchRunning(false)
     setStopwatchTime(0)
+    setStopwatchStartTime(0)
+    setStopwatchPausedDuration(0)
   }
 
   const handleClose = () => {
