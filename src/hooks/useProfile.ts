@@ -35,35 +35,54 @@ export function useProfile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function loadProfile() {
-      if (!user) {
-        setProfile(null)
-        setLoading(false)
-        return
+  const loadProfile = async (showLoading = true) => {
+    if (!user) {
+      setProfile(null)
+      setLoading(false)
+      return null
+    }
+
+    if (showLoading) {
+      setLoading(true)
+    }
+    setError(null)
+
+    try {
+      console.log('🔄 Loading profile for user:', user.email, 'ID:', user.id)
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (error) {
+        throw error
       }
 
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-
-        if (error) {
-          throw error
-        }
-
-        setProfile(data)
-      } catch (error) {
-        console.error('Error loading profile:', error)
-        setError(error instanceof Error ? error.message : 'Failed to load profile')
-      } finally {
+      console.log('✅ Profile loaded:', { 
+        email: data.email, 
+        onboarding_completed: data.onboarding_completed,
+        role: data.role 
+      })
+      setProfile(data)
+      return data
+    } catch (error) {
+      console.error('❌ Error loading profile:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load profile')
+      return null
+    } finally {
+      if (showLoading) {
         setLoading(false)
       }
     }
+  }
 
+  const refreshProfile = () => {
+    console.log('🔄 Refreshing profile data...')
+    return loadProfile(false)
+  }
+
+  useEffect(() => {
     loadProfile()
   }, [user])
 
@@ -98,5 +117,6 @@ export function useProfile() {
     isGroupAdmin,
     isUser,
     hasAdminPrivileges,
+    refreshProfile,
   }
 }
