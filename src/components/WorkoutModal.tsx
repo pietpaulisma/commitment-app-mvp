@@ -1743,7 +1743,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* Calculation breakdown - Inline */}
               <div className="text-center">
                 <div className="text-xs text-white/40 font-sans">
-                  {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight} = {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts
+                  {(() => {
+                    // Calculate the weight multiplier
+                    let weightMultiplier = 1
+                    if (selectedWorkoutExercise.is_weighted && selectedWeight > 0) {
+                      if (selectedWeight >= 10 && selectedWeight < 15) weightMultiplier = 1.5
+                      else if (selectedWeight >= 15 && selectedWeight < 20) weightMultiplier = 2
+                      else if (selectedWeight >= 20 && selectedWeight < 25) weightMultiplier = 2.5
+                      else if (selectedWeight >= 25 && selectedWeight < 30) weightMultiplier = 3
+                      else if (selectedWeight >= 30 && selectedWeight < 35) weightMultiplier = 3.5
+                      else if (selectedWeight >= 35 && selectedWeight < 40) weightMultiplier = 4
+                      else if (selectedWeight >= 40) weightMultiplier = 4.5
+                    }
+                    
+                    if (selectedWeight === 0) {
+                      return `${workoutCount} reps = ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts`
+                    } else {
+                      return `${workoutCount} × ${weightMultiplier}x = ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts`
+                    }
+                  })()}
                 </div>
               </div>
               
