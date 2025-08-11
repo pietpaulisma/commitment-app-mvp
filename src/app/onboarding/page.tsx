@@ -176,32 +176,37 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       const handleScroll = () => {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop
         const scrollHeight = document.documentElement.scrollHeight
-        const clientHeight = document.documentElement.clientHeight
+        const clientHeight = window.innerHeight || document.documentElement.clientHeight
         
-        // Only consider scrolled to bottom if there's actually content to scroll
-        // and user has scrolled significantly
-        if (scrollHeight > clientHeight + 100) { // Only if page is taller than viewport + 100px
-          if (scrollTop + clientHeight >= scrollHeight - 50) {
+        // More lenient scroll detection - consider scrolled to bottom if within 150px
+        // This accounts for different mobile browsers and viewport calculations
+        const scrollThreshold = 150
+        const isScrollableContent = scrollHeight > clientHeight + 50
+        
+        if (isScrollableContent) {
+          const distanceFromBottom = scrollHeight - (scrollTop + clientHeight)
+          if (distanceFromBottom <= scrollThreshold) {
             setHasScrolledToBottom(true)
           } else {
             setHasScrolledToBottom(false)
           }
         } else {
-          // If content doesn't require scrolling, don't show buttons yet
-          setHasScrolledToBottom(false)
+          // If content fits in viewport, show buttons after a delay
+          setTimeout(() => setHasScrolledToBottom(true), 1000)
         }
       }
 
       window.addEventListener('scroll', handleScroll)
-      // Wait a bit before first check to ensure content is fully rendered
+      window.addEventListener('resize', handleScroll) // Also listen for resize events
+      
+      // Check initial state after content loads
       setTimeout(() => {
         handleScroll()
-      }, 500)
-      
-      // Remove auto-scroll for step 2 - user should manually scroll
+      }, 800)
       
       return () => {
         window.removeEventListener('scroll', handleScroll)
+        window.removeEventListener('resize', handleScroll)
       }
     }
   }, [currentStep])
@@ -1171,7 +1176,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             
             {/* Content area - only show when not in hold mode */}
             {!showHoldButton && (
-              <div className="space-y-8 relative z-10 pointer-events-auto min-h-screen">
+              <div className="space-y-8 relative z-10 pointer-events-auto min-h-screen pb-32">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1275,29 +1280,29 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                   </div>
                 </motion.div>
                 
-                {/* Two buttons for final warning step - positioned below content */}
+                {/* Two buttons for final warning step - positioned below content with better spacing */}
                 {hasScrolledToBottom && (
-                  <div className="relative z-50 px-4 pb-8 pointer-events-none">
+                  <div className="relative z-50 px-4 pb-16 pt-8 pointer-events-none">
                     <div className="flex space-x-4 w-full max-w-lg mx-auto pointer-events-auto">
                       {/* I refuse button - blue */}
                       <motion.button
                         onClick={() => onGoToLogin?.()}
-                        className="relative overflow-hidden flex-1"
+                        className="relative overflow-hidden flex-1 min-h-[56px]"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         style={{
                           background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
                           borderRadius: '9999px',
-                          padding: '12px 24px',
-                          border: '1px solid rgba(37, 99, 235, 0.4)',
-                          boxShadow: '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          padding: '16px 24px',
+                          border: '2px solid rgba(37, 99, 235, 0.6)',
+                          boxShadow: '0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                           cursor: 'pointer'
                         }}
                         animate={{
                           boxShadow: [
-                            '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 0 25px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 0 15px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                            '0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 6px 30px rgba(37, 99, 235, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
                           ]
                         }}
                         transition={{ duration: 2, repeat: Infinity }}
@@ -1310,22 +1315,22 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                       {/* I Commit button - red */}
                       <motion.button
                         onClick={() => setShowHoldButton(true)}
-                        className="relative overflow-hidden flex-1"
+                        className="relative overflow-hidden flex-1 min-h-[56px]"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         style={{
                           background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 80%, #7F1D1D 100%)',
                           borderRadius: '9999px',
-                          padding: '12px 24px',
-                          border: '1px solid rgba(220, 38, 38, 0.6)',
-                          boxShadow: '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                          padding: '16px 24px',
+                          border: '2px solid rgba(220, 38, 38, 0.8)',
+                          boxShadow: '0 4px 20px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                           cursor: 'pointer'
                         }}
                         animate={{
                           boxShadow: [
-                            '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 0 25px rgba(220, 38, 38, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 0 15px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                            '0 4px 20px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 6px 30px rgba(220, 38, 38, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                            '0 4px 20px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
                           ]
                         }}
                         transition={{ duration: 2, repeat: Infinity }}
@@ -1923,40 +1928,43 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       )}
 
 
-      {/* Hold button - positioned at bottom like other buttons - matches commit button style */}
+      {/* Hold button - positioned at bottom with better visibility and spacing */}
       {currentStep === 2 && showHoldButton && (
         <div className="fixed bottom-8 left-4 right-4 flex justify-center z-50">
           <button
-            className="relative overflow-hidden w-full max-w-md font-black text-lg py-4 px-8 rounded-xl"
+            className="relative overflow-hidden w-full max-w-md font-black text-lg py-5 px-8 rounded-2xl min-h-[64px]"
             onMouseDown={startHolding}
             onMouseUp={stopHolding}
             onMouseLeave={stopHolding}
             onTouchStart={startHolding}
             onTouchEnd={stopHolding}
-            disabled={holdProgress >= 100}
+            onClick={holdProgress >= 100 ? nextStep : undefined}
             style={{
               background: holdProgress >= 100 
                 ? 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)' 
-                : 'linear-gradient(135deg, #B91C1C 0%, #7F1D1D 100%)',
-              border: '1px solid rgba(185, 28, 28, 0.4)',
-              boxShadow: '0 0 15px rgba(185, 28, 28, 0.3)',
-              color: '#FFFFFF'
+                : 'linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 80%, #7F1D1D 100%)',
+              border: '2px solid rgba(220, 38, 38, 0.8)',
+              boxShadow: holdProgress >= 100 
+                ? '0 4px 25px rgba(34, 197, 94, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+                : '0 4px 25px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              color: '#FFFFFF',
+              cursor: 'pointer'
             }}
           >
-            {/* Red flaming gradient fill overlay */}
+            {/* Progress fill overlay */}
             <div 
-              className="absolute left-0 top-0 bottom-0 rounded-xl transition-all duration-100"
+              className="absolute left-0 top-0 bottom-0 rounded-2xl transition-all duration-100"
               style={{ 
                 width: `${holdProgress}%`,
                 background: holdProgress > 0 && holdProgress < 100 
-                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%)'
+                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 30%, #B91C1C 70%, #991B1B 100%)'
                   : 'transparent',
-                opacity: holdProgress > 0 && holdProgress < 100 ? 0.8 : 0
+                opacity: holdProgress > 0 && holdProgress < 100 ? 0.9 : 0
               }}
             />
             
-            <span className="relative z-10">
-              {holdProgress >= 100 ? '🔥 COMMITTED! 🔥' : 'HOLD TO COMMIT'}
+            <span className="relative z-10 block text-center">
+              {holdProgress >= 100 ? '🔥 COMMITTED! TAP TO CONTINUE 🔥' : 'HOLD TO COMMIT'}
             </span>
           </button>
         </div>
