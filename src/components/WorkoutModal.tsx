@@ -702,7 +702,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       else if (weight >= 15 && weight < 20) weightMultiplier = 2
       else if (weight >= 20 && weight < 25) weightMultiplier = 2.5
       else if (weight >= 25 && weight < 30) weightMultiplier = 3
-      else if (weight >= 30) weightMultiplier = 3.5
+      else if (weight >= 30 && weight < 35) weightMultiplier = 3.5
+      else if (weight >= 35 && weight < 40) weightMultiplier = 4
+      else if (weight >= 40) weightMultiplier = 4.5
       
       points *= weightMultiplier
     }
@@ -1655,13 +1657,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="grid grid-cols-4 gap-1">
                     {[
                       { label: 'body', value: 0, multiplier: 1.0 },
-                      { label: '5', value: 5, multiplier: 1.25 },
                       { label: '10', value: 10, multiplier: 1.5 },
-                      { label: '15', value: 15, multiplier: 1.75 },
-                      { label: '20', value: 20, multiplier: 2.0 },
-                      { label: '25', value: 25, multiplier: 2.25 },
-                      { label: '30', value: 30, multiplier: 2.5 },
-                      { label: '35', value: 35, multiplier: 2.75 }
+                      { label: '15', value: 15, multiplier: 2.0 },
+                      { label: '20', value: 20, multiplier: 2.5 },
+                      { label: '25', value: 25, multiplier: 3.0 },
+                      { label: '30', value: 30, multiplier: 3.5 },
+                      { label: '35', value: 35, multiplier: 4.0 },
+                      { label: '40', value: 40, multiplier: 4.5 }
                     ].map((button, index) => {
                     const isSelected = selectedWeight === button.value
                     const isLocked = lockedWeight === button.value
