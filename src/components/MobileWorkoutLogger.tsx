@@ -467,15 +467,11 @@ export default function MobileWorkoutLogger() {
       return regularPoints + recoveryPoints
     }
     
-    // On regular days, cap recovery at 25% of total
-    if (recoveryPoints > 0) {
-      const totalRawPoints = regularPoints + recoveryPoints
-      const maxRecoveryAllowed = Math.floor(totalRawPoints * 0.25)
-      const effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
-      return regularPoints + effectiveRecoveryPoints
-    }
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+    const effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
     
-    return regularPoints
+    return regularPoints + effectiveRecoveryPoints
   }
 
   const getEffectivePoints = (log: WorkoutLog) => {
@@ -489,22 +485,16 @@ export default function MobileWorkoutLogger() {
       return log.points
     }
 
-    // Calculate recovery cap and distribute proportionally
-    const regularPoints = todaysLogs
-      .filter(l => l.exercises?.type !== 'recovery')
-      .reduce((total, l) => total + l.points, 0)
-    
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
     const totalRecoveryPoints = getRecoveryPoints()
-    if (totalRecoveryPoints === 0) return 0
-
-    const totalRawPoints = regularPoints + totalRecoveryPoints
-    const maxRecoveryAllowed = Math.floor(totalRawPoints * 0.25)
     
+    if (totalRecoveryPoints === 0) return 0
     if (totalRecoveryPoints <= maxRecoveryAllowed) {
       return log.points // No cap needed
     }
 
-    // Proportionally reduce this recovery exercise
+    // Proportionally reduce this recovery exercise based on fixed cap
     const recoveryRatio = maxRecoveryAllowed / totalRecoveryPoints
     return Math.floor(log.points * recoveryRatio)
   }
@@ -783,13 +773,8 @@ export default function MobileWorkoutLogger() {
                               
                               // Check if this recovery exercise would be capped
                               if (selectedExercise && selectedExercise.type === 'recovery' && !isRecoveryDay && rawPoints > 0) {
-                                const regularPoints = todaysLogs
-                                  .filter(log => log.exercises?.type !== 'recovery')
-                                  .reduce((total, log) => total + log.points, 0)
-                                
                                 const currentRecoveryPoints = getRecoveryPoints()
-                                const newTotalRaw = regularPoints + currentRecoveryPoints + rawPoints
-                                const maxRecoveryAllowed = Math.floor(newTotalRaw * 0.25)
+                                const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
                                 const totalRecoveryAfter = currentRecoveryPoints + rawPoints
                                 
                                 if (totalRecoveryAfter > maxRecoveryAllowed) {
@@ -908,17 +893,11 @@ export default function MobileWorkoutLogger() {
                                   {isRecoveryExercise && (
                                     <span className="ml-2 text-xs text-gray-500">• Recovery</span>
                                   )}
-                                  {isPointsCapped && (
-                                    <span className="ml-2 text-xs text-orange-400">• Capped</span>
-                                  )}
                                 </div>
                               </div>
                               <div className="text-right">
                                 <div className="text-lg font-black text-white">
                                   {effectivePoints}
-                                  {isPointsCapped && (
-                                    <span className="text-xs text-orange-400 ml-1">/{log.points}</span>
-                                  )}
                                 </div>
                                 <div className="text-xs text-gray-400">pts</div>
                               </div>

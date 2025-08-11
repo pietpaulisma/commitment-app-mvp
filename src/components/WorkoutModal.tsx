@@ -782,25 +782,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       return log.points
     }
 
-    // Calculate recovery cap and distribute proportionally
-    const regularPoints = todayLogs
-      ?.filter(l => l.exercises?.type !== 'recovery')
-      ?.reduce((total, l) => total + l.points, 0) || 0
-    
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
     const totalRecoveryPoints = todayLogs
       ?.filter(l => l.exercises?.type === 'recovery')
       ?.reduce((total, l) => total + l.points, 0) || 0
     
     if (totalRecoveryPoints === 0) return 0
-
-    const totalRawPoints = regularPoints + totalRecoveryPoints
-    const maxRecoveryAllowed = Math.floor(totalRawPoints * 0.25)
-    
     if (totalRecoveryPoints <= maxRecoveryAllowed) {
       return log.points // No cap needed
     }
 
-    // Proportionally reduce this recovery exercise
+    // Proportionally reduce this recovery exercise based on fixed cap
     const recoveryRatio = maxRecoveryAllowed / totalRecoveryPoints
     return Math.floor(log.points * recoveryRatio)
   }
@@ -830,17 +823,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       return rawPoints
     }
 
-    // Calculate what the recovery cap would be with this new exercise
-    const currentRegularPoints = todayLogs
-      ?.filter(l => l.exercises?.type !== 'recovery')
-      ?.reduce((total, l) => total + l.points, 0) || 0
-    
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
     const currentRecoveryPoints = todayLogs
       ?.filter(l => l.exercises?.type === 'recovery')
       ?.reduce((total, l) => total + l.points, 0) || 0
     
-    const newTotalRaw = currentRegularPoints + currentRecoveryPoints + rawPoints
-    const maxRecoveryAllowed = Math.floor(newTotalRaw * 0.25)
     const newRecoveryTotal = currentRecoveryPoints + rawPoints
     
     if (newRecoveryTotal <= maxRecoveryAllowed) {
@@ -1420,14 +1408,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                             <div>
                                               <span className="font-medium text-white">
                                                 {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
-                                                {isPointsCapped && (
-                                                  <span className="text-xs text-orange-400 ml-1">/{rawPoints}</span>
-                                                )}
                                               </span>
                                               <span className="font-thin text-white ml-1">pts</span>
-                                              {isPointsCapped && (
-                                                <div className="text-xs text-orange-400">capped</div>
-                                              )}
                                             </div>
                                           )
                                         })()}
