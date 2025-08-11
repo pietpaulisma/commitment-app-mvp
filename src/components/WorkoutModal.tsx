@@ -1670,7 +1670,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <div className="relative flex">
                         <button
                           onClick={async () => {
-                            setWeekMode('sane')
+                            await setWeekModeWithSync('sane', user?.id)
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('sane')
                           }}
@@ -1684,7 +1684,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         
                         <button
                           onClick={async () => {
-                            setWeekMode('insane')
+                            await setWeekModeWithSync('insane', user?.id)
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('insane')
                           }}
