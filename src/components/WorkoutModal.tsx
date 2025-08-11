@@ -316,8 +316,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Calculate daily progress with recovery cap (except on recovery days)
       let effectiveRecoveryPoints = recoveryPoints
       if (!isRecoveryDay && recoveryPoints > 0) {
-        const totalRawPoints = regularPoints + recoveryPoints
-        const maxRecoveryAllowed = Math.floor(totalRawPoints * 0.25)
+        const maxRecoveryAllowed = Math.floor(targetData.target * 0.25)
         effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
       }
 
@@ -1262,7 +1261,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               <div 
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
                 style={{ 
-                  width: progressAnimated ? '100%' : '75%',
+                  width: progressAnimated ? `${Math.min(100, Math.max(0, progressPercentage))}%` : '75%',
                   background: createCumulativeGradient(todayLogs || [], dailyTarget),
                   opacity: isClosing ? 0 : 1
                 }}
