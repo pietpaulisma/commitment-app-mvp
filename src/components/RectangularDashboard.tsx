@@ -1191,11 +1191,12 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot - use real penalty data instead of fake calculation
+      // 2. Money Pot - use real penalty data from payment_transactions
       const { data: groupPenalties } = await supabase
-        .from('penalty_logs')
+        .from('payment_transactions')
         .select('amount, user_id, profiles!inner(username)')
         .eq('group_id', profile.group_id)
+        .eq('transaction_type', 'penalty')
 
       const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
       
@@ -1366,11 +1367,12 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution) - use real penalty data
+      // 2. Personal Money Pot (your contribution) - use real penalty data from payment_transactions
       const { data: userPenalties } = await supabase
-        .from('penalty_logs')
+        .from('payment_transactions')
         .select('amount')
         .eq('user_id', user.id)
+        .eq('transaction_type', 'penalty')
 
       const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
 
