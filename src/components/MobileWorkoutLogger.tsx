@@ -295,7 +295,7 @@ export default function MobileWorkoutLogger() {
         const daysSinceStart = getDaysSinceStart(group.start_date)
         const target = calculateDailyTarget({
           daysSinceStart,
-          weekMode: groupSettings?.week_mode || 'sane',
+          weekMode: weekMode, // Use individual user's mode from context
           restDays: groupSettings?.rest_days || [1],
           recoveryDays: groupSettings?.recovery_days || [5]
         })
@@ -457,7 +457,7 @@ export default function MobileWorkoutLogger() {
 
       // If user met/exceeded insane target while in sane mode, switch to insane
       if (currentTotalPoints >= insaneTargetForToday) {
-        await setWeekModeWithSync('insane', userProfile.group_id)
+        await setWeekModeWithSync('insane', user.id)
         console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
         
         // Recalculate daily target with new mode

@@ -294,7 +294,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       
       // If user met/exceeded insane target while in sane mode, switch to insane
       if (currentTotalPoints >= insaneTargetForToday) {
-        await setWeekModeWithSync('insane', profile.group_id)
+        await setWeekModeWithSync('insane', user?.id)
         console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
         
         // Recalculate target with new mode
@@ -1047,7 +1047,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             
             // If user met/exceeded insane target while in sane mode, switch to insane
             if (totalPoints >= insaneTargetForToday) {
-              await setWeekModeWithSync('insane', profile?.group_id)
+              await setWeekModeWithSync('insane', user?.id)
               console.log(`Auto-switched to insane mode! Points: ${totalPoints}, Insane target: ${insaneTargetForToday}`)
               
               // Recalculate target with new mode

@@ -1038,10 +1038,10 @@ export default function RectangularDashboard() {
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Get all group members
+      // Get all group members including their individual week_mode
       const { data: allMembers } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color, created_at')
+        .select('id, email, username, personal_color, created_at, week_mode')
         .eq('group_id', profile.group_id)
 
       if (!allMembers) return
@@ -1118,13 +1118,23 @@ export default function RectangularDashboard() {
         }
       })
 
-      // Create final member objects with their points
-      const membersWithProgress = allMembers.map(member => ({
-        ...member,
-        todayPoints: memberPointsMap.get(member.id) || 0,
-        dailyTarget: dailyTarget,
-        isCurrentUser: member.id === user?.id
-      }))
+      // Create final member objects with their points and individual targets
+      const membersWithProgress = allMembers.map(member => {
+        // Calculate individual daily target based on member's week_mode
+        const memberDailyTarget = calculateDailyTarget({
+          daysSinceStart,
+          weekMode: (member.week_mode as 'sane' | 'insane') || 'insane',
+          restDays: groupSettings?.rest_days || [1],
+          recoveryDays: groupSettings?.recovery_days || [5]
+        })
+        
+        return {
+          ...member,
+          todayPoints: memberPointsMap.get(member.id) || 0,
+          dailyTarget: memberDailyTarget,
+          isCurrentUser: member.id === user?.id
+        }
+      })
       
       // Sort by points descending
       membersWithProgress.sort((a, b) => b.todayPoints - a.todayPoints)
@@ -1138,10 +1148,10 @@ export default function RectangularDashboard() {
     if (!profile?.group_id) return null
 
     try {
-      // Get all group members first
+      // Get all group members first including their individual week_mode
       const { data: members } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color')
+        .select('id, email, username, personal_color, week_mode')
         .eq('group_id', profile.group_id)
 
       if (!members || members.length === 0) return null
@@ -1962,7 +1972,7 @@ export default function RectangularDashboard() {
                                 {progressPercentage}%
                               </span>
                               <span className="text-white/60 text-xs font-light tracking-wide">
-                                {weekMode}
+                                {member.week_mode || 'insane'}
                               </span>
                             </div>
                           </div>

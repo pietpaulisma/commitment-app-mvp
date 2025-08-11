@@ -47,7 +47,6 @@ type GroupSettings = {
   rest_days: number[]
   recovery_days: number[]
   accent_color: string
-  week_mode?: 'sane' | 'insane'
 }
 
 export default function GroupAdminDashboard() {
@@ -63,7 +62,7 @@ export default function GroupAdminDashboard() {
   const [settingsLoading, setSettingsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
   const [editingSettings, setEditingSettings] = useState(false)
-  const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string; week_mode?: 'sane' | 'insane' }>>({})
+  const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string }>>({})
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -200,7 +199,6 @@ export default function GroupAdminDashboard() {
     if (group) {
       setSettingsForm({
         start_date: group.start_date,
-        week_mode: groupSettings?.week_mode || 'sane', // Default to sane mode
         recovery_days: groupSettings?.recovery_days || [5] // Default to Friday (5)
       })
     }
@@ -228,8 +226,8 @@ export default function GroupAdminDashboard() {
 
       if (groupError) throw groupError
 
-      // Update or create group_settings for week_mode (if applicable)
-      if (settingsForm.week_mode) {
+      // Update group_settings for recovery_days if needed  
+      if (settingsForm.recovery_days) {
         // Check if group_settings exists
         const { data: existingSettings } = await supabase
           .from('group_settings')
@@ -242,7 +240,6 @@ export default function GroupAdminDashboard() {
           const { error: settingsError } = await supabase
             .from('group_settings')
             .update({
-              week_mode: settingsForm.week_mode,
               recovery_days: settingsForm.recovery_days,
               updated_at: new Date().toISOString()
             })
@@ -261,8 +258,7 @@ export default function GroupAdminDashboard() {
               recovery_percentage: 25,
               rest_days: [1], // Monday
               recovery_days: settingsForm.recovery_days || [5], // Friday by default
-              accent_color: 'blue',
-              week_mode: settingsForm.week_mode
+              accent_color: 'blue'
             })
 
           if (createError) throw createError
@@ -655,19 +651,6 @@ export default function GroupAdminDashboard() {
                             <div className="text-gray-400 uppercase tracking-wide">Members</div>
                             <div className="font-semibold text-lg text-white">{members.length} members</div>
                           </div>
-                          {(() => {
-                            const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
-                            return daysSinceStart >= 300;
-                          })() && (
-                            <div>
-                              <div className="text-gray-400 uppercase tracking-wide">Week Mode</div>
-                              <div className={`font-semibold text-lg ${
-                                groupSettings?.week_mode === 'insane' ? 'text-red-400' : 'text-green-400'
-                              }`}>
-                                {(groupSettings?.week_mode || 'sane').toUpperCase()}
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     )}
@@ -750,48 +733,6 @@ export default function GroupAdminDashboard() {
                               </p>
                             </div>
 
-                            {/* Week Mode Toggle for 300+ day groups */}
-                            {group && (() => {
-                              const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
-                              return daysSinceStart >= 300;
-                            })() && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-3 uppercase tracking-wide">
-                                  Week Mode (Unlocked after 300 days)
-                                </label>
-                                <div className="bg-gray-800/50 border border-gray-700 p-4 rounded">
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                      type="button"
-                                      onClick={() => setSettingsForm(prev => ({ ...prev, week_mode: 'sane' }))}
-                                      className={`p-3 text-center border transition-colors ${
-                                        (settingsForm.week_mode || 'sane') === 'sane'
-                                          ? 'border-green-500 bg-green-900/30 text-green-400'
-                                          : 'border-gray-600 bg-gray-800/30 text-gray-400 hover:border-gray-500'
-                                      }`}
-                                    >
-                                      <div className="font-bold text-lg">SANE</div>
-                                      <div className="text-xs mt-1">Balanced approach</div>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setSettingsForm(prev => ({ ...prev, week_mode: 'insane' }))}
-                                      className={`p-3 text-center border transition-colors ${
-                                        (settingsForm.week_mode || 'sane') === 'insane'
-                                          ? 'border-red-500 bg-red-900/30 text-red-400'
-                                          : 'border-gray-600 bg-gray-800/30 text-gray-400 hover:border-gray-500'
-                                      }`}
-                                    >
-                                      <div className="font-bold text-lg">INSANE</div>
-                                      <div className="text-xs mt-1">Maximum intensity</div>
-                                    </button>
-                                  </div>
-                                  <p className="text-xs text-gray-500 mt-3">
-                                    Week mode affects how targets are calculated and progress is tracked for experienced groups
-                                  </p>
-                                </div>
-                              </div>
-                            )}
 
                             {/* Recovery Day Selection */}
                             <div>
