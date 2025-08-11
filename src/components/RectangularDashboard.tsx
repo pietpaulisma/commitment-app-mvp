@@ -805,7 +805,7 @@ export default function RectangularDashboard() {
       const interval = setInterval(loadDashboardData, 30000) // Refresh every 30 seconds
       return () => clearInterval(interval)
     }
-  }, [user, profile])
+  }, [user, profile, weekMode])
 
   // Trigger animations after component mounts and data loads
   useEffect(() => {
