@@ -145,7 +145,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Restore background scrolling
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen, user, profile?.group_id])
+  }, [isOpen, user, profile?.group_id, weekMode])
 
   // Cleanup effect to ensure body scroll is restored on unmount
   useEffect(() => {
@@ -271,8 +271,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     setGroupDaysSinceStart(daysSinceStart)
     console.log(`Target recalculated for ${newMode} mode:`, target)
     
-    // Recalculate daily progress with new target's recovery cap
-    await loadDailyProgress(target)
+    // Note: loadDailyProgress() will be called automatically by useEffect when weekMode changes
   }
 
   const loadDailyProgress = async (targetOverride?: number) => {
