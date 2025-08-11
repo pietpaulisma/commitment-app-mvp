@@ -1064,10 +1064,12 @@ export default function RectangularDashboard() {
         .eq('group_id', profile.group_id)
         .maybeSingle()
 
+      // Calculate days since start for target calculations
+      const daysSinceStart = group?.start_date ? getDaysSinceStart(group.start_date) : 1
+      
       // Calculate today's target using centralized utility
       let dailyTarget = 1 // Default fallback
       if (group?.start_date) {
-        const daysSinceStart = getDaysSinceStart(group.start_date)
         dailyTarget = calculateDailyTarget({
           daysSinceStart,
           weekMode,
