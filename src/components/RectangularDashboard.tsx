@@ -1045,21 +1045,50 @@ export default function RectangularDashboard() {
         })
       }
 
-      // Get today's logs for all members in one query
+      // Get today's logs for all members with exercise types for recovery capping
       const memberIds = allMembers.map(m => m.id)
       const { data: todayLogs } = await supabase
         .from('logs')
-        .select('user_id, points')
+        .select('user_id, points, exercise_id, exercises(type)')
         .in('user_id', memberIds)
         .eq('date', today)
 
-      // Process members with their points
+      // Check if today is a recovery day
+      const currentDayOfWeek = new Date().getDay()
+      const recoveryDays = groupSettings?.recovery_days || [5]
+      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
+
+      // Process members with their capped points (same logic as other components)
       const memberPointsMap = new Map()
       todayLogs?.forEach(log => {
         if (!memberPointsMap.has(log.user_id)) {
-          memberPointsMap.set(log.user_id, 0)
+          memberPointsMap.set(log.user_id, { regular: 0, recovery: 0 })
         }
-        memberPointsMap.set(log.user_id, memberPointsMap.get(log.user_id) + log.points)
+        
+        const current = memberPointsMap.get(log.user_id)
+        if (log.exercises?.type === 'recovery') {
+          current.recovery += log.points
+        } else {
+          current.regular += log.points
+        }
+      })
+
+      // Apply recovery capping for each member
+      memberIds.forEach(userId => {
+        if (memberPointsMap.has(userId)) {
+          const { regular, recovery } = memberPointsMap.get(userId)
+          let effectiveRecovery = recovery
+          
+          if (!isRecoveryDay && recovery > 0) {
+            const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+            effectiveRecovery = Math.min(recovery, maxRecoveryAllowed)
+          }
+          
+          // Store the capped total
+          memberPointsMap.set(userId, regular + effectiveRecovery)
+        } else {
+          memberPointsMap.set(userId, 0)
+        }
       })
 
       // Create final member objects with their points
@@ -1877,10 +1906,13 @@ export default function RectangularDashboard() {
                               />
                             </svg>
                             
-                            {/* Bigger, bolder percentage text */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white font-black text-lg">
+                            {/* Bigger, bolder percentage text with mode indicator */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="text-white font-black text-lg leading-tight">
                                 {progressPercentage}%
+                              </span>
+                              <span className="text-white/60 text-xs font-light uppercase tracking-wide">
+                                {weekMode}
                               </span>
                             </div>
                           </div>
