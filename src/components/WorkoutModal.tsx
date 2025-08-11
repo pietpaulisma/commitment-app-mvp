@@ -1016,6 +1016,45 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       try {
         const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
         
+        // Check recovery limit enforcement (unless it's a recovery day)
+        if (selectedWorkoutExercise.type === 'recovery' && profile?.group_id) {
+          // Check if today is a recovery day
+          const { data: groupSettings } = await supabase
+            .from('group_settings')
+            .select('recovery_days')
+            .eq('group_id', profile.group_id)
+            .maybeSingle()
+          
+          const today = new Date()
+          const currentDayOfWeek = today.getDay()
+          const recoveryDays = groupSettings?.recovery_days || [5]
+          const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
+          
+          if (!isRecoveryDay) {
+            const currentRecoveryPercentage = dailyTarget > 0 ? (recoveryProgress / dailyTarget) * 100 : 0
+            const newTotal = dailyProgress + points
+            const newRecoveryPoints = recoveryProgress + points
+            const newRecoveryPercentage = newTotal > 0 ? (newRecoveryPoints / newTotal) * 100 : 0
+
+            if (newRecoveryPercentage > 25) {
+              const maxAllowedRecoveryPoints = Math.floor(newTotal * 0.25)
+              const availableRecoveryPoints = maxAllowedRecoveryPoints - recoveryProgress
+              
+              if (availableRecoveryPoints <= 0) {
+                alert('Recovery exercises cannot exceed 25% of your daily total. You have reached the recovery limit for today.')
+                setLoading(false)
+                return
+              } else {
+                const maxAllowedExercisePoints = availableRecoveryPoints
+                const maxQuantity = maxAllowedExercisePoints / selectedWorkoutExercise.points_per_unit
+                alert(`Recovery exercises cannot exceed 25% of your daily total. You can only add ${maxQuantity.toFixed(1)} ${selectedWorkoutExercise.unit} of this recovery exercise today.`)
+                setLoading(false)
+                return
+              }
+            }
+          }
+        }
+        
         const { error } = await supabase
           .from('logs')
           .insert({
@@ -1795,6 +1834,45 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   setLoading(true)
                   try {
                     const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    
+                    // Check recovery limit enforcement (unless it's a recovery day)
+                    if (selectedWorkoutExercise.type === 'recovery' && profile?.group_id) {
+                      // Check if today is a recovery day
+                      const { data: groupSettings } = await supabase
+                        .from('group_settings')
+                        .select('recovery_days')
+                        .eq('group_id', profile.group_id)
+                        .maybeSingle()
+                      
+                      const today = new Date()
+                      const currentDayOfWeek = today.getDay()
+                      const recoveryDays = groupSettings?.recovery_days || [5]
+                      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
+                      
+                      if (!isRecoveryDay) {
+                        const currentRecoveryPercentage = dailyTarget > 0 ? (recoveryProgress / dailyTarget) * 100 : 0
+                        const newTotal = dailyProgress + points
+                        const newRecoveryPoints = recoveryProgress + points
+                        const newRecoveryPercentage = newTotal > 0 ? (newRecoveryPoints / newTotal) * 100 : 0
+
+                        if (newRecoveryPercentage > 25) {
+                          const maxAllowedRecoveryPoints = Math.floor(newTotal * 0.25)
+                          const availableRecoveryPoints = maxAllowedRecoveryPoints - recoveryProgress
+                          
+                          if (availableRecoveryPoints <= 0) {
+                            alert('Recovery exercises cannot exceed 25% of your daily total. You have reached the recovery limit for today.')
+                            setLoading(false)
+                            return
+                          } else {
+                            const maxAllowedExercisePoints = availableRecoveryPoints
+                            const maxQuantity = maxAllowedExercisePoints / selectedWorkoutExercise.points_per_unit
+                            alert(`Recovery exercises cannot exceed 25% of your daily total. You can only add ${maxQuantity.toFixed(1)} ${selectedWorkoutExercise.unit} of this recovery exercise today.`)
+                            setLoading(false)
+                            return
+                          }
+                        }
+                      }
+                    }
                     
                     const { error } = await supabase
                       .from('logs')

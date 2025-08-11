@@ -410,6 +410,30 @@ export default function MobileWorkoutLogger() {
     const points = calculatePoints()
     const weightValue = parseFloat(weight) || 0
 
+    // Check recovery limit enforcement (unless it's a recovery day)
+    if (selectedExercise.type === 'recovery' && !isRecoveryDay) {
+      const currentTotal = getTotalPoints()
+      const newTotal = currentTotal + points
+      const currentRecoveryPoints = getRecoveryPoints()
+      const newRecoveryPoints = currentRecoveryPoints + points
+      const newRecoveryPercentage = newTotal > 0 ? (newRecoveryPoints / newTotal) * 100 : 0
+
+      if (newRecoveryPercentage > 25) {
+        const maxAllowedRecoveryPoints = Math.floor(newTotal * 0.25)
+        const availableRecoveryPoints = maxAllowedRecoveryPoints - currentRecoveryPoints
+        
+        if (availableRecoveryPoints <= 0) {
+          alert('Recovery exercises cannot exceed 25% of your daily total. You have reached the recovery limit for today.')
+          return
+        } else {
+          const maxAllowedExercisePoints = availableRecoveryPoints
+          const maxQuantity = maxAllowedExercisePoints / selectedExercise.points_per_unit
+          alert(`Recovery exercises cannot exceed 25% of your daily total. You can only add ${maxQuantity.toFixed(1)} ${selectedExercise.unit} of this recovery exercise today.`)
+          return
+        }
+      }
+    }
+
     try {
       const { error } = await supabase
         .from('logs')
