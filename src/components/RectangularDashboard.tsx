@@ -126,10 +126,20 @@ const CHART_COLORS = [
 ]
 
 // Helper function to calculate days since last donation
-const calculateDaysSinceDonation = (lastDonationDate: string | null): number => {
-  if (!lastDonationDate) return 0 // Default to 0 if no donation date
-  
+const calculateDaysSinceDonation = (lastDonationDate: string | null, profileCreatedAt?: string): number => {
   const today = new Date()
+  
+  if (!lastDonationDate) {
+    // If no donation date, calculate days since profile creation or return a default
+    if (profileCreatedAt) {
+      const createdDate = new Date(profileCreatedAt)
+      const diffTime = today.getTime() - createdDate.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays >= 0 ? diffDays : 0
+    }
+    return 0 // Return 0 only if we truly have no reference date
+  }
+  
   const donationDate = new Date(lastDonationDate)
   const diffTime = today.getTime() - donationDate.getTime()
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
@@ -137,7 +147,9 @@ const calculateDaysSinceDonation = (lastDonationDate: string | null): number => 
   return diffDays >= 0 ? diffDays : 0
 }
 
-// Helper function to calculate consecutive "insane" workout days (≥100 points)
+// Helper function to calculate consecutive "insane" workout days 
+// Changed logic: Only count as insane if points are significantly above normal targets (200+ points)
+// This prevents "sane" workouts that happen to reach 100 points from being counted as insane
 const calculateInsaneStreak = (logs: any[]): number => {
   if (!logs || logs.length === 0) return 0
   
@@ -153,7 +165,9 @@ const calculateInsaneStreak = (logs: any[]): number => {
   
   let streak = 0
   for (const date of sortedDates) {
-    if (dailyPoints[date] >= 100) {
+    // Use higher threshold (200+ points) to better identify truly "insane" workout days
+    // This prevents counting sane workouts that happen to reach 100 points
+    if (dailyPoints[date] >= 200) {
       streak++
     } else {
       break // Streak broken
@@ -1607,15 +1621,15 @@ export default function RectangularDashboard() {
 
       // Load donation tracking and insane streak data
       try {
-        // Get profile with last_donation_date
+        // Get profile with last_donation_date and created_at
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('last_donation_date')
+          .select('last_donation_date, created_at')
           .eq('id', user.id)
           .single()
 
-        // Calculate days since donation
-        const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date)
+        // Calculate days since donation (use profile creation date as fallback)
+        const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
         setDaysSinceDonation(donationGap)
 
         // Get logs for streak calculation (last 30 days)
