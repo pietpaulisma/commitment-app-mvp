@@ -59,7 +59,7 @@ type WorkoutModalProps = {
 export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimating = false, onCloseStart }: WorkoutModalProps) {
   const { user } = useAuth()
   const { profile } = useProfile()
-  const { weekMode, setWeekMode, isWeekModeAvailable } = useWeekMode()
+  const { weekMode, setWeekMode, setWeekModeWithSync, isWeekModeAvailable } = useWeekMode()
 
   // Get category colors for exercises with variations
   const getCategoryColor = (type: string, exerciseId: string) => {
@@ -272,6 +272,41 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     console.log(`Target recalculated for ${newMode} mode:`, target)
     
     // Note: loadDailyProgress() will be called automatically by useEffect when weekMode changes
+  }
+
+  const checkAutomaticModeSwitch = async () => {
+    // Only check if user is in sane mode and mode switching is available
+    if (weekMode !== 'sane' || !isWeekModeAvailable(groupDaysSinceStart) || !profile?.group_id) {
+      return
+    }
+
+    try {
+      // Get current total points for today
+      const currentTotalPoints = dailyProgress
+
+      // Only proceed if they've actually done some exercise
+      if (currentTotalPoints <= 0) {
+        return
+      }
+
+      // Calculate what the insane target would be for today
+      const { target: insaneTargetForToday } = await loadGroupDataAndCalculateTarget('insane')
+      
+      // If user met/exceeded insane target while in sane mode, switch to insane
+      if (currentTotalPoints >= insaneTargetForToday) {
+        await setWeekModeWithSync('insane', profile.group_id)
+        console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
+        
+        // Recalculate target with new mode
+        await recalculateTargetWithMode('insane')
+        
+        // Show mode switch notification
+        alert(`🔥 INSANE MODE ACTIVATED! You exceeded the insane target (${insaneTargetForToday}) with ${currentTotalPoints} points!`)
+      }
+    } catch (error) {
+      console.error('Error checking automatic mode switch:', error)
+      // Silently fail - don't interrupt the user's workout flow
+    }
   }
 
   const loadDailyProgress = async (targetOverride?: number) => {
@@ -1004,13 +1039,40 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         console.error('Error submitting to group:', error)
         alert('Error submitting workout to group chat')
       } else {
+        // Check for automatic mode switching to insane
+        if (weekMode === 'sane' && isWeekModeAvailable(groupDaysSinceStart) && totalPoints >= dailyTarget) {
+          try {
+            // Calculate what insane target would be for today
+            const { target: insaneTargetForToday } = await loadGroupDataAndCalculateTarget('insane')
+            
+            // If user met/exceeded insane target while in sane mode, switch to insane
+            if (totalPoints >= insaneTargetForToday) {
+              await setWeekModeWithSync('insane', profile?.group_id)
+              console.log(`Auto-switched to insane mode! Points: ${totalPoints}, Insane target: ${insaneTargetForToday}`)
+              
+              // Recalculate target with new mode
+              await recalculateTargetWithMode('insane')
+              
+              // Show special message for mode switch
+              alert(`🔥 INSANE MODE ACTIVATED! You exceeded the insane target (${insaneTargetForToday}) with ${totalPoints} points!`)
+            } else {
+              // Show normal success message
+              alert('🎉 Workout submitted to group chat!')
+            }
+          } catch (error) {
+            console.error('Error checking automatic mode switch:', error)
+            // Fallback to normal success message
+            alert('🎉 Workout submitted to group chat!')
+          }
+        } else {
+          // Show normal success message
+          alert('🎉 Workout submitted to group chat!')
+        }
+        
         // Success feedback
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100])
         }
-        
-        // Show success message
-        alert('🎉 Workout submitted to group chat!')
         
         // Optionally close modal after submission
         setTimeout(() => {
@@ -1168,6 +1230,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           }
           loadDailyProgress()
           loadTodaysWorkouts()
+          
+          // Check for automatic mode switching after exercise submission
+          await checkAutomaticModeSwitch()
           
           // Haptic feedback
           if (navigator.vibrate) {
@@ -1964,6 +2029,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       }
                       loadDailyProgress()
                       loadTodaysWorkouts()
+                      
+                      // Check for automatic mode switching after exercise submission
+                      await checkAutomaticModeSwitch()
                       
                       // Reset and close
                       setWorkoutInputOpen(false)

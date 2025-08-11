@@ -1,12 +1,20 @@
 'use client'
 
 import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { createClient } from '@supabase/supabase-js'
+
+// Create Supabase client for database updates
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 type WeekMode = 'sane' | 'insane'
 
 interface WeekModeContextType {
   weekMode: WeekMode
   setWeekMode: (mode: WeekMode) => void
+  setWeekModeWithSync: (mode: WeekMode, groupId?: string) => Promise<void>
   isWeekModeAvailable: (daysSinceStart: number) => boolean
 }
 
@@ -36,6 +44,29 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
     console.log('Week mode set to:', mode, '(session storage)')
   }
 
+  const setWeekModeWithSync = async (mode: WeekMode, groupId?: string) => {
+    // Update local state first
+    setWeekMode(mode)
+
+    // Update database if groupId is provided
+    if (groupId) {
+      try {
+        const { error } = await supabase
+          .from('group_settings')
+          .update({ week_mode: mode })
+          .eq('group_id', groupId)
+
+        if (error) {
+          console.error('Error updating week_mode in database:', error)
+        } else {
+          console.log('Week mode synced to database:', mode, 'for group:', groupId)
+        }
+      } catch (error) {
+        console.error('Error syncing week mode to database:', error)
+      }
+    }
+  }
+
   const isWeekModeAvailable = (daysSinceStart: number) => {
     return daysSinceStart >= 448
   }
@@ -44,6 +75,7 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
     <WeekModeContext.Provider value={{
       weekMode,
       setWeekMode,
+      setWeekModeWithSync,
       isWeekModeAvailable
     }}>
       {children}

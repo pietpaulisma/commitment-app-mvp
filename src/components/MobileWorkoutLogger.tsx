@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient } from '@/utils/gradientUtils'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
+import { useWeekMode } from '@/contexts/WeekModeContext'
 
 type Exercise = {
   id: string
@@ -27,6 +28,7 @@ type WorkoutLog = {
 }
 
 export default function MobileWorkoutLogger() {
+  const { weekMode, setWeekModeWithSync, isWeekModeAvailable } = useWeekMode()
   const [user, setUser] = useState<any>(null)
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
@@ -404,6 +406,72 @@ export default function MobileWorkoutLogger() {
     return Math.round(parseFloat(quantity) * selectedExercise.points_per_unit)
   }
 
+  const checkAutomaticModeSwitch = async () => {
+    // Only check if user has the necessary data and is in sane mode
+    if (!user || !userProfile?.group_id || weekMode !== 'sane') {
+      return
+    }
+
+    // Check if mode switching is available for this group
+    const { data: group } = await supabase
+      .from('groups')
+      .select('start_date')
+      .eq('id', userProfile.group_id)
+      .single()
+
+    if (!group?.start_date) {
+      return
+    }
+
+    const daysSinceStart = getDaysSinceStart(group.start_date)
+    if (!isWeekModeAvailable(daysSinceStart)) {
+      return
+    }
+
+    try {
+      // Get current total points for today
+      const currentTotalPoints = getTotalPoints()
+
+      // Only proceed if they've actually done some exercise
+      if (currentTotalPoints <= 0) {
+        return
+      }
+
+      // Get group settings to calculate insane target
+      const { data: groupSettings } = await supabase
+        .from('group_settings')
+        .select('rest_days, recovery_days')
+        .eq('group_id', userProfile.group_id)
+        .single()
+
+      const restDays = groupSettings?.rest_days || [1]
+      const recoveryDays = groupSettings?.recovery_days || [5]
+
+      // Calculate what the insane target would be for today
+      const insaneTargetForToday = calculateDailyTarget({
+        daysSinceStart,
+        weekMode: 'insane',
+        restDays,
+        recoveryDays
+      })
+
+      // If user met/exceeded insane target while in sane mode, switch to insane
+      if (currentTotalPoints >= insaneTargetForToday) {
+        await setWeekModeWithSync('insane', userProfile.group_id)
+        console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
+        
+        // Recalculate daily target with new mode
+        await loadDailyTarget(user.id, userProfile)
+        
+        // Show mode switch notification
+        alert(`🔥 INSANE MODE ACTIVATED! You exceeded the insane target (${insaneTargetForToday}) with ${currentTotalPoints} points!`)
+      }
+    } catch (error) {
+      console.error('Error checking automatic mode switch:', error)
+      // Silently fail - don't interrupt the user's workout flow
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedExercise || !quantity || !user) return
@@ -434,6 +502,10 @@ export default function MobileWorkoutLogger() {
         await loadTodaysLogs(user.id)
         await updateDailyCheckin()
         await checkIfRecoveryDay() // Refresh recovery day status
+        
+        // Check for automatic mode switching after exercise submission
+        await checkAutomaticModeSwitch()
+        
         // Show success with haptic feedback on mobile
         if (navigator.vibrate) {
           navigator.vibrate(100)
