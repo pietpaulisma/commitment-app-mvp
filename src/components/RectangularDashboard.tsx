@@ -148,9 +148,8 @@ const calculateDaysSinceDonation = (lastDonationDate: string | null, profileCrea
 }
 
 // Helper function to calculate consecutive "insane" workout days 
-// Changed logic: Only count as insane if points are significantly above normal targets (200+ points)
-// This prevents "sane" workouts that happen to reach 100 points from being counted as insane
-const calculateInsaneStreak = (logs: any[]): number => {
+// Fixed logic: Only count days where user met/exceeded their actual insane target
+const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: number[] = [1], recoveryDays: number[] = [5]): number => {
   if (!logs || logs.length === 0) return 0
   
   // Group logs by date and sum points per day
@@ -164,13 +163,27 @@ const calculateInsaneStreak = (logs: any[]): number => {
   const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
   
   let streak = 0
+  const groupStartTime = new Date(groupStartDate).getTime()
+  
   for (const date of sortedDates) {
-    // Use higher threshold (200+ points) to better identify truly "insane" workout days
-    // This prevents counting sane workouts that happen to reach 100 points
-    if (dailyPoints[date] >= 200) {
+    const currentDate = new Date(date)
+    const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
+    const dayOfWeek = currentDate.getDay()
+    
+    // Calculate what the insane target would have been for this date
+    const insaneTarget = calculateDailyTarget({
+      daysSinceStart,
+      weekMode: 'insane',
+      restDays,
+      recoveryDays,
+      currentDayOfWeek: dayOfWeek
+    })
+    
+    // Only count as insane streak if they met/exceeded the insane target
+    if (dailyPoints[date] >= insaneTarget) {
       streak++
     } else {
-      break // Streak broken
+      break // Streak broken - they didn't meet the insane target
     }
   }
   
@@ -1157,22 +1170,28 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot
-      const moneyInPot = totalGroupPoints * 0.10
+      // 2. Money Pot - use real penalty data instead of fake calculation
+      const { data: groupPenalties } = await supabase
+        .from('penalty_logs')
+        .select('amount, user_id, profiles!inner(username)')
+        .eq('group_id', profile.group_id)
+
+      const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
       
-      // Find biggest contributor
-      const userPointsMap = new Map()
-      logs?.forEach(log => {
-        userPointsMap.set(log.user_id, (userPointsMap.get(log.user_id) || 0) + log.points)
+      // Find biggest penalty payer
+      const userPenaltyMap = new Map()
+      groupPenalties?.forEach(penalty => {
+        const userId = penalty.user_id
+        userPenaltyMap.set(userId, (userPenaltyMap.get(userId) || 0) + penalty.amount)
       })
       
-      let biggestContributor = 'No data'
-      let maxPoints = 0
-      userPointsMap.forEach((points, userId) => {
-        if (points > maxPoints) {
-          maxPoints = points
-          const user = members.find(m => m.id === userId)
-          biggestContributor = user?.username || 'User'
+      let biggestContributor = 'No penalties yet'
+      let maxPenalties = 0
+      userPenaltyMap.forEach((amount, userId) => {
+        if (amount > maxPenalties) {
+          maxPenalties = amount
+          const penalty = groupPenalties?.find(p => p.user_id === userId)
+          biggestContributor = penalty?.profiles?.username || 'User'
         }
       })
 
@@ -1249,7 +1268,7 @@ export default function RectangularDashboard() {
         moneyPot: {
           title: 'Money Pot',
           subtitle: `top: ${biggestContributor}`,
-          value: Math.max(0, Math.round(moneyInPot)),
+          value: Math.max(0, Math.round(totalPenaltyAmount)),
           type: 'typography_stat'
         },
         birthday: {
@@ -1326,9 +1345,13 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution) - use real donation rate from profile
-      const donationRate = profile?.donation_rate || 0.10
-      const personalMoneyContribution = totalPersonalPoints * donationRate
+      // 2. Personal Money Pot (your contribution) - use real penalty data
+      const { data: userPenalties } = await supabase
+        .from('penalty_logs')
+        .select('amount')
+        .eq('user_id', user.id)
+
+      const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
 
       // 3. Personal Birthday - use real birth date from profile
       let nextBirthdayDays = 0
@@ -1557,6 +1580,8 @@ export default function RectangularDashboard() {
   const loadDashboardData = async () => {
     if (!user || !profile) return
 
+    let currentGroupData: any = null
+
     try {
       // Get group name and start date
       if (profile.group_id) {
@@ -1565,6 +1590,8 @@ export default function RectangularDashboard() {
           .select('name, start_date')
           .eq('id', profile.group_id)
           .single()
+        
+        currentGroupData = group // Store for use in streak calculation
         setGroupName(group?.name || 'Your Group')
         setGroupStartDate(group?.start_date || null)
 
@@ -1645,9 +1672,18 @@ export default function RectangularDashboard() {
           .eq('user_id', user.id)
           .in('date', past30Days)
 
-        // Calculate insane streak
-        const streak = calculateInsaneStreak(userLogs || [])
-        setInsaneStreak(streak)
+        // Calculate insane streak using proper group data
+        if (currentGroupData?.start_date) {
+          const streak = calculateInsaneStreak(
+            userLogs || [], 
+            currentGroupData.start_date, 
+            restDays, 
+            recoveryDays
+          )
+          setInsaneStreak(streak)
+        } else {
+          setInsaneStreak(0)
+        }
       } catch (error) {
         console.log('Could not load donation/streak data:', error)
       }
