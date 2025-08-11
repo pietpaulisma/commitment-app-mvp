@@ -278,8 +278,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Load points and target data in parallel
-      const [pointsResult, targetData] = await Promise.all([
+      // Load points, target data, and recovery days in parallel
+      const [pointsResult, targetData, groupSettings] = await Promise.all([
         supabase
           .from('logs')
           .select(`
@@ -291,18 +291,42 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           `)
           .eq('user_id', user.id)
           .eq('date', today),
-        loadGroupDataAndCalculateTarget()
+        loadGroupDataAndCalculateTarget(),
+        profile?.group_id ? supabase
+          .from('group_settings')
+          .select('recovery_days')
+          .eq('group_id', profile.group_id)
+          .maybeSingle() : null
       ])
 
-      const todayPoints = pointsResult.data?.reduce((sum, log) => sum + log.points, 0) || 0
+      // Calculate regular and recovery points separately
+      const regularPoints = pointsResult.data
+        ?.filter(log => log.exercises?.type !== 'recovery')
+        ?.reduce((sum, log) => sum + log.points, 0) || 0
+      
       const recoveryPoints = pointsResult.data
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      setDailyProgress(todayPoints)
+      // Check if today is a recovery day
+      const currentDayOfWeek = new Date().getDay()
+      const recoveryDays = groupSettings?.data?.recovery_days || [5]
+      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
+
+      // Calculate daily progress with recovery cap (except on recovery days)
+      let effectiveRecoveryPoints = recoveryPoints
+      if (!isRecoveryDay && recoveryPoints > 0) {
+        const totalRawPoints = regularPoints + recoveryPoints
+        const maxRecoveryAllowed = Math.floor(totalRawPoints * 0.25)
+        effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
+      }
+
+      const cappedTotalPoints = regularPoints + effectiveRecoveryPoints
+
+      setDailyProgress(cappedTotalPoints)
       setDailyTarget(targetData.target)
       setGroupDaysSinceStart(targetData.daysSinceStart)
-      setRecoveryProgress(recoveryPoints)
+      setRecoveryProgress(recoveryPoints) // Keep full recovery points for display
       setTodayLogs(pointsResult.data || [])
     } catch (error) {
       console.error('Error loading daily progress:', error)
@@ -1016,45 +1040,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       try {
         const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
         
-        // Check recovery limit enforcement (unless it's a recovery day)
-        if (selectedWorkoutExercise.type === 'recovery' && profile?.group_id) {
-          // Check if today is a recovery day
-          const { data: groupSettings } = await supabase
-            .from('group_settings')
-            .select('recovery_days')
-            .eq('group_id', profile.group_id)
-            .maybeSingle()
-          
-          const today = new Date()
-          const currentDayOfWeek = today.getDay()
-          const recoveryDays = groupSettings?.recovery_days || [5]
-          const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
-          
-          if (!isRecoveryDay) {
-            const currentRecoveryPercentage = dailyTarget > 0 ? (recoveryProgress / dailyTarget) * 100 : 0
-            const newTotal = dailyProgress + points
-            const newRecoveryPoints = recoveryProgress + points
-            const newRecoveryPercentage = newTotal > 0 ? (newRecoveryPoints / newTotal) * 100 : 0
-
-            if (newRecoveryPercentage > 25) {
-              const maxAllowedRecoveryPoints = Math.floor(newTotal * 0.25)
-              const availableRecoveryPoints = maxAllowedRecoveryPoints - recoveryProgress
-              
-              if (availableRecoveryPoints <= 0) {
-                alert('Recovery exercises cannot exceed 25% of your daily total. You have reached the recovery limit for today.')
-                setLoading(false)
-                return
-              } else {
-                const maxAllowedExercisePoints = availableRecoveryPoints
-                const maxQuantity = maxAllowedExercisePoints / selectedWorkoutExercise.points_per_unit
-                alert(`Recovery exercises cannot exceed 25% of your daily total. You can only add ${maxQuantity.toFixed(1)} ${selectedWorkoutExercise.unit} of this recovery exercise today.`)
-                setLoading(false)
-                return
-              }
-            }
-          }
-        }
-        
         const { error } = await supabase
           .from('logs')
           .insert({
@@ -1152,8 +1137,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   })
   
   const progressPercentage = dailyTarget > 0 ? (dailyProgress / dailyTarget) * 100 : 0
-  const recoveryPercentage = dailyTarget > 0 ? Math.min(25, (recoveryProgress / dailyTarget) * 100) : 0
-  const regularPercentage = Math.max(0, progressPercentage - recoveryPercentage)
+  const totalRawProgress = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+  const recoveryPercentage = totalRawProgress > 0 ? (recoveryProgress / totalRawProgress) * 100 : 0
+  const regularPercentage = Math.max(0, progressPercentage - Math.min(25, (recoveryProgress / totalRawProgress) * 100))
 
   if (!isOpen) return null
 
@@ -1834,45 +1820,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   setLoading(true)
                   try {
                     const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                    
-                    // Check recovery limit enforcement (unless it's a recovery day)
-                    if (selectedWorkoutExercise.type === 'recovery' && profile?.group_id) {
-                      // Check if today is a recovery day
-                      const { data: groupSettings } = await supabase
-                        .from('group_settings')
-                        .select('recovery_days')
-                        .eq('group_id', profile.group_id)
-                        .maybeSingle()
-                      
-                      const today = new Date()
-                      const currentDayOfWeek = today.getDay()
-                      const recoveryDays = groupSettings?.recovery_days || [5]
-                      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
-                      
-                      if (!isRecoveryDay) {
-                        const currentRecoveryPercentage = dailyTarget > 0 ? (recoveryProgress / dailyTarget) * 100 : 0
-                        const newTotal = dailyProgress + points
-                        const newRecoveryPoints = recoveryProgress + points
-                        const newRecoveryPercentage = newTotal > 0 ? (newRecoveryPoints / newTotal) * 100 : 0
-
-                        if (newRecoveryPercentage > 25) {
-                          const maxAllowedRecoveryPoints = Math.floor(newTotal * 0.25)
-                          const availableRecoveryPoints = maxAllowedRecoveryPoints - recoveryProgress
-                          
-                          if (availableRecoveryPoints <= 0) {
-                            alert('Recovery exercises cannot exceed 25% of your daily total. You have reached the recovery limit for today.')
-                            setLoading(false)
-                            return
-                          } else {
-                            const maxAllowedExercisePoints = availableRecoveryPoints
-                            const maxQuantity = maxAllowedExercisePoints / selectedWorkoutExercise.points_per_unit
-                            alert(`Recovery exercises cannot exceed 25% of your daily total. You can only add ${maxQuantity.toFixed(1)} ${selectedWorkoutExercise.unit} of this recovery exercise today.`)
-                            setLoading(false)
-                            return
-                          }
-                        }
-                      }
-                    }
                     
                     const { error } = await supabase
                       .from('logs')

@@ -102,7 +102,7 @@ export default function MobileWorkoutLogger() {
 
   // Get exercise segments for stacked gradient progress bar
   const getExerciseSegments = () => {
-    const total = getTotalPoints()
+    const total = getCappedTotalPoints()
     const overallProgress = Math.min(100, (total / dailyTarget) * 100)
     
     if (total === 0 || todaysLogs.length === 0) {
@@ -357,7 +357,7 @@ export default function MobileWorkoutLogger() {
 
     try {
       const todayString = new Date().toISOString().split('T')[0]
-      const totalPoints = getTotalPoints()
+      const totalPoints = getCappedTotalPoints()
       const recoveryPoints = getRecoveryPoints()
       
       // Get group settings to check if today is a recovery day
@@ -410,30 +410,6 @@ export default function MobileWorkoutLogger() {
     const points = calculatePoints()
     const weightValue = parseFloat(weight) || 0
 
-    // Check recovery limit enforcement (unless it's a recovery day)
-    if (selectedExercise.type === 'recovery' && !isRecoveryDay) {
-      const currentTotal = getTotalPoints()
-      const newTotal = currentTotal + points
-      const currentRecoveryPoints = getRecoveryPoints()
-      const newRecoveryPoints = currentRecoveryPoints + points
-      const newRecoveryPercentage = newTotal > 0 ? (newRecoveryPoints / newTotal) * 100 : 0
-
-      if (newRecoveryPercentage > 25) {
-        const maxAllowedRecoveryPoints = Math.floor(newTotal * 0.25)
-        const availableRecoveryPoints = maxAllowedRecoveryPoints - currentRecoveryPoints
-        
-        if (availableRecoveryPoints <= 0) {
-          alert('Recovery exercises cannot exceed 25% of your daily total. You have reached the recovery limit for today.')
-          return
-        } else {
-          const maxAllowedExercisePoints = availableRecoveryPoints
-          const maxQuantity = maxAllowedExercisePoints / selectedExercise.points_per_unit
-          alert(`Recovery exercises cannot exceed 25% of your daily total. You can only add ${maxQuantity.toFixed(1)} ${selectedExercise.unit} of this recovery exercise today.`)
-          return
-        }
-      }
-    }
-
     try {
       const { error } = await supabase
         .from('logs')
@@ -476,6 +452,29 @@ export default function MobileWorkoutLogger() {
     return todaysLogs
       .filter(log => log.exercises?.type === 'recovery')
       .reduce((total, log) => total + log.points, 0)
+  }
+
+  const getCappedTotalPoints = () => {
+    const regularPoints = todaysLogs
+      .filter(log => log.exercises?.type !== 'recovery')
+      .reduce((total, log) => total + log.points, 0)
+    
+    const recoveryPoints = getRecoveryPoints()
+    
+    // On recovery days, no cap applies
+    if (isRecoveryDay) {
+      return regularPoints + recoveryPoints
+    }
+    
+    // On regular days, cap recovery at 25% of total
+    if (recoveryPoints > 0) {
+      const totalRawPoints = regularPoints + recoveryPoints
+      const maxRecoveryAllowed = Math.floor(totalRawPoints * 0.25)
+      const effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
+      return regularPoints + effectiveRecoveryPoints
+    }
+    
+    return regularPoints
   }
 
   const getRecoveryPercentage = () => {
@@ -548,7 +547,7 @@ export default function MobileWorkoutLogger() {
               <div>
                 <div className="flex items-baseline space-x-1">
                   <span className="text-4xl font-black text-white">
-                    {isRecoveryDay ? getRecoveryPoints() : getTotalPoints()}
+                    {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}
                   </span>
                   <span className="text-2xl font-thin text-white">PT</span>
                 </div>
@@ -557,15 +556,15 @@ export default function MobileWorkoutLogger() {
                     ? (getRecoveryPoints() >= dailyTarget 
                         ? "Recovery Target Complete!" 
                         : `${Math.max(0, dailyTarget - getRecoveryPoints())} recovery pts remaining`)
-                    : (getTotalPoints() >= dailyTarget 
+                    : (getCappedTotalPoints() >= dailyTarget 
                         ? "Target Complete!" 
-                        : `${Math.max(0, dailyTarget - getTotalPoints())} remaining`)
+                        : `${Math.max(0, dailyTarget - getCappedTotalPoints())} remaining`)
                   }
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-black text-white">
-                  {Math.round((isRecoveryDay ? getRecoveryPoints() : getTotalPoints()) / dailyTarget * 100)}%
+                  {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
                 </div>
                 <div className="text-sm font-medium -mt-1 text-white">
                   complete
