@@ -102,7 +102,7 @@ export default function MobileWorkoutLogger() {
 
   // Get exercise segments for stacked gradient progress bar
   const getExerciseSegments = () => {
-    const total = getTotalPoints()
+    const total = getCappedTotalPoints()
     const overallProgress = Math.min(100, (total / dailyTarget) * 100)
     
     if (total === 0 || todaysLogs.length === 0) {
@@ -111,12 +111,13 @@ export default function MobileWorkoutLogger() {
 
     let currentPosition = 0
     const segments = todaysLogs.map(log => {
-      const exercisePercentage = (log.points / total) * overallProgress
+      const effectivePoints = getEffectivePoints(log)
+      const exercisePercentage = (effectivePoints / total) * overallProgress
       const segment = {
         color: getCategoryColor(log.exercises?.type || 'all', log.exercise_id),
         start: currentPosition,
         end: currentPosition + exercisePercentage,
-        points: log.points,
+        points: effectivePoints,
         exerciseId: log.exercise_id,
         type: log.exercises?.type || 'all'
       }
@@ -357,7 +358,7 @@ export default function MobileWorkoutLogger() {
 
     try {
       const todayString = new Date().toISOString().split('T')[0]
-      const totalPoints = getTotalPoints()
+      const totalPoints = getCappedTotalPoints()
       const recoveryPoints = getRecoveryPoints()
       
       // Get group settings to check if today is a recovery day
@@ -454,6 +455,50 @@ export default function MobileWorkoutLogger() {
       .reduce((total, log) => total + log.points, 0)
   }
 
+  const getCappedTotalPoints = () => {
+    const regularPoints = todaysLogs
+      .filter(log => log.exercises?.type !== 'recovery')
+      .reduce((total, log) => total + log.points, 0)
+    
+    const recoveryPoints = getRecoveryPoints()
+    
+    // On recovery days, no cap applies
+    if (isRecoveryDay) {
+      return regularPoints + recoveryPoints
+    }
+    
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+    const effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
+    
+    return regularPoints + effectiveRecoveryPoints
+  }
+
+  const getEffectivePoints = (log: WorkoutLog) => {
+    // For non-recovery exercises, always use full points
+    if (log.exercises?.type !== 'recovery') {
+      return log.points
+    }
+
+    // On recovery days, use full points
+    if (isRecoveryDay) {
+      return log.points
+    }
+
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+    const totalRecoveryPoints = getRecoveryPoints()
+    
+    if (totalRecoveryPoints === 0) return 0
+    if (totalRecoveryPoints <= maxRecoveryAllowed) {
+      return log.points // No cap needed
+    }
+
+    // Proportionally reduce this recovery exercise based on fixed cap
+    const recoveryRatio = maxRecoveryAllowed / totalRecoveryPoints
+    return Math.floor(log.points * recoveryRatio)
+  }
+
   const getRecoveryPercentage = () => {
     const total = getTotalPoints()
     if (total === 0) return 0
@@ -524,7 +569,7 @@ export default function MobileWorkoutLogger() {
               <div>
                 <div className="flex items-baseline space-x-1">
                   <span className="text-4xl font-black text-white">
-                    {isRecoveryDay ? getRecoveryPoints() : getTotalPoints()}
+                    {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}
                   </span>
                   <span className="text-2xl font-thin text-white">PT</span>
                 </div>
@@ -533,15 +578,15 @@ export default function MobileWorkoutLogger() {
                     ? (getRecoveryPoints() >= dailyTarget 
                         ? "Recovery Target Complete!" 
                         : `${Math.max(0, dailyTarget - getRecoveryPoints())} recovery pts remaining`)
-                    : (getTotalPoints() >= dailyTarget 
+                    : (getCappedTotalPoints() >= dailyTarget 
                         ? "Target Complete!" 
-                        : `${Math.max(0, dailyTarget - getTotalPoints())} remaining`)
+                        : `${Math.max(0, dailyTarget - getCappedTotalPoints())} remaining`)
                   }
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-black text-white">
-                  {Math.round((isRecoveryDay ? getRecoveryPoints() : getTotalPoints()) / dailyTarget * 100)}%
+                  {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
                 </div>
                 <div className="text-sm font-medium -mt-1 text-white">
                   complete
@@ -722,7 +767,31 @@ export default function MobileWorkoutLogger() {
                       <div className="bg-gray-900/30 backdrop-blur-xl rounded-2xl p-2 border border-white/5 mx-1">
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-gray-400">Points:</span>
-                          <span className="text-lg font-bold" style={{ color: getUserColor() }}>{calculatePoints()}</span>
+                          <div className="text-right">
+                            {(() => {
+                              const rawPoints = calculatePoints()
+                              
+                              // Check if this recovery exercise would be capped
+                              if (selectedExercise && selectedExercise.type === 'recovery' && !isRecoveryDay && rawPoints > 0) {
+                                const currentRecoveryPoints = getRecoveryPoints()
+                                const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+                                const totalRecoveryAfter = currentRecoveryPoints + rawPoints
+                                
+                                if (totalRecoveryAfter > maxRecoveryAllowed) {
+                                  const effectiveRecoveryAdd = Math.max(0, maxRecoveryAllowed - currentRecoveryPoints)
+                                  return (
+                                    <div>
+                                      <span className="text-lg font-bold text-orange-400">{effectiveRecoveryAdd}</span>
+                                      <span className="text-xs text-gray-500 ml-1">/{rawPoints}</span>
+                                      <div className="text-xs text-orange-400 mt-1">25% cap</div>
+                                    </div>
+                                  )
+                                }
+                              }
+                              
+                              return <span className="text-lg font-bold" style={{ color: getUserColor() }}>{rawPoints}</span>
+                            })()}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -792,7 +861,10 @@ export default function MobileWorkoutLogger() {
                   <div>
                     {todaysLogs.slice(0, 5).map(log => {
                       const exerciseColor = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
-                      const progressPercentage = Math.min(100, (log.points / Math.max(1, dailyTarget)) * 100) // Percentage of daily target this exercise represents
+                      const effectivePoints = getEffectivePoints(log)
+                      const progressPercentage = Math.min(100, (effectivePoints / Math.max(1, dailyTarget)) * 100) // Percentage of daily target this exercise represents
+                      const isRecoveryExercise = log.exercises?.type === 'recovery'
+                      const isPointsCapped = isRecoveryExercise && !isRecoveryDay && effectivePoints < log.points
                       
                       return (
                         <div key={log.id} className="bg-gray-900/30 backdrop-blur-xl relative overflow-hidden rounded-3xl shadow-2xl border border-white/5 hover:shadow-xl transition-all duration-300 mb-1">
@@ -818,13 +890,15 @@ export default function MobileWorkoutLogger() {
                                 <div className="text-sm font-medium text-white">{log.exercises?.name || 'Unknown'}</div>
                                 <div className="text-xs text-gray-400">
                                   {log.count || log.duration} {log.exercises?.unit || ''}
-                                  {log.exercises?.type === 'recovery' && (
+                                  {isRecoveryExercise && (
                                     <span className="ml-2 text-xs text-gray-500">• Recovery</span>
                                   )}
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="text-lg font-black text-white">{log.points}</div>
+                                <div className="text-lg font-black text-white">
+                                  {effectivePoints}
+                                </div>
                                 <div className="text-xs text-gray-400">pts</div>
                               </div>
                             </div>

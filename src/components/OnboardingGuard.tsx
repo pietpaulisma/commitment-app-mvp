@@ -12,15 +12,25 @@ interface OnboardingGuardProps {
 
 export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const { user, loading: authLoading } = useAuth()
-  const { profile, loading: profileLoading } = useProfile()
+  const { profile, loading: profileLoading, refreshProfile } = useProfile()
   const router = useRouter()
   const pathname = usePathname()
   const [hasChecked, setHasChecked] = useState(false)
+  const [isCreatingSupremeAdmin, setIsCreatingSupremeAdmin] = useState(false)
+  const [shouldRefreshProfile, setShouldRefreshProfile] = useState(false)
   const mountedRef = useRef(false)
+  const lastPathnameRef = useRef(pathname)
 
   // Re-enabled with better supreme admin handling
 
   const createSupremeAdminProfile = async () => {
+    if (isCreatingSupremeAdmin) {
+      console.log('⏳ Supreme admin profile creation already in progress...')
+      return
+    }
+    
+    setIsCreatingSupremeAdmin(true)
+    
     try {
       console.log('🔥 Creating/updating supreme admin profile for:', user?.email, 'ID:', user?.id)
       
@@ -56,11 +66,13 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         console.error('❌ Error upserting supreme admin profile:', error)
       } else {
         console.log('✅ Supreme admin profile created/updated successfully:', data)
-        // Force page reload to refresh profile data
-        window.location.reload()
+        // Refresh profile data instead of reloading the page
+        await refreshProfile()
       }
     } catch (error) {
       console.error('💥 Exception creating supreme admin profile:', error)
+    } finally {
+      setIsCreatingSupremeAdmin(false)
     }
   }
 
@@ -70,6 +82,36 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       mountedRef.current = false
     }
   }, [])
+
+  // Reset hasChecked when pathname changes or when profile changes 
+  // This allows the guard to re-evaluate when navigating or after profile updates
+  useEffect(() => {
+    setHasChecked(false)
+  }, [pathname, profile?.onboarding_completed])
+
+  // Detect when coming from onboarding page and trigger profile refresh
+  useEffect(() => {
+    const wasOnOnboardingPage = lastPathnameRef.current?.startsWith('/onboarding')
+    const isNowOnDashboard = pathname === '/dashboard'
+    
+    if (wasOnOnboardingPage && isNowOnDashboard && user) {
+      console.log('🔄 Detected navigation from onboarding to dashboard - refreshing profile')
+      setShouldRefreshProfile(true)
+    }
+    
+    lastPathnameRef.current = pathname
+  }, [pathname, user])
+
+  // Execute profile refresh when needed
+  useEffect(() => {
+    if (shouldRefreshProfile && !profileLoading && !authLoading) {
+      console.log('🔄 Executing profile refresh...')
+      refreshProfile().then(() => {
+        console.log('✅ Profile refreshed successfully')
+        setShouldRefreshProfile(false)
+      })
+    }
+  }, [shouldRefreshProfile, profileLoading, authLoading, refreshProfile])
 
   useEffect(() => {
     console.log('🚀 OnboardingGuard useEffect triggered:', {
@@ -81,12 +123,14 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       onboardingCompleted: profile?.onboarding_completed,
       onboardingCompletedType: typeof profile?.onboarding_completed,
       pathname,
+      isCreatingSupremeAdmin,
+      hasChecked,
       timestamp: new Date().toISOString()
     })
 
-    // Wait for both auth and profile to fully load
-    if (authLoading || profileLoading) {
-      console.log('⏳ Still loading, will check again when loaded')
+    // Wait for both auth and profile to fully load, and don't process during supreme admin creation or profile refresh
+    if (authLoading || profileLoading || isCreatingSupremeAdmin || shouldRefreshProfile) {
+      console.log('⏳ Still loading or processing, will check again when ready')
       return
     }
 
@@ -96,12 +140,14 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     
     if (isAuthPage || isOnboardingPage) {
       console.log('📄 On auth/onboarding page, skipping redirect check')
+      setHasChecked(true)
       return
     }
 
     // No user = redirect handled by other guards
     if (!user) {
       console.log('👤 No authenticated user, letting other guards handle')
+      setHasChecked(true)
       return
     }
 
@@ -109,10 +155,13 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     if (user.email === 'klipperdeklip@gmail.com') {
       if (!profile || !profile.onboarding_completed) {
         console.log('🔥 Supreme admin detected - creating/updating profile automatically')
-        createSupremeAdminProfile()
+        if (!isCreatingSupremeAdmin) {
+          createSupremeAdminProfile()
+        }
         return
       } else {
         console.log('✅ Supreme admin profile is complete')
+        setHasChecked(true)
         return
       }
     }
@@ -129,19 +178,25 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     // Has profile and completed onboarding = allow access
     if (profile && profile.onboarding_completed) {
       console.log('✅ Profile exists with completed onboarding - ALLOWING ACCESS')
+      setHasChecked(true)
       return
     }
 
-    // If we get here, something is wrong
-    console.log('❌ REDIRECTING TO ONBOARDING - Reason analysis:', {
-      hasUser: !!user,
-      hasProfile: !!profile,
-      onboardingStatus: profile?.onboarding_completed,
-      willRedirect: true
-    })
-    
-    router.replace('/onboarding')
-  }, [user, profile, authLoading, profileLoading, pathname, router])
+    // Only redirect if we haven't checked yet (prevent infinite loops)
+    if (!hasChecked) {
+      console.log('❌ REDIRECTING TO ONBOARDING - Reason analysis:', {
+        hasUser: !!user,
+        hasProfile: !!profile,
+        onboardingStatus: profile?.onboarding_completed,
+        willRedirect: true
+      })
+      
+      setHasChecked(true)
+      router.replace('/onboarding')
+    } else {
+      console.log('⚠️ Already checked once, not redirecting again to avoid loops')
+    }
+  }, [user, profile, authLoading, profileLoading, pathname, router, isCreatingSupremeAdmin, hasChecked, shouldRefreshProfile])
 
 
   // Show loading state while checking onboarding status

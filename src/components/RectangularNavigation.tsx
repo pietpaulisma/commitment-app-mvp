@@ -231,7 +231,26 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
         console.log('Group settings not available, using defaults')
       }
 
-      setDailyProgress(todayPoints)
+      // Apply recovery capping logic
+      const currentDayOfWeek = new Date().getDay()
+      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
+      
+      let cappedTotalPoints
+      if (isRecoveryDay) {
+        // On recovery days, no cap applies
+        const todayPoints = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+        cappedTotalPoints = todayPoints
+      } else {
+        // Recovery is capped at 25% of daily target (fixed amount)
+        const regularPoints = todayLogs
+          ?.filter(log => log.exercises?.type !== 'recovery')
+          ?.reduce((sum, log) => sum + log.points, 0) || 0
+        const maxRecoveryAllowed = Math.floor(target * 0.25)
+        const effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
+        cappedTotalPoints = regularPoints + effectiveRecoveryPoints
+      }
+
+      setDailyProgress(cappedTotalPoints)
       setDailyTarget(target)
       setRecoveryProgress(recoveryPoints)
       setTodayLogs(todayLogs || [])

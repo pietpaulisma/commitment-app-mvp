@@ -10,7 +10,41 @@ export interface LogEntry {
 }
 
 export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: number, mode?: string): string => {
-  const total = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+  // Calculate effective points with recovery capping
+  const getEffectivePoints = (log: LogEntry) => {
+    // For non-recovery exercises, always use full points
+    if (log.exercises?.type !== 'recovery') {
+      return log.points
+    }
+
+    // Check if today is a recovery day (Friday = 5)
+    const today = new Date()
+    const currentDayOfWeek = today.getDay()
+    const isRecoveryDay = currentDayOfWeek === 5 // Friday
+    
+    // On recovery days, use full points
+    if (isRecoveryDay) {
+      return log.points
+    }
+
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+    const totalRecoveryPoints = todayLogs
+      ?.filter(l => l.exercises?.type === 'recovery')
+      ?.reduce((total, l) => total + l.points, 0) || 0
+    
+    if (totalRecoveryPoints === 0) return 0
+    if (totalRecoveryPoints <= maxRecoveryAllowed) {
+      return log.points // No cap needed
+    }
+
+    // Proportionally reduce this recovery exercise based on fixed cap
+    const recoveryRatio = maxRecoveryAllowed / totalRecoveryPoints
+    return Math.floor(log.points * recoveryRatio)
+  }
+
+  // Use effective points for total calculation
+  const total = todayLogs?.reduce((sum, log) => sum + getEffectivePoints(log), 0) || 0
   
   // If insane mode is selected, return a flaming red gradient
   if (mode === 'insane') {
@@ -60,10 +94,10 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
   // Calculate the total progress percentage
   const totalProgress = Math.min(100, (total / dailyTarget) * 100)
   
-  // Calculate actual exercise type percentages within the completed portion
+  // Calculate actual exercise type percentages within the completed portion using effective points
   // Regular = everything that's NOT recovery or sports
-  const recoveryPoints = todayLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + log.points, 0) || 0
-  const sportsPoints = todayLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + log.points, 0) || 0
+  const recoveryPoints = todayLogs?.filter(log => log.exercises?.type === 'recovery')?.reduce((sum, log) => sum + getEffectivePoints(log), 0) || 0
+  const sportsPoints = todayLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + getEffectivePoints(log), 0) || 0
   const regularPoints = total - recoveryPoints - sportsPoints
   
   // Debug exercise type breakdown

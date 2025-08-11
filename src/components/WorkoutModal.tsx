@@ -106,6 +106,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [isStopwatchExpanded, setIsStopwatchExpanded] = useState(false)
   const [stopwatchTime, setStopwatchTime] = useState(0) // in milliseconds
   const [isStopwatchRunning, setIsStopwatchRunning] = useState(false)
+  const [stopwatchStartTime, setStopwatchStartTime] = useState(0) // timestamp when started
+  const [stopwatchPausedDuration, setStopwatchPausedDuration] = useState(0) // accumulated paused time
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -143,7 +145,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Restore background scrolling
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen, user, profile?.group_id])
+  }, [isOpen, user, profile?.group_id, weekMode])
 
   // Cleanup effect to ensure body scroll is restored on unmount
   useEffect(() => {
@@ -152,16 +154,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }, [])
 
-  // Stopwatch effect
+  // Stopwatch effect - date-based for background tab support
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isStopwatchRunning) {
       interval = setInterval(() => {
-        setStopwatchTime(prevTime => prevTime + 10)
+        const now = Date.now()
+        const elapsed = now - stopwatchStartTime - stopwatchPausedDuration
+        setStopwatchTime(Math.max(0, elapsed))
       }, 10)
     }
     return () => clearInterval(interval)
-  }, [isStopwatchRunning])
+  }, [isStopwatchRunning, stopwatchStartTime, stopwatchPausedDuration])
 
   // Format stopwatch time
   const formatTime = (ms: number) => {
@@ -172,11 +176,28 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   // Stopwatch controls
-  const startStopwatch = () => setIsStopwatchRunning(true)
-  const pauseStopwatch = () => setIsStopwatchRunning(false)
+  const startStopwatch = () => {
+    const now = Date.now()
+    if (stopwatchStartTime === 0) {
+      // First start - set initial timestamp
+      setStopwatchStartTime(now)
+    } else {
+      // Resume - add the pause duration to accumulated paused time
+      setStopwatchPausedDuration(prev => prev + (now - stopwatchStartTime - stopwatchTime))
+      setStopwatchStartTime(now)
+    }
+    setIsStopwatchRunning(true)
+  }
+  
+  const pauseStopwatch = () => {
+    setIsStopwatchRunning(false)
+  }
+  
   const resetStopwatch = () => {
     setIsStopwatchRunning(false)
     setStopwatchTime(0)
+    setStopwatchStartTime(0)
+    setStopwatchPausedDuration(0)
   }
 
   const handleClose = () => {
@@ -249,16 +270,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     setDailyTarget(target)
     setGroupDaysSinceStart(daysSinceStart)
     console.log(`Target recalculated for ${newMode} mode:`, target)
+    
+    // Note: loadDailyProgress() will be called automatically by useEffect when weekMode changes
   }
 
-  const loadDailyProgress = async () => {
+  const loadDailyProgress = async (targetOverride?: number) => {
     if (!user || !profile) return
 
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Load points and target data in parallel
-      const [pointsResult, targetData] = await Promise.all([
+      // Load points and recovery days, optionally load target data if not provided
+      const loadPromises = [
         supabase
           .from('logs')
           .select(`
@@ -270,18 +293,57 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           `)
           .eq('user_id', user.id)
           .eq('date', today),
-        loadGroupDataAndCalculateTarget()
-      ])
+        profile?.group_id ? supabase
+          .from('group_settings')
+          .select('recovery_days')
+          .eq('group_id', profile.group_id)
+          .maybeSingle() : null
+      ]
 
-      const todayPoints = pointsResult.data?.reduce((sum, log) => sum + log.points, 0) || 0
+      // Only load target data if not provided as override
+      if (!targetOverride) {
+        loadPromises.splice(1, 0, loadGroupDataAndCalculateTarget())
+      }
+
+      const results = await Promise.all(loadPromises)
+      const pointsResult = results[0]
+      let targetData, groupSettings
+
+      if (targetOverride) {
+        targetData = { target: targetOverride }
+        groupSettings = results[1]
+      } else {
+        targetData = results[1]
+        groupSettings = results[2]
+      }
+
+      // Calculate regular and recovery points separately
+      const regularPoints = pointsResult.data
+        ?.filter(log => log.exercises?.type !== 'recovery')
+        ?.reduce((sum, log) => sum + log.points, 0) || 0
+      
       const recoveryPoints = pointsResult.data
         ?.filter(log => log.exercises?.type === 'recovery')
         ?.reduce((sum, log) => sum + log.points, 0) || 0
 
-      setDailyProgress(todayPoints)
+      // Check if today is a recovery day
+      const currentDayOfWeek = new Date().getDay()
+      const recoveryDays = groupSettings?.data?.recovery_days || [5]
+      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
+
+      // Calculate daily progress with recovery cap (except on recovery days)
+      let effectiveRecoveryPoints = recoveryPoints
+      if (!isRecoveryDay && recoveryPoints > 0) {
+        const maxRecoveryAllowed = Math.floor(targetData.target * 0.25)
+        effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
+      }
+
+      const cappedTotalPoints = regularPoints + effectiveRecoveryPoints
+
+      setDailyProgress(cappedTotalPoints)
       setDailyTarget(targetData.target)
       setGroupDaysSinceStart(targetData.daysSinceStart)
-      setRecoveryProgress(recoveryPoints)
+      setRecoveryProgress(recoveryPoints) // Keep full recovery points for display
       setTodayLogs(pointsResult.data || [])
     } catch (error) {
       console.error('Error loading daily progress:', error)
@@ -560,16 +622,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   const getExerciseProgress = (exerciseId: string) => {
-    const exercisePoints = todaysWorkouts
-      .filter(workout => workout.exercise_id === exerciseId)
-      .reduce((sum, workout) => sum + workout.points, 0)
+    const exerciseLogs = todayLogs?.filter(log => log.exercise_id === exerciseId) || []
+    const exercisePoints = exerciseLogs.reduce((sum, log) => sum + log.points, 0)
+    const effectivePoints = exerciseLogs.reduce((sum, log) => sum + getEffectivePoints(log), 0)
     
-    // Calculate percentage of daily target this exercise represents
-    const progressPercentage = dailyTarget > 0 ? Math.min(100, (exercisePoints / dailyTarget) * 100) : 0
+    // Calculate percentage of daily target this exercise represents (using effective points)
+    const progressPercentage = dailyTarget > 0 ? Math.min(100, (effectivePoints / dailyTarget) * 100) : 0
     
     return {
-      points: exercisePoints,
-      percentage: progressPercentage
+      points: exercisePoints, // Keep raw points for display
+      effectivePoints: effectivePoints,
+      percentage: progressPercentage // Use effective points for percentage
     }
   }
 
@@ -702,7 +765,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       else if (weight >= 15 && weight < 20) weightMultiplier = 2
       else if (weight >= 20 && weight < 25) weightMultiplier = 2.5
       else if (weight >= 25 && weight < 30) weightMultiplier = 3
-      else if (weight >= 30) weightMultiplier = 3.5
+      else if (weight >= 30 && weight < 35) weightMultiplier = 3.5
+      else if (weight >= 35 && weight < 40) weightMultiplier = 4
+      else if (weight >= 40) weightMultiplier = 4.5
       
       points *= weightMultiplier
     }
@@ -713,6 +778,83 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
     
     return Math.ceil(points) // Round up to avoid decimal submission errors
+  }
+
+  // Get effective points for a workout log considering recovery cap
+  const getEffectivePoints = (log: any) => {
+    // For non-recovery exercises, always use full points
+    if (log.exercises?.type !== 'recovery') {
+      return log.points
+    }
+
+    // Check if today is a recovery day (need to check recovery days)
+    const today = new Date()
+    const currentDayOfWeek = today.getDay()
+    // Friday is typically recovery day (5), but we should check group settings
+    // For now, assume Friday is recovery day - this could be enhanced
+    const isRecoveryDay = currentDayOfWeek === 5 // Friday
+    
+    // On recovery days, use full points
+    if (isRecoveryDay) {
+      return log.points
+    }
+
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+    const totalRecoveryPoints = todayLogs
+      ?.filter(l => l.exercises?.type === 'recovery')
+      ?.reduce((total, l) => total + l.points, 0) || 0
+    
+    if (totalRecoveryPoints === 0) return 0
+    if (totalRecoveryPoints <= maxRecoveryAllowed) {
+      return log.points // No cap needed
+    }
+
+    // Proportionally reduce this recovery exercise based on fixed cap
+    const recoveryRatio = maxRecoveryAllowed / totalRecoveryPoints
+    return Math.floor(log.points * recoveryRatio)
+  }
+
+  // Get total effective points (capped recovery contribution)
+  const getCappedTotalPoints = () => {
+    if (!todayLogs || todayLogs.length === 0) return 0
+    
+    return todayLogs.reduce((total, log) => total + getEffectivePoints(log), 0)
+  }
+
+  // Calculate effective points for a new workout being submitted
+  const getEffectiveWorkoutPoints = (exercise: ExerciseWithProgress, count: number, weight: number, isDecreased: boolean) => {
+    const rawPoints = calculateWorkoutPoints(exercise, count, weight, isDecreased)
+    
+    // For non-recovery exercises, return full points
+    if (exercise.type !== 'recovery') {
+      return rawPoints
+    }
+
+    // Check if today is a recovery day
+    const today = new Date()
+    const currentDayOfWeek = today.getDay()
+    const isRecoveryDay = currentDayOfWeek === 5 // Friday
+    
+    if (isRecoveryDay) {
+      return rawPoints
+    }
+
+    // Recovery is capped at 25% of daily target (fixed amount)
+    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+    const currentRecoveryPoints = todayLogs
+      ?.filter(l => l.exercises?.type === 'recovery')
+      ?.reduce((total, l) => total + l.points, 0) || 0
+    
+    const newRecoveryTotal = currentRecoveryPoints + rawPoints
+    
+    if (newRecoveryTotal <= maxRecoveryAllowed) {
+      return rawPoints // No capping needed
+    }
+
+    // Calculate how much of this new exercise would actually contribute
+    const availableRecoverySpace = Math.max(0, maxRecoveryAllowed - currentRecoveryPoints)
+    return Math.min(rawPoints, availableRecoverySpace)
   }
 
   const loadExercises = async () => {
@@ -1090,8 +1232,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   })
   
   const progressPercentage = dailyTarget > 0 ? (dailyProgress / dailyTarget) * 100 : 0
-  const recoveryPercentage = dailyTarget > 0 ? Math.min(25, (recoveryProgress / dailyTarget) * 100) : 0
-  const regularPercentage = Math.max(0, progressPercentage - recoveryPercentage)
+  const totalRawProgress = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+  const recoveryPercentage = totalRawProgress > 0 ? (recoveryProgress / totalRawProgress) * 100 : 0
+  const regularPercentage = Math.max(0, progressPercentage - Math.min(25, (recoveryProgress / totalRawProgress) * 100))
 
   if (!isOpen) return null
 
@@ -1272,13 +1415,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                         </div>
                                       </div>
                                       <div className="text-right">
-                                        <span className="font-medium text-white">
-                                          {workout.totalPoints % 1 === 0 
-                                            ? workout.totalPoints 
-                                            : workout.totalPoints.toFixed(2)
-                                          }
-                                        </span>
-                                        <span className="font-thin text-white ml-1">pts</span>
+                                        {(() => {
+                                          const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
+                                          const rawPoints = workout.totalPoints
+                                          const isRecoveryWorkout = workout.exercises?.type === 'recovery'
+                                          const isPointsCapped = isRecoveryWorkout && effectivePoints < rawPoints
+                                          
+                                          return (
+                                            <div>
+                                              <span className="font-medium text-white">
+                                                {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
+                                              </span>
+                                              <span className="font-thin text-white ml-1">pts</span>
+                                            </div>
+                                          )
+                                        })()}
                                       </div>
                                     </div>
                                   </div>
@@ -1510,11 +1661,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
                     style={{ 
                       width: '100%',
-                      background: `linear-gradient(to right, 
-                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} 0%, 
-                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)} ${Math.max(0, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100) - 5)}%, 
-                        ${getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)}dd ${Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100)}%, 
-                        #000000 ${Math.min(100, Math.min(100, (calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) / Math.max(1, dailyTarget)) * 100) + 3)}%)`
+                      background: (() => {
+                        const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                        const progressPercent = Math.min(100, (effectivePoints / Math.max(1, dailyTarget)) * 100)
+                        const color = getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)
+                        
+                        return `linear-gradient(to right, 
+                          ${color} 0%, 
+                          ${color} ${Math.max(0, progressPercent - 5)}%, 
+                          ${color}dd ${progressPercent}%, 
+                          #000000 ${Math.min(100, progressPercent + 3)}%)`
+                      })()
                     }}
                   />
                   
@@ -1655,13 +1812,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="grid grid-cols-4 gap-1">
                     {[
                       { label: 'body', value: 0, multiplier: 1.0 },
-                      { label: '5', value: 5, multiplier: 1.25 },
                       { label: '10', value: 10, multiplier: 1.5 },
-                      { label: '15', value: 15, multiplier: 1.75 },
-                      { label: '20', value: 20, multiplier: 2.0 },
-                      { label: '25', value: 25, multiplier: 2.25 },
-                      { label: '30', value: 30, multiplier: 2.5 },
-                      { label: '35', value: 35, multiplier: 2.75 }
+                      { label: '15', value: 15, multiplier: 2.0 },
+                      { label: '20', value: 20, multiplier: 2.5 },
+                      { label: '25', value: 25, multiplier: 3.0 },
+                      { label: '30', value: 30, multiplier: 3.5 },
+                      { label: '35', value: 35, multiplier: 4.0 },
+                      { label: '40', value: 40, multiplier: 4.5 }
                     ].map((button, index) => {
                     const isSelected = selectedWeight === button.value
                     const isLocked = lockedWeight === button.value
@@ -1733,7 +1890,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {isDecreasedExercise && <CheckIcon className="w-3 h-3 text-black" />}
                   </div>
                   <span className="font-medium relative z-10 text-center flex-1">
-                    {isDecreasedExercise ? 'Decreased (0.5x weight)' : 'Regular (1x weight)'}
+                    {isDecreasedExercise ? 'Decreased (1.5x points)' : 'Regular (1x points)'}
                   </span>
                 </button>
               )}
@@ -1741,7 +1898,35 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* Calculation breakdown - Inline */}
               <div className="text-center">
                 <div className="text-xs text-white/40 font-sans">
-                  {workoutCount} + {isDecreasedExercise ? Math.floor(selectedWeight * 0.5) : selectedWeight} = {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts
+                  {(() => {
+                    // Calculate the weight multiplier
+                    let weightMultiplier = 1
+                    if (selectedWorkoutExercise.is_weighted && selectedWeight > 0) {
+                      if (selectedWeight >= 10 && selectedWeight < 15) weightMultiplier = 1.5
+                      else if (selectedWeight >= 15 && selectedWeight < 20) weightMultiplier = 2
+                      else if (selectedWeight >= 20 && selectedWeight < 25) weightMultiplier = 2.5
+                      else if (selectedWeight >= 25 && selectedWeight < 30) weightMultiplier = 3
+                      else if (selectedWeight >= 30 && selectedWeight < 35) weightMultiplier = 3.5
+                      else if (selectedWeight >= 35 && selectedWeight < 40) weightMultiplier = 4
+                      else if (selectedWeight >= 40) weightMultiplier = 4.5
+                    }
+                    
+                    const rawPoints = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    
+                    let calculation = ""
+                    if (selectedWeight === 0) {
+                      calculation = `${workoutCount} reps = ${rawPoints} pts`
+                    } else {
+                      calculation = `${workoutCount} × ${weightMultiplier}x = ${rawPoints} pts`
+                    }
+                    
+                    if (selectedWorkoutExercise.type === 'recovery' && effectivePoints < rawPoints) {
+                      calculation += ` → ${effectivePoints} pts (25% cap)`
+                    }
+                    
+                    return calculation
+                  })()}
                 </div>
               </div>
               
@@ -1805,7 +1990,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     : 'border border-white/10 bg-black/70 backdrop-blur-xl text-white/60'
                 }`}
               >
-                <span className="relative z-10">SUBMIT • {calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</span>
+                <span className="relative z-10">
+                  {(() => {
+                    const rawPoints = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    
+                    if (selectedWorkoutExercise.type === 'recovery' && effectivePoints < rawPoints) {
+                      return `SUBMIT • ${effectivePoints}/${rawPoints} pts (25% cap)`
+                    }
+                    
+                    return `SUBMIT • ${effectivePoints} pts`
+                  })()}
+                </span>
                 </button>
               </div>
             </div>

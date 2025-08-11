@@ -17,11 +17,12 @@ export default function OnboardingPage() {
   const { user } = useAuth()
   
   const handleOnboardingComplete = () => {
-    console.log('Onboarding completed, redirecting to dashboard...')
-    // Add a small delay to ensure state is settled
+    console.log('Onboarding completed, allowing time for profile data to refresh...')
+    // Add a longer delay to ensure database update propagates and profile data refreshes
     setTimeout(() => {
-      router.push('/dashboard')
-    }, 100)
+      console.log('Redirecting to dashboard after onboarding completion')
+      router.replace('/dashboard')
+    }, 2000)
   }
 
   const handleGoToLogin = () => {
