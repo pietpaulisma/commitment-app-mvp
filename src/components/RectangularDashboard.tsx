@@ -1039,11 +1039,15 @@ export default function RectangularDashboard() {
       const today = new Date().toISOString().split('T')[0]
       
       // Get all group members including their individual week_mode
-      const { data: allMembers } = await supabase
+      const { data: allMembers, error: membersError } = await supabase
         .from('profiles')
         .select('id, email, username, personal_color, created_at, week_mode')
         .eq('group_id', profile.group_id)
 
+      if (membersError) {
+        console.error('Error fetching group members:', membersError)
+        return
+      }
       if (!allMembers) return
 
       // Get group start date for target calculation
@@ -1121,9 +1125,10 @@ export default function RectangularDashboard() {
       // Create final member objects with their points and individual targets
       const membersWithProgress = allMembers.map(member => {
         // Calculate individual daily target based on member's week_mode
+        const memberWeekMode = member.week_mode as 'sane' | 'insane' | null
         const memberDailyTarget = calculateDailyTarget({
           daysSinceStart,
-          weekMode: (member.week_mode as 'sane' | 'insane') || 'insane',
+          weekMode: memberWeekMode || 'insane', // Default to insane if null
           restDays: groupSettings?.rest_days || [1],
           recoveryDays: groupSettings?.recovery_days || [5]
         })
@@ -1149,11 +1154,15 @@ export default function RectangularDashboard() {
 
     try {
       // Get all group members first including their individual week_mode
-      const { data: members } = await supabase
+      const { data: members, error: membersError } = await supabase
         .from('profiles')
         .select('id, email, username, personal_color, week_mode')
         .eq('group_id', profile.group_id)
 
+      if (membersError) {
+        console.error('Error fetching members for stats:', membersError)
+        return null
+      }
       if (!members || members.length === 0) return null
 
       const memberIds = members.map(m => m.id)
