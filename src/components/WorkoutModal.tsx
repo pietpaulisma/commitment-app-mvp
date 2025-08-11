@@ -270,16 +270,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     setDailyTarget(target)
     setGroupDaysSinceStart(daysSinceStart)
     console.log(`Target recalculated for ${newMode} mode:`, target)
+    
+    // Recalculate daily progress with new target's recovery cap
+    await loadDailyProgress(target)
   }
 
-  const loadDailyProgress = async () => {
+  const loadDailyProgress = async (targetOverride?: number) => {
     if (!user || !profile) return
 
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Load points, target data, and recovery days in parallel
-      const [pointsResult, targetData, groupSettings] = await Promise.all([
+      // Load points and recovery days, optionally load target data if not provided
+      const loadPromises = [
         supabase
           .from('logs')
           .select(`
@@ -291,13 +294,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           `)
           .eq('user_id', user.id)
           .eq('date', today),
-        loadGroupDataAndCalculateTarget(),
         profile?.group_id ? supabase
           .from('group_settings')
           .select('recovery_days')
           .eq('group_id', profile.group_id)
           .maybeSingle() : null
-      ])
+      ]
+
+      // Only load target data if not provided as override
+      if (!targetOverride) {
+        loadPromises.splice(1, 0, loadGroupDataAndCalculateTarget())
+      }
+
+      const results = await Promise.all(loadPromises)
+      const pointsResult = results[0]
+      let targetData, groupSettings
+
+      if (targetOverride) {
+        targetData = { target: targetOverride }
+        groupSettings = results[1]
+      } else {
+        targetData = results[1]
+        groupSettings = results[2]
+      }
 
       // Calculate regular and recovery points separately
       const regularPoints = pointsResult.data
