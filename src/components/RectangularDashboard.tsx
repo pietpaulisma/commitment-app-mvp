@@ -1817,7 +1817,33 @@ export default function RectangularDashboard() {
       {/* Dashboard Content */}
       {groupStartDate && (
         <div className="relative overflow-hidden">
-          {/* Motivational Quote - Moved above DAY component */}
+
+          {/* DAY and Time Display */}
+          <div className="mx-1 mb-1 space-y-1">
+            {/* DAY Block - Background removed, content left-aligned, "Day" moved above number */}
+            <div className="relative">
+              {/* DAY Content - No background block */}
+              <div className="py-6 px-4 text-left">
+                <div className="flex flex-col justify-start items-start">
+                  <div className="text-6xl font-black text-white drop-shadow-lg mb-2">
+                    {challengeDay}
+                  </div>
+                  <p className="text-sm font-medium text-white/90 drop-shadow">
+                    {getCurrentDayName()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Time Display Block - 50% less tall and twice the width */}
+            <div className="relative">
+              <div style={{ aspectRatio: '4/1' }}>
+                <TimeDisplay className="w-full h-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* Motivational Quote - Moved below DAY and Time components */}
           {groupStartDate && (
             <div className="mx-1 mb-1">
               <div className="px-6">
@@ -1845,31 +1871,6 @@ export default function RectangularDashboard() {
               </div>
             </div>
           )}
-
-          {/* DAY and Time Display */}
-          <div className="mx-1 mb-1 space-y-1">
-            {/* DAY Block - Background removed, content left-aligned, "Day" moved above number */}
-            <div className="relative">
-              {/* DAY Content - No background block */}
-              <div className="py-6 px-4 text-left">
-                <div className="flex flex-col justify-start items-start">
-                  <div className="text-6xl font-black text-white drop-shadow-lg mb-2">
-                    {challengeDay}
-                  </div>
-                  <p className="text-sm font-medium text-white/90 drop-shadow">
-                    {getCurrentDayName()}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Time Display Block - 50% less tall and twice the width */}
-            <div className="relative">
-              <div style={{ aspectRatio: '4/1' }}>
-                <TimeDisplay className="w-full h-full" />
-              </div>
-            </div>
-          </div>
 
           {/* Streaks Box */}
           <div className="mx-1 mb-1">

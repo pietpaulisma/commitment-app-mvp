@@ -91,12 +91,20 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
 
   return (
     <div className={`relative ${className}`}>
-      {/* Thin glowing line - countdown bar (time remaining) */}
+      {/* Time remaining display */}
+      <div className="flex justify-end items-center mb-4">
+        <div className="text-5xl font-thin text-white drop-shadow-lg">
+          {timeRemainingString}
+        </div>
+      </div>
+      
+      {/* Thick glowing line - countdown bar (time remaining) */}
       <div 
-        className="h-1 mb-4 transition-all duration-1000 relative"
+        className="h-2 transition-all duration-1000 relative"
         style={{
           width: '100%',
-          background: 'rgba(255, 255, 255, 0.1)'
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '4px'
         }}
       >
         <div 
@@ -107,17 +115,30 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
               ${colors.primary} 0%, 
               ${colors.secondary} 50%, 
               ${colors.accent} 100%)`,
-            boxShadow: `0 0 8px ${colors.secondary}40, 0 0 16px ${colors.primary}20`,
-            borderRadius: '2px'
+            boxShadow: `
+              0 0 4px ${colors.secondary}, 
+              0 0 8px ${colors.secondary}80, 
+              0 0 16px ${colors.primary}60,
+              0 0 32px ${colors.primary}40
+            `,
+            borderRadius: '4px',
+            filter: 'brightness(1.2)'
           }}
         />
-      </div>
-      
-      {/* Time remaining display */}
-      <div className="flex justify-end items-center">
-        <div className="text-5xl font-thin text-white drop-shadow-lg">
-          {timeRemainingString}
-        </div>
+        
+        {/* White dot indicator at current position */}
+        <div 
+          className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000"
+          style={{
+            left: `${Math.max(0, timeRemainingPercentage)}%`,
+            width: '8px',
+            height: '8px',
+            background: 'white',
+            borderRadius: '50%',
+            boxShadow: '0 0 8px rgba(255, 255, 255, 0.8), 0 0 16px rgba(255, 255, 255, 0.4)',
+            zIndex: 10
+          }}
+        />
       </div>
     </div>
   )
