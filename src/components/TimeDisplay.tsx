@@ -112,7 +112,7 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
           <div 
             className="absolute left-0 top-0 h-full transition-all duration-1000"
             style={{
-              width: `${Math.max(2, timeElapsedPercentage)}%`,
+              width: `${Math.max(2, timeRemainingPercentage)}%`,
               background: 'linear-gradient(90deg, #ff4444 0%, #ff6666 50%, #ff8888 100%)',
               boxShadow: `
                 0 0 4px #ff4444, 
@@ -125,11 +125,11 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
             }}
           />
           
-          {/* White dot indicator at current position */}
+          {/* White dot indicator at current position (end of remaining time) */}
           <div 
             className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000"
             style={{
-              left: `${Math.max(0, timeElapsedPercentage)}%`,
+              left: `${Math.max(0, timeRemainingPercentage)}%`,
               width: '8px',
               height: '8px',
               background: 'white',
