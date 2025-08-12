@@ -2147,8 +2147,21 @@ export default function RectangularDashboard() {
               <div className="grid grid-cols-4 gap-3 py-4 px-1">
                 {groupMembers.map((member) => {
                   const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
-                  const isOverflow = progressPercentage > 100
+                  const shouldGlow = progressPercentage > 110
                   const baseColor = member.personal_color || "#ef4444"
+                  
+                  // Calculate progressive glow intensity based on percentage
+                  const getGlowIntensity = () => {
+                    if (progressPercentage <= 110) return 0
+                    const excessPercentage = progressPercentage - 110
+                    const glowLevel = Math.floor(excessPercentage / 10) + 1 // +1 for base glow at 110%
+                    const baseSize = 20
+                    const maxSize = 60
+                    const glowSize = Math.min(baseSize + (glowLevel * 10), maxSize)
+                    return { level: glowLevel, size: glowSize }
+                  }
+                  
+                  const glowData = getGlowIntensity()
                   
                   // Calculate stroke progress
                   const radius = 36
@@ -2158,30 +2171,39 @@ export default function RectangularDashboard() {
                       
                   return (
                         <div key={member.id} className="flex flex-col items-center relative">
-                          {/* External glow effect - ONLY this pulses when over 100% */}
-                          {isOverflow && (
+                          {/* Progressive external glow effect - ONLY pulses when over 110% */}
+                          {shouldGlow && (
                             <div 
-                              className="absolute inset-0 rounded-full animate-pulse"
+                              className="absolute rounded-full animate-pulse"
                               style={{
-                                boxShadow: `0 0 20px ${baseColor}60, 0 0 40px ${baseColor}40`,
-                                width: '88px',
-                                height: '88px',
-                                top: '-4px',
-                                left: '-4px'
+                                boxShadow: `0 0 ${glowData.size}px ${baseColor}${60 + glowData.level * 10}, 0 0 ${glowData.size * 2}px ${baseColor}${40 + glowData.level * 5}`,
+                                width: '80px',
+                                height: '80px',
+                                top: '0px',
+                                left: '0px',
+                                pointerEvents: 'none'
                               }}
                             />
                           )}
                           
                           {/* Stroke-based circular progress */}
                           <div className="relative w-20 h-20 z-10">
-                            {/* Background circle */}
-                            <div className="w-20 h-20 rounded-full bg-gray-800/50"></div>
+                            {/* Background circle - removed separate div, using SVG background */}
                             
                             {/* Progress stroke circle */}
                             <svg 
-                              className="absolute top-0 left-0 w-20 h-20 -rotate-90"
+                              className="w-20 h-20 -rotate-90"
                               viewBox="0 0 80 80"
                             >
+                              {/* Background circle fill */}
+                              <circle
+                                cx="40"
+                                cy="40"
+                                r={radius}
+                                fill="rgba(31, 41, 55, 0.5)"
+                                stroke="none"
+                              />
+                              
                               {/* Background stroke */}
                               <circle
                                 cx="40"
