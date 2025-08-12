@@ -1786,7 +1786,7 @@ export default function RectangularDashboard() {
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
-      <div className="pb-8">
+      <div className="pb-6">
 
       
       {/* Logo and Quote Box */}
@@ -1819,7 +1819,7 @@ export default function RectangularDashboard() {
         <div className="relative overflow-hidden">
 
           {/* DAY and Time Display */}
-          <div className="mx-1 mb-1 space-y-1">
+          <div className="mx-1 mb-1 space-y-0">
             {/* DAY Block - Background removed, content left-aligned, "Day" moved above number */}
             <div className="relative">
               {/* DAY Content - No background block */}
@@ -1845,7 +1845,7 @@ export default function RectangularDashboard() {
 
           {/* Motivational Quote - Moved below DAY and Time components */}
           {groupStartDate && (
-            <div className="mx-1 mb-1">
+            <div className="mx-1 mb-4">
               <div className="px-6">
                 <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {

@@ -74,12 +74,13 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
 
   const colors = getTimeBasedColors()
   
-  // Calculate time remaining until end of day
+  // Calculate time elapsed and remaining
   const hour = currentTime.getHours()
   const minute = currentTime.getMinutes()
   const second = currentTime.getSeconds()
   const totalSecondsElapsed = hour * 3600 + minute * 60 + second
   const totalSecondsInDay = 24 * 3600
+  const timeElapsedPercentage = (totalSecondsElapsed / totalSecondsInDay) * 100
   const timeRemainingPercentage = ((totalSecondsInDay - totalSecondsElapsed) / totalSecondsInDay) * 100
   
   // Format time remaining as "00:00:00"
@@ -111,7 +112,7 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
           <div 
             className="absolute left-0 top-0 h-full transition-all duration-1000"
             style={{
-              width: `${Math.max(2, timeRemainingPercentage)}%`,
+              width: `${Math.max(2, timeElapsedPercentage)}%`,
               background: 'linear-gradient(90deg, #ff4444 0%, #ff6666 50%, #ff8888 100%)',
               boxShadow: `
                 0 0 4px #ff4444, 
@@ -128,7 +129,7 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
           <div 
             className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000"
             style={{
-              left: `${Math.max(0, timeRemainingPercentage)}%`,
+              right: `${Math.max(0, timeRemainingPercentage)}%`,
               width: '8px',
               height: '8px',
               background: 'white',
