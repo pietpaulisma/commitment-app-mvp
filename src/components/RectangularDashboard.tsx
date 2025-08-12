@@ -1191,19 +1191,28 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot - use real penalty data from payment_transactions
-      // First try a simple query without joins to test
+      // 2. Money Pot - test with minimal query first
+      const { data: allPayments, error: allPaymentsError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .limit(10)
+
+      console.log('All payments test:', allPayments)
+      if (allPaymentsError) {
+        console.error('Error loading all payments:', allPaymentsError)
+      }
+
+      // Now try penalty-specific query
       const { data: groupPenalties, error: penaltyError } = await supabase
         .from('payment_transactions')
-        .select('amount, user_id')
-        .eq('group_id', profile.group_id)
+        .select('amount, user_id, group_id, transaction_type')
         .eq('transaction_type', 'penalty')
 
       if (penaltyError) {
         console.error('Error loading group penalties:', penaltyError)
       }
-      console.log('Group penalties data:', groupPenalties)
-      console.log('Querying group_id:', profile.group_id)
+      console.log('All penalty data:', groupPenalties)
+      console.log('Profile group_id:', profile.group_id)
 
       const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
       console.log('Total penalty amount:', totalPenaltyAmount)
@@ -1375,12 +1384,12 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution) - use real penalty data from payment_transactions
+      // 2. Personal Money Pot (your contribution) - test with simplified query
       const { data: userPenalties, error: userPenaltyError } = await supabase
         .from('payment_transactions')
-        .select('amount')
-        .eq('user_id', user.id)
+        .select('amount, user_id, transaction_type')
         .eq('transaction_type', 'penalty')
+        .eq('user_id', user.id)
 
       if (userPenaltyError) {
         console.error('Error loading user penalties:', userPenaltyError)
