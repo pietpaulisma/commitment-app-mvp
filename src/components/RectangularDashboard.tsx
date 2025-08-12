@@ -1817,43 +1817,7 @@ export default function RectangularDashboard() {
       {/* Dashboard Content */}
       {groupStartDate && (
         <div className="relative overflow-hidden">
-          {/* DAY and Time Display */}
-          <div className="mx-1 mb-1 space-y-1">
-            {/* DAY Block */}
-            <div className="relative">
-              <div 
-                className="relative aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                style={{
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                }}
-              >
-                
-                {/* DAY Content */}
-                <div className="relative z-10 py-6 px-4 h-full">
-                  <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                    Day
-                  </h3>
-                  <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-                    <div className="text-6xl font-black text-white drop-shadow-lg">
-                      {challengeDay}
-                    </div>
-                    <p className="text-sm font-medium text-white/90 drop-shadow">
-                      {getCurrentDayName()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Time Display Block - 50% less tall and twice the width */}
-            <div className="relative">
-              <div style={{ aspectRatio: '4/1' }}>
-                <TimeDisplay className="w-full h-full" />
-              </div>
-            </div>
-          </div>
-
-          {/* Motivational Quote */}
+          {/* Motivational Quote - Moved above DAY component */}
           {groupStartDate && (
             <div className="mx-1 mb-1">
               <div className="px-6">
@@ -1881,6 +1845,34 @@ export default function RectangularDashboard() {
               </div>
             </div>
           )}
+
+          {/* DAY and Time Display */}
+          <div className="mx-1 mb-1 space-y-1">
+            {/* DAY Block - Background removed, content left-aligned, "Day" moved above number */}
+            <div className="relative">
+              {/* DAY Content - No background block */}
+              <div className="py-6 px-4 text-left">
+                <div className="flex flex-col justify-start items-start">
+                  <h3 className="text-xs font-light text-white/80 mb-2 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
+                    Day
+                  </h3>
+                  <div className="text-6xl font-black text-white drop-shadow-lg mb-2">
+                    {challengeDay}
+                  </div>
+                  <p className="text-sm font-medium text-white/90 drop-shadow">
+                    {getCurrentDayName()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Time Display Block - 50% less tall and twice the width */}
+            <div className="relative">
+              <div style={{ aspectRatio: '4/1' }}>
+                <TimeDisplay className="w-full h-full" />
+              </div>
+            </div>
+          </div>
 
           {/* Streaks Box */}
           <div className="mx-1 mb-1">
