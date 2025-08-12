@@ -808,12 +808,12 @@ export default function RectangularDashboard() {
     }
   }, [user, profile])
 
-  // Only reload specific data when weekMode changes to avoid full refresh
+  // Only reload member data when weekMode changes (for group status display)
   useEffect(() => {
     if (user && profile && weekMode) {
-      // Only reload member data (for individual modes) and personal stats (for target calculation)
+      // Only reload member data to show individual modes in group status
       loadGroupMembers()
-      loadPersonalStats()
+      // Note: Don't reload personal stats here - let workout modal handle its own target calculation
     }
   }, [weekMode])
 

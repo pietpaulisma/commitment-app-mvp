@@ -122,10 +122,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Prevent background scrolling
       document.body.style.overflow = 'hidden'
       
-      loadExercises()
+      // Only load data if we haven't loaded it already (prevent reload on mode change)
+      if (exercises.length === 0) {
+        loadExercises()
+        loadTodaysWorkouts()
+        loadFavoriteExercises()
+      }
+      
+      // Always reload daily progress for target calculation
       loadDailyProgress()
-      loadTodaysWorkouts()
-      loadFavoriteExercises()
       
       // Wait for modal to be fully mounted before starting animation
       setTimeout(() => {
@@ -1688,8 +1693,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         <div 
                           className={`absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${
                             weekMode === 'sane' 
-                              ? 'left-1 bg-blue-600/40 border border-blue-400/30' 
-                              : 'left-[calc(50%+2px)] bg-red-600/40 border border-red-400/30'
+                              ? 'left-1 bg-blue-600/30' 
+                              : 'left-[calc(50%+2px)] bg-red-600/30'
                           }`}
                         />
                         
