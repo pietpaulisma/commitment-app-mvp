@@ -1328,7 +1328,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     'Rock Climbing',
     'Surfing',
     'Mountain Biking',
-    'Canoeing'
+    'Canoeing',
+    'Bodycombat'
   ]
 
   if (!isOpen) return null
