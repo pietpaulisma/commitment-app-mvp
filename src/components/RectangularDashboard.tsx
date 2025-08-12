@@ -2051,73 +2051,66 @@ export default function RectangularDashboard() {
                   const isOverflow = progressPercentage > 100
                   const baseColor = member.personal_color || "#ef4444"
                   
-                  // Create gradient based on base color
-                  const gradientId = `gradient-${member.id}-${progressPercentage}`
-                  const lighterColor = baseColor.replace('#', '#').padEnd(7, 'f') // Make lighter variant
-                  const darkerColor = baseColor.replace(/[0-9a-f]/gi, (c) => Math.max(0, parseInt(c, 16) - 3).toString(16))
+                  // Calculate stroke progress
+                  const radius = 36
+                  const circumference = 2 * Math.PI * radius
+                  const strokeDasharray = circumference
+                  const strokeDashoffset = circumference - (Math.min(progressPercentage, 100) / 100) * circumference
                       
                   return (
                         <div key={member.id} className="flex flex-col items-center relative">
-                          {/* External glow effect - positioned outside circle */}
+                          {/* External glow effect - ONLY this pulses when over 100% */}
                           {isOverflow && (
                             <div 
-                              className="absolute w-24 h-24 rounded-full animate-pulse"
+                              className="absolute inset-0 rounded-full animate-pulse"
                               style={{
-                                background: `radial-gradient(circle, ${baseColor}20 0%, ${baseColor}10 50%, transparent 70%)`,
-                                top: '-2px',
-                                left: '50%',
-                                transform: 'translateX(-50%)'
+                                boxShadow: `0 0 20px ${baseColor}60, 0 0 40px ${baseColor}40`,
+                                width: '88px',
+                                height: '88px',
+                                top: '-4px',
+                                left: '-4px'
                               }}
                             />
                           )}
                           
-                          {/* Bigger circular progress with gradient fill */}
+                          {/* Stroke-based circular progress */}
                           <div className="relative w-20 h-20 z-10">
                             {/* Background circle */}
-                            <div className="w-20 h-20 rounded-full bg-gray-800/50 border border-white/10"></div>
+                            <div className="w-20 h-20 rounded-full bg-gray-800/50"></div>
                             
-                            {/* Progress circle with strong gradient fill */}
+                            {/* Progress stroke circle */}
                             <svg 
-                              className="absolute top-0 left-0 w-20 h-20"
+                              className="absolute top-0 left-0 w-20 h-20 -rotate-90"
                               viewBox="0 0 80 80"
                             >
-                              <defs>
-                                <clipPath id={`circle-clip-${member.id}-${progressPercentage}`}>
-                                  <circle cx="40" cy="40" r="36" />
-                                </clipPath>
-                                <linearGradient id={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
-                                  <stop offset="0%" stopColor={darkerColor} />
-                                  <stop offset="30%" stopColor={baseColor} />
-                                  <stop offset="70%" stopColor={lighterColor} />
-                                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0.8" />
-                                </linearGradient>
-                              </defs>
-                              
-                              {/* Background circle border */}
+                              {/* Background stroke */}
                               <circle
                                 cx="40"
                                 cy="40"
-                                r="36"
+                                r={radius}
                                 fill="none"
                                 stroke="#374151"
-                                strokeWidth="2"
+                                strokeWidth="3"
                               />
                               
-                              {/* Filled progress area with strong gradient */}
-                              <rect
-                                x="4"
-                                y={76 - (Math.min(progressPercentage, 100) / 100) * 72}
-                                width="72"
-                                height={(Math.min(progressPercentage, 100) / 100) * 72}
-                                fill={`url(#${gradientId})`}
-                                clipPath={`url(#circle-clip-${member.id}-${progressPercentage})`}
+                              {/* Progress stroke */}
+                              <circle
+                                cx="40"
+                                cy="40"
+                                r={radius}
+                                fill="none"
+                                stroke={baseColor}
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeDasharray={strokeDasharray}
+                                strokeDashoffset={strokeDashoffset}
                                 className="transition-all duration-1000 ease-out"
                               />
                             </svg>
                             
-                            {/* Percentage text positioned lower with bigger font */}
+                            {/* Percentage text positioned lower with bigger font - NO PULSING */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-1">
-                              <span className={`text-white font-black text-xl leading-tight ${isOverflow ? 'animate-pulse' : ''}`}>
+                              <span className="text-white font-black text-xl leading-tight">
                                 {progressPercentage}%
                               </span>
                               <span className="text-white/50 text-xs font-light tracking-wide">
