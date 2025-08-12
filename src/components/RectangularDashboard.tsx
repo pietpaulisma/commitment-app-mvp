@@ -1192,9 +1192,10 @@ export default function RectangularDashboard() {
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
       // 2. Money Pot - use real penalty data from payment_transactions
+      // First try a simple query without joins to test
       const { data: groupPenalties, error: penaltyError } = await supabase
         .from('payment_transactions')
-        .select('amount, user_id, profiles!inner(username)')
+        .select('amount, user_id')
         .eq('group_id', profile.group_id)
         .eq('transaction_type', 'penalty')
 
@@ -1202,6 +1203,7 @@ export default function RectangularDashboard() {
         console.error('Error loading group penalties:', penaltyError)
       }
       console.log('Group penalties data:', groupPenalties)
+      console.log('Querying group_id:', profile.group_id)
 
       const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
       console.log('Total penalty amount:', totalPenaltyAmount)
@@ -1384,6 +1386,7 @@ export default function RectangularDashboard() {
         console.error('Error loading user penalties:', userPenaltyError)
       }
       console.log('User penalties data:', userPenalties)
+      console.log('Querying user_id:', user.id)
 
       const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
       console.log('Personal money contribution:', personalMoneyContribution)
