@@ -3,6 +3,12 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install",
+  "git": {
+    "deploymentEnabled": {
+      "dev": true,
+      "main": true
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/daily-penalty-check",
