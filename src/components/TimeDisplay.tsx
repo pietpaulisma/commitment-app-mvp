@@ -113,19 +113,12 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
       />
       
       <div className="relative z-10 py-6 px-4 h-full">
-        {/* TIME label */}
-        <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-          TIME
-        </h3>
         
-        {/* Time remaining display matching DAY component layout */}
-        <div className="flex flex-col justify-center items-center text-center h-full -mt-10">
-          <div className="text-3xl font-black text-white drop-shadow-lg">
+        {/* Time remaining display */}
+        <div className="flex justify-end items-center h-full">
+          <div className="text-5xl font-black text-white drop-shadow-lg">
             {timeRemainingString}
           </div>
-          <p className="text-sm font-medium text-white/90 drop-shadow">
-            remaining
-          </p>
         </div>
       </div>
     </div>

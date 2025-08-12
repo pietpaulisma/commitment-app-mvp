@@ -1853,9 +1853,6 @@ export default function RectangularDashboard() {
               {/* DAY Content - No background block */}
               <div className="py-6 px-4 text-left">
                 <div className="flex flex-col justify-start items-start">
-                  <h3 className="text-xs font-light text-white/80 mb-2 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                    Day
-                  </h3>
                   <div className="text-6xl font-black text-white drop-shadow-lg mb-2">
                     {challengeDay}
                   </div>
