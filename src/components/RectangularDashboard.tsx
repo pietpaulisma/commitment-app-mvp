@@ -168,14 +168,113 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
   return allMessages[messageIndex] || allMessages[0]
 }
 
-// Helper function to get messages for when daily target is achieved - uses same quotes with different cycling
+// Helper function to get achievement messages - 2 quotes per hour that cycle every 30 minutes
 const getTargetAchievedMessage = (hour: number): { quote: string, author: string } => {
-  // Use the same quote system but cycle differently to show variety when target is achieved
-  const message = getHourlyMessage(hour)
-  return {
-    quote: `🎯 TARGET ACHIEVED! ${message.quote}`,
-    author: message.author
-  }
+  const achievementMessages = [
+    // 12 AM - 1 AM
+    { quote: "Day over. Gains secured. Now rest.", author: "Dwayne Johnson" },
+    { quote: "Ik ben een rijder… maar jij hebt de dag al uitgereden.", author: "Zanger Rinus" },
+    
+    // 1 AM - 2 AM
+    { quote: "Victory at 1 AM. Now go dream about how great you are.", author: "Muhammad Ali" },
+    { quote: "Vandaag is wit… van de rust die je verdient.", author: "Guus Meeuwis" },
+    
+    // 2 AM - 3 AM
+    { quote: "All done. The rest of the night is yours.", author: "Ron Burgundy" },
+    { quote: "Ik draai nog een plaatje… maar jij kan chillen.", author: "Zanger Rinus" },
+    
+    // 3 AM - 4 AM
+    { quote: "Mission complete. Time to haunt the fridge.", author: "Terry Crews" },
+    { quote: "Vandaag is grijs… maar jouw dag is af.", author: "Guus Meeuwis" },
+    
+    // 4 AM - 5 AM
+    { quote: "Goal hit before sunrise. Go watch everyone else wake up.", author: "Rocky Balboa" },
+    { quote: "Ik start de dag met winst… en jij met rust.", author: "Zanger Rinus" },
+    
+    // 5 AM - 6 AM
+    { quote: "Done before dawn. You're officially a superhero.", author: "Arnold Schwarzenegger" },
+    { quote: "Vandaag is goud… en jij bent klaar.", author: "Guus Meeuwis" },
+    
+    // 6 AM - 7 AM
+    { quote: "Target smashed before sunrise. You may now return to being a legend.", author: "Yoda" },
+    { quote: "Vandaag is rood… en jij hoeft vandaag niks meer te doen.", author: "Guus Meeuwis" },
+    
+    // 7 AM - 8 AM
+    { quote: "Mission accomplished. Go eat breakfast like a king.", author: "Michael Scott" },
+    { quote: "Ik ben een rijder… en jij hebt de finishlijn al gehaald.", author: "Zanger Rinus" },
+    
+    // 8 AM - 9 AM
+    { quote: "All goals crushed. Clock out, champ.", author: "Scooter" },
+    { quote: "You've already won the day. Anything else is just showing off.", author: "Ron Burgundy" },
+    
+    // 9 AM - 10 AM
+    { quote: "Vandaag is groen… want je hebt al rust verdiend.", author: "Guus Meeuwis" },
+    { quote: "You're done. Take the rest of the day off from being this awesome.", author: "Arnold Schwarzenegger" },
+    
+    // 10 AM - 11 AM
+    { quote: "Workout complete. Now hydrate and brag.", author: "Will Ferrell" },
+    { quote: "Eén liedje, één set… en jij bent al klaar.", author: "Zanger Rinus" },
+    
+    // 11 AM - 12 PM
+    { quote: "Mission complete. Go eat like you just conquered Rome.", author: "Gordon Ramsay" },
+    { quote: "Vandaag is geel… want je straalt na je winst.", author: "Guus Meeuwis" },
+    
+    // 12 PM - 1 PM
+    { quote: "Lunchtime and you're already done. Enjoy being superior.", author: "Terry Crews" },
+    { quote: "Ik fiets naar m'n lunch… jij naar je trofee.", author: "Zanger Rinus" },
+    
+    // 1 PM - 2 PM
+    { quote: "Target met. You are officially excused from all future effort today.", author: "Dwayne Johnson" },
+    { quote: "Vandaag is blauw… en jij mag achterover leunen.", author: "Guus Meeuwis" },
+    
+    // 2 PM - 3 PM
+    { quote: "Crushed it. Go relax while the mortals sweat.", author: "Muhammad Ali" },
+    { quote: "Ik train, ik lach… en jij mag nu chillen.", author: "Zanger Rinus" },
+    
+    // 3 PM - 4 PM
+    { quote: "Achievement unlocked. Rest mode engaged.", author: "Rocky Balboa" },
+    { quote: "Vandaag is oranje… en jij hoeft geen stap meer te zetten.", author: "Guus Meeuwis" },
+    
+    // 4 PM - 5 PM
+    { quote: "You're finished. Go home, flex once, and sit down.", author: "Ron Burgundy" },
+    { quote: "Ik trek mijn sportpak uit… want jij bent klaar.", author: "Zanger Rinus" },
+    
+    // 5 PM - 6 PM
+    { quote: "Victory hour. The gym misses you already.", author: "Will Ferrell" },
+    { quote: "Vandaag is paars… van je koningstroon na de winst.", author: "Guus Meeuwis" },
+    
+    // 6 PM - 7 PM
+    { quote: "Done and dusted. Pass the carbs.", author: "Gordon Ramsay" },
+    { quote: "Ik ren, ik zing… en jij kan nu chillen.", author: "Zanger Rinus" },
+    
+    // 7 PM - 8 PM
+    { quote: "Day's work is over. Time to strut.", author: "Terry Crews" },
+    { quote: "Vandaag is goud… en jij hebt het al in je zak.", author: "Guus Meeuwis" },
+    
+    // 8 PM - 9 PM
+    { quote: "Workout complete. Couch mode activated.", author: "David Hasselhoff" },
+    { quote: "Ik spring… maar jij hoeft niks meer te doen.", author: "Zanger Rinus" },
+    
+    // 9 PM - 10 PM
+    { quote: "You're done. Everyone else is just late to the party.", author: "Rocky Balboa" },
+    { quote: "Vandaag is zwart… en jij rust als winnaar.", author: "Guus Meeuwis" },
+    
+    // 10 PM - 11 PM
+    { quote: "Day finished. Put the dumbbells to bed.", author: "Arnold Schwarzenegger" },
+    { quote: "Ik doe nog een rondje… maar jij mag stoppen.", author: "Zanger Rinus" },
+    
+    // 11 PM - 12 AM
+    { quote: "You closed the day with a win. Sleep like royalty.", author: "Scooter" },
+    { quote: "Vandaag is zilver… en jij hoeft morgen niks meer te bewijzen.", author: "Guus Meeuwis" }
+  ]
+  
+  // Get 2 messages for the current hour, cycling through them based on minutes (every 30 minutes)
+  const baseIndex = hour * 2
+  const minute = new Date().getMinutes()
+  const cycleIndex = Math.floor(minute / 30) // Change every 30 minutes
+  const messageIndex = (baseIndex + cycleIndex) % achievementMessages.length
+  
+  return achievementMessages[messageIndex] || achievementMessages[0]
 }
 
 // Helper function to convert Tailwind classes to organic gradient styles
