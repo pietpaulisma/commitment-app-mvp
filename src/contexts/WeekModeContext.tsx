@@ -36,7 +36,9 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
         return savedMode
       }
     }
-    return 'insane' // Default fallback
+    // Don't assume default - let database value load first
+    // Temporary fallback until database loads
+    return 'insane' 
   })
 
   // Load user's week mode from profile when user is available
@@ -54,7 +56,7 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
         .eq('id', userId)
         .single()
 
-      if (!error && profile?.week_mode) {
+      if (!error && profile && (profile.week_mode === 'sane' || profile.week_mode === 'insane')) {
         const dbMode = profile.week_mode as WeekMode
         setWeekModeState(dbMode)
         // Also update sessionStorage to match
@@ -62,6 +64,10 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
           sessionStorage.setItem('weekMode', dbMode)
         }
         console.log('Loaded user week mode from profile:', dbMode)
+      } else if (!error && profile) {
+        // If week_mode is null/undefined, set default to 'insane' in database
+        console.log('No week_mode found, setting default to insane')
+        await setWeekModeWithSync('insane', userId)
       }
     } catch (error) {
       console.error('Error loading user week mode:', error)
