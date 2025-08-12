@@ -1854,13 +1854,8 @@ export default function RectangularDashboard() {
           {/* Motivational Quote */}
           {groupStartDate && (
             <div className="mx-1 mb-1">
-              <div 
-                className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl py-3 px-6"
-                style={{
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                }}
-              >
-                <div className={`text-center ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
+              <div className="px-6">
+                <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress
                     const currentUserMember = groupMembers.find(member => member.isCurrentUser)
@@ -1874,7 +1869,7 @@ export default function RectangularDashboard() {
                         <p className="text-sm text-white/90 font-medium drop-shadow leading-relaxed mb-2">
                           "{message.quote}"
                         </p>
-                        <p className="text-xs text-white/60 font-normal text-right">
+                        <p className="text-xs text-white/60 font-normal">
                           — {message.author}
                         </p>
                       </div>
