@@ -7,6 +7,7 @@ import TimeGradient from './TimeGradient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
+import { usePageState } from '@/hooks/usePageState'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { 
   XMarkIcon,
@@ -59,7 +60,8 @@ type WorkoutModalProps = {
 export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimating = false, onCloseStart }: WorkoutModalProps) {
   const { user } = useAuth()
   const { profile } = useProfile()
-  const { weekMode, setWeekMode, isWeekModeAvailable } = useWeekMode()
+  const { weekMode, setWeekMode, setWeekModeWithSync, isWeekModeAvailable } = useWeekMode()
+  const { markWorkoutInProgress, clearWorkoutInProgress } = usePageState()
 
   // Get category colors for exercises with variations
   const getCategoryColor = (type: string, exerciseId: string) => {
@@ -92,7 +94,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [todayLogs, setTodayLogs] = useState<any[]>([])
   const [selectedWeight, setSelectedWeight] = useState(0)
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
-  const [lockedWeight, setLockedWeight] = useState<number | null>(null)
+  const [lockedWeights, setLockedWeights] = useState<Record<string, number>>({})
   const [progressAnimated, setProgressAnimated] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
@@ -109,18 +111,56 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [stopwatchStartTime, setStopwatchStartTime] = useState(0) // timestamp when started
   const [stopwatchPausedDuration, setStopwatchPausedDuration] = useState(0) // accumulated paused time
 
+  // localStorage functions for locked weights
+  const saveLockedWeightsToStorage = (weights: Record<string, number>) => {
+    try {
+      localStorage.setItem('workout-locked-weights', JSON.stringify(weights))
+    } catch (error) {
+      console.warn('Failed to save locked weights to localStorage:', error)
+    }
+  }
+
+  const loadLockedWeightsFromStorage = (): Record<string, number> => {
+    try {
+      const stored = localStorage.getItem('workout-locked-weights')
+      return stored ? JSON.parse(stored) : {}
+    } catch (error) {
+      console.warn('Failed to load locked weights from localStorage:', error)
+      return {}
+    }
+  }
+
+  // Load locked weights from localStorage on component mount
+  useEffect(() => {
+    const storedWeights = loadLockedWeightsFromStorage()
+    setLockedWeights(storedWeights)
+  }, [])
+
+  // Save locked weights to localStorage whenever they change
+  useEffect(() => {
+    saveLockedWeightsToStorage(lockedWeights)
+  }, [lockedWeights])
+
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
       console.log('Loading exercises for group:', profile.group_id)
       console.log('isAnimatedIn before:', isAnimatedIn)
       
+      // Mark workout as in progress for state preservation
+      markWorkoutInProgress()
+      
       // Prevent background scrolling
       document.body.style.overflow = 'hidden'
       
-      loadExercises()
+      // Only load data if we haven't loaded it already (prevent reload on mode change)
+      if (exercises.length === 0) {
+        loadExercises()
+        loadTodaysWorkouts()
+        loadFavoriteExercises()
+      }
+      
+      // Always reload daily progress for target calculation
       loadDailyProgress()
-      loadTodaysWorkouts()
-      loadFavoriteExercises()
       
       // Wait for modal to be fully mounted before starting animation
       setTimeout(() => {
@@ -204,6 +244,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     console.log('Starting close animation')
     setIsClosing(true)
     
+    // Clear workout in progress state
+    clearWorkoutInProgress()
+    
     // Start reverse icon animation immediately - X flips back to chat
     setShowIconTransition(false)
     
@@ -266,12 +309,52 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   const recalculateTargetWithMode = async (newMode: 'sane' | 'insane') => {
-    const { target, daysSinceStart } = await loadGroupDataAndCalculateTarget(newMode)
-    setDailyTarget(target)
-    setGroupDaysSinceStart(daysSinceStart)
-    console.log(`Target recalculated for ${newMode} mode:`, target)
-    
-    // Note: loadDailyProgress() will be called automatically by useEffect when weekMode changes
+    // Just recalculate the target locally without reloading data
+    if (groupDaysSinceStart > 0) {
+      const newTarget = calculateDailyTarget({
+        daysSinceStart: groupDaysSinceStart,
+        weekMode: newMode,
+        restDays: [1], // Default rest days
+        recoveryDays: [5] // Default recovery days  
+      })
+      setDailyTarget(newTarget)
+      console.log(`Target recalculated for ${newMode} mode:`, newTarget)
+    }
+  }
+
+  const checkAutomaticModeSwitch = async () => {
+    // Only check if user is in sane mode and mode switching is available
+    if (weekMode !== 'sane' || !isWeekModeAvailable(groupDaysSinceStart) || !profile?.group_id) {
+      return
+    }
+
+    try {
+      // Get current total points for today
+      const currentTotalPoints = dailyProgress
+
+      // Only proceed if they've actually done some exercise
+      if (currentTotalPoints <= 0) {
+        return
+      }
+
+      // Calculate what the insane target would be for today
+      const { target: insaneTargetForToday } = await loadGroupDataAndCalculateTarget('insane')
+      
+      // If user met/exceeded insane target while in sane mode, switch to insane
+      if (currentTotalPoints >= insaneTargetForToday) {
+        await setWeekModeWithSync('insane', user?.id)
+        console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
+        
+        // Recalculate target with new mode
+        await recalculateTargetWithMode('insane')
+        
+        // Show mode switch notification
+        alert(`🔥 INSANE MODE ACTIVATED! You exceeded the insane target (${insaneTargetForToday}) with ${currentTotalPoints} points!`)
+      }
+    } catch (error) {
+      console.error('Error checking automatic mode switch:', error)
+      // Silently fail - don't interrupt the user's workout flow
+    }
   }
 
   const loadDailyProgress = async (targetOverride?: number) => {
@@ -1004,13 +1087,43 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         console.error('Error submitting to group:', error)
         alert('Error submitting workout to group chat')
       } else {
+        // Check for automatic mode switching to insane
+        if (weekMode === 'sane' && isWeekModeAvailable(groupDaysSinceStart) && totalPoints >= dailyTarget) {
+          try {
+            // Calculate what insane target would be for today
+            const { target: insaneTargetForToday } = await loadGroupDataAndCalculateTarget('insane')
+            
+            // If user met/exceeded insane target while in sane mode, switch to insane
+            if (totalPoints >= insaneTargetForToday) {
+              await setWeekModeWithSync('insane', user?.id)
+              console.log(`Auto-switched to insane mode! Points: ${totalPoints}, Insane target: ${insaneTargetForToday}`)
+              
+              // Recalculate target with new mode
+              await recalculateTargetWithMode('insane')
+              
+              // Show special message for mode switch
+              alert(`🔥 INSANE MODE ACTIVATED! You exceeded the insane target (${insaneTargetForToday}) with ${totalPoints} points!`)
+            } else {
+              // Show normal success message
+              alert('🎉 Workout submitted to group chat!')
+            }
+          } catch (error) {
+            console.error('Error checking automatic mode switch:', error)
+            // Fallback to normal success message
+            alert('🎉 Workout submitted to group chat!')
+          }
+        } else {
+          // Show normal success message
+          alert('🎉 Workout submitted to group chat!')
+        }
+        
         // Success feedback
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100])
         }
         
-        // Show success message
-        alert('🎉 Workout submitted to group chat!')
+        // Clear workout state since it's complete
+        clearWorkoutInProgress()
         
         // Optionally close modal after submission
         setTimeout(() => {
@@ -1080,20 +1193,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     // Reset state and open workout input popup
     setSelectedWorkoutExercise(exercise)
     setWorkoutCount(defaultQuantity || 0) // All exercises start at 0
-    setSelectedWeight(lockedWeight || 0) // Use locked weight if available
+    setSelectedWeight(lockedWeights[exercise.id] || 0) // Use locked weight for this specific exercise
     setIsDecreasedExercise(false)
     setWorkoutInputOpen(true)
   }
 
   const handleWeightClick = (weight: number) => {
+    if (!selectedWorkoutExercise) return
+    
     if (selectedWeight === weight) {
-      if (lockedWeight === weight) {
+      if (lockedWeights[selectedWorkoutExercise.id] === weight) {
         // Third click: unlock and deselect
-        setLockedWeight(null)
+        setLockedWeights(prev => {
+          const newLocked = { ...prev }
+          delete newLocked[selectedWorkoutExercise.id]
+          return newLocked
+        })
         setSelectedWeight(0)
       } else {
-        // Second click: lock
-        setLockedWeight(weight)
+        // Second click: lock for this specific exercise
+        setLockedWeights(prev => ({
+          ...prev,
+          [selectedWorkoutExercise.id]: weight
+        }))
       }
     } else {
       // First click: select
@@ -1168,6 +1290,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           }
           loadDailyProgress()
           loadTodaysWorkouts()
+          
+          // Check for automatic mode switching after exercise submission
+          await checkAutomaticModeSwitch()
           
           // Haptic feedback
           if (navigator.vibrate) {
@@ -1602,15 +1727,26 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         }}
                       />
                       
-                      <div className="relative flex">
+                      <div className="relative flex bg-gray-800/50 rounded-full p-1">
+                        {/* Animated background slider */}
+                        <div 
+                          className={`absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${
+                            weekMode === 'sane' 
+                              ? 'left-1 bg-blue-600/30' 
+                              : 'left-[calc(50%+2px)] bg-red-600/30'
+                          }`}
+                        />
+                        
                         <button
                           onClick={async () => {
-                            setWeekMode('sane')
+                            await setWeekModeWithSync('sane', user?.id)
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('sane')
                           }}
-                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
-                            weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${
+                            weekMode === 'sane' 
+                              ? 'text-white scale-105' 
+                              : 'text-gray-400 hover:text-gray-300 scale-100'
                           }`}
                         >
                           <MoonIcon className="w-4 h-4" />
@@ -1619,12 +1755,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         
                         <button
                           onClick={async () => {
-                            setWeekMode('insane')
+                            await setWeekModeWithSync('insane', user?.id)
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('insane')
                           }}
-                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
-                            weekMode === 'insane' ? 'text-white bg-red-600/30' : 'text-red-400 hover:text-red-300'
+                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${
+                            weekMode === 'insane' 
+                              ? 'text-white scale-105' 
+                              : 'text-red-400 hover:text-red-300 scale-100'
                           }`}
                         >
                           <FireIcon className="w-4 h-4" />
@@ -1821,7 +1959,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       { label: '40', value: 40, multiplier: 4.5 }
                     ].map((button, index) => {
                     const isSelected = selectedWeight === button.value
-                    const isLocked = lockedWeight === button.value
+                    const isLocked = selectedWorkoutExercise && lockedWeights[selectedWorkoutExercise.id] === button.value
                     
                     let buttonStyle = ''
                     if (isLocked) {
@@ -1836,10 +1974,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <button
                         key={index}
                         onClick={() => {
+                          if (!selectedWorkoutExercise) return
+                          
                           if (isSelected && !isLocked) {
-                            setLockedWeight(button.value)
+                            setLockedWeights(prev => ({
+                              ...prev,
+                              [selectedWorkoutExercise.id]: button.value
+                            }))
                           } else if (isLocked) {
-                            setLockedWeight(null)
+                            setLockedWeights(prev => {
+                              const newLocked = { ...prev }
+                              delete newLocked[selectedWorkoutExercise.id]
+                              return newLocked
+                            })
                             setSelectedWeight(0)
                           } else {
                             setSelectedWeight(button.value)
@@ -1965,10 +2112,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       loadDailyProgress()
                       loadTodaysWorkouts()
                       
+                      // Check for automatic mode switching after exercise submission
+                      await checkAutomaticModeSwitch()
+                      
                       // Reset and close
                       setWorkoutInputOpen(false)
                       setWorkoutCount(0)
-                      setSelectedWeight(lockedWeight || 0)
+                      setSelectedWeight(selectedWorkoutExercise ? (lockedWeights[selectedWorkoutExercise.id] || 0) : 0)
                       setIsDecreasedExercise(false)
                       
                       // Haptic feedback

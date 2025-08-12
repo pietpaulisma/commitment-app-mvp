@@ -126,10 +126,20 @@ const CHART_COLORS = [
 ]
 
 // Helper function to calculate days since last donation
-const calculateDaysSinceDonation = (lastDonationDate: string | null): number => {
-  if (!lastDonationDate) return 0 // Default to 0 if no donation date
-  
+const calculateDaysSinceDonation = (lastDonationDate: string | null, profileCreatedAt?: string): number => {
   const today = new Date()
+  
+  if (!lastDonationDate) {
+    // If no donation date, calculate days since profile creation or return a default
+    if (profileCreatedAt) {
+      const createdDate = new Date(profileCreatedAt)
+      const diffTime = today.getTime() - createdDate.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays >= 0 ? diffDays : 0
+    }
+    return 0 // Return 0 only if we truly have no reference date
+  }
+  
   const donationDate = new Date(lastDonationDate)
   const diffTime = today.getTime() - donationDate.getTime()
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
@@ -137,8 +147,9 @@ const calculateDaysSinceDonation = (lastDonationDate: string | null): number => 
   return diffDays >= 0 ? diffDays : 0
 }
 
-// Helper function to calculate consecutive "insane" workout days (≥100 points)
-const calculateInsaneStreak = (logs: any[]): number => {
+// Helper function to calculate consecutive "insane" workout days 
+// Fixed logic: Only count days where user met/exceeded their actual insane target
+const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: number[] = [1], recoveryDays: number[] = [5]): number => {
   if (!logs || logs.length === 0) return 0
   
   // Group logs by date and sum points per day
@@ -152,11 +163,27 @@ const calculateInsaneStreak = (logs: any[]): number => {
   const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
   
   let streak = 0
+  const groupStartTime = new Date(groupStartDate).getTime()
+  
   for (const date of sortedDates) {
-    if (dailyPoints[date] >= 100) {
+    const currentDate = new Date(date)
+    const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
+    const dayOfWeek = currentDate.getDay()
+    
+    // Calculate what the insane target would have been for this date
+    const insaneTarget = calculateDailyTarget({
+      daysSinceStart,
+      weekMode: 'insane',
+      restDays,
+      recoveryDays,
+      currentDayOfWeek: dayOfWeek
+    })
+    
+    // Only count as insane streak if they met/exceeded the insane target
+    if (dailyPoints[date] >= insaneTarget) {
       streak++
     } else {
-      break // Streak broken
+      break // Streak broken - they didn't meet the insane target
     }
   }
   
@@ -771,6 +798,7 @@ export default function RectangularDashboard() {
     }
   }, [user, authLoading, router])
 
+  // Main data loading - don't reload everything when weekMode changes
   useEffect(() => {
     if (user && profile) {
       loadDashboardData()
@@ -779,6 +807,15 @@ export default function RectangularDashboard() {
       return () => clearInterval(interval)
     }
   }, [user, profile])
+
+  // Only reload member data when weekMode changes (for group status display)
+  useEffect(() => {
+    if (user && profile && weekMode) {
+      // Only reload member data to show individual modes in group status
+      loadGroupMembers()
+      // Note: Don't reload personal stats here - let workout modal handle its own target calculation
+    }
+  }, [weekMode])
 
   // Trigger animations after component mounts and data loads
   useEffect(() => {
@@ -1011,12 +1048,16 @@ export default function RectangularDashboard() {
     try {
       const today = new Date().toISOString().split('T')[0]
       
-      // Get all group members
-      const { data: allMembers } = await supabase
+      // Get all group members including their individual week_mode
+      const { data: allMembers, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color, created_at')
+        .select('id, email, username, personal_color, created_at, week_mode')
         .eq('group_id', profile.group_id)
 
+      if (membersError) {
+        console.error('Error fetching group members:', membersError)
+        return
+      }
       if (!allMembers) return
 
       // Get group start date for target calculation
@@ -1033,10 +1074,12 @@ export default function RectangularDashboard() {
         .eq('group_id', profile.group_id)
         .maybeSingle()
 
+      // Calculate days since start for target calculations
+      const daysSinceStart = group?.start_date ? getDaysSinceStart(group.start_date) : 1
+      
       // Calculate today's target using centralized utility
       let dailyTarget = 1 // Default fallback
       if (group?.start_date) {
-        const daysSinceStart = getDaysSinceStart(group.start_date)
         dailyTarget = calculateDailyTarget({
           daysSinceStart,
           weekMode,
@@ -1091,13 +1134,24 @@ export default function RectangularDashboard() {
         }
       })
 
-      // Create final member objects with their points
-      const membersWithProgress = allMembers.map(member => ({
-        ...member,
-        todayPoints: memberPointsMap.get(member.id) || 0,
-        dailyTarget: dailyTarget,
-        isCurrentUser: member.id === user?.id
-      }))
+      // Create final member objects with their points and individual targets
+      const membersWithProgress = allMembers.map(member => {
+        // Calculate individual daily target based on member's week_mode
+        const memberWeekMode = member.week_mode as 'sane' | 'insane' | null
+        const memberDailyTarget = calculateDailyTarget({
+          daysSinceStart,
+          weekMode: memberWeekMode || 'insane', // Default to insane if null
+          restDays: groupSettings?.rest_days || [1],
+          recoveryDays: groupSettings?.recovery_days || [5]
+        })
+        
+        return {
+          ...member,
+          todayPoints: memberPointsMap.get(member.id) || 0,
+          dailyTarget: memberDailyTarget,
+          isCurrentUser: member.id === user?.id
+        }
+      })
       
       // Sort by points descending
       membersWithProgress.sort((a, b) => b.todayPoints - a.todayPoints)
@@ -1111,12 +1165,16 @@ export default function RectangularDashboard() {
     if (!profile?.group_id) return null
 
     try {
-      // Get all group members first
-      const { data: members } = await supabase
+      // Get all group members first including their individual week_mode
+      const { data: members, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color')
+        .select('id, email, username, personal_color, week_mode')
         .eq('group_id', profile.group_id)
 
+      if (membersError) {
+        console.error('Error fetching members for stats:', membersError)
+        return null
+      }
       if (!members || members.length === 0) return null
 
       const memberIds = members.map(m => m.id)
@@ -1143,22 +1201,33 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot
-      const moneyInPot = totalGroupPoints * 0.10
+      // 2. Money Pot - load group penalty data
+      const { data: groupPenalties, error: penaltyError } = await supabase
+        .from('payment_transactions')
+        .select('amount, user_id, profiles!inner(username)')
+        .eq('group_id', profile.group_id)
+        .eq('transaction_type', 'penalty')
+
+      if (penaltyError) {
+        console.error('Error loading group penalties:', penaltyError)
+      }
+
+      const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
       
-      // Find biggest contributor
-      const userPointsMap = new Map()
-      logs?.forEach(log => {
-        userPointsMap.set(log.user_id, (userPointsMap.get(log.user_id) || 0) + log.points)
+      // Find biggest penalty payer
+      const userPenaltyMap = new Map()
+      groupPenalties?.forEach(penalty => {
+        const userId = penalty.user_id
+        userPenaltyMap.set(userId, (userPenaltyMap.get(userId) || 0) + penalty.amount)
       })
       
-      let biggestContributor = 'No data'
-      let maxPoints = 0
-      userPointsMap.forEach((points, userId) => {
-        if (points > maxPoints) {
-          maxPoints = points
-          const user = members.find(m => m.id === userId)
-          biggestContributor = user?.username || 'User'
+      let biggestContributor = 'No penalties yet'
+      let maxPenalties = 0
+      userPenaltyMap.forEach((amount, userId) => {
+        if (amount > maxPenalties) {
+          maxPenalties = amount
+          const penalty = groupPenalties?.find(p => p.user_id === userId)
+          biggestContributor = penalty?.profiles?.username || 'User'
         }
       })
 
@@ -1235,7 +1304,7 @@ export default function RectangularDashboard() {
         moneyPot: {
           title: 'Money Pot',
           subtitle: `top: ${biggestContributor}`,
-          value: Math.max(0, Math.round(moneyInPot)),
+          value: Math.max(0, Math.round(totalPenaltyAmount)),
           type: 'typography_stat'
         },
         birthday: {
@@ -1312,9 +1381,18 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution) - use real donation rate from profile
-      const donationRate = profile?.donation_rate || 0.10
-      const personalMoneyContribution = totalPersonalPoints * donationRate
+      // 2. Personal Money Pot (your contribution)
+      const { data: userPenalties, error: userPenaltyError } = await supabase
+        .from('payment_transactions')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('transaction_type', 'penalty')
+
+      if (userPenaltyError) {
+        console.error('Error loading user penalties:', userPenaltyError)
+      }
+
+      const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
 
       // 3. Personal Birthday - use real birth date from profile
       let nextBirthdayDays = 0
@@ -1543,6 +1621,8 @@ export default function RectangularDashboard() {
   const loadDashboardData = async () => {
     if (!user || !profile) return
 
+    let currentGroupData: any = null
+
     try {
       // Get group name and start date
       if (profile.group_id) {
@@ -1551,6 +1631,8 @@ export default function RectangularDashboard() {
           .select('name, start_date')
           .eq('id', profile.group_id)
           .single()
+        
+        currentGroupData = group // Store for use in streak calculation
         setGroupName(group?.name || 'Your Group')
         setGroupStartDate(group?.start_date || null)
 
@@ -1607,15 +1689,15 @@ export default function RectangularDashboard() {
 
       // Load donation tracking and insane streak data
       try {
-        // Get profile with last_donation_date
+        // Get profile with last_donation_date and created_at
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('last_donation_date')
+          .select('last_donation_date, created_at')
           .eq('id', user.id)
           .single()
 
-        // Calculate days since donation
-        const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date)
+        // Calculate days since donation (use profile creation date as fallback)
+        const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
         setDaysSinceDonation(donationGap)
 
         // Get logs for streak calculation (last 30 days)
@@ -1631,9 +1713,18 @@ export default function RectangularDashboard() {
           .eq('user_id', user.id)
           .in('date', past30Days)
 
-        // Calculate insane streak
-        const streak = calculateInsaneStreak(userLogs || [])
-        setInsaneStreak(streak)
+        // Calculate insane streak using proper group data
+        if (currentGroupData?.start_date) {
+          const streak = calculateInsaneStreak(
+            userLogs || [], 
+            currentGroupData.start_date, 
+            restDays, 
+            recoveryDays
+          )
+          setInsaneStreak(streak)
+        } else {
+          setInsaneStreak(0)
+        }
       } catch (error) {
         console.log('Could not load donation/streak data:', error)
       }
@@ -1912,7 +2003,7 @@ export default function RectangularDashboard() {
                                 {progressPercentage}%
                               </span>
                               <span className="text-white/60 text-xs font-light tracking-wide">
-                                {weekMode}
+                                {member.week_mode || 'insane'}
                               </span>
                             </div>
                           </div>
