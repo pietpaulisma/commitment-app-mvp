@@ -1192,13 +1192,19 @@ export default function RectangularDashboard() {
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
       // 2. Money Pot - use real penalty data from payment_transactions
-      const { data: groupPenalties } = await supabase
+      const { data: groupPenalties, error: penaltyError } = await supabase
         .from('payment_transactions')
         .select('amount, user_id, profiles!inner(username)')
         .eq('group_id', profile.group_id)
         .eq('transaction_type', 'penalty')
 
+      if (penaltyError) {
+        console.error('Error loading group penalties:', penaltyError)
+      }
+      console.log('Group penalties data:', groupPenalties)
+
       const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
+      console.log('Total penalty amount:', totalPenaltyAmount)
       
       // Find biggest penalty payer
       const userPenaltyMap = new Map()
@@ -1368,13 +1374,19 @@ export default function RectangularDashboard() {
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
       // 2. Personal Money Pot (your contribution) - use real penalty data from payment_transactions
-      const { data: userPenalties } = await supabase
+      const { data: userPenalties, error: userPenaltyError } = await supabase
         .from('payment_transactions')
         .select('amount')
         .eq('user_id', user.id)
         .eq('transaction_type', 'penalty')
 
+      if (userPenaltyError) {
+        console.error('Error loading user penalties:', userPenaltyError)
+      }
+      console.log('User penalties data:', userPenalties)
+
       const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
+      console.log('Personal money contribution:', personalMoneyContribution)
 
       // 3. Personal Birthday - use real birth date from profile
       let nextBirthdayDays = 0
