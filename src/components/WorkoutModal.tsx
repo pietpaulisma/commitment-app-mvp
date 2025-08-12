@@ -111,6 +111,36 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [stopwatchStartTime, setStopwatchStartTime] = useState(0) // timestamp when started
   const [stopwatchPausedDuration, setStopwatchPausedDuration] = useState(0) // accumulated paused time
 
+  // localStorage functions for locked weights
+  const saveLockedWeightsToStorage = (weights: Record<string, number>) => {
+    try {
+      localStorage.setItem('workout-locked-weights', JSON.stringify(weights))
+    } catch (error) {
+      console.warn('Failed to save locked weights to localStorage:', error)
+    }
+  }
+
+  const loadLockedWeightsFromStorage = (): Record<string, number> => {
+    try {
+      const stored = localStorage.getItem('workout-locked-weights')
+      return stored ? JSON.parse(stored) : {}
+    } catch (error) {
+      console.warn('Failed to load locked weights from localStorage:', error)
+      return {}
+    }
+  }
+
+  // Load locked weights from localStorage on component mount
+  useEffect(() => {
+    const storedWeights = loadLockedWeightsFromStorage()
+    setLockedWeights(storedWeights)
+  }, [])
+
+  // Save locked weights to localStorage whenever they change
+  useEffect(() => {
+    saveLockedWeightsToStorage(lockedWeights)
+  }, [lockedWeights])
+
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
       console.log('Loading exercises for group:', profile.group_id)
