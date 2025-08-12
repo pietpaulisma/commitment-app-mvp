@@ -798,6 +798,7 @@ export default function RectangularDashboard() {
     }
   }, [user, authLoading, router])
 
+  // Main data loading - don't reload everything when weekMode changes
   useEffect(() => {
     if (user && profile) {
       loadDashboardData()
@@ -805,7 +806,16 @@ export default function RectangularDashboard() {
       const interval = setInterval(loadDashboardData, 30000) // Refresh every 30 seconds
       return () => clearInterval(interval)
     }
-  }, [user, profile, weekMode])
+  }, [user, profile])
+
+  // Only reload specific data when weekMode changes to avoid full refresh
+  useEffect(() => {
+    if (user && profile && weekMode) {
+      // Only reload member data (for individual modes) and personal stats (for target calculation)
+      loadGroupMembers()
+      loadPersonalStats()
+    }
+  }, [weekMode])
 
   // Trigger animations after component mounts and data loads
   useEffect(() => {

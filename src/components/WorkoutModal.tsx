@@ -7,6 +7,7 @@ import TimeGradient from './TimeGradient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
+import { usePageState } from '@/hooks/usePageState'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { 
   XMarkIcon,
@@ -60,6 +61,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const { user } = useAuth()
   const { profile } = useProfile()
   const { weekMode, setWeekMode, setWeekModeWithSync, isWeekModeAvailable } = useWeekMode()
+  const { markWorkoutInProgress, clearWorkoutInProgress } = usePageState()
 
   // Get category colors for exercises with variations
   const getCategoryColor = (type: string, exerciseId: string) => {
@@ -113,6 +115,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     if (isOpen && user && profile?.group_id) {
       console.log('Loading exercises for group:', profile.group_id)
       console.log('isAnimatedIn before:', isAnimatedIn)
+      
+      // Mark workout as in progress for state preservation
+      markWorkoutInProgress()
       
       // Prevent background scrolling
       document.body.style.overflow = 'hidden'
@@ -203,6 +208,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const handleClose = () => {
     console.log('Starting close animation')
     setIsClosing(true)
+    
+    // Clear workout in progress state
+    clearWorkoutInProgress()
     
     // Start reverse icon animation immediately - X flips back to chat
     setShowIconTransition(false)
@@ -1073,6 +1081,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100])
         }
+        
+        // Clear workout state since it's complete
+        clearWorkoutInProgress()
         
         // Optionally close modal after submission
         setTimeout(() => {
