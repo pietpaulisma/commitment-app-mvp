@@ -31,11 +31,6 @@ export default function Login() {
         })
         if (error) throw error
         setMessage('Check your email to confirm your account!')
-        setLoading(false)
-        return
-      } else if (isSignUp) {
-        // New user signup - redirect to new onboarding
-        router.push('/onboarding')
       } else {
         // Sign in existing user
         const { error } = await supabase.auth.signInWithPassword({
