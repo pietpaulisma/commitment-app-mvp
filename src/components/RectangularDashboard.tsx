@@ -2045,26 +2045,41 @@ export default function RectangularDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-wrap justify-start gap-2 py-4 px-2">
+              <div className="grid grid-cols-4 gap-3 py-4 px-1">
                 {groupMembers.map((member) => {
                   const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
+                  const isOverflow = progressPercentage > 100
+                  const baseColor = member.personal_color || "#ef4444"
+                  
+                  // Create gradient based on base color
+                  const gradientId = `gradient-${member.id}-${progressPercentage}`
+                  const glowIntensity = isOverflow ? '20px' : '8px'
+                  const glowColor = baseColor
                       
                   return (
                         <div key={member.id} className="flex flex-col items-center">
-                          {/* Bigger circular progress */}
+                          {/* Bigger circular progress with gradient and glow */}
                           <div className="relative w-20 h-20">
                             {/* Background circle */}
                             <div className="w-20 h-20 rounded-full bg-gray-800/50 border border-white/10"></div>
                             
-                            {/* Progress circle with bottom-to-top fill animation */}
+                            {/* Progress circle with gradient fill */}
                             <svg 
-                              className="absolute top-0 left-0 w-20 h-20"
+                              className={`absolute top-0 left-0 w-20 h-20 ${isOverflow ? 'animate-pulse' : ''}`}
                               viewBox="0 0 80 80"
+                              style={{
+                                filter: `drop-shadow(0 0 ${glowIntensity} ${glowColor}40)`
+                              }}
                             >
                               <defs>
-                                <clipPath id={`circle-clip-${progressPercentage}`}>
+                                <clipPath id={`circle-clip-${member.id}-${progressPercentage}`}>
                                   <circle cx="40" cy="40" r="36" />
                                 </clipPath>
+                                <linearGradient id={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
+                                  <stop offset="0%" stopColor={baseColor} stopOpacity="0.9" />
+                                  <stop offset="50%" stopColor={baseColor} stopOpacity="0.7" />
+                                  <stop offset="100%" stopColor={baseColor} stopOpacity="1" />
+                                </linearGradient>
                               </defs>
                               
                               {/* Background circle border */}
@@ -2077,24 +2092,38 @@ export default function RectangularDashboard() {
                                 strokeWidth="2"
                               />
                               
-                              {/* Filled progress area */}
+                              {/* Filled progress area with gradient */}
                               <rect
                                 x="4"
-                                y={76 - (progressPercentage / 100) * 72}
+                                y={76 - (Math.min(progressPercentage, 100) / 100) * 72}
                                 width="72"
-                                height={(progressPercentage / 100) * 72}
-                                fill={member.personal_color || "#ef4444"}
-                                clipPath={`url(#circle-clip-${progressPercentage})`}
+                                height={(Math.min(progressPercentage, 100) / 100) * 72}
+                                fill={`url(#${gradientId})`}
+                                clipPath={`url(#circle-clip-${member.id}-${progressPercentage})`}
                                 className="transition-all duration-1000 ease-out"
                               />
+                              
+                              {/* Overflow glow effect when over 100% */}
+                              {isOverflow && (
+                                <circle
+                                  cx="40"
+                                  cy="40"
+                                  r="36"
+                                  fill="none"
+                                  stroke={baseColor}
+                                  strokeWidth="1"
+                                  strokeOpacity="0.6"
+                                  className="animate-pulse"
+                                />
+                              )}
                             </svg>
                             
-                            {/* Bigger, bolder percentage text with mode indicator */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                              <span className="text-white font-black text-lg leading-tight">
+                            {/* Percentage text positioned lower with bigger font */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-1">
+                              <span className={`text-white font-black text-xl leading-tight ${isOverflow ? 'animate-pulse' : ''}`}>
                                 {progressPercentage}%
                               </span>
-                              <span className="text-white/60 text-xs font-light tracking-wide">
+                              <span className="text-white/50 text-xs font-light tracking-wide">
                                 {member.week_mode || 'insane'}
                               </span>
                             </div>
