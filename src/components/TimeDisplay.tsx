@@ -90,35 +90,33 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
   const timeRemainingString = `${hoursRemaining.toString().padStart(2, '0')}:${minutesRemaining.toString().padStart(2, '0')}:${secsRemaining.toString().padStart(2, '0')}`
 
   return (
-    <div 
-      className={`relative bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl ${className}`}
-      style={{
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-      }}
-    >
-      {/* Gradient background fill - countdown bar (time remaining) */}
+    <div className={`relative ${className}`}>
+      {/* Thin glowing line - countdown bar (time remaining) */}
       <div 
-        className="absolute right-0 top-0 bottom-0 transition-all duration-1000"
+        className="h-1 mb-4 transition-all duration-1000 relative"
         style={{
-          width: `${Math.max(8, timeRemainingPercentage)}%`,
-          background: `linear-gradient(135deg, 
-            ${colors.primary}60 0%, 
-            ${colors.secondary}60 50%, 
-            ${colors.accent}60 100%)`,
-          borderTopLeftRadius: '0px',
-          borderBottomLeftRadius: '0px',
-          borderTopRightRadius: '16px',
-          borderBottomRightRadius: '16px'
+          width: '100%',
+          background: 'rgba(255, 255, 255, 0.1)'
         }}
-      />
+      >
+        <div 
+          className="absolute left-0 top-0 h-full transition-all duration-1000"
+          style={{
+            width: `${Math.max(2, timeRemainingPercentage)}%`,
+            background: `linear-gradient(90deg, 
+              ${colors.primary} 0%, 
+              ${colors.secondary} 50%, 
+              ${colors.accent} 100%)`,
+            boxShadow: `0 0 8px ${colors.secondary}40, 0 0 16px ${colors.primary}20`,
+            borderRadius: '2px'
+          }}
+        />
+      </div>
       
-      <div className="relative z-10 py-6 px-4 h-full">
-        
-        {/* Time remaining display */}
-        <div className="flex justify-end items-center h-full">
-          <div className="text-5xl font-black text-white drop-shadow-lg">
-            {timeRemainingString}
-          </div>
+      {/* Time remaining display */}
+      <div className="flex justify-end items-center">
+        <div className="text-5xl font-thin text-white drop-shadow-lg">
+          {timeRemainingString}
         </div>
       </div>
     </div>
