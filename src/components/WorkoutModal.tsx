@@ -94,7 +94,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [todayLogs, setTodayLogs] = useState<any[]>([])
   const [selectedWeight, setSelectedWeight] = useState(0)
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
-  const [lockedWeight, setLockedWeight] = useState<number | null>(null)
+  const [lockedWeights, setLockedWeights] = useState<Record<string, number>>({})
   const [progressAnimated, setProgressAnimated] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
@@ -1163,20 +1163,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     // Reset state and open workout input popup
     setSelectedWorkoutExercise(exercise)
     setWorkoutCount(defaultQuantity || 0) // All exercises start at 0
-    setSelectedWeight(lockedWeight || 0) // Use locked weight if available
+    setSelectedWeight(lockedWeights[exercise.id] || 0) // Use locked weight for this specific exercise
     setIsDecreasedExercise(false)
     setWorkoutInputOpen(true)
   }
 
   const handleWeightClick = (weight: number) => {
+    if (!selectedWorkoutExercise) return
+    
     if (selectedWeight === weight) {
-      if (lockedWeight === weight) {
+      if (lockedWeights[selectedWorkoutExercise.id] === weight) {
         // Third click: unlock and deselect
-        setLockedWeight(null)
+        setLockedWeights(prev => {
+          const newLocked = { ...prev }
+          delete newLocked[selectedWorkoutExercise.id]
+          return newLocked
+        })
         setSelectedWeight(0)
       } else {
-        // Second click: lock
-        setLockedWeight(weight)
+        // Second click: lock for this specific exercise
+        setLockedWeights(prev => ({
+          ...prev,
+          [selectedWorkoutExercise.id]: weight
+        }))
       }
     } else {
       // First click: select
@@ -1920,7 +1929,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       { label: '40', value: 40, multiplier: 4.5 }
                     ].map((button, index) => {
                     const isSelected = selectedWeight === button.value
-                    const isLocked = lockedWeight === button.value
+                    const isLocked = selectedWorkoutExercise && lockedWeights[selectedWorkoutExercise.id] === button.value
                     
                     let buttonStyle = ''
                     if (isLocked) {
@@ -1935,10 +1944,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <button
                         key={index}
                         onClick={() => {
+                          if (!selectedWorkoutExercise) return
+                          
                           if (isSelected && !isLocked) {
-                            setLockedWeight(button.value)
+                            setLockedWeights(prev => ({
+                              ...prev,
+                              [selectedWorkoutExercise.id]: button.value
+                            }))
                           } else if (isLocked) {
-                            setLockedWeight(null)
+                            setLockedWeights(prev => {
+                              const newLocked = { ...prev }
+                              delete newLocked[selectedWorkoutExercise.id]
+                              return newLocked
+                            })
                             setSelectedWeight(0)
                           } else {
                             setSelectedWeight(button.value)
@@ -2070,7 +2088,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       // Reset and close
                       setWorkoutInputOpen(false)
                       setWorkoutCount(0)
-                      setSelectedWeight(lockedWeight || 0)
+                      setSelectedWeight(selectedWorkoutExercise ? (lockedWeights[selectedWorkoutExercise.id] || 0) : 0)
                       setIsDecreasedExercise(false)
                       
                       // Haptic feedback
