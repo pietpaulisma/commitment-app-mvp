@@ -274,12 +274,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   const recalculateTargetWithMode = async (newMode: 'sane' | 'insane') => {
-    const { target, daysSinceStart } = await loadGroupDataAndCalculateTarget(newMode)
-    setDailyTarget(target)
-    setGroupDaysSinceStart(daysSinceStart)
-    console.log(`Target recalculated for ${newMode} mode:`, target)
-    
-    // Note: loadDailyProgress() will be called automatically by useEffect when weekMode changes
+    // Just recalculate the target locally without reloading data
+    if (groupDaysSinceStart > 0) {
+      const newTarget = calculateDailyTarget({
+        daysSinceStart: groupDaysSinceStart,
+        weekMode: newMode,
+        restDays: [1], // Default rest days
+        recoveryDays: [5] // Default recovery days  
+      })
+      setDailyTarget(newTarget)
+      console.log(`Target recalculated for ${newMode} mode:`, newTarget)
+    }
   }
 
   const checkAutomaticModeSwitch = async () => {
@@ -1678,15 +1683,26 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         }}
                       />
                       
-                      <div className="relative flex">
+                      <div className="relative flex bg-gray-800/50 rounded-full p-1">
+                        {/* Animated background slider */}
+                        <div 
+                          className={`absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${
+                            weekMode === 'sane' 
+                              ? 'left-1 bg-blue-600/40 border border-blue-400/30' 
+                              : 'left-[calc(50%+2px)] bg-red-600/40 border border-red-400/30'
+                          }`}
+                        />
+                        
                         <button
                           onClick={async () => {
                             await setWeekModeWithSync('sane', user?.id)
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('sane')
                           }}
-                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
-                            weekMode === 'sane' ? 'text-white' : 'text-gray-400 hover:text-gray-300'
+                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${
+                            weekMode === 'sane' 
+                              ? 'text-white scale-105' 
+                              : 'text-gray-400 hover:text-gray-300 scale-100'
                           }`}
                         >
                           <MoonIcon className="w-4 h-4" />
@@ -1699,8 +1715,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('insane')
                           }}
-                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-colors ${
-                            weekMode === 'insane' ? 'text-white bg-red-600/30' : 'text-red-400 hover:text-red-300'
+                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${
+                            weekMode === 'insane' 
+                              ? 'text-white scale-105' 
+                              : 'text-red-400 hover:text-red-300 scale-100'
                           }`}
                         >
                           <FireIcon className="w-4 h-4" />
