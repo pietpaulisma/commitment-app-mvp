@@ -129,7 +129,7 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
           <div 
             className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000"
             style={{
-              right: `${Math.max(0, timeRemainingPercentage)}%`,
+              left: `${Math.max(0, timeElapsedPercentage)}%`,
               width: '8px',
               height: '8px',
               background: 'white',
