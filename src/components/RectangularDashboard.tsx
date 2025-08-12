@@ -1817,8 +1817,8 @@ export default function RectangularDashboard() {
       {/* Dashboard Content */}
       {groupStartDate && (
         <div className="relative overflow-hidden">
-          {/* Two Square Blocks: DAY and Time Remaining */}
-          <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
+          {/* DAY and Time Display */}
+          <div className="mx-1 mb-1 space-y-1">
             {/* DAY Block */}
             <div className="relative">
               <div 
@@ -1845,9 +1845,11 @@ export default function RectangularDashboard() {
               </div>
             </div>
 
-            {/* Time Display Block */}
+            {/* Time Display Block - 50% less tall and twice the width */}
             <div className="relative">
-              <TimeDisplay className="aspect-square" />
+              <div style={{ aspectRatio: '4/1' }}>
+                <TimeDisplay className="w-full h-full" />
+              </div>
             </div>
           </div>
 
