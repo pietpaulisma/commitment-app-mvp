@@ -1950,8 +1950,8 @@ export default function RectangularDashboard() {
 
           {/* Motivational Quote - Moved below DAY and Time components */}
           {groupStartDate && (
-            <div className="mx-1 mb-4">
-              <div className="px-6">
+            <div className="mx-1 my-6">
+              <div className="px-6 py-4">
                 <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress

@@ -162,7 +162,7 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
           }}
         >
           <div 
-            className={`absolute left-0 top-0 h-full transition-all duration-1000 ${isLastTwoHours ? 'animate-pulse' : ''}`}
+            className={`absolute right-0 top-0 h-full transition-all duration-1000 ${isLastTwoHours ? 'animate-pulse' : ''}`}
             style={{
               width: `${Math.max(2, timeRemainingPercentage)}%`,
               background: progressColors.gradient,
@@ -177,11 +177,11 @@ export default function TimeDisplay({ className = '' }: TimeDisplayProps) {
             }}
           />
           
-          {/* White dot indicator at current position (end of remaining time) */}
+          {/* White dot indicator at current position (start of remaining time from left) */}
           <div 
             className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000"
             style={{
-              left: `${Math.max(0, timeRemainingPercentage)}%`,
+              right: `${Math.max(0, timeRemainingPercentage)}%`,
               width: '8px',
               height: '8px',
               background: 'white',
