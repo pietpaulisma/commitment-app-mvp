@@ -11,66 +11,171 @@ import TimeDisplay from './TimeDisplay'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 
-// Helper function to get hilarious hourly commitment messages with fake attributions
+// Helper function to get motivational messages - 4 quotes per hour that cycle
 const getHourlyMessage = (hour: number): { quote: string, author: string } => {
-  const messages = [
-    { quote: "I'LL BE BACK... after this midnight workout, because I NEVER STOP!", author: "Arnold Schwarzenegger" }, // 12AM
-    { quote: "Be the change you wish to see in your abs... even at 3AM", author: "Gandhi" }, // 1AM
-    { quote: "RESPECT TO THE MAN IN THE ICE! Night workouts are HYPER HYPER!", author: "H.P. Baxxter" }, // 2AM
-    { quote: "Can you smell what The Rock is cooking? IT'S SUCCESS AT 3AM, BABY!", author: "The Rock" }, // 3AM
-    { quote: "Insanity is doing the same thing and expecting different abs... wait, that's not how relativity works", author: "Einstein" }, // 4AM
-    { quote: "UNLEASH THE POWER WITHIN! Even if it's 5AM and you're questioning your life choices!", author: "Tony Robbins" }, // 5AM
-    { quote: "I came, I saw, I conquered... this morning workout before my enemies even woke up", author: "Napoleon" }, // 6AM
-    { quote: "Suffering is attachment to not wanting to do burpees... but the path to enlightenment is through 10 more reps", author: "Buddha" }, // 7AM
-    { quote: "THIS BREAKFAST IS RAW! Just like your determination should be, you donut!", author: "Gordon Ramsay" }, // 8AM
-    { quote: "The supreme art of war is to subdue your laziness without even fighting... but first, squats", author: "Sun Tzu" }, // 9AM
-    { quote: "YOU GET GAINS! AND YOU GET GAINS! EVERYBODY GETS GAINS!", author: "Oprah" }, // 10AM
-    { quote: "Great wall of gains can be seen from space... probably. I built one brick at a time", author: "Jackie Chan" }, // 11AM
-    { quote: "Lunch tastes better when seasoned with the wisdom of completed workouts", author: "Confucius" }, // 12PM
-    { quote: "Be like water... flowing around excuses and into the gym", author: "Bruce Lee" }, // 1PM
-    { quote: "To workout or not to workout... that is NOT the question. The answer is always workout", author: "Shakespeare" }, // 2PM
-    { quote: "I'M A GENIUS! And geniuses work out at 3PM when everyone else is slacking", author: "Kanye West" }, // 3PM
-    { quote: "I am speed... especially when running away from my responsibilities to the gym", author: "Lightning McQueen" }, // 4PM
-    { quote: "The unexamined workout is not worth living... but examined or not, DO THE WORKOUT", author: "Socrates" }, // 5PM
-    { quote: "Think different... like working out while others are watching Netflix", author: "Steve Jobs" }, // 6PM
-    { quote: "Bam! A little workout spice makes everything nice, even your evening routine", author: "Emeril Lagasse" }, // 7PM
-    { quote: "Don't hassle the Hoff... especially when I'm crushing my evening workout routine, baby!", author: "David Hasselhoff" }, // 8PM
-    { quote: "I'm Batman... and Batman never skips leg day, even in the darkness", author: "Batman" }, // 9PM
-    { quote: "The power of alternating current is nothing compared to the power of alternating workout days", author: "Tesla" }, // 10PM
-    { quote: "Chuck Norris doesn't do push-ups... he pushes the Earth down. But you should still do yours", author: "Chuck Norris" } // 11PM
+  const allMessages = [
+    // 12 AM - 1 AM
+    { quote: "I'LL BE BACK... after this midnight workout, because I NEVER STOP!", author: "Arnold Schwarzenegger" },
+    { quote: "Sleep is for people who skipped the gym.", author: "Ron Burgundy" },
+    { quote: "I'm a rider... even at 1 AM.", author: "Zanger Rinus" },
+    { quote: "Your dreams can wait, your gains can't.", author: "Arnold Schwarzenegger" },
+    
+    // 1 AM - 2 AM
+    { quote: "If it's quiet, your grunts will echo.", author: "Will Ferrell" },
+    { quote: "Leg day at 1 AM. Because why not scare the janitor?", author: "Rocky Balboa" },
+    { quote: "Vandaag is wit… van de sportschoolverlichting op je gezicht.", author: "Guus Meeuwis" },
+    { quote: "This is the hour legends are made… and sleep-deprived.", author: "Muhammad Ali" },
+    
+    // 2 AM - 3 AM
+    { quote: "Push till your shadow leaves.", author: "David Hasselhoff" },
+    { quote: "You said you'd start tomorrow. Welcome to tomorrow.", author: "Dwayne Johnson" },
+    { quote: "Ik draai nog een plaatje, jij nog een setje.", author: "Zanger Rinus" },
+    { quote: "The weights don't judge, but I do.", author: "Gordon Ramsay" },
+    
+    // 3 AM - 4 AM
+    { quote: "Your pillow is for the weak.", author: "Scooter" },
+    { quote: "If you're here at 3 AM, you're either insane or unstoppable.", author: "Terry Crews" },
+    { quote: "Vandaag is grijs… maar jouw wilskracht is goud.", author: "Guus Meeuwis" },
+    { quote: "Train like the sun is watching.", author: "Muhammad Ali" },
+    
+    // 4 AM - 5 AM
+    { quote: "Only ghosts and gains live here.", author: "Ron Burgundy" },
+    { quote: "Beat the sunrise, own the day.", author: "Rocky Balboa" },
+    { quote: "Ik start de dag met push-ups, jij met smoesjes.", author: "Zanger Rinus" },
+    { quote: "Your competition is still asleep.", author: "Arnold Schwarzenegger" },
+    
+    // 5 AM - 6 AM
+    { quote: "HYPER HYPER! THE DAY IS YOURS!", author: "Scooter" },
+    { quote: "The early set catches the glory.", author: "Dwayne Johnson" },
+    { quote: "Vandaag is goud… als je nieuwe PR.", author: "Guus Meeuwis" },
+    { quote: "If you're lifting now, you've already won.", author: "Muhammad Ali" },
+    
+    // 6 AM - 7 AM
+    { quote: "One last set before breakfast destroys your abs.", author: "Gordon Ramsay" },
+    { quote: "Do. Or do not. At sunrise, there is no excuse.", author: "Yoda" },
+    { quote: "You miss 100% of the morning push-ups… enjoy your printer-ink body.", author: "Michael Scott" },
+    { quote: "Vandaag is rood… van het zweet dat van je voorhoofd druipt.", author: "Guus Meeuwis" },
+    
+    // 7 AM - 8 AM
+    { quote: "If you want results, wake up before the excuses do.", author: "Muhammad Ali" },
+    { quote: "Run like you stole breakfast from Gordon Ramsay's kitchen.", author: "Gordon Ramsay" },
+    { quote: "Rise and shine, champ — even my grandma ran faster… and she's been gone for ten years.", author: "Rocky Balboa" },
+    { quote: "Ik ben een rijder… en ik doe m'n push-ups buiten in de regen.", author: "Zanger Rinus" },
+    
+    // 8 AM - 9 AM
+    { quote: "No traffic at this hour — except for you, sprinting past your limits.", author: "Usain Bolt" },
+    { quote: "Bench press like you're proving something to your ex's new boyfriend.", author: "Ron Burgundy" },
+    { quote: "HYPER HYPER! FASTER HARDER STRONGER — YOUR BOSS CAN WAIT!", author: "Scooter" },
+    { quote: "If you can lift it before 9, you own the whole day.", author: "Arnold Schwarzenegger" },
+    
+    // 9 AM - 10 AM
+    { quote: "Push now, type later. The laptop isn't going anywhere.", author: "Dwayne Johnson" },
+    { quote: "Don't just sit there — chair dips won't break your Zoom connection.", author: "Will Ferrell" },
+    { quote: "De weg naar geluk begint met een set squats.", author: "Guus Meeuwis" },
+    { quote: "Make the printer jealous. It's the only thing here working as hard as you.", author: "Michael Scott" },
+    
+    // 10 AM - 11 AM
+    { quote: "Flex break! Show the interns what real gains look like.", author: "Terry Crews" },
+    { quote: "Hydrate like you're about to arm-wrestle Poseidon.", author: "Jason Momoa" },
+    { quote: "Punch the bag like it owes you lunch money.", author: "Rocky Balboa" },
+    { quote: "If the dumbbell feels heavy, remember — it's lighter than regret.", author: "Arnold Schwarzenegger" },
+    
+    // 11 AM - 12 PM
+    { quote: "Eén liedje, één set, en dan weer door. Dit is geen koffiepauze.", author: "Zanger Rinus" },
+    { quote: "Go hard now so you can eat like a king at noon.", author: "Dwayne Johnson" },
+    { quote: "Your arms should be shaking harder than the office coffee machine.", author: "Will Ferrell" },
+    { quote: "Vandaag is geel… van de zon op je rug tijdens het rennen.", author: "Guus Meeuwis" },
+    
+    // 12 PM - 1 PM
+    { quote: "If you're not sweating, you're just rearranging furniture.", author: "Gordon Ramsay" },
+    { quote: "Do curls until your fork feels like a dumbbell.", author: "Ron Burgundy" },
+    { quote: "Lunch tastes better after lunges.", author: "Michael Scott" },
+    { quote: "Even my salad has more crunch than your core.", author: "Gordon Ramsay" },
+    
+    // 1 PM - 2 PM
+    { quote: "Ik fiets naar m'n gains, jij fietst naar de snackbar.", author: "Zanger Rinus" },
+    { quote: "Stand up. Squat. Scare your coworkers.", author: "Will Ferrell" },
+    { quote: "Push-ups at 1 PM — because coffee only wakes the mind, not the body.", author: "Rocky Balboa" },
+    { quote: "Vandaag is blauw… van je benen na die squats.", author: "Guus Meeuwis" },
+    
+    // 2 PM - 3 PM
+    { quote: "If you're not working out, you're working on your excuses.", author: "Arnold Schwarzenegger" },
+    { quote: "Wake up those legs before your brain falls asleep.", author: "Dwayne Johnson" },
+    { quote: "If your posture drops, so does your reputation.", author: "Ron Burgundy" },
+    { quote: "Ik train, ik lach, ik leef. Jij zit nog steeds achter je bureau.", author: "Zanger Rinus" },
+    
+    // 3 PM - 4 PM
+    { quote: "No meeting will pump you up like this set will.", author: "Terry Crews" },
+    { quote: "Lift now, so you don't lift regrets later.", author: "Muhammad Ali" },
+    { quote: "Do it for the pump… and for that mirror selfie at 4 PM.", author: "Arnold Schwarzenegger" },
+    { quote: "Vandaag is groen… als je nieuwe personal best.", author: "Guus Meeuwis" },
+    
+    // 4 PM - 5 PM
+    { quote: "If you can still text during the set, add weight.", author: "Gordon Ramsay" },
+    { quote: "Punch out of work, punch into the gym.", author: "Rocky Balboa" },
+    { quote: "Your commute home is the cooldown. No skipping the main set.", author: "Dwayne Johnson" },
+    { quote: "Ik trek mijn sportpak aan, jij je jas. We weten wie wint.", author: "Zanger Rinus" },
+    
+    // 5 PM - 6 PM
+    { quote: "If you don't sweat now, you'll cry later.", author: "Scooter" },
+    { quote: "This is the real happy hour.", author: "Will Ferrell" },
+    { quote: "Load the bar like you load your plate — with ambition.", author: "Arnold Schwarzenegger" },
+    { quote: "Vandaag is paars… van de spierpijn morgen.", author: "Guus Meeuwis" },
+    
+    // 6 PM - 7 PM
+    { quote: "If you leave now, you're only cheating yourself.", author: "Muhammad Ali" },
+    { quote: "Lift like your dinner depends on it.", author: "Gordon Ramsay" },
+    { quote: "Train like you're about to run through a wall.", author: "Rocky Balboa" },
+    { quote: "Ik ren, ik lach, ik zing… en ik win.", author: "Zanger Rinus" },
+    
+    // 7 PM - 8 PM
+    { quote: "Every rep now is one less excuse later.", author: "Dwayne Johnson" },
+    { quote: "The day isn't over until your muscles say so.", author: "Terry Crews" },
+    { quote: "Sweat more now, shine more later.", author: "Arnold Schwarzenegger" },
+    { quote: "Vandaag is oranje… van de zon die ondergaat tijdens je run.", author: "Guus Meeuwis" },
+    
+    // 8 PM - 9 PM
+    { quote: "If your shirt is dry, you haven't worked out.", author: "Scooter" },
+    { quote: "Don't go to bed. The bed is for cowards.", author: "David Hasselhoff" },
+    { quote: "If you can still walk after leg day… you didn't do leg day.", author: "Rocky Balboa" },
+    { quote: "Ik spring, ik stoot, ik scoor.", author: "Zanger Rinus" },
+    
+    // 9 PM - 10 PM
+    { quote: "Your couch is whispering. Ignore it.", author: "Ron Burgundy" },
+    { quote: "Champions finish when others Netflix.", author: "Dwayne Johnson" },
+    { quote: "HYPER HYPER! NIGHT TIME IS LIFT TIME!", author: "Scooter" },
+    { quote: "Vandaag is zwart… van de nacht, maar jij blijft gaan.", author: "Guus Meeuwis" },
+    
+    // 10 PM - 11 PM
+    { quote: "Push harder — the world isn't watching, but you are.", author: "Muhammad Ali" },
+    { quote: "If you're still here, you're already winning.", author: "Terry Crews" },
+    { quote: "Train now, sleep like royalty.", author: "Arnold Schwarzenegger" },
+    { quote: "Ik doe nog een rondje… jij doet nog een excuus.", author: "Zanger Rinus" },
+    
+    // 11 PM - 12 AM
+    { quote: "One more set. Your bed will forgive you.", author: "Will Ferrell" },
+    { quote: "The iron doesn't care what time it is.", author: "Dwayne Johnson" },
+    { quote: "If you lift at midnight, you own tomorrow.", author: "Rocky Balboa" },
+    { quote: "Vandaag is zilver… als je medaille voor doorzettingsvermogen.", author: "Guus Meeuwis" }
   ]
-  return messages[hour] || messages[0]
+  
+  // Get 4 messages for the current hour, cycling through them based on minutes
+  const baseIndex = hour * 4
+  const minute = new Date().getMinutes()
+  const cycleIndex = Math.floor(minute / 15) // Change every 15 minutes
+  const messageIndex = (baseIndex + cycleIndex) % allMessages.length
+  
+  return allMessages[messageIndex] || allMessages[0]
 }
 
-// Helper function to get hourly messages for when daily target is achieved with fake attributions
+// Helper function to get messages for when daily target is achieved - uses same quotes with different cycling
 const getTargetAchievedMessage = (hour: number): { quote: string, author: string } => {
-  const messages = [
-    { quote: "Float like a butterfly, sting like a bee, and CRUSH midnight goals like ME!", author: "Muhammad Ali" }, // 12AM
-    { quote: "Genius is 1% inspiration, 99% perspiration... and you just NAILED both at 1AM!", author: "Thomas Edison" }, // 1AM
-    { quote: "Everyone has a plan until they get hit... but YOU hit your target first, KNOCKOUT!", author: "Mike Tyson" }, // 2AM
-    { quote: "Strong with the Force, you are. Complete your daily target, you have. Proud, I am", author: "Yoda" }, // 3AM
-    { quote: "I came, I saw, I conquered the ENTIRE known world... but you conquered your 4AM target!", author: "Alexander the Great" }, // 4AM
-    { quote: "GOOD. You got after it at 5AM. Discipline equals freedom. Target: DESTROYED", author: "Jocko Willink" }, // 5AM
-    { quote: "Write drunk, edit sober... workout consistently, achieve greatness at 6AM", author: "Ernest Hemingway" }, // 6AM
-    { quote: "Winners never quit, and quitters never win... and you just WON the morning!", author: "Vince Lombardi" }, // 7AM
-    { quote: "I took it personal... when people said they couldn't hit targets. But you? You DIFFERENT", author: "Michael Jordan" }, // 8AM
-    { quote: "GET TO THE CHOPPER! Because you just TERMINATED your daily target!", author: "Arnold Schwarzenegger" }, // 9AM
-    { quote: "Mamba mentality means attacking every single day... and you just DOMINATED this one", author: "Kobe Bryant" }, // 10AM
-    { quote: "Veni, vidi, vici... I came, I saw, I conquered Rome. You conquered your 11AM target", author: "Julius Caesar" }, // 11AM
-    { quote: "WHERE'S THE LAMB SAUCE?! Oh wait, you brought the SAUCE with this target completion!", author: "Gordon Ramsay" }, // 12PM
-    { quote: "I don't like to lose... and clearly neither do you. Target SERVED at 1PM!", author: "Serena Williams" }, // 1PM
-    { quote: "The way I see it, if you want the rainbow, you gotta put up with the rain... TARGET ACHIEVED!", author: "Tiger Woods" }, // 2PM
-    { quote: "HARD WORK! DEDICATION! I'm TBE - The Best Ever, but you're TBE at hitting targets!", author: "Floyd Mayweather" }, // 3PM
-    { quote: "We're not here to take part, we're here to take over... and you TOOK OVER this target!", author: "Conor McGregor" }, // 4PM
-    { quote: "AND HIS NAME IS... TARGET CRUSHER! You can't see me, but you can see VICTORY!", author: "John Cena" }, // 5PM
-    { quote: "I'm not a businessman, I'm a business, man... and your business is CRUSHING TARGETS!", author: "LeBron James" }, // 6PM
-    { quote: "I conquered the largest continuous land empire in history... impressive, but have you seen this target completion?", author: "Genghis Khan" }, // 7PM
-    { quote: "Welcome to Earth! *punches target completion button* Now THAT'S how we do it!", author: "Will Smith" }, // 8PM
-    { quote: "I don't want no trouble... but if trouble is hitting targets, then BRING THE TROUBLE!", author: "Jackie Chan" }, // 9PM
-    { quote: "Rest in Peace... to your excuses. The Undertaker of targets has ARRIVED", author: "The Undertaker" }, // 10PM
-    { quote: "It ain't about how hard you hit, it's about how hard you can get hit and keep moving forward... TARGET DOWN!", author: "Rocky Balboa" } // 11PM
-  ]
-  return messages[hour] || messages[0]
+  // Use the same quote system but cycle differently to show variety when target is achieved
+  const message = getHourlyMessage(hour)
+  return {
+    quote: `🎯 TARGET ACHIEVED! ${message.quote}`,
+    author: message.author
+  }
 }
 
 // Helper function to convert Tailwind classes to organic gradient styles
