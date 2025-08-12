@@ -1191,31 +1191,18 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot - test with minimal query first
-      const { data: allPayments, error: allPaymentsError } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .limit(10)
-
-      console.log('All payments test:', allPayments)
-      if (allPaymentsError) {
-        console.error('Error loading all payments:', allPaymentsError)
-      }
-
-      // Now try penalty-specific query
+      // 2. Money Pot - load group penalty data
       const { data: groupPenalties, error: penaltyError } = await supabase
         .from('payment_transactions')
-        .select('amount, user_id, group_id, transaction_type')
+        .select('amount, user_id, profiles!inner(username)')
+        .eq('group_id', profile.group_id)
         .eq('transaction_type', 'penalty')
 
       if (penaltyError) {
         console.error('Error loading group penalties:', penaltyError)
       }
-      console.log('All penalty data:', groupPenalties)
-      console.log('Profile group_id:', profile.group_id)
 
       const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
-      console.log('Total penalty amount:', totalPenaltyAmount)
       
       // Find biggest penalty payer
       const userPenaltyMap = new Map()
@@ -1384,21 +1371,18 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution) - test with simplified query
+      // 2. Personal Money Pot (your contribution)
       const { data: userPenalties, error: userPenaltyError } = await supabase
         .from('payment_transactions')
-        .select('amount, user_id, transaction_type')
-        .eq('transaction_type', 'penalty')
+        .select('amount')
         .eq('user_id', user.id)
+        .eq('transaction_type', 'penalty')
 
       if (userPenaltyError) {
         console.error('Error loading user penalties:', userPenaltyError)
       }
-      console.log('User penalties data:', userPenalties)
-      console.log('Querying user_id:', user.id)
 
       const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
-      console.log('Personal money contribution:', personalMoneyContribution)
 
       // 3. Personal Birthday - use real birth date from profile
       let nextBirthdayDays = 0
