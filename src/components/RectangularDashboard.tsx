@@ -2025,7 +2025,7 @@ export default function RectangularDashboard() {
             {/* DAY Block - Background removed, content left-aligned, "Day" moved above number */}
             <div className="relative">
               {/* DAY Content - No background block */}
-              <div className="py-6 px-4 text-left">
+              <div className="py-2 px-4 text-left">
                 <div className="flex flex-col justify-start items-start">
                   <div className="text-6xl font-black text-white drop-shadow-lg mb-2">
                     {challengeDay}
@@ -2047,8 +2047,8 @@ export default function RectangularDashboard() {
 
           {/* Motivational Quote - Moved below DAY and Time components */}
           {groupStartDate && (
-            <div className="mx-1 my-6">
-              <div className="px-6 py-4">
+            <div className="mx-1 my-2">
+              <div className="px-6 py-2">
                 <div className={`text-left ${isAnimationLoaded ? 'animate-sentence-enter' : ''}`}>
                   {(() => {
                     // Find current user's progress
@@ -2401,7 +2401,7 @@ export default function RectangularDashboard() {
             {/* Workout Times - Full width block */}
             <div className="relative">
               <div 
-                className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                className="mx-1 mb-24 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
                 style={{
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
