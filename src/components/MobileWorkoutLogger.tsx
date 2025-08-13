@@ -626,7 +626,7 @@ export default function MobileWorkoutLogger() {
       <div className="min-h-screen bg-black pb-20">
       {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
-        <div className="bg-black/50 backdrop-blur-sm border-b border-white/10 relative overflow-hidden rounded-t-2xl shadow-2xl">
+        <div className="bg-black/50 backdrop-blur-sm border-b border-white/10 relative overflow-hidden shadow-2xl">
           {/* Stacked gradient progress bar background with subtle animation */}
           <div 
             className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
