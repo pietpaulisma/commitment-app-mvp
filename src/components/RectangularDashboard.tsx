@@ -1990,7 +1990,7 @@ export default function RectangularDashboard() {
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
-      <div className="pb-6">
+      <div className="pb-20">
 
       
       {/* Logo and Quote Box */}
