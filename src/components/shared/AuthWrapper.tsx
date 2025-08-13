@@ -33,7 +33,7 @@ export default function AuthWrapper({
 
   // Show loading while auth or profile is loading
   if (authLoading || (requireAuth && profileLoading)) {
-    return <LoadingSpinner fullScreen message={loadingMessage} />
+    return <LoadingSpinner branded={true} fullScreen message={loadingMessage} />
   }
 
   // If auth is required but user doesn't exist, don't render

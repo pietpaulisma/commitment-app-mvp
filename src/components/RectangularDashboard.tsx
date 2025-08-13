@@ -10,6 +10,7 @@ import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, Cha
 import TimeDisplay from './TimeDisplay'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { useWeekMode } from '@/contexts/WeekModeContext'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
 
 // Helper function to get motivational messages - 4 quotes per hour that cycle
 const getHourlyMessage = (hour: number): { quote: string, author: string } => {
@@ -1969,11 +1970,8 @@ export default function RectangularDashboard() {
 
   if (authLoading || profileLoading || loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-2 border-gray-300 border-t-purple-500 mx-auto"></div>
-          <p className="mt-2 text-gray-400">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-black text-white">
+        <LoadingSpinner branded={true} fullScreen={true} message="Loading dashboard..." />
       </div>
     )
   }

@@ -6,11 +6,14 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import BrandedLoader, { WORKOUT_STAGES } from '@/components/shared/BrandedLoader'
+import { useLoadingStages } from '@/hooks/useLoadingStages'
 
 export default function WorkoutPage() {
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
+  const { currentStage, setStage, complete } = useLoadingStages(WORKOUT_STAGES)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -18,15 +21,20 @@ export default function WorkoutPage() {
     }
   }, [user, authLoading, router])
 
+  // Update loading stages
+  useEffect(() => {
+    if (authLoading) {
+      setStage('auth')
+    } else if (profileLoading) {
+      setStage('profile')
+    } else if (!authLoading && !profileLoading) {
+      setStage('exercises')
+      setTimeout(() => complete(), 500) // Simulate exercises loading
+    }
+  }, [authLoading, profileLoading, setStage, complete])
+
   if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
+    return <BrandedLoader currentStage={currentStage} message="Getting your workout ready..." />
   }
 
   if (!user || !profile) {

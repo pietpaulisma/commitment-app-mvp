@@ -1,9 +1,12 @@
+import BrandedLoader from './BrandedLoader'
+
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg'
   color?: 'white' | 'blue' | 'red' | 'green'
   fullScreen?: boolean
   message?: string
   className?: string
+  branded?: boolean // New option for branded loader
 }
 
 export default function LoadingSpinner({ 
@@ -11,8 +14,13 @@ export default function LoadingSpinner({
   color = 'white', 
   fullScreen = false,
   message = 'Loading...',
-  className = ''
+  className = '',
+  branded = false
 }: LoadingSpinnerProps) {
+  // Use branded loader when requested
+  if (branded) {
+    return <BrandedLoader message={message} fullScreen={fullScreen} className={className} />
+  }
   const sizeClasses = {
     sm: 'h-6 w-6',
     md: 'h-8 w-8', 

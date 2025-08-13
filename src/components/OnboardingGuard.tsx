@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { supabase } from '@/lib/supabase'
+import BrandedLoader, { AUTH_STAGES } from '@/components/shared/BrandedLoader'
+import { useLoadingStages } from '@/hooks/useLoadingStages'
 
 interface OnboardingGuardProps {
   children: React.ReactNode
@@ -20,6 +22,9 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const [shouldRefreshProfile, setShouldRefreshProfile] = useState(false)
   const mountedRef = useRef(false)
   const lastPathnameRef = useRef(pathname)
+  
+  // Loading stages management
+  const { currentStage, setStage, complete } = useLoadingStages(AUTH_STAGES)
 
   // Re-enabled with better supreme admin handling
 
@@ -199,16 +204,20 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   }, [user, profile, authLoading, profileLoading, pathname, router, isCreatingSupremeAdmin, hasChecked, shouldRefreshProfile])
 
 
+  // Update loading stages based on current state
+  useEffect(() => {
+    if (authLoading) {
+      setStage('auth')
+    } else if (profileLoading || shouldRefreshProfile) {
+      setStage('profile')
+    } else if (!authLoading && !profileLoading) {
+      complete()
+    }
+  }, [authLoading, profileLoading, shouldRefreshProfile, setStage, complete])
+
   // Show loading state while checking onboarding status
   if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-400 mx-auto"></div>
-          <p className="mt-2 text-gray-400">Loading...</p>
-        </div>
-      </div>
-    )
+    return <BrandedLoader currentStage={currentStage} />
   }
 
   return <>{children}</>
