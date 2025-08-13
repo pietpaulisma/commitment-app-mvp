@@ -29,7 +29,7 @@ export default function Dashboard() {
       {/* Time-based gradient background */}
       <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" />
       
-      <div className="relative min-h-screen">
+      <div className="relative">
       {/* Components with transparent/relative positioning */}
       <div className="relative z-10">
         <RectangularNavigation 
