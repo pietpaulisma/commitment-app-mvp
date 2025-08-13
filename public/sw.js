@@ -1,7 +1,15 @@
-const CACHE_NAME = 'commitment-app-v1'
+const CACHE_NAME = 'commitment-app-v2'
+const STATIC_CACHE = 'commitment-static-v2'
+const RUNTIME_CACHE = 'commitment-runtime-v2'
+
 const urlsToCache = [
   '/',
   '/dashboard',
+  '/workout',
+  '/targets',
+  '/leaderboard', 
+  '/profile',
+  '/admin',
   '/login',
   '/manifest.json',
   '/icon.svg',
@@ -12,57 +20,108 @@ const urlsToCache = [
 
 // Install service worker and cache resources
 self.addEventListener('install', (event) => {
+  self.skipWaiting() // Activate immediately
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+    Promise.all([
+      caches.open(STATIC_CACHE).then((cache) => cache.addAll(urlsToCache)),
+      caches.open(RUNTIME_CACHE)
+    ])
   )
 })
 
-// Fetch event - serve from cache, fallback to network
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response
-        }
-        
-        // Clone the request
-        const fetchRequest = event.request.clone()
-        
-        return fetch(fetchRequest).then((response) => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response
-          }
-          
-          // Clone the response
-          const responseToCache = response.clone()
-          
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseToCache)
-            })
-          
-          return response
-        })
-      }
-    )
-  )
-})
-
-// Activate service worker and clean old caches
+// Activate service worker immediately and take control
 self.addEventListener('activate', (event) => {
+  self.clients.claim() // Take control immediately
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== STATIC_CACHE && cacheName !== RUNTIME_CACHE) {
             return caches.delete(cacheName)
           }
         })
       )
     })
   )
+})
+
+// Advanced fetch strategy for better caching
+self.addEventListener('fetch', (event) => {
+  const { request } = event
+  const url = new URL(request.url)
+  
+  // Skip cross-origin requests
+  if (url.origin !== location.origin) return
+  
+  // Handle navigation requests (app pages)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          // Return cached version immediately, then fetch update in background
+          fetch(request).then((response) => {
+            if (response.ok) {
+              caches.open(STATIC_CACHE).then((cache) => {
+                cache.put(request, response.clone())
+              })
+            }
+          }).catch(() => {}) // Silently fail background updates
+          
+          return cachedResponse
+        }
+        
+        // No cache, try network
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone()
+            caches.open(STATIC_CACHE).then((cache) => {
+              cache.put(request, responseClone)
+            })
+          }
+          return response
+        }).catch(() => {
+          // Network failed, return offline fallback
+          return caches.match('/dashboard')
+        })
+      })
+    )
+    return
+  }
+  
+  // Handle API and other requests
+  if (request.method === 'GET') {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        // For API calls, try network first, fallback to cache
+        if (url.pathname.includes('/api/') || url.hostname.includes('supabase')) {
+          return fetch(request).then((response) => {
+            if (response.ok) {
+              const responseClone = response.clone()
+              caches.open(RUNTIME_CACHE).then((cache) => {
+                cache.put(request, responseClone)
+              })
+            }
+            return response
+          }).catch(() => {
+            return cachedResponse || new Response('Offline', { status: 503 })
+          })
+        }
+        
+        // For static assets, use cache-first strategy
+        if (cachedResponse) {
+          return cachedResponse
+        }
+        
+        return fetch(request).then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone()
+            caches.open(RUNTIME_CACHE).then((cache) => {
+              cache.put(request, responseClone)
+            })
+          }
+          return response
+        })
+      })
+    )
+  }
 })

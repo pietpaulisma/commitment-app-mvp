@@ -2,7 +2,7 @@
   "name": "Commitment Fitness App",
   "short_name": "Commitment",
   "description": "Track your fitness journey with commitment and consistency",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#f97316",
@@ -11,6 +11,9 @@
   "categories": ["fitness", "health", "lifestyle"],
   "prefer_related_applications": false,
   "related_applications": [],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
       "src": "/icon.svg",

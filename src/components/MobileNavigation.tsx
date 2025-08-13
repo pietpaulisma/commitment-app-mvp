@@ -113,6 +113,7 @@ export default function MobileNavigation() {
               <Link
                 key={item.name}
                 href={item.href}
+                prefetch={true}
                 className={`flex flex-col items-center justify-center py-2 px-1 text-xs font-medium transition-colors ${
                   isActive
                     ? 'text-blue-400 bg-blue-900/30'
@@ -132,13 +133,14 @@ export default function MobileNavigation() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-xl font-bold text-white">
+              <Link href="/dashboard" prefetch={true} className="text-xl font-bold text-white">
                 Commitment App
               </Link>
               
               <div className="flex space-x-6">
                 <Link 
                   href="/dashboard" 
+                  prefetch={true}
                   className="text-gray-300 hover:text-white"
                 >
                   Dashboard
@@ -146,6 +148,7 @@ export default function MobileNavigation() {
                 
                 <Link 
                   href="/workout" 
+                  prefetch={true}
                   className="text-gray-300 hover:text-white"
                 >
                   Log Workout
@@ -153,6 +156,7 @@ export default function MobileNavigation() {
 
                 <Link 
                   href="/leaderboard" 
+                  prefetch={true}
                   className="text-gray-300 hover:text-white"
                 >
                   Leaderboard
@@ -160,6 +164,7 @@ export default function MobileNavigation() {
 
                 <Link 
                   href="/targets" 
+                  prefetch={true}
                   className="text-gray-300 hover:text-white"
                 >
                   Targets
@@ -168,6 +173,7 @@ export default function MobileNavigation() {
                 {isGroupAdmin && !isSupremeAdmin && (
                   <Link 
                     href="/group-admin" 
+                    prefetch={true}
                     className="text-blue-600 hover:text-blue-800 font-medium"
                   >
                     Manage Group
@@ -177,6 +183,7 @@ export default function MobileNavigation() {
                 {hasAdminPrivileges && (
                   <Link 
                     href="/admin" 
+                    prefetch={true}
                     className="text-blue-600 hover:text-blue-800 font-medium"
                   >
                     Admin Panel
@@ -187,18 +194,21 @@ export default function MobileNavigation() {
                   <>
                     <Link 
                       href="/admin/exercises" 
+                      prefetch={true}
                       className="text-purple-600 hover:text-purple-800 font-medium"
                     >
                       Manage Exercises
                     </Link>
                     <Link 
                       href="/admin/groups" 
+                      prefetch={true}
                       className="text-purple-600 hover:text-purple-800 font-medium"
                     >
                       Manage Groups
                     </Link>
                     <Link 
                       href="/admin/users" 
+                      prefetch={true}
                       className="text-purple-600 hover:text-purple-800 font-medium"
                     >
                       Manage Users
@@ -211,6 +221,7 @@ export default function MobileNavigation() {
             <div className="flex items-center space-x-4">
               <Link 
                 href="/profile" 
+                prefetch={true}
                 className="text-sm text-gray-600 hover:text-gray-900"
               >
                 <span className="text-gray-600">Signed in as </span>

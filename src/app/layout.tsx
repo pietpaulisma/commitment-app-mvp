@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { WeekModeProvider } from "@/contexts/WeekModeContext";
 import OnboardingGuard from "@/components/OnboardingGuard";
 import DevTestingPanel from "@/components/DevTestingPanel";
+import PageStateProvider from "@/components/PageStateProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -126,7 +127,9 @@ export default function RootLayout({
         <AuthProvider>
           <WeekModeProvider>
             <OnboardingGuard>
-              {children}
+              <PageStateProvider>
+                {children}
+              </PageStateProvider>
             </OnboardingGuard>
           </WeekModeProvider>
         </AuthProvider>
