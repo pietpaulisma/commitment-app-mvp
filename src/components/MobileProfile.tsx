@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import AuthWrapper from '@/components/shared/AuthWrapper'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import { getWorkoutStats } from '@/utils/supabaseQueries'
 
 type WorkoutStats = {
   total_workouts: number
@@ -18,18 +21,11 @@ type WorkoutStats = {
 }
 
 export default function MobileProfile() {
-  const { user, loading: authLoading, signOut } = useAuth()
-  const { profile, loading: profileLoading } = useProfile()
-  const router = useRouter()
+  const { user, signOut } = useAuth()
+  const { profile } = useProfile()
   
   const [workoutStats, setWorkoutStats] = useState<WorkoutStats | null>(null)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
-    }
-  }, [user, authLoading, router])
 
   useEffect(() => {
     if (profile) {
@@ -42,67 +38,8 @@ export default function MobileProfile() {
 
     setLoading(true)
     try {
-      const { data: workouts } = await supabase
-        .from('logs')
-        .select('points, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
-
-      if (!workouts || workouts.length === 0) {
-        setWorkoutStats({
-          total_workouts: 0,
-          total_points: 0,
-          avg_points_per_workout: 0,
-          first_workout: null,
-          last_workout: null,
-          best_day: null,
-          current_streak: 0
-        })
-        return
-      }
-
-      const totalWorkouts = workouts.length
-      const totalPoints = workouts.reduce((sum, w) => sum + (w.points || 0), 0)
-      const avgPointsPerWorkout = totalPoints / totalWorkouts
-
-      const firstWorkout = workouts[0].created_at
-      const lastWorkout = workouts[workouts.length - 1].created_at
-
-      const dayCount: Record<string, number> = {}
-      workouts.forEach(workout => {
-        const day = new Date(workout.created_at).toLocaleDateString('en-US', { weekday: 'long' })
-        dayCount[day] = (dayCount[day] || 0) + 1
-      })
-      const bestDay = Object.keys(dayCount).reduce((a, b) => dayCount[a] > dayCount[b] ? a : b, 'None')
-
-      // Simple streak calculation
-      const { data: checkins } = await supabase
-        .from('daily_checkins')
-        .select('date, is_complete')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(30)
-
-      let currentStreak = 0
-      if (checkins) {
-        for (const checkin of checkins) {
-          if (checkin.is_complete) {
-            currentStreak++
-          } else {
-            break
-          }
-        }
-      }
-
-      setWorkoutStats({
-        total_workouts: totalWorkouts,
-        total_points: totalPoints,
-        avg_points_per_workout: avgPointsPerWorkout,
-        first_workout: firstWorkout,
-        last_workout: lastWorkout,
-        best_day: bestDay,
-        current_streak: currentStreak
-      })
+      const stats = await getWorkoutStats(user.id)
+      setWorkoutStats(stats)
     } catch (error) {
       console.error('Error loading workout stats:', error)
     } finally {
@@ -111,30 +48,13 @@ export default function MobileProfile() {
   }
 
 
-  if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
-          <p className="mt-2 text-gray-400">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user || !profile) {
-    return null
-  }
-
-  // Use actual username from profile
-  const username = profile.username || 'User'
-
   return (
+    <AuthWrapper loadingMessage="Loading profile...">
     <div className="min-h-screen bg-black pb-20">
       {/* Dashboard-style Header */}
       <div className="px-4 pt-8 pb-6">
         <h1 className="text-4xl font-black text-white mb-2">Profile</h1>
-        <p className="text-xl text-gray-300">Hey, {username}!</p>
+        <p className="text-xl text-gray-300">Hey, {profile?.username || 'User'}!</p>
       </div>
 
       <div className="px-4 space-y-6">
@@ -143,9 +63,8 @@ export default function MobileProfile() {
           <h2 className="text-2xl font-bold text-white mb-4">Your Statistics</h2>
           
           {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto"></div>
-              <p className="mt-2 text-gray-400 text-sm">Loading stats...</p>
+            <div className="py-8">
+              <LoadingSpinner size="sm" message="Loading stats..." />
             </div>
           ) : workoutStats ? (
             <div className="grid grid-cols-2 gap-0 border border-gray-800 rounded-lg overflow-hidden">
@@ -182,11 +101,11 @@ export default function MobileProfile() {
         </div>
 
         {/* Admin Tools Section */}
-        {(profile.role === 'supreme_admin' || profile.role === 'group_admin') && (
+        {(profile?.role === 'supreme_admin' || profile?.role === 'group_admin') && (
           <div>
             <h2 className="text-2xl font-bold text-white mb-4">Admin Tools</h2>
             <div className="space-y-3">
-              {profile.role === 'supreme_admin' && (
+              {profile?.role === 'supreme_admin' && (
                 <>
                   <Link 
                     href="/admin"
@@ -204,7 +123,7 @@ export default function MobileProfile() {
                   </Link>
                 </>
               )}
-              {(profile.role === 'group_admin' || profile.role === 'supreme_admin') && (
+              {(profile?.role === 'group_admin' || profile?.role === 'supreme_admin') && (
                 <Link 
                   href="/group-admin"
                   className="w-full bg-gray-900/30 hover:bg-gray-900/50 text-white py-4 px-6 rounded-lg transition-colors flex items-center justify-between"
@@ -228,5 +147,6 @@ export default function MobileProfile() {
         </div>
       </div>
     </div>
+    </AuthWrapper>
   )
 }

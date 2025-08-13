@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient } from '@/utils/gradientUtils'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { useWeekMode } from '@/contexts/WeekModeContext'
+import { getUserColor, getUserColorHover } from '@/utils/colorUtils'
 
 type Exercise = {
   id: string
@@ -91,16 +92,9 @@ export default function MobileWorkoutLogger() {
     return colorArray[colorIndex]
   }
 
-  // Helper function to get darker version of user's color for hover states
-  const getUserColorHover = () => {
-    const color = getUserColor()
-    // Convert hex to RGB and darken it
-    const hex = color.replace('#', '')
-    const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - 20)
-    const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - 20)
-    const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - 20)
-    return `rgb(${r}, ${g}, ${b})`
-  }
+  // Get user colors based on their email
+  const userColor = getUserColor(user?.email)
+  const userColorHover = getUserColorHover(userColor)
 
   // Get exercise segments for stacked gradient progress bar
   const getExerciseSegments = () => {
@@ -587,7 +581,7 @@ export default function MobileWorkoutLogger() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-2 border-white/10 mx-auto" style={{ borderTopColor: getUserColor() }}></div>
+          <div className="animate-spin h-8 w-8 border-2 border-white/10 mx-auto" style={{ borderTopColor: userColor }}></div>
           <p className="mt-2 text-gray-400">Loading...</p>
         </div>
       </div>
@@ -612,10 +606,10 @@ export default function MobileWorkoutLogger() {
     <>
       <style jsx>{`
         .focus-ring:focus {
-          ring-color: ${getUserColor()};
+          ring-color: ${userColor};
         }
         .btn-hover:hover {
-          background-color: ${getUserColorHover()} !important;
+          background-color: ${userColorHover} !important;
         }
       `}</style>
       <div className="min-h-screen bg-black pb-20">
@@ -706,7 +700,7 @@ export default function MobileWorkoutLogger() {
                     className="bg-gray-900/30 backdrop-blur-xl hover:bg-gray-900/40 text-white p-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-2xl border border-white/5 mb-1"
                   >
                     <div className="text-center">
-                      <div className="text-lg font-black mb-1" style={{ color: getUserColor() }}>{exercise.points_per_unit}</div>
+                      <div className="text-lg font-black mb-1" style={{ color: userColor }}>{exercise.points_per_unit}</div>
                       <div className="text-sm font-medium mb-1">{exercise.name}</div>
                       <div className="text-xs text-gray-400 uppercase tracking-wide">per {exercise.unit}</div>
                     </div>
@@ -732,7 +726,7 @@ export default function MobileWorkoutLogger() {
                             <div className="text-xs text-gray-400">Recovery Exercise</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-lg font-black" style={{ color: getUserColor() }}>{exercise.points_per_unit}</div>
+                            <div className="text-lg font-black" style={{ color: userColor }}>{exercise.points_per_unit}</div>
                             <div className="text-xs text-gray-400">per {exercise.unit}</div>
                           </div>
                         </div>
@@ -790,7 +784,7 @@ export default function MobileWorkoutLogger() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-black" style={{ color: getUserColor() }}>{selectedExercise.points_per_unit}</div>
+                          <div className="text-2xl font-black" style={{ color: userColor }}>{selectedExercise.points_per_unit}</div>
                           <div className="text-xs text-gray-400">per {selectedExercise.unit}</div>
                         </div>
                       </div>
@@ -861,7 +855,7 @@ export default function MobileWorkoutLogger() {
                                 }
                               }
                               
-                              return <span className="text-lg font-bold" style={{ color: getUserColor() }}>{rawPoints}</span>
+                              return <span className="text-lg font-bold" style={{ color: userColor }}>{rawPoints}</span>
                             })()}
                           </div>
                         </div>
@@ -872,7 +866,7 @@ export default function MobileWorkoutLogger() {
                     <button 
                       type="submit"
                       className="w-full text-black py-4 px-4 rounded-3xl transition-all duration-300 font-black text-lg shadow-sm hover:scale-105 btn-hover"
-                      style={{ backgroundColor: getUserColor() }}
+                      style={{ backgroundColor: userColor }}
                     >
                       LOG WORKOUT
                     </button>
@@ -893,13 +887,13 @@ export default function MobileWorkoutLogger() {
               <div className="grid grid-cols-2 gap-1 mb-3 mx-1">
                 <div className="bg-gray-900/30 backdrop-blur-xl p-3 border border-white/5 rounded-3xl shadow-2xl">
                   <div className="text-center">
-                    <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getTotalPoints()}</div>
+                    <div className="text-3xl font-black mb-1" style={{ color: userColor }}>{getTotalPoints()}</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Total Points</div>
                   </div>
                 </div>
                 <div className="bg-gray-900/30 backdrop-blur-xl p-3 border border-white/5 rounded-3xl shadow-2xl">
                   <div className="text-center">
-                    <div className="text-3xl font-black mb-1" style={{ color: getUserColor() }}>{getRecoveryPercentage()}%</div>
+                    <div className="text-3xl font-black mb-1" style={{ color: userColor }}>{getRecoveryPercentage()}%</div>
                     <div className="text-xs text-gray-400 uppercase tracking-wide">Recovery</div>
                   </div>
                 </div>
@@ -909,7 +903,7 @@ export default function MobileWorkoutLogger() {
               {getRecoveryPercentage() > 25 && (
                 <div className="bg-gray-900/30 backdrop-blur-xl border border-white/5 rounded-3xl p-3 mb-3 mx-1">
                   <div className="text-center">
-                    <div className="text-sm font-medium mb-1" style={{ color: getUserColor() }}>Recovery Notice</div>
+                    <div className="text-sm font-medium mb-1" style={{ color: userColor }}>Recovery Notice</div>
                     <div className="text-xs text-gray-400">
                       Recovery exercises exceed 25% of your daily total
                     </div>

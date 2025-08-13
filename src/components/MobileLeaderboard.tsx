@@ -5,6 +5,8 @@ import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import AuthWrapper from '@/components/shared/AuthWrapper'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
 
 type LeaderboardEntry = {
   user_id: string
@@ -27,9 +29,8 @@ type GroupLeaderboard = {
 }
 
 export default function MobileLeaderboard() {
-  const { user, loading: authLoading } = useAuth()
-  const { profile, loading: profileLoading } = useProfile()
-  const router = useRouter()
+  const { user } = useAuth()
+  const { profile } = useProfile()
   
   const [individualLeaderboard, setIndividualLeaderboard] = useState<LeaderboardEntry[]>([])
   const [groupLeaderboard, setGroupLeaderboard] = useState<GroupLeaderboard[]>([])
@@ -37,12 +38,6 @@ export default function MobileLeaderboard() {
   const [loading, setLoading] = useState(true)
   const [currentUserRank, setCurrentUserRank] = useState<LeaderboardEntry | null>(null)
   const [activeTab, setActiveTab] = useState<'individual' | 'groups'>('individual')
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
-    }
-  }, [user, authLoading, router])
 
   useEffect(() => {
     if (user && profile) {
@@ -162,22 +157,8 @@ export default function MobileLeaderboard() {
     }
   }
 
-  if (authLoading || profileLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user || !profile) {
-    return null
-  }
-
   return (
+    <AuthWrapper loadingMessage="Loading leaderboard...">
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-4">
@@ -199,9 +180,8 @@ export default function MobileLeaderboard() {
       </div>
 
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading leaderboard...</p>
+        <div className="py-8">
+          <LoadingSpinner size="md" color="blue" message="Loading leaderboard..." />
         </div>
       ) : (
         <div className="px-4 space-y-4">
@@ -343,5 +323,6 @@ export default function MobileLeaderboard() {
         </div>
       )}
     </div>
+    </AuthWrapper>
   )
 }

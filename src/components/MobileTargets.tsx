@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import AuthWrapper from '@/components/shared/AuthWrapper'
+import LoadingSpinner from '@/components/shared/LoadingSpinner'
 
 type GroupSettings = {
   id: string
@@ -38,9 +40,8 @@ type TargetProgress = {
 }
 
 export default function MobileTargets() {
-  const { user, loading: authLoading } = useAuth()
-  const { profile, loading: profileLoading } = useProfile()
-  const router = useRouter()
+  const { user } = useAuth()
+  const { profile } = useProfile()
   
   const [groupSettings, setGroupSettings] = useState<GroupSettings | null>(null)
   const [recentProgress, setRecentProgress] = useState<TargetProgress[]>([])
@@ -49,12 +50,6 @@ export default function MobileTargets() {
   const [longestStreak, setLongestStreak] = useState(0)
   const [totalPenalties, setTotalPenalties] = useState(0)
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login')
-    }
-  }, [user, authLoading, router])
 
   useEffect(() => {
     if (user && profile) {
@@ -166,39 +161,27 @@ export default function MobileTargets() {
     return recentProgress.length > 0 ? (completedDays / recentProgress.length) * 100 : 0
   }
 
-  if (authLoading || profileLoading) {
+  if (!profile?.group_id) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
+      <AuthWrapper>
+        <div className="min-h-screen bg-gray-50 pb-20">
+          <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+            <h1 className="text-xl font-bold text-gray-900 text-center">Daily Targets</h1>
+          </div>
+          <div className="text-center py-12 px-4">
+            <div className="text-4xl mb-4">🎯</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">No Group Assigned</h2>
+            <p className="text-gray-600 mb-4">You need to be assigned to a group to track daily targets.</p>
+            <p className="text-gray-600">Contact an administrator to join a group.</p>
+          </div>
         </div>
-      </div>
-    )
-  }
-
-  if (!user || !profile) {
-    return null
-  }
-
-  if (!profile.group_id) {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4">
-          <h1 className="text-xl font-bold text-gray-900 text-center">Daily Targets</h1>
-        </div>
-        <div className="text-center py-12 px-4">
-          <div className="text-4xl mb-4">🎯</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">No Group Assigned</h2>
-          <p className="text-gray-600 mb-4">You need to be assigned to a group to track daily targets.</p>
-          <p className="text-gray-600">Contact an administrator to join a group.</p>
-        </div>
-      </div>
+      </AuthWrapper>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <AuthWrapper loadingMessage="Loading targets...">
+      <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-4">
         <h1 className="text-xl font-bold text-gray-900 text-center">Daily Targets</h1>
@@ -206,9 +189,8 @@ export default function MobileTargets() {
       </div>
 
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading target data...</p>
+        <div className="py-8">
+          <LoadingSpinner size="md" color="blue" message="Loading target data..." />
         </div>
       ) : (
         <div className="p-4 space-y-4">
@@ -372,6 +354,7 @@ export default function MobileTargets() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthWrapper>
   )
 }
