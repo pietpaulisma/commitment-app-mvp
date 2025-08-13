@@ -1411,7 +1411,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               />
               
               {/* Button Content */}
-              <div className="relative h-full flex items-center justify-between px-6 text-white">
+              <div className="relative flex items-center justify-between px-6 text-white" style={{ minHeight: 'calc(64px + env(safe-area-inset-top))' }}>
                 <div className="flex flex-col items-start">
                   <span className="font-bold text-sm tracking-tight uppercase">
                     {progressPercentage >= 100 ? 'Complete!' : 'Log Workout'}
