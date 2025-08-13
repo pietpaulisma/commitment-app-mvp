@@ -623,57 +623,65 @@ export default function MobileWorkoutLogger() {
           background-color: ${userColorHover} !important;
         }
       `}</style>
+      
+      <div className="min-h-screen bg-black pb-20">
+      
       {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
-        <div className="bg-black/50 backdrop-blur-sm border-b border-white/10 relative overflow-hidden shadow-2xl">
-          {/* Stacked gradient progress bar background with subtle animation */}
+        <div className="mx-1 mb-1">
           <div 
-            className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
-            style={{ 
-              width: progressAnimated ? '100%' : '80%',
-              background: isRecoveryDay 
-                ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
-                : createCumulativeGradient(todaysLogs || [], dailyTarget),
-              // Force cache invalidation
-              transform: `translateZ(${Date.now() % 1000}px)`
+            className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl relative overflow-hidden"
+            style={{
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
             }}
-          />
-          
-          {/* Content */}
-          <div className="relative px-4 py-6">
-            <div className="flex items-end justify-between">
-              <div>
-                <div className="flex items-baseline space-x-1">
-                  <span className="text-4xl font-black text-white">
-                    {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}
-                  </span>
-                  <span className="text-2xl font-thin text-white">PT</span>
+          >
+            {/* Stacked gradient progress bar background with subtle animation */}
+            <div 
+              className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
+              style={{ 
+                width: progressAnimated ? '100%' : '80%',
+                background: isRecoveryDay 
+                  ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
+                  : createCumulativeGradient(todaysLogs || [], dailyTarget),
+                // Force cache invalidation
+                transform: `translateZ(${Date.now() % 1000}px)`
+              }}
+            />
+            
+            {/* Content */}
+            <div className="relative px-4 py-6">
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="flex items-baseline space-x-1">
+                    <span className="text-4xl font-black text-white">
+                      {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}
+                    </span>
+                    <span className="text-2xl font-thin text-white">PT</span>
+                  </div>
+                  <p className="text-sm font-medium -mt-1 text-white">
+                    {isRecoveryDay 
+                      ? (getRecoveryPoints() >= dailyTarget 
+                          ? "Recovery Target Complete!" 
+                          : `${Math.max(0, dailyTarget - getRecoveryPoints())} recovery pts remaining`)
+                      : (getCappedTotalPoints() >= dailyTarget 
+                          ? "Target Complete!" 
+                          : `${Math.max(0, dailyTarget - getCappedTotalPoints())} remaining`)
+                    }
+                  </p>
                 </div>
-                <p className="text-sm font-medium -mt-1 text-white">
-                  {isRecoveryDay 
-                    ? (getRecoveryPoints() >= dailyTarget 
-                        ? "Recovery Target Complete!" 
-                        : `${Math.max(0, dailyTarget - getRecoveryPoints())} recovery pts remaining`)
-                    : (getCappedTotalPoints() >= dailyTarget 
-                        ? "Target Complete!" 
-                        : `${Math.max(0, dailyTarget - getCappedTotalPoints())} remaining`)
-                  }
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-black text-white">
-                  {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
-                </div>
-                <div className="text-sm font-medium -mt-1 text-white">
-                  complete
+                <div className="text-right">
+                  <div className="text-3xl font-black text-white">
+                    {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
+                  </div>
+                  <div className="text-sm font-medium -mt-1 text-white">
+                    complete
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      <div className="min-h-screen bg-black pb-20">
 
       {/* Flexible Rest Day Section */}
       {hasFlexibleRestDay && (
