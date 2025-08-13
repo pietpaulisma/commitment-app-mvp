@@ -1385,7 +1385,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       <div 
         className="fixed inset-0 bg-black flex flex-col transition-all duration-500 ease-out shadow-2xl"
         style={{ 
-          paddingTop: 'env(safe-area-inset-top)',
           transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
@@ -1396,11 +1395,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       >
         {/* Time-based gradient background with subtle glass layer effect */}
         <TimeGradient className="absolute inset-0 z-[-1] pointer-events-none" intensity={0.15} />
-        {/* Header - Reduced height for PWA */}
-        <div className="sticky top-0">
+        {/* Header - Reduced height for PWA - Now extends to true top */}
+        <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex items-center">
-            {/* Progress Bar Section - Reduced height for PWA */}
-            <div className={`flex-1 relative h-12 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
+            {/* Progress Bar Section - Extends to fill safe area */}
+            <div className={`flex-1 relative ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`} style={{ minHeight: 'calc(48px + env(safe-area-inset-top))' }}>
               {/* Liquid gradient progress background with subtle animation */}
               <div 
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -1435,10 +1434,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               )}
             </div>
 
-            {/* Chat → X Button Transition */}
+            {/* Chat → X Button Transition - Extends to fill safe area */}
             <button
               onClick={handleClose}
-              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
+              className="w-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
+              style={{ minHeight: 'calc(48px + env(safe-area-inset-top))' }}
               aria-label="Close workout log"
             >
               {/* Chat Icon (slides up and out when modal reaches top) */}
