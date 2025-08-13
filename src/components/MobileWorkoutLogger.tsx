@@ -624,64 +624,43 @@ export default function MobileWorkoutLogger() {
         }
       `}</style>
       
-      <div className="min-h-screen bg-black pb-20">
-      
-      {/* Daily Target Progress Header */}
+      {/* Daily Target Progress Header - Copy exact navigation button structure */}
       {dailyTarget > 0 && (
-        <div className="mx-1 mb-1">
+        <div className="relative h-16 bg-gray-900 overflow-hidden">
+          {/* Stacked gradient progress bar background with subtle animation */}
           <div 
-            className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl relative overflow-hidden"
-            style={{
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+            className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
+            style={{ 
+              width: progressAnimated ? '100%' : '80%',
+              background: isRecoveryDay 
+                ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
+                : createCumulativeGradient(todaysLogs || [], dailyTarget),
+              // Force cache invalidation
+              transform: `translateZ(${Date.now() % 1000}px)`
             }}
-          >
-            {/* Stacked gradient progress bar background with subtle animation */}
-            <div 
-              className="absolute right-0 top-0 bottom-0 transition-all duration-600 ease-out"
-              style={{ 
-                width: progressAnimated ? '100%' : '80%',
-                background: isRecoveryDay 
-                  ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
-                  : createCumulativeGradient(todaysLogs || [], dailyTarget),
-                // Force cache invalidation
-                transform: `translateZ(${Date.now() % 1000}px)`
-              }}
-            />
+          />
+          
+          {/* Content */}
+          <div className="relative h-full flex items-center justify-between px-6 text-white">
+            <div className="flex flex-col items-start">
+              <span className="font-bold text-sm tracking-tight uppercase">
+                LOG WORKOUT
+              </span>
+              <span className="text-xs opacity-75 font-medium">
+                {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}/{dailyTarget} pts
+              </span>
+            </div>
             
-            {/* Content */}
-            <div className="relative px-4 py-6">
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="flex items-baseline space-x-1">
-                    <span className="text-4xl font-black text-white">
-                      {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}
-                    </span>
-                    <span className="text-2xl font-thin text-white">PT</span>
-                  </div>
-                  <p className="text-sm font-medium -mt-1 text-white">
-                    {isRecoveryDay 
-                      ? (getRecoveryPoints() >= dailyTarget 
-                          ? "Recovery Target Complete!" 
-                          : `${Math.max(0, dailyTarget - getRecoveryPoints())} recovery pts remaining`)
-                      : (getCappedTotalPoints() >= dailyTarget 
-                          ? "Target Complete!" 
-                          : `${Math.max(0, dailyTarget - getCappedTotalPoints())} remaining`)
-                    }
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-black text-white">
-                    {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
-                  </div>
-                  <div className="text-sm font-medium -mt-1 text-white">
-                    complete
-                  </div>
-                </div>
-              </div>
+            <div className="flex flex-col items-end justify-center h-full">
+              <span className="text-3xl font-black tracking-tight leading-none">
+                {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
+              </span>
             </div>
           </div>
         </div>
       )}
+
+      <div className="min-h-screen bg-black pb-20">
 
       {/* Flexible Rest Day Section */}
       {hasFlexibleRestDay && (
