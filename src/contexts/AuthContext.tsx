@@ -28,8 +28,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-
   useEffect(() => {
+    // Check cached session first
+    const cachedUser = typeof window !== 'undefined' ? sessionStorage.getItem('auth_user') : null
+    const cachedTimestamp = typeof window !== 'undefined' ? sessionStorage.getItem('auth_timestamp') : null
+    
+    if (cachedUser && cachedTimestamp) {
+      const timestamp = parseInt(cachedTimestamp)
+      const isValidCache = Date.now() - timestamp < 5 * 60 * 1000 // 5 minutes
+      
+      if (isValidCache) {
+        console.log('📦 Using cached auth session')
+        setUser(JSON.parse(cachedUser))
+        setLoading(false)
+      }
+    }
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -40,22 +54,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
         
-        setUser(session?.user ?? null)
+        const userData = session?.user ?? null
+        setUser(userData)
         setLoading(false)
+        
+        // Cache the user session
+        if (typeof window !== 'undefined') {
+          if (userData) {
+            sessionStorage.setItem('auth_user', JSON.stringify(userData))
+            sessionStorage.setItem('auth_timestamp', Date.now().toString())
+          } else {
+            sessionStorage.removeItem('auth_user')
+            sessionStorage.removeItem('auth_timestamp')
+          }
+        }
       } catch (error) {
         console.error('Error in getInitialSession:', error)
         setLoading(false)
       }
     }
 
-    getInitialSession()
+    // Only fetch if we don't have valid cached data
+    if (!cachedUser || !cachedTimestamp || Date.now() - parseInt(cachedTimestamp) >= 5 * 60 * 1000) {
+      getInitialSession()
+    }
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email)
-        setUser(session?.user ?? null)
+        const userData = session?.user ?? null
+        setUser(userData)
         setLoading(false)
+        
+        // Update cache on auth change
+        if (typeof window !== 'undefined') {
+          if (userData) {
+            sessionStorage.setItem('auth_user', JSON.stringify(userData))
+            sessionStorage.setItem('auth_timestamp', Date.now().toString())
+          } else {
+            sessionStorage.removeItem('auth_user')
+            sessionStorage.removeItem('auth_timestamp')
+          }
+        }
       }
     )
 
@@ -67,6 +108,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     setUser(null)
+    // Clear auth cache
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('auth_user')
+      sessionStorage.removeItem('auth_timestamp')
+    }
     await supabase.auth.signOut()
   }
 

@@ -35,11 +35,40 @@ export function useProfile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Cache key for sessionStorage
+  const getCacheKey = (userId: string) => `profile_cache_${userId}`
+  const getCacheTimestampKey = (userId: string) => `profile_cache_timestamp_${userId}`
+  
+  // Cache duration: 5 minutes
+  const CACHE_DURATION = 5 * 60 * 1000
+
   const loadProfile = async (showLoading = true) => {
     if (!user) {
       setProfile(null)
       setLoading(false)
       return null
+    }
+
+    // Check cache first
+    const cacheKey = getCacheKey(user.id)
+    const timestampKey = getCacheTimestampKey(user.id)
+    
+    if (typeof window !== 'undefined') {
+      const cachedProfile = sessionStorage.getItem(cacheKey)
+      const cachedTimestamp = sessionStorage.getItem(timestampKey)
+      
+      if (cachedProfile && cachedTimestamp) {
+        const timestamp = parseInt(cachedTimestamp)
+        const isValidCache = Date.now() - timestamp < CACHE_DURATION
+        
+        if (isValidCache) {
+          console.log('📦 Using cached profile for:', user.email)
+          const parsed = JSON.parse(cachedProfile)
+          setProfile(parsed)
+          setLoading(false)
+          return parsed
+        }
+      }
     }
 
     if (showLoading) {
@@ -64,6 +93,13 @@ export function useProfile() {
         onboarding_completed: data.onboarding_completed,
         role: data.role 
       })
+      
+      // Cache the profile data
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(cacheKey, JSON.stringify(data))
+        sessionStorage.setItem(timestampKey, Date.now().toString())
+      }
+      
       setProfile(data)
       return data
     } catch (error) {
@@ -79,6 +115,11 @@ export function useProfile() {
 
   const refreshProfile = () => {
     console.log('🔄 Refreshing profile data...')
+    // Clear cache on manual refresh
+    if (typeof window !== 'undefined' && user) {
+      sessionStorage.removeItem(getCacheKey(user.id))
+      sessionStorage.removeItem(getCacheTimestampKey(user.id))
+    }
     return loadProfile(false)
   }
 
