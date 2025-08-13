@@ -1399,7 +1399,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex items-center">
             {/* Progress Bar Section - Extends to fill safe area */}
-            <div className={`flex-1 relative ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`} style={{ minHeight: 'calc(48px + env(safe-area-inset-top))' }}>
+            <div className={`flex-1 relative ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`} style={{ minHeight: 'calc(64px + env(safe-area-inset-top))' }}>
               {/* Liquid gradient progress background with subtle animation */}
               <div 
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -1438,7 +1438,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             <button
               onClick={handleClose}
               className="w-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
-              style={{ minHeight: 'calc(48px + env(safe-area-inset-top))' }}
+              style={{ minHeight: 'calc(64px + env(safe-area-inset-top))' }}
               aria-label="Close workout log"
             >
               {/* Chat Icon (slides up and out when modal reaches top) */}
