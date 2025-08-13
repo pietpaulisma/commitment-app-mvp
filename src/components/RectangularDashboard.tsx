@@ -2401,7 +2401,7 @@ export default function RectangularDashboard() {
             {/* Workout Times - Full width block */}
             <div className="relative">
               <div 
-                className="mx-1 mb-24 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                className="mx-1 mb-20 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
                 style={{
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
