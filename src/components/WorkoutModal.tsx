@@ -1405,7 +1405,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
                 style={{ 
                   width: progressAnimated ? '100%' : '75%',
-                  background: createCumulativeGradient(todayLogs || [], dailyTarget),
+                  background: createCumulativeGradient(todayLogs || [], dailyTarget, weekMode),
                   opacity: isClosing ? 0 : 1
                 }}
               />
