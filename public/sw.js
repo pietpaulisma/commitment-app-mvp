@@ -20,7 +20,7 @@ const urlsToCache = [
 
 // Install service worker and cache resources
 self.addEventListener('install', (event) => {
-  self.skipWaiting() // Activate immediately
+  // Don't skipWaiting - let it activate naturally to avoid page refreshes
   event.waitUntil(
     Promise.all([
       caches.open(STATIC_CACHE).then((cache) => cache.addAll(urlsToCache)),
@@ -29,9 +29,9 @@ self.addEventListener('install', (event) => {
   )
 })
 
-// Activate service worker immediately and take control
+// Activate service worker and clean old caches
 self.addEventListener('activate', (event) => {
-  self.clients.claim() // Take control immediately
+  // Don't claim immediately - this can cause page refreshes
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(

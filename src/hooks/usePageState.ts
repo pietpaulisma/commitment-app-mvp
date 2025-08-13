@@ -45,57 +45,13 @@ export function usePageState() {
     }
   }, [pathname])
 
-  // Enhanced visibility change handler for better state restoration
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      let wasHidden = false
-      
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'hidden') {
-          wasHidden = true
-          // Save critical state when app goes to background
-          sessionStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
-        } else if (document.visibilityState === 'visible' && wasHidden) {
-          wasHidden = false
-          
-          // Check if we need to restore state
-          const lastActivity = parseInt(sessionStorage.getItem(LAST_ACTIVITY_KEY) || '0')
-          const timeDiff = Date.now() - lastActivity
-          
-          // If app was hidden for less than 5 minutes, restore the exact state
-          if (timeDiff < 5 * 60 * 1000) {
-            const savedPage = sessionStorage.getItem(PAGE_STATE_KEY)
-            const workoutInProgress = sessionStorage.getItem(WORKOUT_STATE_KEY)
-            
-            // Always restore to the last active page if different from current
-            if (savedPage && savedPage !== pathname) {
-              console.log('Restoring last page state:', savedPage, 'from current:', pathname)
-              setIsRestoring(true)
-              router.replace(savedPage)
-              
-              // Reset the restoring flag after navigation
-              setTimeout(() => setIsRestoring(false), 100)
-            }
-          }
-        }
-      }
-
-      // Also handle app focus/blur for better mobile support
-      const handleFocus = () => {
-        if (wasHidden) {
-          handleVisibilityChange()
-        }
-      }
-
-      document.addEventListener('visibilitychange', handleVisibilityChange)
-      window.addEventListener('focus', handleFocus)
-      
-      return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange)
-        window.removeEventListener('focus', handleFocus)
-      }
-    }
-  }, [router, pathname])
+  // DISABLED: Visibility change handler that was causing unwanted navigation
+  // The original problem was loading screens, not navigation - this was overengineered
+  // Now that we have proper caching, we don't need this aggressive restoration
+  
+  // useEffect(() => {
+  //   // Visibility change logic removed to prevent unwanted navigation
+  // }, [router, pathname])
 
   // Helper functions to mark workout state
   const markWorkoutInProgress = () => {

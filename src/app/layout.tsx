@@ -5,7 +5,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { WeekModeProvider } from "@/contexts/WeekModeContext";
 import OnboardingGuard from "@/components/OnboardingGuard";
 import DevTestingPanel from "@/components/DevTestingPanel";
-import PageStateProvider from "@/components/PageStateProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -112,6 +111,7 @@ export default function RootLayout({
                 navigator.serviceWorker.register('/sw.js')
                   .then(function(registration) {
                     console.log('SW registered: ', registration);
+                    // Don't trigger page refresh on registration
                   })
                   .catch(function(registrationError) {
                     console.log('SW registration failed: ', registrationError);
@@ -127,9 +127,7 @@ export default function RootLayout({
         <AuthProvider>
           <WeekModeProvider>
             <OnboardingGuard>
-              <PageStateProvider>
-                {children}
-              </PageStateProvider>
+              {children}
             </OnboardingGuard>
           </WeekModeProvider>
         </AuthProvider>
