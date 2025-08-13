@@ -92,8 +92,19 @@ export default function MobileWorkoutLogger() {
     return colorArray[colorIndex]
   }
 
-  // Get user colors based on their email
-  const userColor = getUserColor(user?.email)
+  // Get colors based on week mode like dashboard
+  const getModeColor = () => {
+    switch (weekMode) {
+      case 'sane':
+        return '#3b82f6' // Blue for sane mode
+      case 'insane':
+        return '#ef4444' // Red for insane mode
+      default:
+        return '#3b82f6' // Default to blue
+    }
+  }
+  
+  const userColor = getModeColor()
   const userColorHover = getUserColorHover(userColor)
 
   // Get exercise segments for stacked gradient progress bar
@@ -865,7 +876,7 @@ export default function MobileWorkoutLogger() {
                     {/* Submit Button */}
                     <button 
                       type="submit"
-                      className="w-full text-black px-4 rounded-3xl transition-all duration-300 font-black text-lg shadow-2xl hover:scale-105 btn-hover relative overflow-hidden"
+                      className="w-full text-black px-4 rounded-3xl transition-all duration-300 font-black text-lg shadow-2xl hover:scale-105 btn-hover relative overflow-hidden -mx-1 -my-3"
                       style={{ 
                         backgroundColor: userColor,
                         background: `linear-gradient(135deg, ${userColor}ff 0%, ${userColor}cc 50%, ${userColor}ff 100%)`,
