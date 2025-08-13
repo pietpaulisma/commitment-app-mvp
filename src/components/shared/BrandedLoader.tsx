@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 interface LoadingStage {
   key: string
@@ -61,10 +62,16 @@ export default function BrandedLoader({
     <div className="text-center space-y-6">
       {/* Logo with pulse animation */}
       <div className="relative">
-        <div className="w-16 h-16 mx-auto relative">
+        <div className="w-20 h-20 mx-auto relative">
           {/* Main logo */}
-          <div className="w-full h-full rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-2xl transform transition-transform duration-500 hover:scale-105">
-            <span className="text-white text-2xl font-black tracking-tighter">C</span>
+          <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl transform transition-transform duration-500 hover:scale-105 relative">
+            <Image
+              src="/logo.png"
+              alt="Commitment App"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           
           {/* Pulse rings */}
