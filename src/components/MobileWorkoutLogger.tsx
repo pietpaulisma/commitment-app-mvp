@@ -865,17 +865,14 @@ export default function MobileWorkoutLogger() {
                     {/* Submit Button */}
                     <button 
                       type="submit"
-                      className="w-full text-black py-6 px-4 rounded-3xl transition-all duration-300 font-black text-lg shadow-2xl hover:scale-105 btn-hover relative overflow-hidden"
-                      style={{ backgroundColor: userColor }}
+                      className="w-full text-black px-4 rounded-3xl transition-all duration-300 font-black text-lg shadow-2xl hover:scale-105 btn-hover relative overflow-hidden"
+                      style={{ 
+                        backgroundColor: userColor,
+                        background: `linear-gradient(135deg, ${userColor}ff 0%, ${userColor}cc 50%, ${userColor}ff 100%)`,
+                        minHeight: '60px'
+                      }}
                     >
-                      {/* Full height gradient background */}
-                      <div 
-                        className="absolute left-0 top-0 bottom-0 right-0 transition-all duration-300"
-                        style={{ 
-                          background: `linear-gradient(135deg, ${userColor}ff 0%, ${userColor}cc 50%, ${userColor}ff 100%)`
-                        }}
-                      />
-                      <span className="relative z-10">LOG WORKOUT</span>
+                      <span className="relative z-10 flex items-center justify-center h-full py-6">LOG WORKOUT</span>
                     </button>
                   </>
                 )}
