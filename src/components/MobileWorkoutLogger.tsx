@@ -623,7 +623,6 @@ export default function MobileWorkoutLogger() {
           background-color: ${userColorHover} !important;
         }
       `}</style>
-      <div className="min-h-screen bg-black pb-20">
       {/* Daily Target Progress Header */}
       {dailyTarget > 0 && (
         <div className="bg-black/50 backdrop-blur-sm border-b border-white/10 relative overflow-hidden shadow-2xl">
@@ -673,6 +672,8 @@ export default function MobileWorkoutLogger() {
           </div>
         </div>
       )}
+
+      <div className="min-h-screen bg-black pb-20">
 
       {/* Flexible Rest Day Section */}
       {hasFlexibleRestDay && (
