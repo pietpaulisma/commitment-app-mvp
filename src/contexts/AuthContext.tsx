@@ -120,7 +120,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
           .eq('id', user.id)
       } catch (error) {
-        console.error('Error updating online status:', error)
+        // Silently handle missing columns - they may not exist yet
+        if (error.message?.includes('column') && error.message?.includes('does not exist')) {
+          console.log('Online status columns not available yet')
+        } else {
+          console.error('Error updating online status:', error)
+        }
       }
     }
 

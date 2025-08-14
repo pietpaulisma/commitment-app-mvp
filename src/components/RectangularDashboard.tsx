@@ -1256,7 +1256,7 @@ export default function RectangularDashboard() {
       // Get all group members including their individual week_mode
       const { data: allMembers, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color, created_at, week_mode, is_online, last_seen')
+        .select('id, email, username, personal_color, created_at, week_mode')
         .eq('group_id', profile.group_id)
 
       if (membersError) {
@@ -1358,6 +1358,28 @@ export default function RectangularDashboard() {
         }
       })
       
+      // Try to load online status if columns exist
+      try {
+        const { data: onlineStatus, error: onlineError } = await supabase
+          .from('profiles')
+          .select('id, is_online, last_seen')
+          .eq('group_id', profile.group_id)
+        
+        if (!onlineError && onlineStatus) {
+          // Add online status to members
+          membersWithProgress.forEach(member => {
+            const status = onlineStatus.find(s => s.id === member.id)
+            if (status) {
+              member.is_online = status.is_online
+              member.last_seen = status.last_seen
+            }
+          })
+        }
+      } catch (onlineError) {
+        console.log('Online status columns not available yet, skipping:', onlineError)
+        // Continue without online status - this is expected if columns don't exist
+      }
+
       // Sort by points descending
       membersWithProgress.sort((a, b) => b.todayPoints - a.todayPoints)
       setGroupMembers(membersWithProgress)
