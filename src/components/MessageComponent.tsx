@@ -317,13 +317,13 @@ export function MessageComponent({
 
           {/* Emoji Reactions */}
           <div className="text-sm text-gray-400 mb-2">React with:</div>
-          <div className="flex gap-1 flex-wrap">
-            {['👍', '❤️', '😂', '😮', '😢', '🔥'].map((emoji) => (
+          <div className="grid grid-cols-6 gap-1">
+            {['👍', '❤️', '😂', '😮', '😢', '🔥', '💪', '🙏', '👏', '✅', '🎉', '😍'].map((emoji) => (
               <Button
                 key={emoji}
                 variant="ghost"
                 size="sm"
-                className="text-2xl p-1 h-8 w-8 hover:bg-gray-700"
+                className="text-lg p-1 h-8 w-8 hover:bg-gray-700 rounded"
                 onClick={() => handleEmojiSelect(emoji)}
               >
                 {emoji}

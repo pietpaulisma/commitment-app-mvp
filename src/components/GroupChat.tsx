@@ -825,15 +825,15 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         {/* Reply indicator */}
         {replyingTo && (
           <div className="px-4 py-2 bg-gray-800 border-t border-gray-700 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-300">
-              <Reply className="w-4 h-4" />
-              <span>Replying to {getReplyingToMessage()?.username || 'User'}</span>
+            <div className="flex items-center gap-2 text-sm text-gray-300 min-w-0 flex-1">
+              <Reply className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Replying to {getReplyingToMessage()?.username || 'User'}</span>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setReplyingTo(null)}
-              className="text-gray-400 hover:text-white p-1"
+              className="text-gray-400 hover:text-white p-1 flex-shrink-0"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -881,7 +881,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             <Button
               type="submit"
               disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
-              className="bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 rounded-full shrink-0 w-8 h-8"
+              className="bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 shrink-0 w-8 h-8"
+              style={{ borderRadius: '50%' }}
               size="icon"
             >
               {sending || uploading ? (

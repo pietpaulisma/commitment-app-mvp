@@ -97,7 +97,6 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
   // Determine if workout was "sane" or "insane"
   const getIntensityLabel = (percentage: number, points: number): string => {
     if (percentage >= 150 || points > 750) return "INSANE";
-    if (percentage >= 100 || points >= 500) return "solid";
     return "sane";
   };
 
