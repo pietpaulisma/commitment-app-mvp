@@ -741,37 +741,38 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
   return (
     <div 
-      className="fixed inset-0 bg-black flex flex-col transition-transform duration-500 ease-out max-w-2xl mx-auto relative border-l border-r border-gray-800"
+      className="fixed inset-0 bg-black text-white flex flex-col transition-transform duration-500 ease-out"
       style={{ 
         paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
         willChange: 'transform',
         backfaceVisibility: 'hidden',
         touchAction: 'manipulation',
-        zIndex: isClosing ? 40 : 9999 // Slide behind bottom nav (z-50) when closing
+        zIndex: isClosing ? 40 : 9999
       }}
     >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 bg-gray-900 border-b border-gray-800">
-          <div className="flex items-center gap-4">
-            <MessageCircle className="w-10 h-10 text-white scale-x-[-1]" />
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <MessageCircle className="w-8 h-8 text-white scale-x-[-1]" />
             <div>
-              <h2 className="text-lg font-medium">{groupName || 'Group Chat'}</h2>
-              <p className="text-sm text-gray-400">Group messaging</p>
+              <h2 className="text-base font-medium">{groupName || 'Group Chat'}</h2>
+              <p className="text-xs text-gray-400">Group messaging</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="text-gray-400 hover:text-white hover:bg-gray-800 w-10 h-10"
+            className="text-gray-400 hover:text-white hover:bg-gray-800 w-8 h-8"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-3">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin h-8 w-8 border-2 border-gray-700 border-t-blue-400 rounded-full mx-auto"></div>
@@ -840,8 +841,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         )}
 
         {/* Input */}
-        <div className="p-4 bg-gray-900 border-t border-gray-800">
-          <form onSubmit={sendMessage} className="flex items-center gap-2">
+        <div className="p-3 bg-gray-900 border-t border-gray-800">
+          <form onSubmit={sendMessage} className="flex items-center gap-3">
             <input
               type="file"
               ref={fileInputRef}
@@ -862,16 +863,16 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 shrink-0 w-10 h-10"
+              className="text-gray-400 hover:text-white hover:bg-gray-800 shrink-0 w-10 h-10 rounded-full"
             >
-              <Plus className="w-8 h-8" />
+              <Plus className="w-5 h-5" />
             </Button>
             <div className="flex-1 relative">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 rounded-full pr-16 h-10 text-sm"
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 rounded-full h-10 text-sm"
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage(e))}
                 disabled={sending || uploading}
                 maxLength={500}

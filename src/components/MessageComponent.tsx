@@ -124,23 +124,49 @@ export function MessageComponent({
 
   const workoutData = parseWorkoutData();
 
+  // Get user avatar and color
+  const getUserAvatar = () => {
+    // For demo purposes, assign emojis based on user email/username
+    const avatars = ['🌊', '🏔️', '⚡', '🎯', '🚀', '💎', '🎸', '🌟'];
+    const email = message.user_email || '';
+    const hash = email.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return avatars[Math.abs(hash) % avatars.length];
+  };
+
+  const getUserBgColor = () => {
+    const colors = [
+      '#e91e63', '#4caf50', '#3b82f6', '#8b5cf6', 
+      '#f59e0b', '#ec4899', '#06b6d4', '#10b981'
+    ];
+    const email = message.user_email || '';
+    const hash = email.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   return (
-    <div className={`flex gap-3 mb-4 items-end ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex gap-2 mb-3 items-end ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar - only show for other users, positioned at bottom */}
       {!isCurrentUser && (
         <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 bg-gray-700"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0"
+          style={{ backgroundColor: getUserBgColor() }}
         >
-          {message.username?.charAt(0)?.toUpperCase() || message.user_email?.charAt(0)?.toUpperCase() || '?'}
+          {getUserAvatar()}
         </div>
       )}
 
       {/* Message content */}
-      <div className={`max-w-lg relative ${isCurrentUser ? 'mr-3' : 'ml-2'}`}>
+      <div className={`max-w-md relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
         {/* User name - only show for other users */}
         {!isCurrentUser && (
           <div 
-            className={`text-sm mb-2 ml-4 font-medium ${getUserColor(message.user_email || '', message.user_role || 'user')}`}
+            className={`text-sm mb-1 ml-3 font-medium ${getUserColor(message.user_email || '', message.user_role || 'user')}`}
           >
             {message.username || 'User'}
           </div>
@@ -150,7 +176,7 @@ export function MessageComponent({
         <div className="relative">
           <div 
             className={`
-              relative px-4 py-3 rounded-xl shadow-sm cursor-pointer transition-colors
+              relative px-3 py-2 rounded-xl shadow-sm cursor-pointer transition-colors
               ${isCurrentUser 
                 ? message.id.startsWith('temp-')
                   ? 'bg-gradient-to-r from-orange-700 to-red-600 text-white rounded-br-none opacity-70'
@@ -163,7 +189,7 @@ export function MessageComponent({
             {/* Speech bubble tail */}
             <div 
               className={`
-                absolute bottom-0 w-4 h-4
+                absolute bottom-0 w-3 h-3
                 ${isCurrentUser 
                   ? 'right-0 translate-x-full bg-gradient-to-br from-orange-700 to-red-600' 
                   : 'left-0 -translate-x-full bg-gray-800'
@@ -211,19 +237,19 @@ export function MessageComponent({
                 />
               </div>
             ) : message.message && message.message_type !== 'workout_completion' ? (
-              <div className="text-base leading-6">
+              <div className="text-sm leading-5">
                 {message.message}
               </div>
             ) : null}
 
             {/* Timestamp and read receipt */}
             <div className={`
-              flex items-center justify-end gap-1 mt-2 text-sm opacity-70
+              flex items-center justify-end gap-1 mt-1 text-xs opacity-60
               ${isCurrentUser ? 'text-orange-100' : 'text-gray-300'}
             `}>
               <span>{formatTime(message.created_at)}</span>
               {isCurrentUser && (
-                <div className="text-orange-200 text-base">✓✓</div>
+                <div className="text-orange-200">✓✓</div>
               )}
               {message.id.startsWith('temp-') && (
                 <div className="w-3 h-3 animate-spin border border-white border-t-transparent rounded-full opacity-50"></div>
@@ -233,7 +259,7 @@ export function MessageComponent({
 
           {/* Existing reactions */}
           {hasReactions && (
-            <div className={`flex gap-2 mt-2 flex-wrap items-center ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex gap-1 mt-1 flex-wrap items-center ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
               {Object.entries(
                 message.reactions!.reduce((acc, reaction) => {
                   if (!acc[reaction.emoji]) {
@@ -247,7 +273,7 @@ export function MessageComponent({
                   key={emoji}
                   variant="ghost"
                   size="sm"
-                  className={`h-8 px-3 rounded-full text-sm bg-gray-800 hover:bg-gray-700 border ${
+                  className={`h-6 px-2 rounded-full text-xs bg-gray-800 hover:bg-gray-700 border ${
                     reactions.some(r => r.user_id === currentUser.id) ? 'border-orange-500 bg-orange-500/10' : 'border-gray-700'
                   }`}
                   onClick={() => onAddReaction(message.id, emoji)}

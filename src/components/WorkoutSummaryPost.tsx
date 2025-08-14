@@ -102,22 +102,22 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
   const isInsane = intensity === "INSANE";
 
   return (
-    <div className="bg-gray-900 rounded-xl p-4 text-white w-full border border-gray-800">
+    <div className="bg-gray-900 rounded-lg p-3 text-white w-full border border-gray-800">
       {/* Compact Header with inline info */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <h3 className="font-medium text-white">{workoutType}</h3>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-white text-sm">{workoutType}</h3>
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-300">
+        <div className="flex items-center gap-3 text-sm text-gray-300">
           <div className="text-right">
             <span className="font-medium text-white">{data.points}</span>
-            <span className="text-gray-400 ml-1">pts</span>
+            <span className="text-gray-400 ml-1 text-xs">pts</span>
           </div>
         </div>
       </div>
 
       {/* Progress bar with inline stats */}
-      <div className="mb-3">        
+      <div className="mb-2">        
         <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden mb-2">
           <div 
             className={`h-full transition-all duration-500 ${
@@ -159,14 +159,14 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
 
       {/* Exercise summary inline */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-2 text-xs text-gray-300">
+        <div className="flex gap-1 text-xs text-gray-300">
           {data.exercises.slice(0, 3).map((exercise, index) => (
-            <span key={index} className="bg-gray-800 px-2 py-1 rounded">
+            <span key={index} className="bg-gray-800 px-2 py-0.5 rounded text-xs">
               {exercise.name}
             </span>
           ))}
           {data.exercises.length > 3 && (
-            <span className="text-gray-500">+{data.exercises.length - 3}</span>
+            <span className="text-gray-500 text-xs">+{data.exercises.length - 3}</span>
           )}
         </div>
         
