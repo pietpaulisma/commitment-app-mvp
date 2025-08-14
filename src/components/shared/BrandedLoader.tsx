@@ -62,21 +62,21 @@ export default function BrandedLoader({
     <div className="text-center space-y-6">
       {/* Logo with pulse animation */}
       <div className="relative">
-        <div className="w-20 h-20 mx-auto relative">
-          {/* Main logo */}
-          <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl transform transition-transform duration-500 hover:scale-105 relative">
-            <Image
-              src="/logo.png"
-              alt="Commitment App"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          
-          {/* Pulse rings */}
-          <div className="absolute inset-0 rounded-2xl border-2 border-red-400 opacity-75 animate-ping"></div>
-          <div className="absolute inset-0 rounded-2xl border border-red-300 opacity-50 animate-ping" style={{ animationDelay: '0.5s' }}></div>
+        <div className="flex justify-center">
+          <Image
+            src="/logo.png"
+            alt="Commitment App"
+            width={80}
+            height={80}
+            className="w-auto h-16 md:h-20 drop-shadow-2xl transform transition-transform duration-500 hover:scale-105"
+            priority
+          />
+        </div>
+        
+        {/* Subtle pulse glow behind logo */}
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+          <div className="w-24 h-24 rounded-full bg-red-500/20 animate-ping opacity-30"></div>
+          <div className="absolute w-32 h-32 rounded-full bg-orange-500/10 animate-ping opacity-20" style={{ animationDelay: '0.5s' }}></div>
         </div>
         
         {/* Logo text */}
