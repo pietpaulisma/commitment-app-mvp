@@ -626,7 +626,7 @@ export default function MobileWorkoutLogger() {
       
       {/* Daily Target Progress Header - Copy exact navigation button structure */}
       {dailyTarget > 0 && (
-        <div className="relative h-16 bg-gray-900 overflow-hidden">
+        <div className="relative h-12 bg-gray-900 overflow-hidden border-t border-gray-700">
           {/* Stacked gradient progress bar background with subtle animation */}
           <div 
             className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -641,9 +641,9 @@ export default function MobileWorkoutLogger() {
           />
           
           {/* Content */}
-          <div className="relative h-full flex items-center justify-between px-6 text-white">
+          <div className="relative h-full flex items-center justify-between px-4 text-white">
             <div className="flex flex-col items-start">
-              <span className="font-bold text-sm tracking-tight uppercase">
+              <span className="font-bold text-xs tracking-tight uppercase">
                 LOG WORKOUT
               </span>
               <span className="text-xs opacity-75 font-medium">
@@ -652,7 +652,7 @@ export default function MobileWorkoutLogger() {
             </div>
             
             <div className="flex flex-col items-end justify-center h-full">
-              <span className="text-3xl font-black tracking-tight leading-none">
+              <span className="text-2xl font-black tracking-tight leading-none">
                 {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
               </span>
             </div>
