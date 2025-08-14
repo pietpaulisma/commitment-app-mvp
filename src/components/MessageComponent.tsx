@@ -171,7 +171,7 @@ export function MessageComponent({
       )}
 
       {/* Message content */}
-      <div className={`max-w-md relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
+      <div className={`${isWorkoutPost ? 'max-w-full w-full' : 'max-w-md'} relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
         {/* User name - only show for other users */}
         {!isCurrentUser && (
           <div 

@@ -34,10 +34,13 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
   const [showDetails, setShowDetails] = useState(false);
 
   // Normalize the workout data
+  const points = workoutData.points || workoutData.total_points || 0;
+  const target = workoutData.target || workoutData.target_points || 500; // Default target if not specified
+  
   const data = {
     title: workoutData.title || 'Workout Completed',
-    points: workoutData.points || workoutData.total_points || 0,
-    target: workoutData.target || workoutData.target_points || 0,
+    points: points,
+    target: target,
     exercises: Array.isArray(workoutData.exercises) 
       ? workoutData.exercises 
       : workoutData.exercises 
@@ -49,8 +52,8 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
           }))
         : [],
     completedAt: workoutData.completedAt || workoutData.completed_at || new Date().toLocaleTimeString(),
-    percentage: workoutData.percentage || (workoutData.target_points > 0 
-      ? Math.min(100, ((workoutData.points || workoutData.total_points || 0) / workoutData.target_points) * 100)
+    percentage: workoutData.percentage || (target > 0 
+      ? (points / target) * 100
       : 0)
   };
 
@@ -93,7 +96,8 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
 
   // Determine if workout was "sane" or "insane"
   const getIntensityLabel = (percentage: number, points: number): string => {
-    if (percentage >= 100 || points > 500) return "INSANE";
+    if (percentage >= 150 || points > 750) return "INSANE";
+    if (percentage >= 100 || points >= 500) return "solid";
     return "sane";
   };
 
@@ -102,7 +106,7 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
   const isInsane = intensity === "INSANE";
 
   return (
-    <div className="bg-gray-900 rounded-lg p-3 text-white w-full border border-gray-800">
+    <div className="bg-gray-900 rounded-lg p-3 text-white border border-gray-800">
       {/* Compact Header with inline info */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">

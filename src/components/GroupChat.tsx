@@ -841,8 +841,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         )}
 
         {/* Input */}
-        <div className="p-3 bg-gray-900 border-t border-gray-800">
-          <form onSubmit={sendMessage} className="flex items-center gap-3">
+        <div className="p-4 bg-gray-900">
+          <form onSubmit={sendMessage} className="flex items-center gap-3 bg-gray-800 rounded-full px-4 py-2">
             <input
               type="file"
               ref={fileInputRef}
@@ -863,16 +863,16 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 shrink-0 w-10 h-10 rounded-full"
+              className="text-gray-400 hover:text-white hover:bg-gray-700 shrink-0 w-8 h-8 rounded-full"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
             </Button>
             <div className="flex-1 relative">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 rounded-full h-10 text-sm"
+                className="bg-transparent border-none text-white placeholder-gray-400 h-8 text-sm focus:ring-0 focus:outline-none"
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage(e))}
                 disabled={sending || uploading}
                 maxLength={500}
@@ -881,13 +881,13 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             <Button
               type="submit"
               disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
-              className="bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 rounded-full shrink-0 w-10 h-10"
+              className="bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 rounded-full shrink-0 w-8 h-8"
               size="icon"
             >
               {sending || uploading ? (
-                <div className="w-5 h-5 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
+                <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
               ) : (
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4" />
               )}
             </Button>
           </form>
