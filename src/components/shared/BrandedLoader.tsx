@@ -66,23 +66,18 @@ export default function BrandedLoader({
           <Image
             src="/logo.png"
             alt="Commitment App"
-            width={80}
-            height={80}
-            className="w-auto h-16 md:h-20 drop-shadow-2xl transform transition-transform duration-500 hover:scale-105"
+            width={40}
+            height={40}
+            className="w-auto h-8 md:h-10 drop-shadow-2xl transform transition-transform duration-500 hover:scale-105"
             priority
           />
         </div>
         
         {/* Subtle pulse glow behind logo */}
         <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
-          <div className="w-24 h-24 rounded-full bg-red-500/20 animate-ping opacity-30"></div>
-          <div className="absolute w-32 h-32 rounded-full bg-orange-500/10 animate-ping opacity-20" style={{ animationDelay: '0.5s' }}></div>
+          <div className="w-12 h-12 rounded-full bg-red-500/20 animate-ping opacity-30"></div>
+          <div className="absolute w-16 h-16 rounded-full bg-orange-500/10 animate-ping opacity-20" style={{ animationDelay: '0.5s' }}></div>
         </div>
-        
-        {/* Logo text */}
-        <h2 className="mt-4 text-xl font-black text-white tracking-tight">
-          COMMITMENT
-        </h2>
       </div>
 
       {/* Progress section */}
