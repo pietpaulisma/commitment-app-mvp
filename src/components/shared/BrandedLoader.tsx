@@ -63,13 +63,10 @@ export default function BrandedLoader({
       {/* Logo with pulse animation */}
       <div className="relative">
         <div className="flex justify-center">
-          <Image
+          <img
             src="/logo.png"
             alt="Commitment App"
-            width={40}
-            height={40}
             className="w-auto h-8 md:h-10 drop-shadow-2xl transform transition-transform duration-500 hover:scale-105"
-            priority
           />
         </div>
         
