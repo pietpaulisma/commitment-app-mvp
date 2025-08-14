@@ -1256,7 +1256,7 @@ export default function RectangularDashboard() {
       // Get all group members including their individual week_mode
       const { data: allMembers, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color, created_at, week_mode')
+        .select('id, email, username, personal_color, created_at, week_mode, is_online, last_seen')
         .eq('group_id', profile.group_id)
 
       if (membersError) {
@@ -2224,6 +2224,17 @@ export default function RectangularDashboard() {
                                 className="transition-all duration-1000 ease-out"
                               />
                             </svg>
+                            
+                            {/* Online status indicator */}
+                            {member.is_online && (
+                              <div 
+                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-black animate-pulse"
+                                style={{ 
+                                  backgroundColor: member.personal_color || "#ef4444",
+                                  boxShadow: `0 0 10px ${member.personal_color || "#ef4444"}80, 0 0 5px ${member.personal_color || "#ef4444"}40`
+                                }}
+                              />
+                            )}
                             
                             {/* Percentage text positioned lower with bigger font - NO PULSING */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-1">

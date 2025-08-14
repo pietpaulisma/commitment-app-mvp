@@ -105,6 +105,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // Site-wide online tracking
+  useEffect(() => {
+    if (!user) return
+
+    // Update online status when user is authenticated
+    const updateOnlineStatus = async (isOnline: boolean) => {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ 
+            last_seen: new Date().toISOString(),
+            is_online: isOnline 
+          })
+          .eq('id', user.id)
+      } catch (error) {
+        console.error('Error updating online status:', error)
+      }
+    }
+
+    // Set user online when they're on the site
+    updateOnlineStatus(true)
+
+    // Handle browser events to track online status
+    const handleBeforeUnload = () => {
+      // Use sendBeacon for more reliable offline tracking
+      const data = JSON.stringify({
+        user_id: user.id,
+        is_online: false,
+        last_seen: new Date().toISOString()
+      })
+      
+      if (navigator.sendBeacon) {
+        // Note: This would need a proper endpoint, for now just update directly
+        updateOnlineStatus(false)
+      } else {
+        updateOnlineStatus(false)
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      updateOnlineStatus(!document.hidden)
+    }
+
+    const handleFocus = () => {
+      updateOnlineStatus(true)
+    }
+
+    const handleBlur = () => {
+      updateOnlineStatus(false)
+    }
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('pagehide', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+
+    // Heartbeat to keep online status updated
+    const heartbeat = setInterval(() => {
+      if (!document.hidden) {
+        updateOnlineStatus(true)
+      }
+    }, 30000) // Every 30 seconds
+
+    return () => {
+      updateOnlineStatus(false)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('pagehide', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
+      clearInterval(heartbeat)
+    }
+  }, [user])
+
 
   const signOut = async () => {
     setUser(null)
