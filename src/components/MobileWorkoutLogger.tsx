@@ -626,7 +626,7 @@ export default function MobileWorkoutLogger() {
       
       {/* Daily Target Progress Header - Copy exact navigation button structure */}
       {dailyTarget > 0 && (
-        <div className="relative h-16 bg-gray-900 overflow-hidden">
+        <div className="relative h-16 bg-gray-900 overflow-hidden border-t border-gray-700">
           {/* Stacked gradient progress bar background with subtle animation */}
           <div 
             className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"

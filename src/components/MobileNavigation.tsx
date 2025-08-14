@@ -78,7 +78,7 @@ export default function MobileNavigation() {
   return (
     <>
       {/* Top Header for Mobile */}
-      <div className="lg:hidden bg-gray-900 shadow-sm border-b border-gray-700 px-4 py-3">
+      <div className="lg:hidden bg-gray-900 shadow-sm border-b border-gray-700 px-4 py-2">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-white">Commitment App</h1>
