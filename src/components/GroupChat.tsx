@@ -176,6 +176,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [groupName, setGroupName] = useState('')
+  const [onlineCount, setOnlineCount] = useState(0)
   
   // Animation states
   const [isAnimatedIn, setIsAnimatedIn] = useState(false)
@@ -343,11 +344,13 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   }, [isOpen, profile?.group_id])
 
   useEffect(() => {
-    scrollToBottom()
+    scrollToBottom(loading)
   }, [messages])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  const scrollToBottom = (isInitialLoad = false) => {
+    messagesEndRef.current?.scrollIntoView({ 
+      behavior: isInitialLoad ? 'instant' : 'smooth' 
+    })
   }
 
   const loadGroupName = async () => {
@@ -717,6 +720,76 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     return messages.find(msg => msg.id === replyingTo);
   };
 
+  // Online user tracking
+  const updateOnlineStatus = async (isOnline: boolean) => {
+    if (!user || !profile?.group_id) return;
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ 
+          last_seen: new Date().toISOString(),
+          is_online: isOnline 
+        })
+        .eq('id', user.id);
+    } catch (error) {
+      console.error('Error updating online status:', error);
+    }
+  };
+
+  const loadOnlineCount = async () => {
+    if (!profile?.group_id) return;
+
+    try {
+      const { count } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact' })
+        .eq('group_id', profile.group_id)
+        .eq('is_online', true);
+      
+      setOnlineCount(count || 0);
+    } catch (error) {
+      console.error('Error loading online count:', error);
+    }
+  };
+
+  // Track online status when component mounts/unmounts
+  useEffect(() => {
+    if (isOpen && user && profile?.group_id) {
+      updateOnlineStatus(true);
+      loadOnlineCount();
+      
+      // Set user offline when they close the tab/browser
+      const handleBeforeUnload = () => {
+        updateOnlineStatus(false);
+      };
+      
+      const handleVisibilityChange = () => {
+        updateOnlineStatus(!document.hidden);
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        updateOnlineStatus(false);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+  }, [isOpen, user, profile?.group_id]);
+
+  // Poll for online count updates every 30 seconds
+  useEffect(() => {
+    if (!isOpen || !profile?.group_id) return;
+
+    const interval = setInterval(() => {
+      loadOnlineCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, profile?.group_id]);
+
   if (!isOpen) return null
 
   if (!profile?.group_id) {
@@ -758,7 +831,9 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             <MessageCircle className="w-8 h-8 text-white scale-x-[-1]" />
             <div>
               <h2 className="text-base font-medium">{groupName || 'Group Chat'}</h2>
-              <p className="text-xs text-gray-400">Group messaging</p>
+              <p className="text-xs text-gray-400">
+                {onlineCount > 0 ? `${onlineCount} online` : 'Group messaging'}
+              </p>
             </div>
           </div>
           <Button
