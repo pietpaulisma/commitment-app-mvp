@@ -63,22 +63,31 @@ export function MessageComponent({
   const handleShowActionMenu = (event: React.MouseEvent) => {
     const rect = event.currentTarget.getBoundingClientRect();
     
-    // Position menu relative to the message bubble
-    let leftPosition = rect.left + rect.width / 2;
-    let topPosition = rect.top - 20; // 20px above the element
+    // Menu dimensions
+    const menuWidth = 240; // Actual menu width
+    const menuHeight = 120; // Approximate menu height
+    const offset = 10; // Padding from screen edges
     
-    // Check if menu would go outside viewport
-    const menuWidth = 120; // Half width for centering
-    if (leftPosition - menuWidth < 10) {
-      leftPosition = menuWidth + 10;
-    }
-    if (leftPosition + menuWidth > window.innerWidth - 10) {
-      leftPosition = window.innerWidth - menuWidth - 10;
+    // Start with centered position above the element
+    let leftPosition = rect.left + rect.width / 2 - menuWidth / 2;
+    let topPosition = rect.top - menuHeight - 10;
+    
+    // Ensure menu stays within horizontal bounds
+    if (leftPosition < offset) {
+      leftPosition = offset;
+    } else if (leftPosition + menuWidth > window.innerWidth - offset) {
+      leftPosition = window.innerWidth - menuWidth - offset;
     }
     
-    // Check if menu would go above viewport
-    if (topPosition < 10) {
-      topPosition = rect.bottom + 10; // Show below element instead
+    // Ensure menu stays within vertical bounds
+    if (topPosition < offset) {
+      // Show below the element if there's not enough space above
+      topPosition = rect.bottom + 10;
+      
+      // If still not enough space below, position at the top with margin
+      if (topPosition + menuHeight > window.innerHeight - offset) {
+        topPosition = offset;
+      }
     }
     
     setMenuPosition({
@@ -289,11 +298,10 @@ export function MessageComponent({
       {/* Message Action Menu */}
       {showActionMenu && (
         <div 
-          className="fixed z-50 bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-3"
+          className="fixed z-50 bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-3 w-60"
           style={{
             top: menuPosition.top,
-            left: menuPosition.left - 120, // Center the menu
-            transform: 'translateX(50%)'
+            left: menuPosition.left
           }}
         >
           {/* Reply Button */}
