@@ -251,15 +251,12 @@ export function MessageComponent({
               </div>
             ) : null}
 
-            {/* Timestamp and read receipt */}
+            {/* Timestamp */}
             <div className={`
               flex items-center justify-end gap-1 mt-1 text-xs opacity-60
               ${isCurrentUser ? 'text-orange-100' : 'text-gray-300'}
             `}>
               <span>{formatTime(message.created_at)}</span>
-              {isCurrentUser && (
-                <div className="text-orange-200">✓✓</div>
-              )}
               {message.id.startsWith('temp-') && (
                 <div className="w-3 h-3 animate-spin border border-white border-t-transparent rounded-full opacity-50"></div>
               )}
