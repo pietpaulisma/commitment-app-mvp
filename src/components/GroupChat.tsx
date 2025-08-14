@@ -21,6 +21,11 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   FaceSmileIcon as FaceSmileIconSolid
 } from '@heroicons/react/24/solid'
+import { MessageCircle, Plus, Send, X, Reply } from 'lucide-react'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { MessageComponent } from './MessageComponent'
+import { WorkoutSummaryPost } from './WorkoutSummaryPost'
 
 type ChatMessage = {
   id: string
@@ -35,6 +40,12 @@ type ChatMessage = {
   user_role?: string
   username?: string
   reactions?: MessageReaction[]
+  replyTo?: {
+    messageId: string
+    userName: string
+    content: string
+    type: 'text' | 'image' | 'workout'
+  }
 }
 
 type MessageReaction = {
@@ -180,6 +191,9 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   // Reaction states
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null)
   const [reactions, setReactions] = useState<{ [messageId: string]: MessageReaction[] }>({})
+
+  // Reply states
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
   // Available emoji reactions
   const emojiOptions: EmojiOption[] = [
@@ -451,6 +465,26 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         }
       }
       
+      // Create reply info if replying
+      let replyInfo;
+      if (replyingTo) {
+        const originalMessage = getReplyingToMessage();
+        if (originalMessage) {
+          replyInfo = {
+            messageId: originalMessage.id,
+            userName: originalMessage.username || 'User',
+            content: originalMessage.message_type === 'workout_completion' 
+              ? 'Workout summary' 
+              : originalMessage.message || 'Message',
+            type: originalMessage.message_type === 'workout_completion' 
+              ? 'workout' as const
+              : originalMessage.message_type === 'image' 
+                ? 'image' as const 
+                : 'text' as const
+          };
+        }
+      }
+
       // Create optimistic message
       const optimisticMessage: ChatMessage = {
         id: tempId,
@@ -463,13 +497,15 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         user_email: profile.email,
         user_role: profile.role,
         username: profile.username,
-        reactions: []
+        reactions: [],
+        replyTo: replyInfo
       }
 
       setMessages(prev => [...prev, optimisticMessage])
       setNewMessage('')
       setSelectedImage(null)
       setImagePreview(null)
+      setReplyingTo(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
 
       // Send to database
@@ -673,6 +709,14 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     return colors[Math.abs(hash) % colors.length]
   }
 
+  const handleReply = (messageId: string) => {
+    setReplyingTo(messageId);
+  };
+
+  const getReplyingToMessage = () => {
+    return messages.find(msg => msg.id === replyingTo);
+  };
+
   if (!isOpen) return null
 
   if (!profile?.group_id) {
@@ -697,7 +741,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
   return (
     <div 
-      className="fixed inset-0 bg-black flex flex-col transition-transform duration-500 ease-out"
+      className="fixed inset-0 bg-black flex flex-col transition-transform duration-500 ease-out max-w-2xl mx-auto relative border-l border-r border-gray-800"
       style={{ 
         paddingTop: 'env(safe-area-inset-top)',
         transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
@@ -707,47 +751,27 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         zIndex: isClosing ? 40 : 9999 // Slide behind bottom nav (z-50) when closing
       }}
     >
-        {/* Header - matches workout page header style */}
-        <div className="sticky top-0">
-          <div className="flex">
-            {/* Main header area */}
-            <div className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden">
-              <div className="relative h-full flex items-center justify-start px-6 text-white">
-                <h1 className="text-2xl font-bold text-white">Group Chat</h1>
-              </div>
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 bg-gray-900 border-b border-gray-800">
+          <div className="flex items-center gap-4">
+            <MessageCircle className="w-10 h-10 text-white scale-x-[-1]" />
+            <div>
+              <h2 className="text-lg font-medium">{groupName || 'Group Chat'}</h2>
+              <p className="text-sm text-gray-400">Group messaging</p>
             </div>
-
-            {/* Close button - matches workout page X button with icon transitions */}
-            <button
-              onClick={handleClose}
-              className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
-              aria-label="Close chat"
-            >
-              {/* Chat Icon (slides up and out when modal reaches top) */}
-              <div 
-                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
-                style={{
-                  transform: showIconTransition ? 'translateY(-64px)' : 'translateY(0px)'
-                }}
-              >
-                <ChatBubbleLeftRightIcon className="w-6 h-6" />
-              </div>
-              
-              {/* X Icon (slides up from below when modal reaches top) */}
-              <div 
-                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
-                style={{
-                  transform: showIconTransition ? 'translateY(0px)' : 'translateY(64px)'
-                }}
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </div>
-            </button>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white hover:bg-gray-800 w-10 h-10"
+          >
+            <X className="w-6 h-6" />
+          </Button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin h-8 w-8 border-2 border-gray-700 border-t-blue-400 rounded-full mx-auto"></div>
@@ -755,154 +779,20 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-12">
-              <ChatBubbleLeftRightIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4 scale-x-[-1]" />
               <p className="text-gray-400 font-medium">No messages yet</p>
               <p className="text-gray-500 text-sm mt-1">Be the first to say hello!</p>
             </div>
           ) : (
             messages.map((message) => (
-              <div
+              <MessageComponent
                 key={message.id}
-                className={`flex items-end space-x-3 mb-1 ${
-                  message.user_id === user?.id ? 'justify-end flex-row-reverse space-x-reverse' : 'justify-start'
-                }`}
-              >
-                {/* User Avatar */}
-                {message.user_id !== user?.id && (
-                  <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-medium text-gray-300">
-                      {message.user_email?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                )}
-                
-                <div className="max-w-xs lg:max-w-md xl:max-w-lg">
-                  {/* Message bubble - WhatsApp style */}
-                  <div
-                    className={`relative px-3 py-2 rounded-lg shadow-sm ${
-                      message.user_id === user?.id
-                        ? message.id.startsWith('temp-') 
-                          ? 'bg-gray-700 text-white opacity-70' 
-                          : 'bg-gray-700 text-white'
-                        : 'bg-gray-800 text-white'
-                    }`}
-                  >
-                    {/* User name inside bubble (for others' messages) - WhatsApp style */}
-                    {message.user_id !== user?.id && (
-                      <div className="mb-1">
-                        <span className={`text-xs font-semibold ${getUserColor(message.user_email || '', message.user_role || 'user')}`}>
-                          {message.username || 'User'}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Image message */}
-                    {message.message_type === 'image' && message.image_url && (
-                      <div className="mb-2">
-                        <img 
-                          src={message.image_url} 
-                          alt="Shared image" 
-                          className="rounded-lg max-w-full h-auto"
-                          style={{ maxHeight: '300px' }}
-                        />
-                      </div>
-                    )}
-
-                    {/* Workout Completion Message */}
-                    {message.message_type === 'workout_completion' && (() => {
-                      try {
-                        const parsedMessage = JSON.parse(message.message)
-                        if (parsedMessage.workout_data) {
-                          return (
-                            <WorkoutCompletionMessage 
-                              message={message}
-                              workoutData={parsedMessage.workout_data}
-                            />
-                          )
-                        }
-                      } catch (e) {
-                        console.log('Could not parse workout completion message:', e)
-                      }
-                      return null
-                    })()}
-                    
-                    {/* Text content with timestamp - WhatsApp style */}
-                    {message.message && message.message_type !== 'workout_completion' && (
-                      <div className="pr-16 pb-5">
-                        <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                          {message.message}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Timestamp bottom-right - WhatsApp style */}
-                    <div className="absolute bottom-1.5 right-3 flex items-center space-x-1">
-                      <span className="text-xs opacity-60">
-                        {formatTime(message.created_at)}
-                      </span>
-                      {message.id.startsWith('temp-') && (
-                        <div className="w-3 h-3 animate-spin border border-white border-t-transparent rounded-full opacity-50"></div>
-                      )}
-                    </div>
-                    
-                    {/* Reaction button - WhatsApp style round button */}
-                    <button
-                      onClick={() => setShowReactionPicker(
-                        showReactionPicker === message.id ? null : message.id
-                      )}
-                      className="absolute -bottom-2 -right-2 w-6 h-6 bg-gray-600 hover:bg-gray-500 rounded-full flex items-center justify-center transition-all duration-200 opacity-80 hover:opacity-100 shadow-lg border border-gray-700"
-                    >
-                      <FaceSmileIcon className="w-3.5 h-3.5 text-gray-200" />
-                    </button>
-                  </div>
-                  
-                  {/* Reactions */}
-                  {message.reactions && message.reactions.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2 px-2">
-                      {Object.entries(
-                        message.reactions.reduce((acc, reaction) => {
-                          if (!acc[reaction.emoji]) {
-                            acc[reaction.emoji] = []
-                          }
-                          acc[reaction.emoji].push(reaction)
-                          return acc
-                        }, {} as { [emoji: string]: MessageReaction[] })
-                      ).map(([emoji, reactions]) => (
-                        <button
-                          key={emoji}
-                          onClick={() => addReaction(message.id, emoji)}
-                          className={`px-2 py-1 rounded-full text-xs flex items-center space-x-1 transition-colors ${
-                            reactions.some(r => r.user_id === user?.id)
-                              ? 'bg-blue-900/50 border border-blue-600/50 text-blue-300'
-                              : 'bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700'
-                          }`}
-                        >
-                          <span>{emoji}</span>
-                          <span>{reactions.length}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Reaction picker */}
-                  {showReactionPicker === message.id && (
-                    <div className="flex space-x-2 mt-2 p-2 bg-gray-800 rounded-lg border border-gray-700">
-                      {emojiOptions.map((option) => (
-                        <button
-                          key={option.emoji}
-                          onClick={() => {
-                            addReaction(message.id, option.emoji)
-                            setShowReactionPicker(null)
-                          }}
-                          className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                        >
-                          <option.icon className="w-5 h-5 text-gray-300" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+                message={message}
+                currentUser={{ id: user?.id || '', email: profile?.email, username: profile?.username }}
+                onAddReaction={addReaction}
+                onReply={handleReply}
+                getUserColor={getUserColor}
+              />
             ))
           )}
           <div ref={messagesEndRef} />
@@ -931,70 +821,76 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           </div>
         )}
 
-        {/* Message Input - Modern aligned design */}
-        <form onSubmit={sendMessage} className="bg-black border-t border-gray-800" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="flex items-center space-x-2 p-4">
-            {/* Image upload button */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="flex-shrink-0 w-11 h-11 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors border border-gray-700"
-              aria-label="Upload image"
+        {/* Reply indicator */}
+        {replyingTo && (
+          <div className="px-4 py-2 bg-gray-800 border-t border-gray-700 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <Reply className="w-4 h-4" />
+              <span>Replying to {getReplyingToMessage()?.username || 'User'}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setReplyingTo(null)}
+              className="text-gray-400 hover:text-white p-1"
             >
-              <PhotoIcon className="w-5 h-5 text-gray-400" />
-            </button>
-            
-            {/* Text input */}
-            <div className="flex-1">
-              <textarea
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="p-4 bg-gray-900 border-t border-gray-800">
+          <form onSubmit={sendMessage} className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*,video/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  setSelectedImage(file)
+                  const reader = new FileReader()
+                  reader.onload = (e) => setImagePreview(e.target?.result as string)
+                  reader.readAsDataURL(file)
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-gray-400 hover:text-white hover:bg-gray-800 shrink-0 w-10 h-10"
+            >
+              <Plus className="w-8 h-8" />
+            </Button>
+            <div className="flex-1 relative">
+              <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent resize-none min-h-[2.75rem] max-h-[120px]"
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 rounded-full pr-16 h-10 text-sm"
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage(e))}
                 disabled={sending || uploading}
                 maxLength={500}
-                rows={1}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement
-                  target.style.height = 'auto'
-                  target.style.height = Math.min(target.scrollHeight, 120) + 'px'
-                }}
               />
             </div>
-            
-            {/* Send button */}
-            <button
+            <Button
               type="submit"
               disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
-              className="flex-shrink-0 w-11 h-11 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-              aria-label="Send message"
+              className="bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 rounded-full shrink-0 w-10 h-10"
+              size="icon"
             >
               {sending || uploading ? (
                 <div className="w-5 h-5 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
               ) : (
-                <PaperAirplaneIcon className="w-5 h-5" />
+                <Send className="w-5 h-5" />
               )}
-            </button>
-          </div>
-          
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) {
-                setSelectedImage(file)
-                const reader = new FileReader()
-                reader.onload = (e) => setImagePreview(e.target?.result as string)
-                reader.readAsDataURL(file)
-              }
-            }}
-            className="hidden"
-          />
-        </form>
+            </Button>
+          </form>
+        </div>
     </div>
   )
 }
