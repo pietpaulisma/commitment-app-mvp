@@ -176,7 +176,10 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
         {data.exercises.length > 0 && (
           <Button
             variant="ghost"
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDetails(!showDetails);
+            }}
             className="text-gray-400 hover:text-white hover:bg-gray-800 h-6 px-2 text-xs"
           >
             {showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
