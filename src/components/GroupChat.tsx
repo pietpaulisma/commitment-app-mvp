@@ -756,29 +756,56 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     }
   };
 
-  // Group messages by day
-  const groupMessagesByDay = () => {
-    const groups: Array<{type: 'divider', day: string} | {type: 'message', message: ChatMessage}> = [];
+  // Analyze message grouping for consecutive messages from same user
+  const analyzeMessageGrouping = () => {
+    const messageGrouping: Array<{type: 'divider', day: string} | {type: 'message', message: ChatMessage, isFirstInGroup: boolean, isLastInGroup: boolean}> = [];
     let lastDate = '';
     
-    messages.forEach(message => {
+    messages.forEach((message, index) => {
       const messageDate = new Date(message.created_at).toDateString();
       
+      // Add day divider if date changed
       if (messageDate !== lastDate) {
-        groups.push({
+        messageGrouping.push({
           type: 'divider',
           day: getDayLabel(new Date(message.created_at))
         });
         lastDate = messageDate;
       }
       
-      groups.push({
+      // Analyze grouping for this message
+      const prevMessage = index > 0 ? messages[index - 1] : null;
+      const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+      
+      // Check if previous message is from same user and within time limit
+      const prevIsSameUser = prevMessage && 
+        prevMessage.user_id === message.user_id &&
+        new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() < 5 * 60 * 1000 && // 5 minutes
+        new Date(prevMessage.created_at).toDateString() === messageDate; // Same day
+      
+      // Check if next message is from same user and within time limit  
+      const nextIsSameUser = nextMessage &&
+        nextMessage.user_id === message.user_id &&
+        new Date(nextMessage.created_at).getTime() - new Date(message.created_at).getTime() < 5 * 60 * 1000 && // 5 minutes
+        new Date(nextMessage.created_at).toDateString() === messageDate; // Same day
+      
+      const isFirstInGroup = !prevIsSameUser;
+      const isLastInGroup = !nextIsSameUser;
+      
+      messageGrouping.push({
         type: 'message',
-        message
+        message,
+        isFirstInGroup,
+        isLastInGroup
       });
     });
     
-    return groups;
+    return messageGrouping;
+  };
+
+  // Group messages by day (legacy - keeping for compatibility)
+  const groupMessagesByDay = () => {
+    return analyzeMessageGrouping();
   };
 
   // Online user tracking
@@ -936,6 +963,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                   onAddReaction={addReaction}
                   onReply={handleReply}
                   getUserColor={getUserColor}
+                  isFirstInGroup={'isFirstInGroup' in item ? item.isFirstInGroup : true}
+                  isLastInGroup={'isLastInGroup' in item ? item.isLastInGroup : true}
                 />
               )
             ))

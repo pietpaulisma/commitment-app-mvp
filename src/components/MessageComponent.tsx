@@ -46,6 +46,8 @@ interface MessageComponentProps {
   onAddReaction: (messageId: string, emoji: string) => void;
   onReply: (messageId: string) => void;
   getUserColor: (email: string, role: string) => string;
+  isFirstInGroup?: boolean;
+  isLastInGroup?: boolean;
 }
 
 export function MessageComponent({ 
@@ -53,7 +55,9 @@ export function MessageComponent({
   currentUser, 
   onAddReaction, 
   onReply,
-  getUserColor 
+  getUserColor,
+  isFirstInGroup = true,
+  isLastInGroup = true
 }: MessageComponentProps) {
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -159,9 +163,9 @@ export function MessageComponent({
   };
 
   return (
-    <div className={`flex gap-2 mb-3 items-end ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      {/* Avatar - only show for other users, positioned at bottom */}
-      {!isCurrentUser && (
+    <div className={`flex gap-2 ${isLastInGroup ? 'mb-3' : 'mb-1'} items-end ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      {/* Avatar - only show for other users and only on last message in group */}
+      {!isCurrentUser && isLastInGroup && (
         <div 
           className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0"
           style={{ backgroundColor: getUserBgColor() }}
@@ -169,11 +173,16 @@ export function MessageComponent({
           {getUserAvatar()}
         </div>
       )}
+      
+      {/* Spacer for grouped messages without avatar */}
+      {!isCurrentUser && !isLastInGroup && (
+        <div className="w-8 h-8 flex-shrink-0" />
+      )}
 
       {/* Message content */}
       <div className={`${isWorkoutPost ? 'max-w-full w-full' : 'max-w-md'} relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
-        {/* User name - only show for other users */}
-        {!isCurrentUser && (
+        {/* User name - only show for other users and only on first message in group */}
+        {!isCurrentUser && isFirstInGroup && (
           <div 
             className={`text-sm mb-1 ml-3 font-medium ${getUserColor(message.user_email || '', message.user_role || 'user')}`}
           >
@@ -188,28 +197,30 @@ export function MessageComponent({
               relative px-3 py-2 rounded-xl shadow-sm cursor-pointer transition-colors
               ${isCurrentUser 
                 ? message.id.startsWith('temp-')
-                  ? 'bg-gradient-to-r from-orange-700 to-red-600 text-white rounded-br-none opacity-70'
-                  : 'bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 text-white rounded-br-none'
-                : 'bg-gray-800 hover:bg-gray-700 text-white rounded-bl-none'
+                  ? `bg-gradient-to-r from-orange-700 to-red-600 text-white opacity-70 ${isLastInGroup ? 'rounded-br-none' : ''}`
+                  : `bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 text-white ${isLastInGroup ? 'rounded-br-none' : ''}`
+                : `bg-gray-800 hover:bg-gray-700 text-white ${isLastInGroup ? 'rounded-bl-none' : ''}`
               }
             `}
             onClick={handleShowActionMenu}
           >
-            {/* Speech bubble tail */}
-            <div 
-              className={`
-                absolute bottom-0 w-3 h-3
-                ${isCurrentUser 
-                  ? 'right-0 translate-x-full bg-gradient-to-br from-orange-700 to-red-600' 
-                  : 'left-0 -translate-x-full bg-gray-800'
-                }
-              `} 
-              style={{
-                clipPath: isCurrentUser 
-                  ? 'polygon(0 0, 100% 100%, 0 100%)' 
-                  : 'polygon(100% 0, 0 100%, 100% 100%)'
-              }}
-            ></div>
+            {/* Speech bubble tail - only show on last message in group */}
+            {isLastInGroup && (
+              <div 
+                className={`
+                  absolute bottom-0 w-3 h-3
+                  ${isCurrentUser 
+                    ? 'right-0 translate-x-full bg-gradient-to-br from-orange-700 to-red-600' 
+                    : 'left-0 -translate-x-full bg-gray-800'
+                  }
+                `} 
+                style={{
+                  clipPath: isCurrentUser 
+                    ? 'polygon(0 0, 100% 100%, 0 100%)' 
+                    : 'polygon(100% 0, 0 100%, 100% 100%)'
+                }}
+              ></div>
+            )}
 
             {/* Reply context - shown when this message is a reply */}
             {message.replyTo && (
