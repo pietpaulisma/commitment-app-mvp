@@ -777,15 +777,17 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
       const prevMessage = index > 0 ? messages[index - 1] : null;
       const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
       
-      // Check if previous message is from same user and within time limit
+      // Check if previous message is from same user and within time limit and same message type
       const prevIsSameUser = prevMessage && 
         prevMessage.user_id === message.user_id &&
+        prevMessage.message_type === message.message_type && // Same message type
         new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() < 5 * 60 * 1000 && // 5 minutes
         new Date(prevMessage.created_at).toDateString() === messageDate; // Same day
       
-      // Check if next message is from same user and within time limit  
+      // Check if next message is from same user and within time limit and same message type
       const nextIsSameUser = nextMessage &&
         nextMessage.user_id === message.user_id &&
+        nextMessage.message_type === message.message_type && // Same message type
         new Date(nextMessage.created_at).getTime() - new Date(message.created_at).getTime() < 5 * 60 * 1000 && // 5 minutes
         new Date(nextMessage.created_at).toDateString() === messageDate; // Same day
       
