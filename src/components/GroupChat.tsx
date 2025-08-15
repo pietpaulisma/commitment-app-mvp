@@ -177,6 +177,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [groupName, setGroupName] = useState('')
   const [onlineCount, setOnlineCount] = useState(0)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
   
   // Animation states
   const [isAnimatedIn, setIsAnimatedIn] = useState(false)
@@ -226,6 +227,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
   useEffect(() => {
     if (isOpen && profile?.group_id) {
+      setIsInitialLoad(true) // Reset for fresh chat opening
       loadMessages()
       loadGroupName()
       
@@ -344,12 +346,17 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   }, [isOpen, profile?.group_id])
 
   useEffect(() => {
-    scrollToBottom(loading)
-  }, [messages])
+    if (messages.length > 0) {
+      scrollToBottom(isInitialLoad)
+      if (isInitialLoad) {
+        setIsInitialLoad(false)
+      }
+    }
+  }, [messages, isInitialLoad])
 
-  const scrollToBottom = (isInitialLoad = false) => {
+  const scrollToBottom = (instant = false) => {
     messagesEndRef.current?.scrollIntoView({ 
-      behavior: isInitialLoad ? 'instant' : 'smooth' 
+      behavior: instant ? 'instant' : 'smooth' 
     })
   }
 
