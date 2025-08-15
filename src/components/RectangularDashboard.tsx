@@ -1358,6 +1358,28 @@ export default function RectangularDashboard() {
         }
       })
       
+      // Try to load online status if columns exist
+      try {
+        const { data: onlineStatus, error: onlineError } = await supabase
+          .from('profiles')
+          .select('id, is_online, last_seen')
+          .eq('group_id', profile.group_id)
+        
+        if (!onlineError && onlineStatus) {
+          // Add online status to members
+          membersWithProgress.forEach(member => {
+            const status = onlineStatus.find(s => s.id === member.id)
+            if (status) {
+              member.is_online = status.is_online
+              member.last_seen = status.last_seen
+            }
+          })
+        }
+      } catch (onlineError) {
+        console.log('Online status columns not available yet, skipping:', onlineError)
+        // Continue without online status - this is expected if columns don't exist
+      }
+
       // Sort by points descending
       membersWithProgress.sort((a, b) => b.todayPoints - a.todayPoints)
       setGroupMembers(membersWithProgress)
@@ -2224,6 +2246,17 @@ export default function RectangularDashboard() {
                                 className="transition-all duration-1000 ease-out"
                               />
                             </svg>
+                            
+                            {/* Online status indicator */}
+                            {member.is_online && (
+                              <div 
+                                className="absolute top-2.5 right-0.5 w-4 h-4 rounded-full animate-pulse"
+                                style={{ 
+                                  backgroundColor: member.personal_color || "#ef4444",
+                                  boxShadow: `0 0 10px ${member.personal_color || "#ef4444"}80, 0 0 5px ${member.personal_color || "#ef4444"}40`
+                                }}
+                              />
+                            )}
                             
                             {/* Percentage text positioned lower with bigger font - NO PULSING */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-1">
