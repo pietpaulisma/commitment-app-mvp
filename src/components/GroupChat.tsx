@@ -727,6 +727,48 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     return messages.find(msg => msg.id === replyingTo);
   };
 
+  // Helper function to format day dividers
+  const getDayLabel = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const messageDate = new Date(date);
+    
+    if (messageDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (messageDate.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return messageDate.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+  };
+
+  // Group messages by day
+  const groupMessagesByDay = () => {
+    const groups: Array<{type: 'divider', day: string} | {type: 'message', message: ChatMessage}> = [];
+    let lastDate = '';
+    
+    messages.forEach(message => {
+      const messageDate = new Date(message.created_at).toDateString();
+      
+      if (messageDate !== lastDate) {
+        groups.push({
+          type: 'divider',
+          day: getDayLabel(new Date(message.created_at))
+        });
+        lastDate = messageDate;
+      }
+      
+      groups.push({
+        type: 'message',
+        message
+      });
+    });
+    
+    return groups;
+  };
+
   // Online user tracking
   const updateOnlineStatus = async (isOnline: boolean) => {
     if (!user || !profile?.group_id) return;
@@ -867,15 +909,23 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
               <p className="text-gray-500 text-sm mt-1">Be the first to say hello!</p>
             </div>
           ) : (
-            messages.map((message) => (
-              <MessageComponent
-                key={message.id}
-                message={message}
-                currentUser={{ id: user?.id || '', email: profile?.email, username: profile?.username }}
-                onAddReaction={addReaction}
-                onReply={handleReply}
-                getUserColor={getUserColor}
-              />
+            groupMessagesByDay().map((item, index) => (
+              item.type === 'divider' ? (
+                <div key={`divider-${index}`} className="flex justify-center my-4">
+                  <div className="bg-gray-700 text-gray-300 text-sm px-4 py-2 rounded-full">
+                    {item.day}
+                  </div>
+                </div>
+              ) : (
+                <MessageComponent
+                  key={item.message.id}
+                  message={item.message}
+                  currentUser={{ id: user?.id || '', email: profile?.email, username: profile?.username }}
+                  onAddReaction={addReaction}
+                  onReply={handleReply}
+                  getUserColor={getUserColor}
+                />
+              )
             ))
           )}
           <div ref={messagesEndRef} />
