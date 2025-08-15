@@ -2250,7 +2250,7 @@ export default function RectangularDashboard() {
                             {/* Online status indicator */}
                             {member.is_online && (
                               <div 
-                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-black animate-pulse"
+                                className="absolute top-1 -right-0.5 w-4 h-4 rounded-full border-2 border-black animate-pulse"
                                 style={{ 
                                   backgroundColor: member.personal_color || "#ef4444",
                                   boxShadow: `0 0 10px ${member.personal_color || "#ef4444"}80, 0 0 5px ${member.personal_color || "#ef4444"}40`
