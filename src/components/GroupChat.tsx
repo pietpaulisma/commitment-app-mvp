@@ -911,7 +911,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
       className="fixed inset-0 bg-black text-white flex flex-col transition-transform duration-500 ease-out"
       style={{ 
         paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
         transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
         willChange: 'transform',
         backfaceVisibility: 'hidden',
@@ -1020,8 +1019,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         )}
 
         {/* Input */}
-        <div className="p-4 bg-gray-900">
-          <form onSubmit={sendMessage} className="flex items-center gap-3 bg-gray-800 rounded-full px-4 py-2">
+        <div className="bg-gray-900 pt-3 px-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
+          <form onSubmit={sendMessage} className="flex items-center gap-3 bg-gray-800 rounded-full px-3 py-1.5">
             <input
               type="file"
               ref={fileInputRef}
@@ -1042,7 +1041,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="text-gray-400 hover:text-white hover:bg-gray-700 shrink-0 w-8 h-8 rounded-full"
+              className="text-gray-400 hover:text-white hover:bg-gray-700 shrink-0 w-7 h-7 rounded-full"
             >
               <Plus className="w-4 h-4" />
             </Button>
@@ -1051,7 +1050,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="bg-transparent border-none text-white placeholder-gray-400 h-8 text-sm focus:ring-0 focus:outline-none"
+                className="bg-transparent border-none text-white placeholder-gray-400 h-7 text-sm focus:ring-0 focus:outline-none"
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage(e))}
                 disabled={sending || uploading}
                 maxLength={500}
@@ -1060,7 +1059,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             <Button
               type="submit"
               disabled={(!newMessage.trim() && !selectedImage) || sending || uploading}
-              className="bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 shrink-0 w-8 h-8"
+              className="bg-gradient-to-r from-orange-700 to-red-600 hover:from-orange-800 hover:to-red-700 shrink-0 w-7 h-7"
               style={{ borderRadius: '50%' }}
               size="icon"
             >
