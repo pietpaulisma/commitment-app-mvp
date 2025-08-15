@@ -1022,6 +1022,32 @@ export default function RectangularDashboard() {
     }
   }, [weekMode])
 
+  // Add periodic refresh for group members to keep data current
+  useEffect(() => {
+    if (!user || !profile) return
+
+    // Refresh group members every 2 minutes
+    const interval = setInterval(() => {
+      console.log('Periodic refresh of group members')
+      loadGroupMembers()
+    }, 2 * 60 * 1000) // 2 minutes
+
+    // Also refresh when user comes back to the page
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('User returned to page, refreshing group members')
+        loadGroupMembers()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [user, profile])
+
   // Trigger animations after component mounts and data loads
   useEffect(() => {
     if (user && profile && groupStartDate) {
@@ -1366,14 +1392,12 @@ export default function RectangularDashboard() {
           .eq('group_id', profile.group_id)
         
         if (!onlineError && onlineStatus) {
-          console.log('Online status data loaded:', onlineStatus)
           // Add online status to members
           membersWithProgress.forEach(member => {
             const status = onlineStatus.find(s => s.id === member.id)
             if (status) {
               member.is_online = status.is_online
               member.last_seen = status.last_seen
-              console.log(`Member ${member.username} online status:`, status.is_online)
             }
           })
         }
