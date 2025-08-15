@@ -735,12 +735,24 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     
     const messageDate = new Date(date);
     
+    // Calculate days difference
+    const timeDiff = today.getTime() - messageDate.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+    
     if (messageDate.toDateString() === today.toDateString()) {
       return 'Today';
     } else if (messageDate.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
-    } else {
+    } else if (daysDiff <= 7) {
+      // Within past week - show weekday
       return messageDate.toLocaleDateString('en-US', { weekday: 'long' });
+    } else {
+      // Older than a week - show actual date
+      return messageDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: messageDate.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+      });
     }
   };
 
