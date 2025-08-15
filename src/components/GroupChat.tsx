@@ -347,7 +347,11 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
   useEffect(() => {
     if (messages.length > 0) {
-      scrollToBottom(isInitialLoad)
+      // Add small delay to ensure DOM is fully rendered, especially important in PWA mode
+      setTimeout(() => {
+        scrollToBottom(isInitialLoad)
+      }, isInitialLoad ? 100 : 0)
+      
       if (isInitialLoad) {
         setIsInitialLoad(false)
       }

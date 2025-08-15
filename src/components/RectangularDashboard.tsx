@@ -1366,12 +1366,14 @@ export default function RectangularDashboard() {
           .eq('group_id', profile.group_id)
         
         if (!onlineError && onlineStatus) {
+          console.log('Online status data loaded:', onlineStatus)
           // Add online status to members
           membersWithProgress.forEach(member => {
             const status = onlineStatus.find(s => s.id === member.id)
             if (status) {
               member.is_online = status.is_online
               member.last_seen = status.last_seen
+              console.log(`Member ${member.username} online status:`, status.is_online)
             }
           })
         }
@@ -2250,11 +2252,13 @@ export default function RectangularDashboard() {
                             {/* Online status indicator */}
                             {member.is_online && (
                               <div 
-                                className="absolute top-2.5 right-0.5 w-4 h-4 rounded-full animate-pulse"
+                                className="absolute top-2.5 right-0.5 w-4 h-4 rounded-full animate-pulse border border-gray-900"
                                 style={{ 
                                   backgroundColor: member.personal_color || "#ef4444",
-                                  boxShadow: `0 0 10px ${member.personal_color || "#ef4444"}80, 0 0 5px ${member.personal_color || "#ef4444"}40`
+                                  boxShadow: `0 0 15px ${member.personal_color || "#ef4444"}CC, 0 0 8px ${member.personal_color || "#ef4444"}80, inset 0 0 0 1px rgba(255,255,255,0.2)`,
+                                  zIndex: 10
                                 }}
+                                title="User is online"
                               />
                             )}
                             

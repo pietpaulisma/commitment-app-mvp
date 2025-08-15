@@ -112,13 +112,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Update online status when user is authenticated
     const updateOnlineStatus = async (isOnline: boolean) => {
       try {
-        await supabase
+        console.log(`Setting user online status to: ${isOnline}`)
+        const result = await supabase
           .from('profiles')
           .update({ 
             last_seen: new Date().toISOString(),
             is_online: isOnline 
           })
           .eq('id', user.id)
+        console.log('Online status update result:', result)
       } catch (error) {
         // Silently handle missing columns - they may not exist yet
         if (error.message?.includes('column') && error.message?.includes('does not exist')) {
