@@ -127,7 +127,8 @@ export default function ExerciseManagementPage() {
                 <p className="text-gray-400">No exercises found</p>
               </div>
             ) : (
-              exercises.map((exercise) => (
+              <>
+              {exercises.map((exercise) => (
                 <div key={exercise.id} className="bg-gray-900 border border-gray-700 p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
@@ -173,11 +174,11 @@ export default function ExerciseManagementPage() {
                     </button>
                   </div>
                 </div>
-              ))
+              ))}
+              </>
             )}
-          </>
+          </div>
         )}
-
       </div>
       
       {/* Add/Edit Exercise Modal */}
