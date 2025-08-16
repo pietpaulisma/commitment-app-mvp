@@ -1477,69 +1477,69 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot - load group penalty data
-      const { data: groupPenalties, error: penaltyError } = await supabase
+      // 2. Money Pot - load group transaction data (both penalties and payments)
+      const { data: groupTransactions, error: transactionError } = await supabase
         .from('payment_transactions')
-        .select('amount, user_id, profiles!inner(username)')
+        .select('amount, user_id, transaction_type, profiles!inner(username)')
         .eq('group_id', profile.group_id)
-        .eq('transaction_type', 'penalty')
+        .in('transaction_type', ['penalty', 'payment'])
 
-      if (penaltyError) {
-        console.error('Error loading group penalties:', penaltyError)
+      if (transactionError) {
+        console.error('Error loading group transactions:', transactionError)
       }
 
-      const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
-      
-      // Find biggest penalty payer
-      const userPenaltyMap = new Map()
-      groupPenalties?.forEach(penalty => {
-        const userId = penalty.user_id
-        userPenaltyMap.set(userId, (userPenaltyMap.get(userId) || 0) + penalty.amount)
+      // Calculate net amounts (penalties - payments) per user
+      const userNetAmountMap = new Map()
+      groupTransactions?.forEach(transaction => {
+        const userId = transaction.user_id
+        const amount = transaction.transaction_type === 'penalty' ? transaction.amount : -transaction.amount
+        userNetAmountMap.set(userId, (userNetAmountMap.get(userId) || 0) + amount)
       })
       
-      let biggestContributor = 'No penalties yet'
-      let maxPenalties = 0
-      userPenaltyMap.forEach((amount, userId) => {
-        if (amount > maxPenalties) {
-          maxPenalties = amount
-          const penalty = groupPenalties?.find(p => p.user_id === userId)
-          biggestContributor = penalty?.profiles?.username || 'User'
+      // Calculate total pot amount (sum of all positive net amounts)
+      const totalPotAmount = Array.from(userNetAmountMap.values())
+        .filter(amount => amount > 0)
+        .reduce((sum, amount) => sum + amount, 0)
+      
+      // Find biggest net contributor
+      let biggestContributor = 'No contributions yet'
+      let maxNetAmount = 0
+      userNetAmountMap.forEach((netAmount, userId) => {
+        if (netAmount > maxNetAmount) {
+          maxNetAmount = netAmount
+          const transaction = groupTransactions?.find(t => t.user_id === userId)
+          biggestContributor = transaction?.profiles?.username || 'User'
         }
       })
 
-      // 3. Pot Contributors - detailed data for the new component
-      const { data: detailedPenalties, error: detailedPenaltyError } = await supabase
-        .from('payment_transactions')
-        .select('amount, user_id, created_at, profiles!inner(username)')
-        .eq('group_id', profile.group_id)
-        .eq('transaction_type', 'penalty')
-        .order('created_at', { ascending: false })
-
+      // 3. Pot Contributors - detailed data for the new component (reuse the same transaction data)
       let contributors = []
-      if (detailedPenalties && !detailedPenaltyError) {
-        // Aggregate by user and find most recent contribution for each
+      if (groupTransactions && !transactionError) {
+        // Aggregate by user and find most recent transaction for each
         const userContributions = new Map()
-        detailedPenalties.forEach(penalty => {
-          const userId = penalty.user_id
-          const username = penalty.profiles?.username || 'User'
+        groupTransactions.forEach(transaction => {
+          const userId = transaction.user_id
+          const username = transaction.profiles?.username || 'User'
           if (!userContributions.has(userId)) {
             userContributions.set(userId, {
               name: username,
-              amount: 0,
-              latestDate: new Date(penalty.created_at),
+              netAmount: 0,
+              latestDate: new Date(transaction.created_at),
               isRecent: false
             })
           }
           const existing = userContributions.get(userId)
-          existing.amount += penalty.amount
-          if (new Date(penalty.created_at) > existing.latestDate) {
-            existing.latestDate = new Date(penalty.created_at)
+          const amount = transaction.transaction_type === 'penalty' ? transaction.amount : -transaction.amount
+          existing.netAmount += amount
+          if (new Date(transaction.created_at) > existing.latestDate) {
+            existing.latestDate = new Date(transaction.created_at)
           }
         })
 
-        // Convert to array and sort by amount (highest first)
+        // Convert to array, filter positive amounts, and sort by amount (highest first)
         contributors = Array.from(userContributions.values())
-          .sort((a, b) => b.amount - a.amount)
+          .filter(contributor => contributor.netAmount > 0) // Only show users who owe money
+          .sort((a, b) => b.netAmount - a.netAmount)
           .map((contributor, index) => {
             const now = new Date()
             const diffTime = now.getTime() - contributor.latestDate.getTime()
@@ -1557,7 +1557,7 @@ export default function RectangularDashboard() {
 
             return {
               name: contributor.name,
-              amount: Math.round(contributor.amount),
+              amount: Math.round(contributor.netAmount),
               timeAgo: timeAgo, // Show time for each contributor
               isNew: diffHours < 2 // Mark as new if within 2 hours
             }
@@ -1637,12 +1637,12 @@ export default function RectangularDashboard() {
         moneyPot: {
           title: 'Money Pot',
           subtitle: `top: ${biggestContributor}`,
-          value: Math.max(0, Math.round(totalPenaltyAmount)),
+          value: Math.max(0, Math.round(totalPotAmount)),
           type: 'typography_stat'
         },
         potContributors: {
           title: 'Pot Contributors',
-          value: Math.max(0, Math.round(totalPenaltyAmount)),
+          value: Math.max(0, Math.round(totalPotAmount)),
           contributors: contributors,
           type: 'pot_contributors'
         },
@@ -1720,18 +1720,21 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution)
-      const { data: userPenalties, error: userPenaltyError } = await supabase
+      // 2. Personal Money Pot (your net contribution)
+      const { data: userTransactions, error: userTransactionError } = await supabase
         .from('payment_transactions')
-        .select('amount')
+        .select('amount, transaction_type')
         .eq('user_id', user.id)
-        .eq('transaction_type', 'penalty')
+        .in('transaction_type', ['penalty', 'payment'])
 
-      if (userPenaltyError) {
-        console.error('Error loading user penalties:', userPenaltyError)
+      if (userTransactionError) {
+        console.error('Error loading user transactions:', userTransactionError)
       }
 
-      const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
+      // Calculate net contribution (penalties - payments)
+      const personalPenalties = userTransactions?.filter(t => t.transaction_type === 'penalty').reduce((sum, t) => sum + t.amount, 0) || 0
+      const personalPayments = userTransactions?.filter(t => t.transaction_type === 'payment').reduce((sum, t) => sum + t.amount, 0) || 0
+      const personalMoneyContribution = Math.max(0, personalPenalties - personalPayments)
 
       // 3. Personal Birthday - use real birth date from profile
       let nextBirthdayDays = 0
