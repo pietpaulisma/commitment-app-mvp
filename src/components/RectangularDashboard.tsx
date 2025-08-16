@@ -902,7 +902,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
               </div>
               <div className="text-right mb-1">
                 <div className="text-white/70 text-xs">RECORD</div>
-                <div className="text-white text-base font-bold">44</div>
+                <div className="text-white text-base font-bold">{stat.longestStreak || 0}</div>
               </div>
             </div>
           </div>
@@ -1184,6 +1184,7 @@ export default function RectangularDashboard() {
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
   const [daysSinceDonation, setDaysSinceDonation] = useState<number>(0)
   const [insaneStreak, setInsaneStreak] = useState<number>(0)
+  const [personalLongestInsaneStreak, setPersonalLongestInsaneStreak] = useState<number>(0)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -1262,7 +1263,7 @@ export default function RectangularDashboard() {
 
   // Update group stats when streak data changes
   useEffect(() => {
-    if (groupStats && (daysSinceDonation > 0 || insaneStreak > 0)) {
+    if (groupStats && (daysSinceDonation > 0 || insaneStreak >= 0)) {
       // Update the streak progress data in existing group stats
       const updatedStats = { ...groupStats }
       if (updatedStats.interestingStats) {
@@ -1271,7 +1272,8 @@ export default function RectangularDashboard() {
             return {
               ...stat,
               commitmentDays: daysSinceDonation,
-              insaneDays: insaneStreak
+              insaneDays: insaneStreak,
+              longestStreak: personalLongestInsaneStreak
             }
           }
           return stat
@@ -1279,7 +1281,7 @@ export default function RectangularDashboard() {
         setGroupStats(updatedStats)
       }
     }
-  }, [daysSinceDonation, insaneStreak, groupStats?.interestingStats?.length])
+  }, [daysSinceDonation, insaneStreak, personalLongestInsaneStreak, groupStats?.interestingStats?.length])
 
   const calculateChallengeInfo = () => {
     if (!groupStartDate) return
@@ -2299,8 +2301,26 @@ export default function RectangularDashboard() {
             recoveryDays
           )
           setInsaneStreak(streak)
+          
+          // Also calculate personal longest streak for the record
+          // Get ALL user logs (not just 30 days) for longest streak calculation
+          const { data: allPersonalLogs } = await supabase
+            .from('logs')
+            .select('date, points')
+            .eq('user_id', user.id)
+          
+          const personalLongestStreak = calculateLongestStreak(
+            allPersonalLogs || [],
+            currentGroupData.start_date,
+            restDays,
+            recoveryDays
+          )
+          
+          console.log('🔍 Personal longest insane streak:', personalLongestStreak)
+          setPersonalLongestInsaneStreak(personalLongestStreak)
         } else {
           setInsaneStreak(0)
+          setPersonalLongestInsaneStreak(0)
         }
       } catch (error) {
         console.log('Could not load donation/streak data:', error)
