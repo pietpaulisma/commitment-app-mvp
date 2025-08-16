@@ -852,69 +852,111 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
     )
   }
 
-  // Streak Progress - Shows current streak vs longest streak with mini graph
+  // Streak Progress - Dual section design with background graphs like screenshot
   if (stat.type === 'streak_progress') {
     const currentStreak = stat.currentStreak || 0
     const longestStreak = stat.longestStreak || 0
     const isNewRecord = currentStreak > 0 && currentStreak >= longestStreak
-    const bgColor = 'bg-gray-900/30'
+    
+    // Generate some mock graph data for background visualization
+    const generateGraphData = (length: number, trend: 'up' | 'down' | 'stable' = 'up') => {
+      return Array.from({ length }, (_, i) => {
+        const base = trend === 'up' ? (i / length) * 0.8 + 0.2 : 
+                     trend === 'down' ? 1 - (i / length) * 0.6 : 
+                     0.5 + Math.sin(i * 0.3) * 0.3
+        return Math.max(0.1, Math.min(1, base + (Math.random() - 0.5) * 0.2))
+      })
+    }
+    
+    const commitmentGraphData = generateGraphData(20, 'stable')
+    const insaneGraphData = generateGraphData(20, 'up')
     
     return (
-      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-4 h-full flex flex-col">
-          {/* Header */}
-          <div className="mb-2">
-            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
-            <div className="flex items-baseline gap-2">
-              <div className="text-2xl font-black text-white leading-none">
-                {currentStreak}
-              </div>
-              <div className="text-xs text-gray-400">
-                / {longestStreak} max
-              </div>
+      <div key={index} className={`relative rounded-lg ${layoutClasses} overflow-hidden`}>
+        {/* Top Section - Commitment Streak */}
+        <div className="relative h-1/2 overflow-hidden">
+          {/* Orange background with gradient */}
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              background: getGradientStyle('bg-orange-400', 'organic')
+            }}
+          />
+          
+          {/* Background graph lines */}
+          <div className="absolute inset-0 flex items-end justify-end pr-4 pb-2">
+            <div className="flex items-end gap-0.5 opacity-30">
+              {commitmentGraphData.map((value, i) => (
+                <div
+                  key={i}
+                  className="w-1 bg-white/40 rounded-t"
+                  style={{ height: `${value * 40}px` }}
+                />
+              ))}
             </div>
           </div>
           
-          {/* Progress visualization */}
-          <div className="flex-1 flex flex-col justify-center">
-            {/* Progress bars */}
-            <div className="space-y-2 mb-3">
-              {/* Current streak bar */}
-              <div className="flex items-center gap-2">
-                <div className="text-xs text-gray-400 w-12">Now</div>
-                <div className="flex-1 bg-gray-700 h-2 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-1000 ease-out ${
-                      isNewRecord ? 'bg-green-400' : 'bg-blue-400'
-                    }`}
-                    style={{ 
-                      width: longestStreak > 0 ? `${Math.min((currentStreak / longestStreak) * 100, 100)}%` : '0%'
-                    }}
-                  />
-                </div>
-                <div className="text-xs text-white font-bold w-6">{currentStreak}</div>
+          {/* Content */}
+          <div className="relative p-3 h-full flex flex-col justify-between">
+            <div className="text-xs text-white/90 uppercase tracking-wider font-bold">
+              COMMITMENT STREAK
+            </div>
+            <div className="flex items-baseline justify-between">
+              <div className="text-3xl font-black text-white leading-none">
+                {currentStreak}
               </div>
-              
-              {/* Best streak reference line */}
-              <div className="flex items-center gap-2">
-                <div className="text-xs text-gray-400 w-12">Best</div>
-                <div className="flex-1 bg-gray-700 h-1 rounded-full">
-                  <div className="w-full h-full bg-orange-400 rounded-full" />
-                </div>
-                <div className="text-xs text-orange-400 font-bold w-6">{longestStreak}</div>
+              <div className="text-right">
+                <div className="text-white/90 text-sm font-bold">RECORD</div>
+                <div className="text-white text-lg font-black">{longestStreak}</div>
               </div>
             </div>
-            
-            {/* Status message */}
-            <div className="text-center">
-              {isNewRecord && currentStreak > 0 ? (
-                <div className="text-xs text-green-400 font-bold">🔥 NEW RECORD!</div>
-              ) : currentStreak > 0 ? (
-                <div className="text-xs text-blue-400">On a streak!</div>
-              ) : (
-                <div className="text-xs text-gray-400">Start your streak</div>
-              )}
+            <div className="text-white text-sm font-bold">DAYS</div>
+          </div>
+        </div>
+        
+        {/* Bottom Section - Insane Streak */}
+        <div className="relative h-1/2 overflow-hidden">
+          {/* Green background with gradient */}
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)'
+            }}
+          />
+          
+          {/* Background graph lines */}
+          <div className="absolute inset-0 flex items-end justify-end pr-4 pb-2">
+            <div className="flex items-end gap-0.5 opacity-30">
+              {insaneGraphData.map((value, i) => (
+                <div
+                  key={i}
+                  className="w-1 bg-white/40 rounded-t"
+                  style={{ height: `${value * 40}px` }}
+                />
+              ))}
             </div>
+          </div>
+          
+          {/* Content */}
+          <div className="relative p-3 h-full flex flex-col justify-between">
+            <div className="text-xs text-white/90 uppercase tracking-wider font-bold">
+              INSANE STREAK
+            </div>
+            <div className="flex items-baseline justify-between">
+              <div className="text-3xl font-black text-white leading-none">
+                {currentStreak + 1}
+              </div>
+              <div className="text-right">
+                {isNewRecord && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-yellow-300">🔥</span>
+                    <span className="text-white text-xs font-bold">NEW</span>
+                  </div>
+                )}
+                <div className="text-white text-lg font-black">RECORD!</div>
+              </div>
+            </div>
+            <div className="text-white text-sm font-bold">DAYS</div>
           </div>
         </div>
       </div>
