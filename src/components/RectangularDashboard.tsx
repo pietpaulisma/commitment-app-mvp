@@ -779,20 +779,27 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
           {/* Contributors List */}
           <div className="flex-1 flex flex-col gap-2 overflow-y-auto">
             {contributors.map((contributor: any, i: number) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className="text-sm text-white font-medium truncate">
-                    {contributor.name}
+              <div key={i} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="text-xs text-white font-medium truncate">
+                      {contributor.name}
+                    </div>
+                    {contributor.isNew && (
+                      <span className="bg-green-500 text-black text-xs px-1.5 py-0.5 rounded font-bold">
+                        NEW
+                      </span>
+                    )}
                   </div>
-                  {contributor.isNew && (
-                    <span className="bg-green-500 text-black text-xs px-2 py-0.5 rounded font-bold">
-                      NEW
-                    </span>
-                  )}
+                  <div className="text-xs text-gray-300 font-bold">
+                    ${contributor.amount}
+                  </div>
                 </div>
-                <div className="text-sm text-gray-300 font-bold">
-                  ${contributor.amount}
-                </div>
+                {contributor.timeAgo && (
+                  <div className="text-xs text-gray-400 pl-0">
+                    {contributor.timeAgo}
+                  </div>
+                )}
               </div>
             ))}
             {contributors.length === 0 && (
@@ -801,15 +808,6 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
               </div>
             )}
           </div>
-          
-          {/* Last contribution timestamp */}
-          {contributors.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-700">
-              <div className="text-xs text-gray-400">
-                {contributors[0]?.timeAgo}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     )
@@ -1564,8 +1562,8 @@ export default function RectangularDashboard() {
             return {
               name: contributor.name,
               amount: Math.round(contributor.amount),
-              timeAgo: index === 0 ? timeAgo : '', // Only show time for latest
-              isNew: diffHours < 2 && index === 0 // Mark as new if within 2 hours and top contributor
+              timeAgo: timeAgo, // Show time for each contributor
+              isNew: diffHours < 2 // Mark as new if within 2 hours
             }
           })
       }
