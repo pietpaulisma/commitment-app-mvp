@@ -1,7 +1,11 @@
 -- Fix RLS policies for payment_transactions table to allow admin adjustments
 -- Run this in your Supabase SQL editor
 
--- Add policy to allow group admins to insert payment transactions for their group members
+-- First, drop any existing policies if they exist
+DROP POLICY IF EXISTS "Group admins can insert payment_transactions for their group" ON payment_transactions;
+DROP POLICY IF EXISTS "Supreme admins can insert payment_transactions for any group" ON payment_transactions;
+
+-- Add policy to allow group admins to insert payment transactions for their group
 CREATE POLICY "Group admins can insert payment_transactions for their group" ON payment_transactions
 FOR INSERT 
 WITH CHECK (
@@ -9,10 +13,10 @@ WITH CHECK (
   EXISTS (
     SELECT 1 FROM profiles admin_profile
     WHERE admin_profile.id = auth.uid() 
-    AND admin_profile.role IN ('group_admin', 'supreme_admin')
+    AND admin_profile.role::text IN ('group_admin', 'supreme_admin')
     AND (
       -- Either it's a supreme admin (can insert for any group)
-      admin_profile.role = 'supreme_admin'
+      admin_profile.role::text = 'supreme_admin'
       OR
       -- Or it's a group admin and the group_id matches their managed group
       EXISTS (
@@ -31,7 +35,7 @@ WITH CHECK (
   EXISTS (
     SELECT 1 FROM profiles 
     WHERE profiles.id = auth.uid() 
-    AND profiles.role = 'supreme_admin'
+    AND profiles.role::text = 'supreme_admin'
   )
 );
 
