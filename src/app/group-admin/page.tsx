@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
-import { ShareIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline'
+import { getDaysSinceStart } from '@/utils/targetCalculation'
 
 type Member = {
   id: string
@@ -60,9 +60,15 @@ export default function GroupAdminDashboard() {
   const [groupSettings, setGroupSettings] = useState<GroupSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [settingsLoading, setSettingsLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'pot'>('overview')
   const [editingSettings, setEditingSettings] = useState(false)
   const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string }>>({})
+  const [potData, setPotData] = useState<any[]>([])
+  const [potLoading, setPotLoading] = useState(false)
+  const [potError, setPotError] = useState<string | null>(null)
+  const [editingPot, setEditingPot] = useState<string | null>(null)
+  const [adjustmentAmount, setAdjustmentAmount] = useState('')
+  const [adjustmentReason, setAdjustmentReason] = useState('')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -80,6 +86,7 @@ export default function GroupAdminDashboard() {
     if ((isGroupAdmin || (isSupremeAdmin && profile?.group_id)) && profile) {
       loadGroupData()
       loadGroupSettings()
+      loadPotData()
     }
   }, [isGroupAdmin, isSupremeAdmin, profile])
 
@@ -192,6 +199,123 @@ export default function GroupAdminDashboard() {
       console.error('Error loading group settings:', error)
     } finally {
       setSettingsLoading(false)
+    }
+  }
+
+  const loadPotData = async () => {
+    console.log('🍯 [POT DEBUG] Starting loadPotData...')
+    console.log('🍯 [POT DEBUG] Profile:', profile)
+    
+    if (!profile) {
+      console.log('🍯 [POT DEBUG] No profile, returning early')
+      return
+    }
+
+    try {
+      setPotLoading(true)
+      setPotError(null)
+      console.log('🍯 [POT DEBUG] Set loading to true')
+
+      // Step 1: Get group data
+      console.log('🍯 [POT DEBUG] Fetching group data for admin_id:', profile.id)
+      const { data: groupData, error: groupError } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('admin_id', profile.id)
+        .single()
+
+      console.log('🍯 [POT DEBUG] Group query result:', { groupData, groupError })
+      if (groupError) throw groupError
+
+      // Step 2: Get members data (without total_penalty_owed for now)
+      console.log('🍯 [POT DEBUG] Fetching members for group_id:', groupData.id)
+      const { data: membersData, error: membersError } = await supabase
+        .from('profiles')
+        .select('id, email, username')
+        .eq('group_id', groupData.id)
+        .order('email')
+
+      console.log('🍯 [POT DEBUG] Members query result:', { membersData, membersError })
+      if (membersError) throw membersError
+
+      // Step 3: Check payment_transactions table access
+      console.log('🍯 [POT DEBUG] Testing payment_transactions table access...')
+      const { data: testTransactions, error: testError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .limit(1)
+
+      console.log('🍯 [POT DEBUG] Payment transactions test:', { testTransactions, testError })
+
+      // Step 4: Get transactions for each member (with fallback)
+      console.log('🍯 [POT DEBUG] Processing', membersData?.length || 0, 'members...')
+      const membersWithTransactions = await Promise.all(
+        (membersData || []).map(async (member, index) => {
+          console.log(`🍯 [POT DEBUG] Processing member ${index + 1}:`, member.email, 'ID:', member.id)
+          
+          // Try payment_transactions first
+          let transactions = null
+          let transactionError = null
+          
+          try {
+            const result = await supabase
+              .from('payment_transactions')
+              .select('amount, transaction_type, description, created_at')
+              .eq('user_id', member.id)
+              .order('created_at', { ascending: false })
+            
+            transactions = result.data
+            transactionError = result.error
+          } catch (error) {
+            console.log(`🍯 [POT DEBUG] Error accessing payment_transactions for ${member.email}:`, error)
+            transactionError = error
+          }
+
+          console.log(`🍯 [POT DEBUG] Transactions for ${member.email}:`, { transactions, transactionError })
+
+          // Calculate current debt and find last penalty date
+          const totalPaid = transactions
+            ?.filter(t => t.transaction_type === 'payment')
+            .reduce((sum, t) => sum + t.amount, 0) || 0
+
+          const totalPenalties = transactions
+            ?.filter(t => t.transaction_type === 'penalty')
+            .reduce((sum, t) => sum + t.amount, 0) || 0
+
+          const currentDebt = Math.max(0, totalPenalties - totalPaid)
+
+          // Find last penalty date
+          const lastPenalty = transactions
+            ?.filter(t => t.transaction_type === 'penalty')
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+
+          const lastPenaltyDate = lastPenalty ? new Date(lastPenalty.created_at).toLocaleDateString() : null
+
+          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: debt=${currentDebt}, lastPenalty=${lastPenaltyDate}`)
+
+          return {
+            ...member,
+            total_penalty_owed: currentDebt,
+            last_penalty_date: lastPenaltyDate,
+            recent_transactions: transactions?.slice(0, 3) || [] // Keep fewer for reference
+          }
+        })
+      )
+
+      console.log('🍯 [POT DEBUG] Final membersWithTransactions:', membersWithTransactions)
+      setPotData(membersWithTransactions)
+    } catch (error) {
+      console.error('🍯 [POT DEBUG] Error loading pot data:', error)
+      console.error('🍯 [POT DEBUG] Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setPotError(`Failed to load pot data: ${errorMessage}`)
+    } finally {
+      console.log('🍯 [POT DEBUG] Setting loading to false')
+      setPotLoading(false)
     }
   }
 
@@ -321,6 +445,63 @@ export default function GroupAdminDashboard() {
     }
   }
 
+  const adjustPenaltyAmount = async (userId: string) => {
+    console.log('🍯 [POT DEBUG] Starting penalty adjustment...')
+    console.log('🍯 [POT DEBUG] User ID:', userId)
+    console.log('🍯 [POT DEBUG] Admin profile:', profile)
+    console.log('🍯 [POT DEBUG] Group:', group)
+    
+    if (!adjustmentAmount || !adjustmentReason) {
+      alert('Please enter both amount and reason for the adjustment')
+      return
+    }
+
+    const amount = parseFloat(adjustmentAmount)
+    if (isNaN(amount) || amount === 0) {
+      alert('Please enter a valid amount (positive for penalty, negative for payment)')
+      return
+    }
+
+    try {
+      if (!group) return
+
+      const transactionType = amount > 0 ? 'penalty' : 'payment'
+      const absoluteAmount = Math.abs(amount)
+
+      const transactionData = {
+        user_id: userId,
+        group_id: group.id,
+        amount: absoluteAmount,
+        transaction_type: transactionType,
+        description: `Admin adjustment: ${adjustmentReason}`
+      }
+
+      console.log('🍯 [POT DEBUG] Inserting transaction:', transactionData)
+
+      const { data, error: transactionError } = await supabase
+        .from('payment_transactions')
+        .insert(transactionData)
+        .select()
+
+      console.log('🍯 [POT DEBUG] Insert result:', { data, transactionError })
+
+      if (transactionError) throw transactionError
+
+      // Note: We don't update profiles.total_penalty_owed since the column doesn't exist
+      // The debt will be calculated from payment_transactions on next load
+      console.log('🍯 [POT DEBUG] Transaction recorded, debt will be recalculated from transactions')
+
+      await Promise.all([loadPotData(), loadGroupData()])
+      setEditingPot(null)
+      setAdjustmentAmount('')
+      setAdjustmentReason('')
+      alert('Adjustment recorded successfully!')
+    } catch (error) {
+      console.error('Error adjusting penalty:', error)
+      alert('Failed to adjust penalty: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    }
+  }
+
   if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -391,6 +572,16 @@ export default function GroupAdminDashboard() {
                     }`}
                   >
                     Group Settings
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('pot')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'pot'
+                        ? 'border-orange-500 text-orange-500'
+                        : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'
+                    }`}
+                  >
+                    Pot
                   </button>
                 </nav>
               </div>
@@ -616,7 +807,7 @@ export default function GroupAdminDashboard() {
               )}
             </div>
               </>
-            ) : (
+            ) : activeTab === 'settings' ? (
               /* Settings Tab */
               <div className="bg-gray-900/30 border border-gray-800 p-4 md:p-6">
                 <h3 className="text-lg font-semibold text-white mb-6">Group Settings</h3>
@@ -644,7 +835,7 @@ export default function GroupAdminDashboard() {
                           <div>
                             <div className="text-gray-400 uppercase tracking-wide">Challenge Day</div>
                             <div className="font-semibold text-lg text-white">
-                              Day {Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1}
+                              Day {getDaysSinceStart(group.start_date) + 1}
                             </div>
                           </div>
                           <div>
@@ -664,18 +855,15 @@ export default function GroupAdminDashboard() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
-                            <div className="text-xs text-gray-400 uppercase tracking-wide">Today's Target</div>
+                            <div className="text-xs text-gray-400 uppercase tracking-wide">Today&apos;s Target</div>
                             <div className="font-bold text-xl text-white">
-                              {(() => {
-                                const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
-                                return 1 + Math.max(0, daysSinceStart);
-                              })()}pts
+                              {1 + getDaysSinceStart(group.start_date)}pts
                             </div>
                           </div>
                           <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
                             <div className="text-xs text-gray-400 uppercase tracking-wide">Challenge Day</div>
                             <div className="font-bold text-xl text-white">
-                              Day {Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1}
+                              Day {getDaysSinceStart(group.start_date) + 1}
                             </div>
                           </div>
                         </div>
@@ -778,7 +966,7 @@ export default function GroupAdminDashboard() {
                           </div>
                         ) : (
                           <div className="text-center py-8 text-gray-400">
-                            <p>Click "Edit Start Date" to modify when your group's challenge began</p>
+                            <p>Click &quot;Edit Start Date&quot; to modify when your group&apos;s challenge began</p>
                             <p className="text-sm mt-2">Note: This will affect daily target calculations for all members</p>
                           </div>
                         )}
@@ -787,7 +975,198 @@ export default function GroupAdminDashboard() {
                   </div>
                 )}
               </div>
-            )}
+            ) : activeTab === 'pot' ? (
+              /* Pot Tab */
+              <div className="bg-gray-900/30 border border-gray-800">
+                <div className="px-6 py-4 border-b border-gray-800">
+                  <h3 className="text-lg font-semibold text-white">Money Pot Management</h3>
+                  <p className="text-gray-400 text-sm mt-1">Track member contributions and adjust penalty amounts</p>
+                </div>
+                
+                {potLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                    <p className="mt-2 text-gray-400">Loading pot data...</p>
+                  </div>
+                ) : potError ? (
+                  <div className="text-center py-8">
+                    <div className="bg-red-900/30 border border-red-700 p-6 rounded-lg">
+                      <h4 className="text-red-400 font-semibold mb-2">Error Loading Pot Data</h4>
+                      <p className="text-red-300 text-sm mb-4">{potError}</p>
+                      <button
+                        onClick={loadPotData}
+                        className="bg-red-600 text-white px-4 py-2 text-sm hover:bg-red-700 transition-colors"
+                      >
+                        Retry
+                      </button>
+                      <div className="mt-4 text-left">
+                        <details className="text-xs text-gray-400">
+                          <summary className="cursor-pointer hover:text-gray-300">Debug Info</summary>
+                          <div className="mt-2 space-y-1">
+                            <div>User ID: {profile?.id}</div>
+                            <div>User Role: {profile?.role}</div>
+                            <div>Group ID: {profile?.group_id}</div>
+                            <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                          </div>
+                        </details>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-800">
+                    {potData.map((member) => (
+                      <div key={member.id} className="p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                          {/* Member Info */}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4 mb-3">
+                              <h4 className="text-lg font-medium text-white">{member.email}</h4>
+                              <span className={`px-2 py-1 text-xs rounded ${
+                                (member.total_penalty_owed || 0) > 0 
+                                  ? 'bg-red-900/50 text-red-400 border border-red-700'
+                                  : 'bg-green-900/50 text-green-400 border border-green-700'
+                              }`}>
+                                {(member.total_penalty_owed || 0) > 0 ? 'Owes Money' : 'Paid Up'}
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <div className="text-gray-400 uppercase tracking-wide text-xs">Current Debt</div>
+                                <div className="text-red-400 font-bold text-2xl">€{(member.total_penalty_owed || 0).toFixed(2)}</div>
+                              </div>
+                              <div>
+                                <div className="text-gray-400 uppercase tracking-wide text-xs">Last Penalty</div>
+                                <div className="text-orange-400 font-medium">
+                                  {member.last_penalty_date || 'No penalties yet'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Action Button */}
+                          <div className="flex-shrink-0">
+                            {editingPot === member.id ? (
+                              <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg min-w-80">
+                                <h5 className="text-white font-medium mb-3">Adjust Amount</h5>
+                                <div className="space-y-3">
+                                  <div>
+                                    <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
+                                      Amount (+ for penalty, - for payment)
+                                    </label>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={adjustmentAmount}
+                                      onChange={(e) => setAdjustmentAmount(e.target.value)}
+                                      placeholder="10.00 or -20.00"
+                                      className="w-full px-3 py-2 bg-gray-900 border border-gray-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
+                                      Reason
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={adjustmentReason}
+                                      onChange={(e) => setAdjustmentReason(e.target.value)}
+                                      placeholder="Phone died, missed check-in"
+                                      className="w-full px-3 py-2 bg-gray-900 border border-gray-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    />
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => adjustPenaltyAmount(member.id)}
+                                      className="bg-green-600 text-white px-3 py-1 text-sm hover:bg-green-700 transition-colors"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingPot(null)
+                                        setAdjustmentAmount('')
+                                        setAdjustmentReason('')
+                                      }}
+                                      className="bg-gray-600 text-white px-3 py-1 text-sm hover:bg-gray-700 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setEditingPot(member.id)}
+                                className="bg-orange-600 text-white px-4 py-2 text-sm hover:bg-orange-700 transition-colors"
+                              >
+                                Adjust Amount
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Recent Activity (only if there are transactions) */}
+                        {member.recent_transactions && member.recent_transactions.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-800">
+                            <h5 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Recent Activity</h5>
+                            <div className="space-y-1">
+                              {member.recent_transactions.slice(0, 2).map((transaction: any, index: number) => (
+                                <div key={index} className="flex justify-between items-center text-xs">
+                                  <span className="text-gray-300">{transaction.description}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={transaction.transaction_type === 'penalty' ? 'text-red-400' : 'text-green-400'}>
+                                      {transaction.transaction_type === 'penalty' ? '+' : '-'}€{transaction.amount.toFixed(2)}
+                                    </span>
+                                    <span className="text-gray-500">
+                                      {new Date(transaction.created_at).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {potData.length === 0 && (
+                      <div className="text-center py-8">
+                        <div className="bg-yellow-900/30 border border-yellow-700 p-6 rounded-lg">
+                          <h4 className="text-yellow-400 font-semibold mb-2">No Pot Data Found</h4>
+                          <p className="text-yellow-300 text-sm mb-4">
+                            No members found or no penalty data available. This could mean:
+                          </p>
+                          <ul className="text-yellow-300 text-sm text-left space-y-1 mb-4">
+                            <li>• No members in your group yet</li>
+                            <li>• Database permissions issue</li>
+                            <li>• Payment transactions table not accessible</li>
+                            <li>• No penalty data has been recorded yet</li>
+                          </ul>
+                          <button
+                            onClick={loadPotData}
+                            className="bg-yellow-600 text-white px-4 py-2 text-sm hover:bg-yellow-700 transition-colors"
+                          >
+                            Refresh Data
+                          </button>
+                          <div className="mt-4 text-left">
+                            <details className="text-xs text-gray-400">
+                              <summary className="cursor-pointer hover:text-gray-300">Debug Info</summary>
+                              <div className="mt-2 space-y-1">
+                                <div>User ID: {profile?.id}</div>
+                                <div>User Role: {profile?.role}</div>
+                                <div>Group ID: {profile?.group_id}</div>
+                                <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                              </div>
+                            </details>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         )}
       </div>

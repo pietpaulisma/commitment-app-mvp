@@ -24,44 +24,44 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     // 1 AM - 2 AM
     { quote: "If it's quiet, your grunts will echo.", author: "Will Ferrell" },
     { quote: "Leg day at 1 AM. Because why not scare the janitor?", author: "Rocky Balboa" },
-    { quote: "Vandaag is wit… van de sportschoolverlichting op je gezicht.", author: "Guus Meeuwis" },
+    { quote: "The gym lights at 1 AM hit different when you're this dedicated.", author: "Terry Crews" },
     { quote: "This is the hour legends are made… and sleep-deprived.", author: "Muhammad Ali" },
     
     // 2 AM - 3 AM
     { quote: "Push till your shadow leaves.", author: "David Hasselhoff" },
     { quote: "You said you'd start tomorrow. Welcome to tomorrow.", author: "Dwayne Johnson" },
-    { quote: "Ik draai nog een plaatje, jij nog een setje.", author: "Zanger Rinus" },
+    { quote: "One more set while the world sleeps. That's how champions are built.", author: "Arnold Schwarzenegger" },
     { quote: "The weights don't judge, but I do.", author: "Gordon Ramsay" },
     
     // 3 AM - 4 AM
     { quote: "Your pillow is for the weak.", author: "Scooter" },
     { quote: "If you're here at 3 AM, you're either insane or unstoppable.", author: "Terry Crews" },
-    { quote: "Vandaag is grijs… maar jouw wilskracht is goud.", author: "Guus Meeuwis" },
+    { quote: "3 AM is when the weak go to bed and the strong get started.", author: "Ron Burgundy" },
     { quote: "Train like the sun is watching.", author: "Muhammad Ali" },
     
     // 4 AM - 5 AM
     { quote: "Only ghosts and gains live here.", author: "Ron Burgundy" },
     { quote: "Beat the sunrise, own the day.", author: "Rocky Balboa" },
-    { quote: "Ik start de dag met push-ups, jij met smoesjes.", author: "Zanger Rinus" },
+    { quote: "Starting the day with push-ups while others start with excuses.", author: "Michael Scott" },
     { quote: "Your competition is still asleep.", author: "Arnold Schwarzenegger" },
     
     // 5 AM - 6 AM
     { quote: "HYPER HYPER! THE DAY IS YOURS!", author: "Scooter" },
     { quote: "The early set catches the glory.", author: "Dwayne Johnson" },
-    { quote: "Vandaag is goud… als je nieuwe PR.", author: "Guus Meeuwis" },
+    { quote: "5 AM workouts separate the legends from the wannabes.", author: "Terry Crews" },
     { quote: "If you're lifting now, you've already won.", author: "Muhammad Ali" },
     
     // 6 AM - 7 AM
     { quote: "One last set before breakfast destroys your abs.", author: "Gordon Ramsay" },
-    { quote: "Do. Or do not. At sunrise, there is no excuse.", author: "Yoda" },
+    { quote: "Do. Or do not. At sunrise, there is no excuse.", author: "Arnold Schwarzenegger" },
     { quote: "You miss 100% of the morning push-ups… enjoy your printer-ink body.", author: "Michael Scott" },
-    { quote: "Vandaag is rood… van het zweet dat van je voorhoofd druipt.", author: "Guus Meeuwis" },
+    { quote: "Sweat at sunrise is just liquid victory leaking out.", author: "Will Ferrell" },
     
     // 7 AM - 8 AM
     { quote: "If you want results, wake up before the excuses do.", author: "Muhammad Ali" },
     { quote: "Run like you stole breakfast from Gordon Ramsay's kitchen.", author: "Gordon Ramsay" },
     { quote: "Rise and shine, champ — even my grandma ran faster… and she's been gone for ten years.", author: "Rocky Balboa" },
-    { quote: "Ik ben een rijder… en ik doe m'n push-ups buiten in de regen.", author: "Zanger Rinus" },
+    { quote: "Real champions do push-ups in the rain while others find excuses.", author: "David Hasselhoff" },
     
     // 8 AM - 9 AM
     { quote: "No traffic at this hour — except for you, sprinting past your limits.", author: "Usain Bolt" },
@@ -72,7 +72,7 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     // 9 AM - 10 AM
     { quote: "Push now, type later. The laptop isn't going anywhere.", author: "Dwayne Johnson" },
     { quote: "Don't just sit there — chair dips won't break your Zoom connection.", author: "Will Ferrell" },
-    { quote: "De weg naar geluk begint met een set squats.", author: "Guus Meeuwis" },
+    { quote: "Squats at 9 AM? Your desk chair is already jealous.", author: "Gordon Ramsay" },
     { quote: "Make the printer jealous. It's the only thing here working as hard as you.", author: "Michael Scott" },
     
     // 10 AM - 11 AM
@@ -82,10 +82,10 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     { quote: "If the dumbbell feels heavy, remember — it's lighter than regret.", author: "Arnold Schwarzenegger" },
     
     // 11 AM - 12 PM
-    { quote: "Eén liedje, één set, en dan weer door. Dit is geen koffiepauze.", author: "Zanger Rinus" },
+    { quote: "This isn't a coffee break, it's a gains break.", author: "Arnold Schwarzenegger" },
     { quote: "Go hard now so you can eat like a king at noon.", author: "Dwayne Johnson" },
     { quote: "Your arms should be shaking harder than the office coffee machine.", author: "Will Ferrell" },
-    { quote: "Vandaag is geel… van de zon op je rug tijdens het rennen.", author: "Guus Meeuwis" },
+    { quote: "Lunch is earned, not deserved. Keep pushing.", author: "Terry Crews" },
     
     // 12 PM - 1 PM
     { quote: "If you're not sweating, you're just rearranging furniture.", author: "Gordon Ramsay" },
@@ -94,22 +94,22 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     { quote: "Even my salad has more crunch than your core.", author: "Gordon Ramsay" },
     
     // 1 PM - 2 PM
-    { quote: "Ik fiets naar m'n gains, jij fietst naar de snackbar.", author: "Zanger Rinus" },
+    { quote: "Cycle toward gains, not toward the snack bar.", author: "David Hasselhoff" },
     { quote: "Stand up. Squat. Scare your coworkers.", author: "Will Ferrell" },
     { quote: "Push-ups at 1 PM — because coffee only wakes the mind, not the body.", author: "Rocky Balboa" },
-    { quote: "Vandaag is blauw… van je benen na die squats.", author: "Guus Meeuwis" },
+    { quote: "Afternoon workouts hit different when everyone else is food-coma'd.", author: "Terry Crews" },
     
     // 2 PM - 3 PM
     { quote: "If you're not working out, you're working on your excuses.", author: "Arnold Schwarzenegger" },
     { quote: "Wake up those legs before your brain falls asleep.", author: "Dwayne Johnson" },
     { quote: "If your posture drops, so does your reputation.", author: "Ron Burgundy" },
-    { quote: "Ik train, ik lach, ik leef. Jij zit nog steeds achter je bureau.", author: "Zanger Rinus" },
+    { quote: "Training, laughing, living while others sit behind desks.", author: "Scooter" },
     
     // 3 PM - 4 PM
     { quote: "No meeting will pump you up like this set will.", author: "Terry Crews" },
     { quote: "Lift now, so you don't lift regrets later.", author: "Muhammad Ali" },
     { quote: "Do it for the pump… and for that mirror selfie at 4 PM.", author: "Arnold Schwarzenegger" },
-    { quote: "Vandaag is groen… als je nieuwe personal best.", author: "Guus Meeuwis" },
+    { quote: "Green light means go harder, not go home.", author: "Scooter" },
     
     // 4 PM - 5 PM
     { quote: "If you can still text during the set, add weight.", author: "Gordon Ramsay" },
@@ -121,19 +121,19 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     { quote: "If you don't sweat now, you'll cry later.", author: "Scooter" },
     { quote: "This is the real happy hour.", author: "Will Ferrell" },
     { quote: "Load the bar like you load your plate — with ambition.", author: "Arnold Schwarzenegger" },
-    { quote: "Vandaag is paars… van de spierpijn morgen.", author: "Guus Meeuwis" },
+    { quote: "Tomorrow's soreness is today's evidence of greatness.", author: "Muhammad Ali" },
     
     // 6 PM - 7 PM
     { quote: "If you leave now, you're only cheating yourself.", author: "Muhammad Ali" },
     { quote: "Lift like your dinner depends on it.", author: "Gordon Ramsay" },
     { quote: "Train like you're about to run through a wall.", author: "Rocky Balboa" },
-    { quote: "Ik ren, ik lach, ik zing… en ik win.", author: "Zanger Rinus" },
+    { quote: "Running, laughing, singing, and winning. That's the formula.", author: "Will Ferrell" },
     
     // 7 PM - 8 PM
     { quote: "Every rep now is one less excuse later.", author: "Dwayne Johnson" },
     { quote: "The day isn't over until your muscles say so.", author: "Terry Crews" },
     { quote: "Sweat more now, shine more later.", author: "Arnold Schwarzenegger" },
-    { quote: "Vandaag is oranje… van de zon die ondergaat tijdens je run.", author: "Guus Meeuwis" },
+    { quote: "Sunset runs hit different when you're chasing your dreams.", author: "Ron Burgundy" },
     
     // 8 PM - 9 PM
     { quote: "If your shirt is dry, you haven't worked out.", author: "Scooter" },
@@ -145,7 +145,7 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     { quote: "Your couch is whispering. Ignore it.", author: "Ron Burgundy" },
     { quote: "Champions finish when others Netflix.", author: "Dwayne Johnson" },
     { quote: "HYPER HYPER! NIGHT TIME IS LIFT TIME!", author: "Scooter" },
-    { quote: "Vandaag is zwart… van de nacht, maar jij blijft gaan.", author: "Guus Meeuwis" },
+    { quote: "The night is dark, but your determination burns bright.", author: "Will Ferrell" },
     
     // 10 PM - 11 PM
     { quote: "Push harder — the world isn't watching, but you are.", author: "Muhammad Ali" },
@@ -157,7 +157,7 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     { quote: "One more set. Your bed will forgive you.", author: "Will Ferrell" },
     { quote: "The iron doesn't care what time it is.", author: "Dwayne Johnson" },
     { quote: "If you lift at midnight, you own tomorrow.", author: "Rocky Balboa" },
-    { quote: "Vandaag is zilver… als je medaille voor doorzettingsvermogen.", author: "Guus Meeuwis" }
+    { quote: "This late-night dedication deserves a medal for persistence.", author: "David Hasselhoff" }
   ]
   
   // Get 4 messages for the current hour, cycling through them based on minutes
@@ -174,67 +174,67 @@ const getTargetAchievedMessage = (hour: number): { quote: string, author: string
   const achievementMessages = [
     // 12 AM - 1 AM
     { quote: "Day over. Gains secured. Now rest.", author: "Dwayne Johnson" },
-    { quote: "Ik ben een rijder… maar jij hebt de dag al uitgereden.", author: "Zanger Rinus" },
+    { quote: "You've already ridden this day to victory.", author: "David Hasselhoff" },
     
     // 1 AM - 2 AM
     { quote: "Victory at 1 AM. Now go dream about how great you are.", author: "Muhammad Ali" },
-    { quote: "Vandaag is wit… van de rust die je verdient.", author: "Guus Meeuwis" },
+    { quote: "Today is pure white from the rest you've earned.", author: "Ron Burgundy" },
     
     // 2 AM - 3 AM
     { quote: "All done. The rest of the night is yours.", author: "Ron Burgundy" },
-    { quote: "Ik draai nog een plaatje… maar jij kan chillen.", author: "Zanger Rinus" },
+    { quote: "The music keeps playing, but you can finally chill.", author: "Terry Crews" },
     
     // 3 AM - 4 AM
     { quote: "Mission complete. Time to haunt the fridge.", author: "Terry Crews" },
-    { quote: "Vandaag is grijs… maar jouw dag is af.", author: "Guus Meeuwis" },
+    { quote: "The day may be gray, but your victory is crystal clear.", author: "Muhammad Ali" },
     
     // 4 AM - 5 AM
     { quote: "Goal hit before sunrise. Go watch everyone else wake up.", author: "Rocky Balboa" },
-    { quote: "Ik start de dag met winst… en jij met rust.", author: "Zanger Rinus" },
+    { quote: "Started the day with victory, now you can rest like a champion.", author: "Ron Burgundy" },
     
     // 5 AM - 6 AM
     { quote: "Done before dawn. You're officially a superhero.", author: "Arnold Schwarzenegger" },
-    { quote: "Vandaag is goud… en jij bent klaar.", author: "Guus Meeuwis" },
+    { quote: "Golden achievement unlocked. You're officially done for the day.", author: "Terry Crews" },
     
     // 6 AM - 7 AM
-    { quote: "Target smashed before sunrise. You may now return to being a legend.", author: "Yoda" },
-    { quote: "Vandaag is rood… en jij hoeft vandaag niks meer te doen.", author: "Guus Meeuwis" },
+    { quote: "Target smashed before sunrise. You may now return to being a legend.", author: "Dwayne Johnson" },
+    { quote: "Mission complete. You don't need to prove anything else today.", author: "Will Ferrell" },
     
     // 7 AM - 8 AM
     { quote: "Mission accomplished. Go eat breakfast like a king.", author: "Michael Scott" },
-    { quote: "Ik ben een rijder… en jij hebt de finishlijn al gehaald.", author: "Zanger Rinus" },
+    { quote: "You've crossed the finish line while others are still hitting snooze.", author: "David Hasselhoff" },
     
     // 8 AM - 9 AM
     { quote: "All goals crushed. Clock out, champ.", author: "Scooter" },
     { quote: "You've already won the day. Anything else is just showing off.", author: "Ron Burgundy" },
     
     // 9 AM - 10 AM
-    { quote: "Vandaag is groen… want je hebt al rust verdiend.", author: "Guus Meeuwis" },
+    { quote: "Green light for rest - you've earned every minute.", author: "Arnold Schwarzenegger" },
     { quote: "You're done. Take the rest of the day off from being this awesome.", author: "Arnold Schwarzenegger" },
     
     // 10 AM - 11 AM
     { quote: "Workout complete. Now hydrate and brag.", author: "Will Ferrell" },
-    { quote: "Eén liedje, één set… en jij bent al klaar.", author: "Zanger Rinus" },
+    { quote: "One song, one set, and you're already victorious.", author: "Scooter" },
     
     // 11 AM - 12 PM
     { quote: "Mission complete. Go eat like you just conquered Rome.", author: "Gordon Ramsay" },
-    { quote: "Vandaag is geel… want je straalt na je winst.", author: "Guus Meeuwis" },
+    { quote: "You're glowing with victory. Literally radiating success.", author: "Ron Burgundy" },
     
     // 12 PM - 1 PM
     { quote: "Lunchtime and you're already done. Enjoy being superior.", author: "Terry Crews" },
-    { quote: "Ik fiets naar m'n lunch… jij naar je trofee.", author: "Zanger Rinus" },
+    { quote: "While others cycle to lunch, you're cycling toward your trophy.", author: "Michael Scott" },
     
     // 1 PM - 2 PM
     { quote: "Target met. You are officially excused from all future effort today.", author: "Dwayne Johnson" },
-    { quote: "Vandaag is blauw… en jij mag achterover leunen.", author: "Guus Meeuwis" },
+    { quote: "Victory achieved. You can lean back and enjoy the view.", author: "Arnold Schwarzenegger" },
     
     // 2 PM - 3 PM
     { quote: "Crushed it. Go relax while the mortals sweat.", author: "Muhammad Ali" },
-    { quote: "Ik train, ik lach… en jij mag nu chillen.", author: "Zanger Rinus" },
+    { quote: "Trained hard, laughed harder. Now you get to chill.", author: "Will Ferrell" },
     
     // 3 PM - 4 PM
     { quote: "Achievement unlocked. Rest mode engaged.", author: "Rocky Balboa" },
-    { quote: "Vandaag is oranje… en jij hoeft geen stap meer te zetten.", author: "Guus Meeuwis" },
+    { quote: "Orange you glad you're done? No more steps required.", author: "Terry Crews" },
     
     // 4 PM - 5 PM
     { quote: "You're finished. Go home, flex once, and sit down.", author: "Ron Burgundy" },
@@ -242,15 +242,15 @@ const getTargetAchievedMessage = (hour: number): { quote: string, author: string
     
     // 5 PM - 6 PM
     { quote: "Victory hour. The gym misses you already.", author: "Will Ferrell" },
-    { quote: "Vandaag is paars… van je koningstroon na de winst.", author: "Guus Meeuwis" },
+    { quote: "Royal purple throne awaits after this victory.", author: "Gordon Ramsay" },
     
     // 6 PM - 7 PM
     { quote: "Done and dusted. Pass the carbs.", author: "Gordon Ramsay" },
-    { quote: "Ik ren, ik zing… en jij kan nu chillen.", author: "Zanger Rinus" },
+    { quote: "Ran hard, sang loud, now you can relax loud.", author: "David Hasselhoff" },
     
     // 7 PM - 8 PM
     { quote: "Day's work is over. Time to strut.", author: "Terry Crews" },
-    { quote: "Vandaag is goud… en jij hebt het al in je zak.", author: "Guus Meeuwis" },
+    { quote: "Today's gold medal is already in your pocket.", author: "Muhammad Ali" },
     
     // 8 PM - 9 PM
     { quote: "Workout complete. Couch mode activated.", author: "David Hasselhoff" },
@@ -258,7 +258,7 @@ const getTargetAchievedMessage = (hour: number): { quote: string, author: string
     
     // 9 PM - 10 PM
     { quote: "You're done. Everyone else is just late to the party.", author: "Rocky Balboa" },
-    { quote: "Vandaag is zwart… en jij rust als winnaar.", author: "Guus Meeuwis" },
+    { quote: "The day may be dark, but you rest as a champion.", author: "Rocky Balboa" },
     
     // 10 PM - 11 PM
     { quote: "Day finished. Put the dumbbells to bed.", author: "Arnold Schwarzenegger" },
@@ -266,7 +266,7 @@ const getTargetAchievedMessage = (hour: number): { quote: string, author: string
     
     // 11 PM - 12 AM
     { quote: "You closed the day with a win. Sleep like royalty.", author: "Scooter" },
-    { quote: "Vandaag is zilver… en jij hoeft morgen niks meer te bewijzen.", author: "Guus Meeuwis" }
+    { quote: "Silver lining complete. Tomorrow you prove nothing because today you proved everything.", author: "Gordon Ramsay" }
   ]
   
   // Get 2 messages for the current hour, cycling through them based on minutes (every 30 minutes)
@@ -364,16 +364,29 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
     return acc
   }, {} as Record<string, number>)
   
-  // Sort dates in descending order (most recent first)
-  const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+  const today = new Date().toISOString().split('T')[0]
+  const groupStartTime = new Date(groupStartDate).getTime()
+  
+  // Get all dates from logs, but exclude today if no workout yet (to avoid breaking active streaks)
+  const workoutDates = Object.keys(dailyPoints)
+  const hasWorkedOutToday = dailyPoints[today] > 0
+  
+  // Sort dates in descending order (most recent first), excluding today if no workout
+  const sortedDates = workoutDates
+    .filter(date => date !== today || hasWorkedOutToday)
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
   
   let streak = 0
-  const groupStartTime = new Date(groupStartDate).getTime()
   
   for (const date of sortedDates) {
     const currentDate = new Date(date)
     const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
     const dayOfWeek = currentDate.getDay()
+    
+    // Skip rest days and recovery days - they don't count toward or break insane streaks
+    if (restDays.includes(dayOfWeek) || recoveryDays.includes(dayOfWeek)) {
+      continue // Skip this day, don't break or count the streak
+    }
     
     // Calculate what the insane target would have been for this date
     const insaneTarget = calculateDailyTarget({
@@ -393,6 +406,53 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
   }
   
   return streak
+}
+
+// Calculate longest streak a user has ever had
+const calculateLongestStreak = (logs: any[], groupStartDate: string, restDays: number[], recoveryDays: number[]) => {
+  if (!logs || logs.length === 0) return 0
+
+  // Group logs by date and sum points for each day
+  const dailyPoints = logs.reduce((acc, log) => {
+    acc[log.date] = (acc[log.date] || 0) + log.points
+    return acc
+  }, {} as Record<string, number>)
+
+  // Get all dates and sort chronologically (oldest first for longest streak calculation)
+  const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+  
+  let maxStreak = 0
+  let currentStreak = 0
+  const groupStartTime = new Date(groupStartDate).getTime()
+
+  for (const date of sortedDates) {
+    const currentDate = new Date(date)
+    const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
+    const dayOfWeek = currentDate.getDay()
+
+    // Skip rest days and recovery days - they don't count toward or break insane streaks
+    if (restDays.includes(dayOfWeek) || recoveryDays.includes(dayOfWeek)) {
+      continue // Skip this day, don't break or count the streak
+    }
+
+    // Calculate insane target for this day
+    const insaneTarget = calculateDailyTarget({
+      daysSinceStart,
+      restDays,
+      recoveryDays,
+      currentDayOfWeek: dayOfWeek
+    })
+
+    // Check if they met the insane target this day
+    if (dailyPoints[date] >= insaneTarget) {
+      currentStreak++
+      maxStreak = Math.max(maxStreak, currentStreak)
+    } else {
+      currentStreak = 0 // Reset streak
+    }
+  }
+
+  return maxStreak
 }
 
 // Helper function to get dynamic colors based on streak/count progression
@@ -432,7 +492,15 @@ const getProgressiveColor = (count: number, type: 'bg' | 'text' | 'border' = 'bg
 }
 
 // Memoized chart component for performance
-const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string, userProfile: any }) => {
+const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceDonation, insaneStreak, personalLongestInsaneStreak }: { 
+  stat: any, 
+  index: number, 
+  getLayoutClasses: (blockType: string) => string, 
+  userProfile: any,
+  daysSinceDonation?: number,
+  insaneStreak?: number,
+  personalLongestInsaneStreak?: number
+}) => {
   // Simple color selection without useMemo to avoid circular dependencies
   const accentColor = CHART_COLORS[index % CHART_COLORS.length] || 'text-gray-400'
 
@@ -760,6 +828,157 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
     )
   }
 
+  // Pot Contributors - Vertical list showing pot total and individual contributions
+  if (stat.type === 'pot_contributors') {
+    const contributors = stat.contributors || []
+    const bgColor = 'bg-gray-900/30'
+    
+    return (
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col">
+          {/* Header */}
+          <div className="mb-2">
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-2xl font-black text-white leading-none mb-1">
+              €{stat.value}
+            </div>
+          </div>
+          
+          {/* Contributors List */}
+          <div className="flex-1 flex flex-col gap-1">
+            {contributors.map((contributor: any, i: number) => (
+              <div key={i} className="flex flex-col">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-white font-medium truncate">
+                    {contributor.name}
+                  </div>
+                  <div className="text-xs text-gray-300 font-bold">
+                    €{contributor.amount}
+                  </div>
+                </div>
+                {contributor.timeAgo && (
+                  <div className={`text-xs flex items-center gap-1 ${
+                    contributor.isMostRecent 
+                      ? `text-${contributor.userColor}-400` 
+                      : 'text-gray-400'
+                  }`}>
+                    <span>{contributor.timeAgo}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+            {contributors.length === 0 && (
+              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+                No contributions yet
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Streak Progress - Dual section design with progress fill backgrounds like birthday component
+  if (stat.type === 'streak_progress') {
+    // Read directly from state variables (single source of truth)
+    const commitmentDays = daysSinceDonation || 0
+    const insaneDays = insaneStreak || 0
+    const longestRecord = personalLongestInsaneStreak || 0
+    
+    // Calculate progress percentages for background fills
+    // If on a record (current = longest), fill 100%. Otherwise, show progress toward record.
+    const commitmentProgress = commitmentDays >= 44 ? 100 : Math.min((commitmentDays / 44) * 100, 100)
+    const insaneProgress = insaneDays >= longestRecord && longestRecord > 0 ? 100 : 
+                          longestRecord > 0 ? Math.min((insaneDays / longestRecord) * 100, 100) : 
+                          insaneDays > 0 ? 50 : 0 // Show some progress if they have days but no record yet
+    
+    // Check for new records
+    const isCommitmentNewRecord = commitmentDays >= 44
+    const isInsaneNewRecord = insaneDays >= longestRecord && longestRecord > 0
+    
+    return (
+      <div key={index} className={`relative rounded-lg ${layoutClasses} overflow-hidden`}>
+        {/* Top Section - Commitment Streak */}
+        <div className="relative h-1/2 overflow-hidden bg-gray-900/30">
+          {/* Progress fill background */}
+          <div 
+            className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
+            style={{ 
+              background: getGradientStyle('bg-orange-400', 'organic'),
+              width: `${commitmentProgress}%`,
+              borderTopLeftRadius: '12px'
+            }}
+          />
+          
+          {/* Content */}
+          <div className="relative p-3 h-full flex flex-col">
+            <div className="text-xs text-white/90 uppercase tracking-wider font-bold mb-1">
+              COMMITMENT STREAK
+            </div>
+            <div className="flex-1 flex items-end justify-between">
+              <div className="flex items-baseline gap-1">
+                <div className="text-4xl font-black text-white leading-none">
+                  {commitmentDays}
+                </div>
+                <div className="text-white text-sm font-light mb-1">days</div>
+              </div>
+              <div className="text-right mb-1">
+                {isCommitmentNewRecord ? (
+                  <div className="flex items-center gap-1 justify-end mb-1">
+                    <span className="text-yellow-300">🔥</span>
+                    <span className="text-white text-xs font-bold">NEW</span>
+                  </div>
+                ) : (
+                  <div className="text-white/70 text-xs">RECORD</div>
+                )}
+                <div className="text-white text-base font-bold">44</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Bottom Section - Insane Streak */}
+        <div className="relative h-1/2 overflow-hidden bg-gray-900/30">
+          {/* Progress fill background */}
+          <div 
+            className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
+            style={{ 
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+              width: `${insaneProgress}%`,
+              borderBottomLeftRadius: '12px'
+            }}
+          />
+          
+          {/* Content */}
+          <div className="relative p-3 h-full flex flex-col">
+            <div className="text-xs text-white/90 uppercase tracking-wider font-bold mb-1">
+              INSANE STREAK
+            </div>
+            <div className="flex-1 flex items-end justify-between">
+              <div className="flex items-baseline gap-1">
+                <div className="text-4xl font-black text-white leading-none">
+                  {insaneDays}
+                </div>
+                <div className="text-white text-sm font-light mb-1">days</div>
+              </div>
+              <div className="text-right mb-1">
+                {isInsaneNewRecord && (
+                  <div className="flex items-center gap-1 justify-end mb-1">
+                    <span className="text-yellow-300">🔥</span>
+                    <span className="text-white text-xs font-bold">NEW</span>
+                  </div>
+                )}
+                <div className="text-white text-xs font-bold">
+                  {isInsaneNewRecord ? 'RECORD!' : `RECORD: ${longestRecord}`}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Wide chart - Full width bar chart with enhanced animations and hover
   if (stat.type === 'wide_chart') {
     const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
@@ -833,14 +1052,17 @@ const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonal
   )
 }
 
-const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfile, onClick, isPersonalMode, hasPersonalData }: {
+const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfile, onClick, isPersonalMode, hasPersonalData, daysSinceDonation, insaneStreak, personalLongestInsaneStreak }: {
   stat: any,
   index: number,
   getLayoutClasses: (blockType: string) => string,
   userProfile: any,
   onClick?: () => void,
   isPersonalMode?: boolean,
-  hasPersonalData?: boolean
+  hasPersonalData?: boolean,
+  daysSinceDonation?: number,
+  insaneStreak?: number,
+  personalLongestInsaneStreak?: number
 }) => {
   return (
     <InteractiveStatWrapper
@@ -854,6 +1076,9 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
         index={index}
         getLayoutClasses={getLayoutClasses}
         userProfile={userProfile}
+        daysSinceDonation={daysSinceDonation}
+        insaneStreak={insaneStreak}
+        personalLongestInsaneStreak={personalLongestInsaneStreak}
       />
     </InteractiveStatWrapper>
   )
@@ -991,11 +1216,12 @@ export default function RectangularDashboard() {
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
   const [personalStats, setPersonalStats] = useState<any>(null)
-  const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false})
+  const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false, 4: false})
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
   const [daysSinceDonation, setDaysSinceDonation] = useState<number>(0)
   const [insaneStreak, setInsaneStreak] = useState<number>(0)
+  const [personalLongestInsaneStreak, setPersonalLongestInsaneStreak] = useState<number>(0)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -1097,6 +1323,9 @@ export default function RectangularDashboard() {
       calculateChallengeInfo()
     }
   }, [groupStartDate, restDays, recoveryDays])
+
+  // Prevent multiple personal data loads with session-based flag
+  const personalDataLoadedRef = useRef(false)
 
   const calculateChallengeInfo = () => {
     if (!groupStartDate) return
@@ -1454,37 +1683,121 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot - load group penalty data
-      const { data: groupPenalties, error: penaltyError } = await supabase
+      // 2. Money Pot - load group transaction data (both penalties and payments)
+      const { data: groupTransactions, error: transactionError } = await supabase
         .from('payment_transactions')
-        .select('amount, user_id, profiles!inner(username)')
+        .select('amount, user_id, transaction_type, created_at, profiles!inner(username)')
         .eq('group_id', profile.group_id)
-        .eq('transaction_type', 'penalty')
+        .in('transaction_type', ['penalty', 'payment'])
+        .order('created_at', { ascending: false })
 
-      if (penaltyError) {
-        console.error('Error loading group penalties:', penaltyError)
+      if (transactionError) {
+        console.error('Error loading group transactions:', transactionError)
       }
 
-      const totalPenaltyAmount = groupPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
-      
-      // Find biggest penalty payer
-      const userPenaltyMap = new Map()
-      groupPenalties?.forEach(penalty => {
-        const userId = penalty.user_id
-        userPenaltyMap.set(userId, (userPenaltyMap.get(userId) || 0) + penalty.amount)
+      // Calculate net amounts (penalties - payments) per user
+      const userNetAmountMap = new Map()
+      groupTransactions?.forEach(transaction => {
+        const userId = transaction.user_id
+        const amount = transaction.transaction_type === 'penalty' ? transaction.amount : -transaction.amount
+        userNetAmountMap.set(userId, (userNetAmountMap.get(userId) || 0) + amount)
       })
       
-      let biggestContributor = 'No penalties yet'
-      let maxPenalties = 0
-      userPenaltyMap.forEach((amount, userId) => {
-        if (amount > maxPenalties) {
-          maxPenalties = amount
-          const penalty = groupPenalties?.find(p => p.user_id === userId)
-          biggestContributor = penalty?.profiles?.username || 'User'
+      // Calculate total pot amount (sum of all positive net amounts)
+      const totalPotAmount = Array.from(userNetAmountMap.values())
+        .filter(amount => amount > 0)
+        .reduce((sum, amount) => sum + amount, 0)
+      
+      // Find biggest net contributor
+      let biggestContributor = 'No contributions yet'
+      let maxNetAmount = 0
+      userNetAmountMap.forEach((netAmount, userId) => {
+        if (netAmount > maxNetAmount) {
+          maxNetAmount = netAmount
+          const transaction = groupTransactions?.find(t => t.user_id === userId)
+          biggestContributor = transaction?.profiles?.username || 'User'
         }
       })
 
-      // 3. Next Birthday in Group - find the next upcoming birthday
+      // 3. Pot Contributors - detailed data for the new component (reuse the same transaction data)
+      let contributors = []
+      if (groupTransactions && !transactionError) {
+        // Get user colors for styling
+        const userColorsMap = new Map()
+        const userIds = [...new Set(groupTransactions.map(t => t.user_id))]
+        if (userIds.length > 0) {
+          const { data: userProfiles } = await supabase
+            .from('profiles')
+            .select('id, personal_color')
+            .in('id', userIds)
+          
+          userProfiles?.forEach(user => {
+            userColorsMap.set(user.id, user.personal_color || 'gray')
+          })
+        }
+
+        // Aggregate by user and find most recent transaction for each
+        const userContributions = new Map()
+        groupTransactions.forEach(transaction => {
+          const userId = transaction.user_id
+          const username = transaction.profiles?.username || 'User'
+          const userColor = userColorsMap.get(userId) || 'gray'
+          if (!userContributions.has(userId)) {
+            userContributions.set(userId, {
+              name: username,
+              netAmount: 0,
+              latestDate: new Date(transaction.created_at),
+              userId: userId,
+              userColor: userColor
+            })
+          }
+          const existing = userContributions.get(userId)
+          const amount = transaction.transaction_type === 'penalty' ? transaction.amount : -transaction.amount
+          existing.netAmount += amount
+          if (new Date(transaction.created_at) > existing.latestDate) {
+            existing.latestDate = new Date(transaction.created_at)
+          }
+        })
+
+        // Convert to array, filter positive amounts, and sort by amount (highest first)
+        const positiveContributors = Array.from(userContributions.values())
+          .filter(contributor => contributor.netAmount > 0) // Only show users who owe money
+          .sort((a, b) => b.netAmount - a.netAmount)
+
+        // Find the most recent transaction date among all contributors
+        const mostRecentDate = positiveContributors.length > 0 
+          ? Math.max(...positiveContributors.map(c => c.latestDate.getTime()))
+          : 0
+
+        contributors = positiveContributors.map((contributor, index) => {
+          const now = new Date()
+          const diffTime = now.getTime() - contributor.latestDate.getTime()
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+          const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+          
+          let timeAgo = ''
+          if (diffDays > 0) {
+            timeAgo = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+          } else if (diffHours > 0) {
+            timeAgo = `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+          } else {
+            timeAgo = 'Just now'
+          }
+
+          // Mark as most recent (newest contributor)
+          const isMostRecent = contributor.latestDate.getTime() === mostRecentDate
+
+          return {
+            name: contributor.name,
+            amount: Math.round(contributor.netAmount),
+            timeAgo: timeAgo,
+            userColor: contributor.userColor,
+            isMostRecent: isMostRecent
+          }
+        })
+      }
+
+      // 4. Next Birthday in Group - find the next upcoming birthday
       const { data: memberProfiles } = await supabase
         .from('profiles')
         .select('email, birth_date')
@@ -1543,6 +1856,38 @@ export default function RectangularDashboard() {
       const mostPopularHour = hourCounts.indexOf(Math.max(...hourCounts))
       const peakTime = `${mostPopularHour}:00`
 
+      // 5. Streak Progress - Calculate current and longest streaks
+      // First get all user logs for streak calculation (not just 30 days)
+      const { data: allUserLogs } = await supabase
+        .from('logs')
+        .select('date, points')
+        .in('user_id', memberIds)
+
+      // Get the actual group start date for streak calculations
+      const { data: groupData } = await supabase
+        .from('groups')
+        .select('start_date')
+        .eq('id', profile.group_id)
+        .single()
+
+      const groupStartDate = groupData?.start_date || today
+
+      // Calculate group-wide current streak (using recent data from past 30 days)
+      const currentStreak = calculateInsaneStreak(
+        logs || [], 
+        groupStartDate, 
+        [1], // Default rest days
+        [5]  // Default recovery days  
+      )
+
+      // Calculate group-wide longest streak ever
+      const longestStreak = calculateLongestStreak(
+        allUserLogs || [],
+        groupStartDate,
+        [1], // Default rest days
+        [5]  // Default recovery days
+      )
+
       return {
         groupPoints: {
           title: 'Group Points',
@@ -1557,8 +1902,14 @@ export default function RectangularDashboard() {
         moneyPot: {
           title: 'Money Pot',
           subtitle: `top: ${biggestContributor}`,
-          value: Math.max(0, Math.round(totalPenaltyAmount)),
+          value: Math.max(0, Math.round(totalPotAmount)),
           type: 'typography_stat'
+        },
+        potContributors: {
+          title: 'Pot Contributors',
+          value: Math.max(0, Math.round(totalPotAmount)),
+          contributors: contributors,
+          type: 'pot_contributors'
         },
         birthday: {
           title: 'Next Birthday',
@@ -1579,6 +1930,14 @@ export default function RectangularDashboard() {
             activity: count
           })),
           type: 'heatmap_grid'
+        },
+        streakProgress: {
+          title: 'Streak Progress',
+          currentStreak: currentStreak,
+          longestStreak: longestStreak,
+          commitmentDays: 0, // Will be updated by personal data only
+          insaneDays: 0, // Will be updated by personal data only
+          type: 'streak_progress'
         }
       }
     } catch (error) {
@@ -1590,14 +1949,16 @@ export default function RectangularDashboard() {
   const loadGroupStats = async () => {
     if (!profile?.group_id) return
 
+
     try {
       const stats = await calculateEssentialStats()
       if (stats) {
         setGroupStats({
           interestingStats: [
             { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
-            { ...stats.moneyPot, layout: 'square' },        // Bottom left - square
-            { ...stats.birthday, layout: 'square' },        // Bottom right - square  
+            { ...stats.potContributors, layout: 'vertical' }, // Vertical 1:2 pot contributors
+            { ...stats.birthday, layout: 'square' },        // Birthday square
+            { ...stats.streakProgress, layout: 'square' },  // Streak square (new!)
             { ...stats.workoutTimes, layout: 'col-span-2' } // Bottom - full width rectangle
           ]
         })
@@ -1634,18 +1995,21 @@ export default function RectangularDashboard() {
 
       const totalPersonalPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Personal Money Pot (your contribution)
-      const { data: userPenalties, error: userPenaltyError } = await supabase
+      // 2. Personal Money Pot (your net contribution)
+      const { data: userTransactions, error: userTransactionError } = await supabase
         .from('payment_transactions')
-        .select('amount')
+        .select('amount, transaction_type')
         .eq('user_id', user.id)
-        .eq('transaction_type', 'penalty')
+        .in('transaction_type', ['penalty', 'payment'])
 
-      if (userPenaltyError) {
-        console.error('Error loading user penalties:', userPenaltyError)
+      if (userTransactionError) {
+        console.error('Error loading user transactions:', userTransactionError)
       }
 
-      const personalMoneyContribution = userPenalties?.reduce((sum, penalty) => sum + penalty.amount, 0) || 0
+      // Calculate net contribution (penalties - payments)
+      const personalPenalties = userTransactions?.filter(t => t.transaction_type === 'penalty').reduce((sum, t) => sum + t.amount, 0) || 0
+      const personalPayments = userTransactions?.filter(t => t.transaction_type === 'payment').reduce((sum, t) => sum + t.amount, 0) || 0
+      const personalMoneyContribution = Math.max(0, personalPenalties - personalPayments)
 
       // 3. Personal Birthday - use real birth date from profile
       let nextBirthdayDays = 0
@@ -1707,11 +2071,18 @@ export default function RectangularDashboard() {
             layout: 'col-span-2' // Top row - full width
           },
           {
-            title: 'Your Contribution',
-            subtitle: 'money pot',
+            title: 'Your Contributions',
             value: Math.max(0, Math.round(personalMoneyContribution)),
-            type: 'typography_stat',
-            layout: 'square' // Bottom left - square
+            contributors: [
+              {
+                name: profile?.username || 'You',
+                amount: Math.max(0, Math.round(personalMoneyContribution)),
+                timeAgo: personalMoneyContribution > 0 ? 'Total to date' : '',
+                isNew: false
+              }
+            ],
+            type: 'pot_contributors',
+            layout: 'vertical' // Vertical 1:2 rectangle
           },
           {
             title: profile?.birth_date ? 'Your Birthday' : 'Set Birthday',
@@ -1722,6 +2093,15 @@ export default function RectangularDashboard() {
             doublePoints: true,
             type: 'countdown_bar',
             layout: 'square' // Bottom right - square  
+          },
+          {
+            title: 'Your Streaks',
+            subtitle: 'commitment progress',
+            commitmentDays: daysSinceDonation || 0,
+            insaneDays: insaneStreak || 0,
+            longestRecord: personalLongestInsaneStreak || 0,
+            type: 'streak_progress',
+            layout: 'square' // Square layout to match group stats
           },
           {
             title: 'Your Peak Time',
@@ -1940,18 +2320,19 @@ export default function RectangularDashboard() {
         }
       }
 
-      // Load donation tracking and insane streak data
-      try {
-        // Get profile with last_donation_date and created_at
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('last_donation_date, created_at')
-          .eq('id', user.id)
-          .single()
+      // Load donation tracking and insane streak data (only once per session)
+      if (!personalDataLoadedRef.current) {
+        try {
+          // Get profile with last_donation_date and created_at
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('last_donation_date, created_at')
+            .eq('id', user.id)
+            .single()
 
-        // Calculate days since donation (use profile creation date as fallback)
-        const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
-        setDaysSinceDonation(donationGap)
+          // Calculate days since donation (use profile creation date as fallback)
+          const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
+          setDaysSinceDonation(donationGap)
 
         // Get logs for streak calculation (last 30 days)
         const past30Days = Array.from({ length: 30 }, (_, i) => {
@@ -1975,11 +2356,33 @@ export default function RectangularDashboard() {
             recoveryDays
           )
           setInsaneStreak(streak)
+          
+          // Also calculate personal longest streak for the record
+          // Get ALL user logs (not just 30 days) for longest streak calculation
+          const { data: allPersonalLogs } = await supabase
+            .from('logs')
+            .select('date, points')
+            .eq('user_id', user.id)
+          
+          const personalLongestStreak = calculateLongestStreak(
+            allPersonalLogs || [],
+            currentGroupData.start_date,
+            restDays,
+            recoveryDays
+          )
+          
+          setPersonalLongestInsaneStreak(personalLongestStreak)
+          
+          // Mark personal data as loaded to prevent multiple loads
+          personalDataLoadedRef.current = true
         } else {
           setInsaneStreak(0)
+          setPersonalLongestInsaneStreak(0)
+          personalDataLoadedRef.current = true
         }
-      } catch (error) {
-        console.log('Could not load donation/streak data:', error)
+        } catch (error) {
+          console.log('Could not load donation/streak data:', error)
+        }
       }
 
     } catch (error) {
@@ -2120,39 +2523,6 @@ export default function RectangularDashboard() {
             </div>
           )}
 
-          {/* Streaks Box */}
-          <div className="mx-1 mb-1">
-            <div 
-              className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-              style={{
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-              }}
-            >
-              <div className="relative z-10 py-6 px-6">
-                <h3 className="text-xs font-light text-white/80 mb-6 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                  Streaks
-                </h3>
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="text-center">
-                    <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
-                      {daysSinceDonation}
-                    </div>
-                    <p className="text-sm font-medium text-white/60 drop-shadow">
-                      days since donation
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
-                      {insaneStreak}
-                    </div>
-                    <p className="text-sm font-medium text-white/60 drop-shadow">
-                      days insane streak
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -2408,51 +2778,90 @@ export default function RectangularDashboard() {
                   onClick={() => toggleIndividualStat(0)}
                   isPersonalMode={individualStatsMode[0]}
                   hasPersonalData={!!personalStats?.interestingStats?.[0]}
+                  daysSinceDonation={daysSinceDonation}
+                  insaneStreak={insaneStreak}
+                  personalLongestInsaneStreak={personalLongestInsaneStreak}
                 />
               </div>
             </div>
 
-            {/* Money Pot and Birthday - Two square blocks side by side */}
-            <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
-              {/* Money Pot Block */}
-              <div className="relative">
-                <div 
-                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                  style={{
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                  }}
-                >
-                  <MemoizedChartComponent 
-                    key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
-                    stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
-                    index={1} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                    onClick={() => toggleIndividualStat(1)}
-                    isPersonalMode={individualStatsMode[1]}
-                    hasPersonalData={!!personalStats?.interestingStats?.[1]}
-                  />
+            {/* Pot Contributors and Square Components - Proper alignment */}
+            <div className="mx-1 mb-1">
+              <div className="grid grid-cols-2 gap-1 h-auto">
+                {/* Pot Contributors - Vertical 1:2 block */}
+                <div className="relative">
+                  <div 
+                    className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl h-full"
+                    style={{
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
+                      aspectRatio: '1 / 2'
+                    }}
+                  >
+                    <MemoizedChartComponent 
+                      key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
+                      stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
+                      index={1} 
+                      getLayoutClasses={getLayoutClasses}
+                      userProfile={profile}
+                      onClick={() => toggleIndividualStat(1)}
+                      isPersonalMode={individualStatsMode[1]}
+                      hasPersonalData={!!personalStats?.interestingStats?.[1]}
+                      daysSinceDonation={daysSinceDonation}
+                      insaneStreak={insaneStreak}
+                      personalLongestInsaneStreak={personalLongestInsaneStreak}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Birthday Block */}
-              <div className="relative">
-                <div 
-                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                  style={{
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                  }}
-                >
-                  <MemoizedChartComponent 
-                    key={`${individualStatsMode[2] ? 'personal' : 'group'}-${(individualStatsMode[2] && personalStats?.interestingStats?.[2]) ? personalStats.interestingStats[2].type : groupStats.interestingStats[2].type}-2`}
-                    stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]} 
-                    index={2} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                    onClick={() => toggleIndividualStat(2)}
-                    isPersonalMode={individualStatsMode[2]}
-                    hasPersonalData={!!personalStats?.interestingStats?.[2]}
-                  />
+                {/* Right column with 2 squares stacked */}
+                <div className="grid grid-rows-2 gap-1 h-full">
+                  {/* Birthday Block - Top right square */}
+                  <div className="relative">
+                    <div 
+                      className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                      style={{
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                      }}
+                    >
+                      <MemoizedChartComponent 
+                        key={`${individualStatsMode[2] ? 'personal' : 'group'}-${(individualStatsMode[2] && personalStats?.interestingStats?.[2]) ? personalStats.interestingStats[2].type : groupStats.interestingStats[2].type}-2`}
+                        stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]} 
+                        index={2} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                        onClick={() => toggleIndividualStat(2)}
+                        isPersonalMode={individualStatsMode[2]}
+                        hasPersonalData={!!personalStats?.interestingStats?.[2]}
+                        daysSinceDonation={daysSinceDonation}
+                        insaneStreak={insaneStreak}
+                        personalLongestInsaneStreak={personalLongestInsaneStreak}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Streak Block - Bottom right square */}
+                  <div className="relative">
+                    <div 
+                      className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                      style={{
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                      }}
+                    >
+                      <MemoizedChartComponent 
+                        key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
+                        stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
+                        index={3} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                        onClick={() => toggleIndividualStat(3)}
+                        isPersonalMode={individualStatsMode[3]}
+                        hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                        daysSinceDonation={daysSinceDonation}
+                        insaneStreak={insaneStreak}
+                        personalLongestInsaneStreak={personalLongestInsaneStreak}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2466,14 +2875,17 @@ export default function RectangularDashboard() {
                 }}
               >
                 <MemoizedChartComponent 
-                  key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
-                  stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
-                  index={3} 
+                  key={`${individualStatsMode[4] ? 'personal' : 'group'}-${(individualStatsMode[4] && personalStats?.interestingStats?.[4]) ? personalStats.interestingStats[4].type : groupStats.interestingStats[4].type}-4`}
+                  stat={individualStatsMode[4] && personalStats?.interestingStats?.[4] ? personalStats.interestingStats[4] : groupStats.interestingStats[4]} 
+                  index={4} 
                   getLayoutClasses={getLayoutClasses}
                   userProfile={profile}
-                  onClick={() => toggleIndividualStat(3)}
-                  isPersonalMode={individualStatsMode[3]}
-                  hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                  onClick={() => toggleIndividualStat(4)}
+                  isPersonalMode={individualStatsMode[4]}
+                  hasPersonalData={!!personalStats?.interestingStats?.[4]}
+                  daysSinceDonation={daysSinceDonation}
+                  insaneStreak={insaneStreak}
+                  personalLongestInsaneStreak={personalLongestInsaneStreak}
                 />
               </div>
             </div>
