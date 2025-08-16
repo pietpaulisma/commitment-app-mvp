@@ -872,17 +872,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
 
   // Streak Progress - Dual section design with progress fill backgrounds like birthday component
   if (stat.type === 'streak_progress') {
-    // Use the data from the stat object
-    const commitmentDays = stat.commitmentDays || 0
-    const insaneDays = stat.insaneDays || 0
-    const longestRecord = stat.longestStreak || 0
-    
-    console.log('🔍 Streak component rendering with:', {
-      commitmentDays,
-      insaneDays,
-      longestRecord,
-      fullStatObject: stat
-    })
+    // Read directly from state variables (single source of truth)
+    const commitmentDays = daysSinceDonation || 0
+    const insaneDays = insaneStreak || 0
+    const longestRecord = personalLongestInsaneStreak || 0
     
     // Calculate progress percentages for background fills
     // If on a record (current = longest), fill 100%. Otherwise, show progress toward record.
@@ -1291,35 +1284,8 @@ export default function RectangularDashboard() {
     }
   }, [groupStartDate, restDays, recoveryDays])
 
-  // Update group stats when personal streak data is loaded (prevent race conditions)
-  useEffect(() => {
-    if (groupStats && daysSinceDonation >= 0) { // Update when we have any personal data (including 0)
-      // Update the streak progress data in existing group stats
-      const updatedStats = { ...groupStats }
-      if (updatedStats.interestingStats) {
-        updatedStats.interestingStats = updatedStats.interestingStats.map((stat: any) => {
-          if (stat.type === 'streak_progress') {
-            console.log('🔍 Updating streak component with personal data:', {
-              commitmentDays: daysSinceDonation,
-              insaneDays: insaneStreak,
-              personalLongestInsaneStreak: personalLongestInsaneStreak
-            })
-            return {
-              ...stat,
-              commitmentDays: daysSinceDonation,
-              insaneDays: insaneStreak,
-              longestStreak: personalLongestInsaneStreak
-            }
-          }
-          return stat
-        })
-        setGroupStats(updatedStats)
-      }
-    }
-  }, [daysSinceDonation, insaneStreak, personalLongestInsaneStreak])
-  
-  // Prevent group stats from reloading after personal data is set
-  const [personalDataLoaded, setPersonalDataLoaded] = useState(false)
+  // Prevent multiple personal data loads with session-based flag
+  const personalDataLoadedRef = useRef(false)
 
   const calculateChallengeInfo = () => {
     if (!groupStartDate) return
@@ -1943,16 +1909,10 @@ export default function RectangularDashboard() {
   const loadGroupStats = async () => {
     if (!profile?.group_id) return
 
-    // Don't reload group stats if personal data is already loaded (prevents overwriting)
-    if (personalDataLoaded) {
-      console.log('🔍 Skipping group stats reload - personal data already loaded')
-      return
-    }
 
     try {
       const stats = await calculateEssentialStats()
       if (stats) {
-        console.log('🔍 Group stats loading with streak data:', stats.streakProgress)
         setGroupStats({
           interestingStats: [
             { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
@@ -2311,20 +2271,19 @@ export default function RectangularDashboard() {
         }
       }
 
-      // Load donation tracking and insane streak data
-      try {
-        // Get profile with last_donation_date and created_at
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('last_donation_date, created_at')
-          .eq('id', user.id)
-          .single()
+      // Load donation tracking and insane streak data (only once per session)
+      if (!personalDataLoadedRef.current) {
+        try {
+          // Get profile with last_donation_date and created_at
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('last_donation_date, created_at')
+            .eq('id', user.id)
+            .single()
 
-        // Calculate days since donation (use profile creation date as fallback)
-        const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
-        console.log('🔍 Setting daysSinceDonation to:', donationGap)
-        setDaysSinceDonation(donationGap)
-        setPersonalDataLoaded(true)
+          // Calculate days since donation (use profile creation date as fallback)
+          const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
+          setDaysSinceDonation(donationGap)
 
         // Get logs for streak calculation (last 30 days)
         const past30Days = Array.from({ length: 30 }, (_, i) => {
@@ -2363,15 +2322,18 @@ export default function RectangularDashboard() {
             recoveryDays
           )
           
-          console.log('🔍 Personal longest insane streak:', personalLongestStreak)
-          console.log('🔍 Setting insaneStreak to:', streak)
           setPersonalLongestInsaneStreak(personalLongestStreak)
+          
+          // Mark personal data as loaded to prevent multiple loads
+          personalDataLoadedRef.current = true
         } else {
           setInsaneStreak(0)
           setPersonalLongestInsaneStreak(0)
+          personalDataLoadedRef.current = true
         }
-      } catch (error) {
-        console.log('Could not load donation/streak data:', error)
+        } catch (error) {
+          console.log('Could not load donation/streak data:', error)
+        }
       }
 
     } catch (error) {
