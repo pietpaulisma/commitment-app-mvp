@@ -58,26 +58,24 @@ export default function GroupExercisesPage() {
     try {
       setLoading(true)
       
-      // Load all exercises
-      const { data: exercisesData } = await supabase
-        .from('exercises')
-        .select('*')
-        .order('name')
+      // Load all data in parallel for better performance
+      const [exercisesResult, groupsResult, groupExercisesResult] = await Promise.all([
+        supabase
+          .from('exercises')
+          .select('*')
+          .order('name'),
+        supabase
+          .from('groups')
+          .select('id, name')
+          .order('name'),
+        supabase
+          .from('group_exercises')
+          .select('group_id, exercise_id')
+      ])
 
-      // Load all groups
-      const { data: groupsData } = await supabase
-        .from('groups')
-        .select('id, name')
-        .order('name')
-
-      // Load all group-exercise relationships
-      const { data: groupExercisesData } = await supabase
-        .from('group_exercises')
-        .select('group_id, exercise_id')
-
-      setExercises(exercisesData || [])
-      setGroups(groupsData || [])
-      setGroupExercises(groupExercisesData || [])
+      setExercises(exercisesResult.data || [])
+      setGroups(groupsResult.data || [])
+      setGroupExercises(groupExercisesResult.data || [])
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
