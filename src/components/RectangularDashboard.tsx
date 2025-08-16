@@ -1293,7 +1293,7 @@ export default function RectangularDashboard() {
 
   // Update group stats when personal streak data is loaded (prevent race conditions)
   useEffect(() => {
-    if (groupStats && daysSinceDonation > 0) { // Only update when we have real personal data
+    if (groupStats && daysSinceDonation >= 0) { // Update when we have any personal data (including 0)
       // Update the streak progress data in existing group stats
       const updatedStats = { ...groupStats }
       if (updatedStats.interestingStats) {
@@ -2312,6 +2312,7 @@ export default function RectangularDashboard() {
 
         // Calculate days since donation (use profile creation date as fallback)
         const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
+        console.log('🔍 Setting daysSinceDonation to:', donationGap)
         setDaysSinceDonation(donationGap)
 
         // Get logs for streak calculation (last 30 days)
@@ -2352,6 +2353,7 @@ export default function RectangularDashboard() {
           )
           
           console.log('🔍 Personal longest insane streak:', personalLongestStreak)
+          console.log('🔍 Setting insaneStreak to:', streak)
           setPersonalLongestInsaneStreak(personalLongestStreak)
         } else {
           setInsaneStreak(0)
