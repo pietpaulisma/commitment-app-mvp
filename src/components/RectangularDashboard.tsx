@@ -395,6 +395,48 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
   return streak
 }
 
+// Calculate longest streak a user has ever had
+const calculateLongestStreak = (logs: any[], groupStartDate: string, restDays: number[], recoveryDays: number[]) => {
+  if (!logs || logs.length === 0) return 0
+
+  // Group logs by date and sum points for each day
+  const dailyPoints = logs.reduce((acc, log) => {
+    acc[log.date] = (acc[log.date] || 0) + log.points
+    return acc
+  }, {} as Record<string, number>)
+
+  // Get all dates and sort chronologically (oldest first for longest streak calculation)
+  const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+  
+  let maxStreak = 0
+  let currentStreak = 0
+  const groupStartTime = new Date(groupStartDate).getTime()
+
+  for (const date of sortedDates) {
+    const currentDate = new Date(date)
+    const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
+    const dayOfWeek = currentDate.getDay()
+
+    // Calculate insane target for this day
+    const insaneTarget = calculateDailyTarget({
+      daysSinceStart,
+      restDays,
+      recoveryDays,
+      currentDayOfWeek: dayOfWeek
+    })
+
+    // Check if they met the insane target this day
+    if (dailyPoints[date] >= insaneTarget) {
+      currentStreak++
+      maxStreak = Math.max(maxStreak, currentStreak)
+    } else {
+      currentStreak = 0 // Reset streak
+    }
+  }
+
+  return maxStreak
+}
+
 // Helper function to get dynamic colors based on streak/count progression
 const getProgressiveColor = (count: number, type: 'bg' | 'text' | 'border' = 'bg') => {
   let colorClass = ''
@@ -810,6 +852,75 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
     )
   }
 
+  // Streak Progress - Shows current streak vs longest streak with mini graph
+  if (stat.type === 'streak_progress') {
+    const currentStreak = stat.currentStreak || 0
+    const longestStreak = stat.longestStreak || 0
+    const isNewRecord = currentStreak > 0 && currentStreak >= longestStreak
+    const bgColor = 'bg-gray-900/30'
+    
+    return (
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col">
+          {/* Header */}
+          <div className="mb-2">
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="flex items-baseline gap-2">
+              <div className="text-2xl font-black text-white leading-none">
+                {currentStreak}
+              </div>
+              <div className="text-xs text-gray-400">
+                / {longestStreak} max
+              </div>
+            </div>
+          </div>
+          
+          {/* Progress visualization */}
+          <div className="flex-1 flex flex-col justify-center">
+            {/* Progress bars */}
+            <div className="space-y-2 mb-3">
+              {/* Current streak bar */}
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-gray-400 w-12">Now</div>
+                <div className="flex-1 bg-gray-700 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-1000 ease-out ${
+                      isNewRecord ? 'bg-green-400' : 'bg-blue-400'
+                    }`}
+                    style={{ 
+                      width: longestStreak > 0 ? `${Math.min((currentStreak / longestStreak) * 100, 100)}%` : '0%'
+                    }}
+                  />
+                </div>
+                <div className="text-xs text-white font-bold w-6">{currentStreak}</div>
+              </div>
+              
+              {/* Best streak reference line */}
+              <div className="flex items-center gap-2">
+                <div className="text-xs text-gray-400 w-12">Best</div>
+                <div className="flex-1 bg-gray-700 h-1 rounded-full">
+                  <div className="w-full h-full bg-orange-400 rounded-full" />
+                </div>
+                <div className="text-xs text-orange-400 font-bold w-6">{longestStreak}</div>
+              </div>
+            </div>
+            
+            {/* Status message */}
+            <div className="text-center">
+              {isNewRecord && currentStreak > 0 ? (
+                <div className="text-xs text-green-400 font-bold">🔥 NEW RECORD!</div>
+              ) : currentStreak > 0 ? (
+                <div className="text-xs text-blue-400">On a streak!</div>
+              ) : (
+                <div className="text-xs text-gray-400">Start your streak</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Wide chart - Full width bar chart with enhanced animations and hover
   if (stat.type === 'wide_chart') {
     const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
@@ -1041,7 +1152,7 @@ export default function RectangularDashboard() {
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
   const [personalStats, setPersonalStats] = useState<any>(null)
-  const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false})
+  const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false, 4: false})
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
   const [daysSinceDonation, setDaysSinceDonation] = useState<number>(0)
@@ -1651,6 +1762,38 @@ export default function RectangularDashboard() {
       const mostPopularHour = hourCounts.indexOf(Math.max(...hourCounts))
       const peakTime = `${mostPopularHour}:00`
 
+      // 5. Streak Progress - Calculate current and longest streaks
+      // First get all user logs for streak calculation (not just 30 days)
+      const { data: allUserLogs } = await supabase
+        .from('logs')
+        .select('date, points')
+        .in('user_id', memberIds)
+
+      // Get the actual group start date for streak calculations
+      const { data: groupData } = await supabase
+        .from('groups')
+        .select('start_date')
+        .eq('id', profile.group_id)
+        .single()
+
+      const groupStartDate = groupData?.start_date || today
+
+      // Calculate group-wide current streak (using recent data from past 30 days)
+      const currentStreak = calculateInsaneStreak(
+        logs || [], 
+        groupStartDate, 
+        [1], // Default rest days
+        [5]  // Default recovery days  
+      )
+
+      // Calculate group-wide longest streak ever
+      const longestStreak = calculateLongestStreak(
+        allUserLogs || [],
+        groupStartDate,
+        [1], // Default rest days
+        [5]  // Default recovery days
+      )
+
       return {
         groupPoints: {
           title: 'Group Points',
@@ -1693,6 +1836,12 @@ export default function RectangularDashboard() {
             activity: count
           })),
           type: 'heatmap_grid'
+        },
+        streakProgress: {
+          title: 'Insane Streak',
+          currentStreak: currentStreak,
+          longestStreak: longestStreak,
+          type: 'streak_progress'
         }
       }
     } catch (error) {
@@ -1711,7 +1860,8 @@ export default function RectangularDashboard() {
           interestingStats: [
             { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
             { ...stats.potContributors, layout: 'vertical' }, // Vertical 1:2 pot contributors
-            { ...stats.birthday, layout: 'square' },        // Bottom right - square  
+            { ...stats.birthday, layout: 'square' },        // Birthday square
+            { ...stats.streakProgress, layout: 'square' },  // Streak square (new!)
             { ...stats.workoutTimes, layout: 'col-span-2' } // Bottom - full width rectangle
           ]
         })
@@ -2244,39 +2394,6 @@ export default function RectangularDashboard() {
             </div>
           )}
 
-          {/* Streaks Box */}
-          <div className="mx-1 mb-1">
-            <div 
-              className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-              style={{
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-              }}
-            >
-              <div className="relative z-10 py-6 px-6">
-                <h3 className="text-xs font-light text-white/80 mb-6 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                  Streaks
-                </h3>
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="text-center">
-                    <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
-                      {daysSinceDonation}
-                    </div>
-                    <p className="text-sm font-medium text-white/60 drop-shadow">
-                      days since donation
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-4xl font-black text-white drop-shadow-lg mb-2">
-                      {insaneStreak}
-                    </div>
-                    <p className="text-sm font-medium text-white/60 drop-shadow">
-                      days insane streak
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
@@ -2534,12 +2651,12 @@ export default function RectangularDashboard() {
               </div>
             </div>
 
-            {/* Money Pot and Birthday - Two square blocks side by side */}
-            <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
-              {/* Money Pot Block */}
-              <div className="relative">
+            {/* Pot Contributors and Square Components - 2x2 grid */}
+            <div className="grid grid-cols-2 grid-rows-2 gap-1 mx-1 mb-1">
+              {/* Pot Contributors - Vertical 1:2 block (takes up 2 rows) */}
+              <div className="relative row-span-2">
                 <div 
-                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                  className="aspect-[1/2] bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
                   style={{
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                   }}
@@ -2557,7 +2674,7 @@ export default function RectangularDashboard() {
                 </div>
               </div>
 
-              {/* Birthday Block */}
+              {/* Birthday Block - Top right square */}
               <div className="relative">
                 <div 
                   className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
@@ -2577,6 +2694,27 @@ export default function RectangularDashboard() {
                   />
                 </div>
               </div>
+
+              {/* Streak Block - Bottom right square */}
+              <div className="relative">
+                <div 
+                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                  style={{
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                  }}
+                >
+                  <MemoizedChartComponent 
+                    key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
+                    stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
+                    index={3} 
+                    getLayoutClasses={getLayoutClasses}
+                    userProfile={profile}
+                    onClick={() => toggleIndividualStat(3)}
+                    isPersonalMode={individualStatsMode[3]}
+                    hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Workout Times - Full width block */}
@@ -2588,14 +2726,14 @@ export default function RectangularDashboard() {
                 }}
               >
                 <MemoizedChartComponent 
-                  key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
-                  stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
-                  index={3} 
+                  key={`${individualStatsMode[4] ? 'personal' : 'group'}-${(individualStatsMode[4] && personalStats?.interestingStats?.[4]) ? personalStats.interestingStats[4].type : groupStats.interestingStats[4].type}-4`}
+                  stat={individualStatsMode[4] && personalStats?.interestingStats?.[4] ? personalStats.interestingStats[4] : groupStats.interestingStats[4]} 
+                  index={4} 
                   getLayoutClasses={getLayoutClasses}
                   userProfile={profile}
-                  onClick={() => toggleIndividualStat(3)}
-                  isPersonalMode={individualStatsMode[3]}
-                  hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                  onClick={() => toggleIndividualStat(4)}
+                  isPersonalMode={individualStatsMode[4]}
+                  hasPersonalData={!!personalStats?.interestingStats?.[4]}
                 />
               </div>
             </div>
