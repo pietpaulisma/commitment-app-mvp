@@ -369,12 +369,22 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
   
   console.log('🔍 calculateInsaneStreak: Daily points:', dailyPoints)
   
-  // Sort dates in descending order (most recent first)
-  const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-  console.log('🔍 calculateInsaneStreak: Sorted dates (recent first):', sortedDates.slice(0, 5))
+  const today = new Date().toISOString().split('T')[0]
+  const groupStartTime = new Date(groupStartDate).getTime()
+  
+  // Get all dates from logs, but exclude today if no workout yet (to avoid breaking active streaks)
+  const workoutDates = Object.keys(dailyPoints)
+  const hasWorkedOutToday = dailyPoints[today] > 0
+  
+  // Sort dates in descending order (most recent first), excluding today if no workout
+  const sortedDates = workoutDates
+    .filter(date => date !== today || hasWorkedOutToday)
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+  
+  console.log('🔍 calculateInsaneStreak: Dates to check (recent first):', sortedDates.slice(0, 5))
+  console.log('🔍 calculateInsaneStreak: Has worked out today:', hasWorkedOutToday)
   
   let streak = 0
-  const groupStartTime = new Date(groupStartDate).getTime()
   
   for (const date of sortedDates) {
     const currentDate = new Date(date)
