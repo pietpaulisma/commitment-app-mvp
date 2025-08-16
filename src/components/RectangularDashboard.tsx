@@ -760,6 +760,61 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
     )
   }
 
+  // Pot Contributors - Vertical list showing pot total and individual contributions
+  if (stat.type === 'pot_contributors') {
+    const contributors = stat.contributors || []
+    const bgColor = 'bg-gray-900/30'
+    
+    return (
+      <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
+        <div className="p-4 h-full flex flex-col">
+          {/* Header */}
+          <div className="mb-3">
+            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="text-4xl font-black text-white leading-none mb-1">
+              ${stat.value}
+            </div>
+          </div>
+          
+          {/* Contributors List */}
+          <div className="flex-1 flex flex-col gap-2 overflow-y-auto">
+            {contributors.map((contributor: any, i: number) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="text-sm text-white font-medium truncate">
+                    {contributor.name}
+                  </div>
+                  {contributor.isNew && (
+                    <span className="bg-green-500 text-black text-xs px-2 py-0.5 rounded font-bold">
+                      NEW
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-300 font-bold">
+                  ${contributor.amount}
+                </div>
+              </div>
+            ))}
+            {contributors.length === 0 && (
+              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+                No contributions yet
+              </div>
+            )}
+          </div>
+          
+          {/* Last contribution timestamp */}
+          {contributors.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-700">
+              <div className="text-xs text-gray-400">
+                {contributors[0]?.timeAgo}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   // Wide chart - Full width bar chart with enhanced animations and hover
   if (stat.type === 'wide_chart') {
     const maxValue = Math.max(...(stat.data?.map((d: any) => d.points) || [100]))
@@ -1458,7 +1513,64 @@ export default function RectangularDashboard() {
         }
       })
 
-      // 3. Next Birthday in Group - find the next upcoming birthday
+      // 3. Pot Contributors - detailed data for the new component
+      const { data: detailedPenalties, error: detailedPenaltyError } = await supabase
+        .from('payment_transactions')
+        .select('amount, user_id, created_at, profiles!inner(username)')
+        .eq('group_id', profile.group_id)
+        .eq('transaction_type', 'penalty')
+        .order('created_at', { ascending: false })
+
+      let contributors = []
+      if (detailedPenalties && !detailedPenaltyError) {
+        // Aggregate by user and find most recent contribution for each
+        const userContributions = new Map()
+        detailedPenalties.forEach(penalty => {
+          const userId = penalty.user_id
+          const username = penalty.profiles?.username || 'User'
+          if (!userContributions.has(userId)) {
+            userContributions.set(userId, {
+              name: username,
+              amount: 0,
+              latestDate: new Date(penalty.created_at),
+              isRecent: false
+            })
+          }
+          const existing = userContributions.get(userId)
+          existing.amount += penalty.amount
+          if (new Date(penalty.created_at) > existing.latestDate) {
+            existing.latestDate = new Date(penalty.created_at)
+          }
+        })
+
+        // Convert to array and sort by amount (highest first)
+        contributors = Array.from(userContributions.values())
+          .sort((a, b) => b.amount - a.amount)
+          .map((contributor, index) => {
+            const now = new Date()
+            const diffTime = now.getTime() - contributor.latestDate.getTime()
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+            const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+            
+            let timeAgo = ''
+            if (diffDays > 0) {
+              timeAgo = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+            } else if (diffHours > 0) {
+              timeAgo = `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+            } else {
+              timeAgo = 'Just now'
+            }
+
+            return {
+              name: contributor.name,
+              amount: Math.round(contributor.amount),
+              timeAgo: index === 0 ? timeAgo : '', // Only show time for latest
+              isNew: diffHours < 2 && index === 0 // Mark as new if within 2 hours and top contributor
+            }
+          })
+      }
+
+      // 4. Next Birthday in Group - find the next upcoming birthday
       const { data: memberProfiles } = await supabase
         .from('profiles')
         .select('email, birth_date')
@@ -1534,6 +1646,12 @@ export default function RectangularDashboard() {
           value: Math.max(0, Math.round(totalPenaltyAmount)),
           type: 'typography_stat'
         },
+        potContributors: {
+          title: 'Pot Contributors',
+          value: Math.max(0, Math.round(totalPenaltyAmount)),
+          contributors: contributors,
+          type: 'pot_contributors'
+        },
         birthday: {
           title: 'Next Birthday',
           subtitle: nextBirthdayPerson, // Person whose birthday it is
@@ -1570,7 +1688,7 @@ export default function RectangularDashboard() {
         setGroupStats({
           interestingStats: [
             { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
-            { ...stats.moneyPot, layout: 'square' },        // Bottom left - square
+            { ...stats.potContributors, layout: 'vertical' }, // Vertical 1:2 pot contributors
             { ...stats.birthday, layout: 'square' },        // Bottom right - square  
             { ...stats.workoutTimes, layout: 'col-span-2' } // Bottom - full width rectangle
           ]
@@ -1681,11 +1799,18 @@ export default function RectangularDashboard() {
             layout: 'col-span-2' // Top row - full width
           },
           {
-            title: 'Your Contribution',
-            subtitle: 'money pot',
+            title: 'Your Contributions',
             value: Math.max(0, Math.round(personalMoneyContribution)),
-            type: 'typography_stat',
-            layout: 'square' // Bottom left - square
+            contributors: [
+              {
+                name: profile?.username || 'You',
+                amount: Math.max(0, Math.round(personalMoneyContribution)),
+                timeAgo: personalMoneyContribution > 0 ? 'Total to date' : '',
+                isNew: false
+              }
+            ],
+            type: 'pot_contributors',
+            layout: 'vertical' // Vertical 1:2 rectangle
           },
           {
             title: profile?.birth_date ? 'Your Birthday' : 'Set Birthday',
