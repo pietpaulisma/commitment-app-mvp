@@ -492,7 +492,15 @@ const getProgressiveColor = (count: number, type: 'bg' | 'text' | 'border' = 'bg
 }
 
 // Memoized chart component for performance
-const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: any, index: number, getLayoutClasses: (blockType: string) => string, userProfile: any }) => {
+const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceDonation, insaneStreak, personalLongestInsaneStreak }: { 
+  stat: any, 
+  index: number, 
+  getLayoutClasses: (blockType: string) => string, 
+  userProfile: any,
+  daysSinceDonation?: number,
+  insaneStreak?: number,
+  personalLongestInsaneStreak?: number
+}) => {
   // Simple color selection without useMemo to avoid circular dependencies
   const accentColor = CHART_COLORS[index % CHART_COLORS.length] || 'text-gray-400'
 
@@ -1044,14 +1052,17 @@ const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonal
   )
 }
 
-const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfile, onClick, isPersonalMode, hasPersonalData }: {
+const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfile, onClick, isPersonalMode, hasPersonalData, daysSinceDonation, insaneStreak, personalLongestInsaneStreak }: {
   stat: any,
   index: number,
   getLayoutClasses: (blockType: string) => string,
   userProfile: any,
   onClick?: () => void,
   isPersonalMode?: boolean,
-  hasPersonalData?: boolean
+  hasPersonalData?: boolean,
+  daysSinceDonation?: number,
+  insaneStreak?: number,
+  personalLongestInsaneStreak?: number
 }) => {
   return (
     <InteractiveStatWrapper
@@ -1065,6 +1076,9 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
         index={index}
         getLayoutClasses={getLayoutClasses}
         userProfile={userProfile}
+        daysSinceDonation={daysSinceDonation}
+        insaneStreak={insaneStreak}
+        personalLongestInsaneStreak={personalLongestInsaneStreak}
       />
     </InteractiveStatWrapper>
   )
@@ -2727,6 +2741,9 @@ export default function RectangularDashboard() {
                   onClick={() => toggleIndividualStat(0)}
                   isPersonalMode={individualStatsMode[0]}
                   hasPersonalData={!!personalStats?.interestingStats?.[0]}
+                  daysSinceDonation={daysSinceDonation}
+                  insaneStreak={insaneStreak}
+                  personalLongestInsaneStreak={personalLongestInsaneStreak}
                 />
               </div>
             </div>
@@ -2752,6 +2769,9 @@ export default function RectangularDashboard() {
                       onClick={() => toggleIndividualStat(1)}
                       isPersonalMode={individualStatsMode[1]}
                       hasPersonalData={!!personalStats?.interestingStats?.[1]}
+                      daysSinceDonation={daysSinceDonation}
+                      insaneStreak={insaneStreak}
+                      personalLongestInsaneStreak={personalLongestInsaneStreak}
                     />
                   </div>
                 </div>
@@ -2775,6 +2795,9 @@ export default function RectangularDashboard() {
                         onClick={() => toggleIndividualStat(2)}
                         isPersonalMode={individualStatsMode[2]}
                         hasPersonalData={!!personalStats?.interestingStats?.[2]}
+                        daysSinceDonation={daysSinceDonation}
+                        insaneStreak={insaneStreak}
+                        personalLongestInsaneStreak={personalLongestInsaneStreak}
                       />
                     </div>
                   </div>
@@ -2796,6 +2819,9 @@ export default function RectangularDashboard() {
                         onClick={() => toggleIndividualStat(3)}
                         isPersonalMode={individualStatsMode[3]}
                         hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                        daysSinceDonation={daysSinceDonation}
+                        insaneStreak={insaneStreak}
+                        personalLongestInsaneStreak={personalLongestInsaneStreak}
                       />
                     </div>
                   </div>
@@ -2820,6 +2846,9 @@ export default function RectangularDashboard() {
                   onClick={() => toggleIndividualStat(4)}
                   isPersonalMode={individualStatsMode[4]}
                   hasPersonalData={!!personalStats?.interestingStats?.[4]}
+                  daysSinceDonation={daysSinceDonation}
+                  insaneStreak={insaneStreak}
+                  personalLongestInsaneStreak={personalLongestInsaneStreak}
                 />
               </div>
             </div>
