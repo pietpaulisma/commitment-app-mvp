@@ -865,14 +865,25 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
     // Use the data from the stat object
     const commitmentDays = stat.commitmentDays || 0
     const insaneDays = stat.insaneDays || 0
+    const longestRecord = stat.longestStreak || 0
+    
+    console.log('🔍 Streak component rendering with:', {
+      commitmentDays,
+      insaneDays,
+      longestRecord,
+      fullStatObject: stat
+    })
     
     // Calculate progress percentages for background fills
-    const maxDays = 100 // Arbitrary max for progress visualization
-    const commitmentProgress = Math.min((commitmentDays / maxDays) * 100, 100)
-    const insaneProgress = Math.min((insaneDays / maxDays) * 100, 100)
+    // If on a record (current = longest), fill 100%. Otherwise, show progress toward record.
+    const commitmentProgress = commitmentDays >= 44 ? 100 : Math.min((commitmentDays / 44) * 100, 100)
+    const insaneProgress = insaneDays >= longestRecord && longestRecord > 0 ? 100 : 
+                          longestRecord > 0 ? Math.min((insaneDays / longestRecord) * 100, 100) : 
+                          insaneDays > 0 ? 50 : 0 // Show some progress if they have days but no record yet
     
-    // Check for new records (simplified for now)
-    const isInsaneNewRecord = insaneDays > 20 // Arbitrary threshold
+    // Check for new records
+    const isCommitmentNewRecord = commitmentDays >= 44
+    const isInsaneNewRecord = insaneDays >= longestRecord && longestRecord > 0
     
     return (
       <div key={index} className={`relative rounded-lg ${layoutClasses} overflow-hidden`}>
@@ -901,8 +912,15 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                 <div className="text-white text-sm font-light mb-1">days</div>
               </div>
               <div className="text-right mb-1">
-                <div className="text-white/70 text-xs">RECORD</div>
-                <div className="text-white text-base font-bold">{stat.longestStreak || 0}</div>
+                {isCommitmentNewRecord ? (
+                  <div className="flex items-center gap-1 justify-end mb-1">
+                    <span className="text-yellow-300">🔥</span>
+                    <span className="text-white text-xs font-bold">NEW</span>
+                  </div>
+                ) : (
+                  <div className="text-white/70 text-xs">RECORD</div>
+                )}
+                <div className="text-white text-base font-bold">44</div>
               </div>
             </div>
           </div>
@@ -939,7 +957,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                     <span className="text-white text-xs font-bold">NEW</span>
                   </div>
                 )}
-                <div className="text-white text-xs font-bold">RECORD!</div>
+                <div className="text-white text-xs font-bold">
+                  {isInsaneNewRecord ? 'RECORD!' : `RECORD: ${longestRecord}`}
+                </div>
               </div>
             </div>
           </div>
@@ -1269,6 +1289,11 @@ export default function RectangularDashboard() {
       if (updatedStats.interestingStats) {
         updatedStats.interestingStats = updatedStats.interestingStats.map((stat: any) => {
           if (stat.type === 'streak_progress') {
+            console.log('🔍 Updating streak component with:', {
+              commitmentDays: daysSinceDonation,
+              insaneDays: insaneStreak,
+              personalLongestInsaneStreak: personalLongestInsaneStreak
+            })
             return {
               ...stat,
               commitmentDays: daysSinceDonation,
