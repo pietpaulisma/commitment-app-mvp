@@ -227,11 +227,11 @@ export default function GroupAdminDashboard() {
       console.log('🍯 [POT DEBUG] Group query result:', { groupData, groupError })
       if (groupError) throw groupError
 
-      // Step 2: Get members data
+      // Step 2: Get members data (without total_penalty_owed for now)
       console.log('🍯 [POT DEBUG] Fetching members for group_id:', groupData.id)
       const { data: membersData, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, total_penalty_owed')
+        .select('id, email, username')
         .eq('group_id', groupData.id)
         .order('email')
 
@@ -315,12 +315,16 @@ export default function GroupAdminDashboard() {
             ? transactions.slice(0, 5) 
             : penaltyHistory.slice(0, 5)
 
-          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: paid=${totalPaid}, penalties=${totalPenalties}, debt=${member.total_penalty_owed}`)
+          // Calculate current debt (penalties - payments)
+          const currentDebt = Math.max(0, totalPenalties - totalPaid)
+
+          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: paid=${totalPaid}, penalties=${totalPenalties}, debt=${currentDebt}`)
 
           return {
             ...member,
             total_paid: totalPaid,
             total_penalties: totalPenalties,
+            total_penalty_owed: currentDebt, // Calculate debt from transactions
             recent_transactions: recentTransactions
           }
         })
@@ -499,18 +503,9 @@ export default function GroupAdminDashboard() {
 
       if (transactionError) throw transactionError
 
-      const member = potData.find(m => m.id === userId)
-      if (member) {
-        const currentDebt = member.total_penalty_owed || 0
-        const newDebt = Math.max(0, currentDebt + amount)
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ total_penalty_owed: newDebt })
-          .eq('id', userId)
-
-        if (profileError) throw profileError
-      }
+      // Note: We don't update profiles.total_penalty_owed since the column doesn't exist
+      // The debt will be calculated from payment_transactions on next load
+      console.log('🍯 [POT DEBUG] Transaction recorded, debt will be recalculated from transactions')
 
       await Promise.all([loadPotData(), loadGroupData()])
       setEditingPot(null)
