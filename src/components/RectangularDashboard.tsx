@@ -852,111 +852,88 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
     )
   }
 
-  // Streak Progress - Dual section design with background graphs like screenshot
+  // Streak Progress - Dual section design with progress fill backgrounds like birthday component
   if (stat.type === 'streak_progress') {
-    const currentStreak = stat.currentStreak || 0
-    const longestStreak = stat.longestStreak || 0
-    const isNewRecord = currentStreak > 0 && currentStreak >= longestStreak
+    // Use the correct data sources: daysSinceDonation for commitment, insaneStreak for insane
+    const commitmentDays = daysSinceDonation || 0
+    const insaneDays = insaneStreak || 0
     
-    // Generate some mock graph data for background visualization
-    const generateGraphData = (length: number, trend: 'up' | 'down' | 'stable' = 'up') => {
-      return Array.from({ length }, (_, i) => {
-        const base = trend === 'up' ? (i / length) * 0.8 + 0.2 : 
-                     trend === 'down' ? 1 - (i / length) * 0.6 : 
-                     0.5 + Math.sin(i * 0.3) * 0.3
-        return Math.max(0.1, Math.min(1, base + (Math.random() - 0.5) * 0.2))
-      })
-    }
+    // Calculate progress percentages for background fills
+    const maxDays = 100 // Arbitrary max for progress visualization
+    const commitmentProgress = Math.min((commitmentDays / maxDays) * 100, 100)
+    const insaneProgress = Math.min((insaneDays / maxDays) * 100, 100)
     
-    const commitmentGraphData = generateGraphData(20, 'stable')
-    const insaneGraphData = generateGraphData(20, 'up')
+    // Check for new records (simplified for now)
+    const isInsaneNewRecord = insaneDays > 20 // Arbitrary threshold
     
     return (
       <div key={index} className={`relative rounded-lg ${layoutClasses} overflow-hidden`}>
         {/* Top Section - Commitment Streak */}
-        <div className="relative h-1/2 overflow-hidden">
-          {/* Orange background with gradient */}
+        <div className="relative h-1/2 overflow-hidden bg-gray-900/30">
+          {/* Progress fill background */}
           <div 
-            className="absolute inset-0"
+            className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
             style={{ 
-              background: getGradientStyle('bg-orange-400', 'organic')
+              background: getGradientStyle('bg-orange-400', 'organic'),
+              width: `${commitmentProgress}%`,
+              borderTopLeftRadius: '12px'
             }}
           />
           
-          {/* Background graph lines */}
-          <div className="absolute inset-0 flex items-end justify-end pr-4 pb-2">
-            <div className="flex items-end gap-0.5 opacity-30">
-              {commitmentGraphData.map((value, i) => (
-                <div
-                  key={i}
-                  className="w-1 bg-white/40 rounded-t"
-                  style={{ height: `${value * 40}px` }}
-                />
-              ))}
-            </div>
-          </div>
-          
           {/* Content */}
-          <div className="relative p-3 h-full flex flex-col justify-between">
-            <div className="text-xs text-white/90 uppercase tracking-wider font-bold">
+          <div className="relative p-3 h-full flex flex-col">
+            <div className="text-xs text-white/90 uppercase tracking-wider font-bold mb-1">
               COMMITMENT STREAK
             </div>
-            <div className="flex items-baseline justify-between">
-              <div className="text-3xl font-black text-white leading-none">
-                {currentStreak}
+            <div className="flex-1 flex items-end justify-between">
+              <div className="flex items-baseline gap-1">
+                <div className="text-4xl font-black text-white leading-none">
+                  {commitmentDays}
+                </div>
+                <div className="text-white text-sm font-light mb-1">days</div>
               </div>
-              <div className="text-right">
-                <div className="text-white/90 text-sm font-bold">RECORD</div>
-                <div className="text-white text-lg font-black">{longestStreak}</div>
+              <div className="text-right mb-1">
+                <div className="text-white/70 text-xs">RECORD</div>
+                <div className="text-white text-base font-bold">44</div>
               </div>
             </div>
-            <div className="text-white text-sm font-bold">DAYS</div>
           </div>
         </div>
         
         {/* Bottom Section - Insane Streak */}
-        <div className="relative h-1/2 overflow-hidden">
-          {/* Green background with gradient */}
+        <div className="relative h-1/2 overflow-hidden bg-gray-900/30">
+          {/* Progress fill background */}
           <div 
-            className="absolute inset-0"
+            className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
             style={{ 
-              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)'
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+              width: `${insaneProgress}%`,
+              borderBottomLeftRadius: '12px'
             }}
           />
           
-          {/* Background graph lines */}
-          <div className="absolute inset-0 flex items-end justify-end pr-4 pb-2">
-            <div className="flex items-end gap-0.5 opacity-30">
-              {insaneGraphData.map((value, i) => (
-                <div
-                  key={i}
-                  className="w-1 bg-white/40 rounded-t"
-                  style={{ height: `${value * 40}px` }}
-                />
-              ))}
-            </div>
-          </div>
-          
           {/* Content */}
-          <div className="relative p-3 h-full flex flex-col justify-between">
-            <div className="text-xs text-white/90 uppercase tracking-wider font-bold">
+          <div className="relative p-3 h-full flex flex-col">
+            <div className="text-xs text-white/90 uppercase tracking-wider font-bold mb-1">
               INSANE STREAK
             </div>
-            <div className="flex items-baseline justify-between">
-              <div className="text-3xl font-black text-white leading-none">
-                {currentStreak + 1}
+            <div className="flex-1 flex items-end justify-between">
+              <div className="flex items-baseline gap-1">
+                <div className="text-4xl font-black text-white leading-none">
+                  {insaneDays}
+                </div>
+                <div className="text-white text-sm font-light mb-1">days</div>
               </div>
-              <div className="text-right">
-                {isNewRecord && (
-                  <div className="flex items-center gap-1">
+              <div className="text-right mb-1">
+                {isInsaneNewRecord && (
+                  <div className="flex items-center gap-1 justify-end mb-1">
                     <span className="text-yellow-300">🔥</span>
                     <span className="text-white text-xs font-bold">NEW</span>
                   </div>
                 )}
-                <div className="text-white text-lg font-black">RECORD!</div>
+                <div className="text-white text-xs font-bold">RECORD!</div>
               </div>
             </div>
-            <div className="text-white text-sm font-bold">DAYS</div>
           </div>
         </div>
       </div>
