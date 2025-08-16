@@ -446,6 +446,11 @@ export default function GroupAdminDashboard() {
   }
 
   const adjustPenaltyAmount = async (userId: string) => {
+    console.log('🍯 [POT DEBUG] Starting penalty adjustment...')
+    console.log('🍯 [POT DEBUG] User ID:', userId)
+    console.log('🍯 [POT DEBUG] Admin profile:', profile)
+    console.log('🍯 [POT DEBUG] Group:', group)
+    
     if (!adjustmentAmount || !adjustmentReason) {
       alert('Please enter both amount and reason for the adjustment')
       return
@@ -463,15 +468,22 @@ export default function GroupAdminDashboard() {
       const transactionType = amount > 0 ? 'penalty' : 'payment'
       const absoluteAmount = Math.abs(amount)
 
-      const { error: transactionError } = await supabase
+      const transactionData = {
+        user_id: userId,
+        group_id: group.id,
+        amount: absoluteAmount,
+        transaction_type: transactionType,
+        description: `Admin adjustment: ${adjustmentReason}`
+      }
+
+      console.log('🍯 [POT DEBUG] Inserting transaction:', transactionData)
+
+      const { data, error: transactionError } = await supabase
         .from('payment_transactions')
-        .insert({
-          user_id: userId,
-          group_id: group.id,
-          amount: absoluteAmount,
-          transaction_type: transactionType,
-          description: `Admin adjustment: ${adjustmentReason}`
-        })
+        .insert(transactionData)
+        .select()
+
+      console.log('🍯 [POT DEBUG] Insert result:', { data, transactionError })
 
       if (transactionError) throw transactionError
 
