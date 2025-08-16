@@ -355,10 +355,7 @@ const calculateDaysSinceDonation = (lastDonationDate: string | null, profileCrea
 // Helper function to calculate consecutive "insane" workout days 
 // Fixed logic: Only count days where user met/exceeded their actual insane target
 const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: number[] = [1], recoveryDays: number[] = [5]): number => {
-  if (!logs || logs.length === 0) {
-    console.log('🔍 calculateInsaneStreak: No logs provided')
-    return 0
-  }
+  if (!logs || logs.length === 0) return 0
   
   // Group logs by date and sum points per day
   const dailyPoints = logs.reduce((acc, log) => {
@@ -366,8 +363,6 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
     acc[date] = (acc[date] || 0) + log.points
     return acc
   }, {} as Record<string, number>)
-  
-  console.log('🔍 calculateInsaneStreak: Daily points:', dailyPoints)
   
   const today = new Date().toISOString().split('T')[0]
   const groupStartTime = new Date(groupStartDate).getTime()
@@ -380,9 +375,6 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
   const sortedDates = workoutDates
     .filter(date => date !== today || hasWorkedOutToday)
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-  
-  console.log('🔍 calculateInsaneStreak: Dates to check (recent first):', sortedDates.slice(0, 5))
-  console.log('🔍 calculateInsaneStreak: Has worked out today:', hasWorkedOutToday)
   
   let streak = 0
   
@@ -400,18 +392,14 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
       currentDayOfWeek: dayOfWeek
     })
     
-    console.log(`🔍 calculateInsaneStreak: ${date} - Points: ${dailyPoints[date]}, Target: ${insaneTarget}, Met: ${dailyPoints[date] >= insaneTarget}`)
-    
     // Only count as insane streak if they met/exceeded the insane target
     if (dailyPoints[date] >= insaneTarget) {
       streak++
     } else {
-      console.log(`🔍 calculateInsaneStreak: Streak broken at ${date}`)
       break // Streak broken - they didn't meet the insane target
     }
   }
   
-  console.log('🔍 calculateInsaneStreak: Final streak:', streak)
   return streak
 }
 
@@ -2287,11 +2275,6 @@ export default function RectangularDashboard() {
 
         // Calculate days since donation (use profile creation date as fallback)
         const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
-        console.log('🔍 Commitment Streak Debug:', {
-          last_donation_date: profileData?.last_donation_date,
-          created_at: profileData?.created_at,
-          calculated_days: donationGap
-        })
         setDaysSinceDonation(donationGap)
 
         // Get logs for streak calculation (last 30 days)
@@ -2309,21 +2292,12 @@ export default function RectangularDashboard() {
 
         // Calculate insane streak using proper group data
         if (currentGroupData?.start_date) {
-          console.log('🔍 Insane Streak Debug - Input:', {
-            userLogs: userLogs?.slice(0, 5), // First 5 logs for debugging
-            groupStartDate: currentGroupData.start_date,
-            restDays,
-            recoveryDays
-          })
-          
           const streak = calculateInsaneStreak(
             userLogs || [], 
             currentGroupData.start_date, 
             restDays, 
             recoveryDays
           )
-          
-          console.log('🔍 Insane Streak Debug - Result:', streak)
           setInsaneStreak(streak)
         } else {
           setInsaneStreak(0)
