@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import ExerciseForm from '@/components/ExerciseForm'
 import TimeGradient from '@/components/TimeGradient'
+import { useExercises } from '@/hooks/useExercises'
 import { supabase } from '@/lib/supabase'
 
 type Exercise = {
@@ -26,8 +27,7 @@ export default function ExerciseManagementPage() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { profile, loading: profileLoading, isSupremeAdmin } = useProfile()
   const router = useRouter()
-  const [exercises, setExercises] = useState<Exercise[]>([])
-  const [loading, setLoading] = useState(true)
+  const { exercises, loading, refreshExercises } = useExercises()
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
 
@@ -43,27 +43,8 @@ export default function ExerciseManagementPage() {
     }
   }, [profile, profileLoading, isSupremeAdmin, router])
 
-  useEffect(() => {
-    if (isSupremeAdmin) {
-      loadExercises()
-    }
-  }, [isSupremeAdmin])
+  // Exercises are automatically loaded by the useExercises hook
 
-  const loadExercises = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('exercises')
-        .select('*')
-        .order('name')
-
-      if (error) throw error
-      setExercises(data || [])
-    } catch (error) {
-      console.error('Error loading exercises:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const deleteExercise = async (exerciseId: string) => {
     if (!confirm('Are you sure you want to delete this exercise? This action cannot be undone.')) {
@@ -78,7 +59,7 @@ export default function ExerciseManagementPage() {
 
       if (error) throw error
       
-      await loadExercises()
+      await refreshExercises()
       alert('Exercise deleted successfully!')
     } catch (error) {
       console.error('Error deleting exercise:', error)
@@ -196,8 +177,9 @@ export default function ExerciseManagementPage() {
                 </div>
               ))
             )}
-          </div>
+          </>
         )}
+      </div>
       </div>
 
       {/* Add/Edit Exercise Modal */}
@@ -209,7 +191,7 @@ export default function ExerciseManagementPage() {
           setEditingExercise(null)
         }}
         onSuccess={() => {
-          loadExercises()
+          refreshExercises()
           setShowAddForm(false)
           setEditingExercise(null)
         }}
