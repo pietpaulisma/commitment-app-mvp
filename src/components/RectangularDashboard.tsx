@@ -2651,68 +2651,74 @@ export default function RectangularDashboard() {
               </div>
             </div>
 
-            {/* Pot Contributors and Square Components - 2x2 grid */}
-            <div className="grid grid-cols-2 grid-rows-2 gap-1 mx-1 mb-1">
-              {/* Pot Contributors - Vertical 1:2 block (takes up 2 rows) */}
-              <div className="relative row-span-2">
-                <div 
-                  className="aspect-[1/2] bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                  style={{
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                  }}
-                >
-                  <MemoizedChartComponent 
-                    key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
-                    stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
-                    index={1} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                    onClick={() => toggleIndividualStat(1)}
-                    isPersonalMode={individualStatsMode[1]}
-                    hasPersonalData={!!personalStats?.interestingStats?.[1]}
-                  />
+            {/* Pot Contributors and Square Components - Proper alignment */}
+            <div className="mx-1 mb-1">
+              <div className="grid grid-cols-2 gap-1 h-auto">
+                {/* Pot Contributors - Vertical 1:2 block */}
+                <div className="relative">
+                  <div 
+                    className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl h-full"
+                    style={{
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
+                      aspectRatio: '1 / 2'
+                    }}
+                  >
+                    <MemoizedChartComponent 
+                      key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
+                      stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
+                      index={1} 
+                      getLayoutClasses={getLayoutClasses}
+                      userProfile={profile}
+                      onClick={() => toggleIndividualStat(1)}
+                      isPersonalMode={individualStatsMode[1]}
+                      hasPersonalData={!!personalStats?.interestingStats?.[1]}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Birthday Block - Top right square */}
-              <div className="relative">
-                <div 
-                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                  style={{
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                  }}
-                >
-                  <MemoizedChartComponent 
-                    key={`${individualStatsMode[2] ? 'personal' : 'group'}-${(individualStatsMode[2] && personalStats?.interestingStats?.[2]) ? personalStats.interestingStats[2].type : groupStats.interestingStats[2].type}-2`}
-                    stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]} 
-                    index={2} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                    onClick={() => toggleIndividualStat(2)}
-                    isPersonalMode={individualStatsMode[2]}
-                    hasPersonalData={!!personalStats?.interestingStats?.[2]}
-                  />
-                </div>
-              </div>
+                {/* Right column with 2 squares stacked */}
+                <div className="grid grid-rows-2 gap-1 h-full">
+                  {/* Birthday Block - Top right square */}
+                  <div className="relative">
+                    <div 
+                      className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                      style={{
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                      }}
+                    >
+                      <MemoizedChartComponent 
+                        key={`${individualStatsMode[2] ? 'personal' : 'group'}-${(individualStatsMode[2] && personalStats?.interestingStats?.[2]) ? personalStats.interestingStats[2].type : groupStats.interestingStats[2].type}-2`}
+                        stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]} 
+                        index={2} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                        onClick={() => toggleIndividualStat(2)}
+                        isPersonalMode={individualStatsMode[2]}
+                        hasPersonalData={!!personalStats?.interestingStats?.[2]}
+                      />
+                    </div>
+                  </div>
 
-              {/* Streak Block - Bottom right square */}
-              <div className="relative">
-                <div 
-                  className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-                  style={{
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-                  }}
-                >
-                  <MemoizedChartComponent 
-                    key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
-                    stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
-                    index={3} 
-                    getLayoutClasses={getLayoutClasses}
-                    userProfile={profile}
-                    onClick={() => toggleIndividualStat(3)}
-                    isPersonalMode={individualStatsMode[3]}
-                    hasPersonalData={!!personalStats?.interestingStats?.[3]}
-                  />
+                  {/* Streak Block - Bottom right square */}
+                  <div className="relative">
+                    <div 
+                      className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
+                      style={{
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                      }}
+                    >
+                      <MemoizedChartComponent 
+                        key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
+                        stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
+                        index={3} 
+                        getLayoutClasses={getLayoutClasses}
+                        userProfile={profile}
+                        onClick={() => toggleIndividualStat(3)}
+                        isPersonalMode={individualStatsMode[3]}
+                        hasPersonalData={!!personalStats?.interestingStats?.[3]}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
