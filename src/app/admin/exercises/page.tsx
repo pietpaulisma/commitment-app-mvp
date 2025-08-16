@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
@@ -83,7 +83,7 @@ export default function ExerciseManagementPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-black">
       {/* Time-based gradient background with increased intensity */}
       <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" intensity={1.2} />
       
@@ -134,9 +134,7 @@ export default function ExerciseManagementPage() {
                       <h4 className="text-white font-semibold">{exercise.name}</h4>
                       <p className="text-xs text-gray-400">ID: {exercise.id}</p>
                     </div>
-                    <span className={`px-2 py-1 text-xs font-bold border ${
-                      exercise.type === 'recovery' ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-700 text-gray-300 border-gray-600'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs font-bold border ${exercise.type === 'recovery' ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-700 text-gray-300 border-gray-600'}`}>
                       {exercise.type}
                     </span>
                   </div>
@@ -177,26 +175,26 @@ export default function ExerciseManagementPage() {
                 </div>
               ))
             )}
-          </>
+          </div>
         )}
-      </div>
-      </div>
 
+      </div>
+      
       {/* Add/Edit Exercise Modal */}
       <ExerciseForm
         exercise={editingExercise}
         isOpen={showAddForm || !!editingExercise}
         onClose={() => {
-          setShowAddForm(false)
-          setEditingExercise(null)
+          setShowAddForm(false);
+          setEditingExercise(null);
         }}
         onSuccess={() => {
-          refreshExercises()
-          setShowAddForm(false)
-          setEditingExercise(null)
+          refreshExercises();
+          setShowAddForm(false);
+          setEditingExercise(null);
         }}
       />
+      </div>
     </div>
-    </>
-  )
+  );
 }
