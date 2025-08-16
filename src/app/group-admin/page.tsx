@@ -273,59 +273,31 @@ export default function GroupAdminDashboard() {
 
           console.log(`🍯 [POT DEBUG] Transactions for ${member.email}:`, { transactions, transactionError })
 
-          // If payment_transactions failed, try penalty_logs as fallback
-          let penaltyHistory = []
-          if (!transactions || transactionError) {
-            console.log(`🍯 [POT DEBUG] Trying penalty_logs fallback for ${member.email}...`)
-            try {
-              const { data: penalties } = await supabase
-                .from('penalty_logs')
-                .select('amount, reason, penalty_date, created_at')
-                .eq('user_id', member.id)
-                .order('created_at', { ascending: false })
-                .limit(10)
-              
-              console.log(`🍯 [POT DEBUG] Penalty logs for ${member.email}:`, penalties)
-              
-              if (penalties && penalties.length > 0) {
-                penaltyHistory = penalties.map(p => ({
-                  amount: p.amount,
-                  transaction_type: 'penalty',
-                  description: p.reason,
-                  created_at: p.created_at
-                }))
-              }
-            } catch (penaltyError) {
-              console.log(`🍯 [POT DEBUG] Error accessing penalty_logs for ${member.email}:`, penaltyError)
-            }
-          }
-
-          // Calculate totals
+          // Calculate current debt and find last penalty date
           const totalPaid = transactions
             ?.filter(t => t.transaction_type === 'payment')
             .reduce((sum, t) => sum + t.amount, 0) || 0
 
           const totalPenalties = transactions
             ?.filter(t => t.transaction_type === 'penalty')
-            .reduce((sum, t) => sum + t.amount, 0) || 
-            penaltyHistory.reduce((sum, p) => sum + p.amount, 0) || 0
+            .reduce((sum, t) => sum + t.amount, 0) || 0
 
-          // Use recent transactions or penalty history
-          const recentTransactions = (transactions && transactions.length > 0) 
-            ? transactions.slice(0, 5) 
-            : penaltyHistory.slice(0, 5)
-
-          // Calculate current debt (penalties - payments)
           const currentDebt = Math.max(0, totalPenalties - totalPaid)
 
-          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: paid=${totalPaid}, penalties=${totalPenalties}, debt=${currentDebt}`)
+          // Find last penalty date
+          const lastPenalty = transactions
+            ?.filter(t => t.transaction_type === 'penalty')
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+
+          const lastPenaltyDate = lastPenalty ? new Date(lastPenalty.created_at).toLocaleDateString() : null
+
+          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: debt=${currentDebt}, lastPenalty=${lastPenaltyDate}`)
 
           return {
             ...member,
-            total_paid: totalPaid,
-            total_penalties: totalPenalties,
-            total_penalty_owed: currentDebt, // Calculate debt from transactions
-            recent_transactions: recentTransactions
+            total_penalty_owed: currentDebt,
+            last_penalty_date: lastPenaltyDate,
+            recent_transactions: transactions?.slice(0, 3) || [] // Keep fewer for reference
           }
         })
       )
@@ -1046,18 +1018,16 @@ export default function GroupAdminDashboard() {
                               </span>
                             </div>
                             
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                               <div>
                                 <div className="text-gray-400 uppercase tracking-wide text-xs">Current Debt</div>
-                                <div className="text-red-400 font-bold text-lg">€{(member.total_penalty_owed || 0).toFixed(2)}</div>
+                                <div className="text-red-400 font-bold text-2xl">€{(member.total_penalty_owed || 0).toFixed(2)}</div>
                               </div>
                               <div>
-                                <div className="text-gray-400 uppercase tracking-wide text-xs">Total Penalties</div>
-                                <div className="text-orange-400 font-medium">€{(member.total_penalties || 0).toFixed(2)}</div>
-                              </div>
-                              <div>
-                                <div className="text-gray-400 uppercase tracking-wide text-xs">Total Paid</div>
-                                <div className="text-green-400 font-medium">€{(member.total_paid || 0).toFixed(2)}</div>
+                                <div className="text-gray-400 uppercase tracking-wide text-xs">Last Penalty</div>
+                                <div className="text-orange-400 font-medium">
+                                  {member.last_penalty_date || 'No penalties yet'}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1124,12 +1094,12 @@ export default function GroupAdminDashboard() {
                           </div>
                         </div>
                         
-                        {/* Recent Transactions */}
+                        {/* Recent Activity (only if there are transactions) */}
                         {member.recent_transactions && member.recent_transactions.length > 0 && (
                           <div className="mt-4 pt-4 border-t border-gray-800">
-                            <h5 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Recent Transactions</h5>
+                            <h5 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Recent Activity</h5>
                             <div className="space-y-1">
-                              {member.recent_transactions.slice(0, 3).map((transaction: any, index: number) => (
+                              {member.recent_transactions.slice(0, 2).map((transaction: any, index: number) => (
                                 <div key={index} className="flex justify-between items-center text-xs">
                                   <span className="text-gray-300">{transaction.description}</span>
                                   <div className="flex items-center gap-2">
