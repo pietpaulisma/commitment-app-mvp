@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
 import { ShareIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline'
+import { getDaysSinceStart } from '@/utils/targetCalculation'
 
 type Member = {
   id: string
@@ -644,7 +645,7 @@ export default function GroupAdminDashboard() {
                           <div>
                             <div className="text-gray-400 uppercase tracking-wide">Challenge Day</div>
                             <div className="font-semibold text-lg text-white">
-                              Day {Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1}
+                              Day {getDaysSinceStart(group.start_date) + 1}
                             </div>
                           </div>
                           <div>
@@ -666,16 +667,13 @@ export default function GroupAdminDashboard() {
                           <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
                             <div className="text-xs text-gray-400 uppercase tracking-wide">Today's Target</div>
                             <div className="font-bold text-xl text-white">
-                              {(() => {
-                                const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
-                                return 1 + Math.max(0, daysSinceStart);
-                              })()}pts
+                              {1 + getDaysSinceStart(group.start_date)}pts
                             </div>
                           </div>
                           <div className="text-center p-3 bg-gray-800/50 border border-gray-700">
                             <div className="text-xs text-gray-400 uppercase tracking-wide">Challenge Day</div>
                             <div className="font-bold text-xl text-white">
-                              Day {Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1}
+                              Day {getDaysSinceStart(group.start_date) + 1}
                             </div>
                           </div>
                         </div>
