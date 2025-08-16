@@ -789,11 +789,12 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
                   </div>
                 </div>
                 {contributor.timeAgo && (
-                  <div className="text-xs text-gray-400 flex items-center gap-1">
+                  <div className={`text-xs flex items-center gap-1 ${
+                    contributor.isMostRecent 
+                      ? `text-${contributor.userColor}-400` 
+                      : 'text-gray-400'
+                  }`}>
                     <span>{contributor.timeAgo}</span>
-                    {contributor.isNew && (
-                      <span className="text-green-400 italic">new</span>
-                    )}
                   </div>
                 )}
               </div>
@@ -1480,9 +1481,10 @@ export default function RectangularDashboard() {
       // 2. Money Pot - load group transaction data (both penalties and payments)
       const { data: groupTransactions, error: transactionError } = await supabase
         .from('payment_transactions')
-        .select('amount, user_id, transaction_type, profiles!inner(username)')
+        .select('amount, user_id, transaction_type, created_at, profiles!inner(username)')
         .eq('group_id', profile.group_id)
         .in('transaction_type', ['penalty', 'payment'])
+        .order('created_at', { ascending: false })
 
       if (transactionError) {
         console.error('Error loading group transactions:', transactionError)
@@ -1515,17 +1517,33 @@ export default function RectangularDashboard() {
       // 3. Pot Contributors - detailed data for the new component (reuse the same transaction data)
       let contributors = []
       if (groupTransactions && !transactionError) {
+        // Get user colors for styling
+        const userColorsMap = new Map()
+        const userIds = [...new Set(groupTransactions.map(t => t.user_id))]
+        if (userIds.length > 0) {
+          const { data: userProfiles } = await supabase
+            .from('profiles')
+            .select('id, personal_color')
+            .in('id', userIds)
+          
+          userProfiles?.forEach(user => {
+            userColorsMap.set(user.id, user.personal_color || 'gray')
+          })
+        }
+
         // Aggregate by user and find most recent transaction for each
         const userContributions = new Map()
         groupTransactions.forEach(transaction => {
           const userId = transaction.user_id
           const username = transaction.profiles?.username || 'User'
+          const userColor = userColorsMap.get(userId) || 'gray'
           if (!userContributions.has(userId)) {
             userContributions.set(userId, {
               name: username,
               netAmount: 0,
               latestDate: new Date(transaction.created_at),
-              isRecent: false
+              userId: userId,
+              userColor: userColor
             })
           }
           const existing = userContributions.get(userId)
@@ -1537,31 +1555,41 @@ export default function RectangularDashboard() {
         })
 
         // Convert to array, filter positive amounts, and sort by amount (highest first)
-        contributors = Array.from(userContributions.values())
+        const positiveContributors = Array.from(userContributions.values())
           .filter(contributor => contributor.netAmount > 0) // Only show users who owe money
           .sort((a, b) => b.netAmount - a.netAmount)
-          .map((contributor, index) => {
-            const now = new Date()
-            const diffTime = now.getTime() - contributor.latestDate.getTime()
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-            const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
-            
-            let timeAgo = ''
-            if (diffDays > 0) {
-              timeAgo = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
-            } else if (diffHours > 0) {
-              timeAgo = `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
-            } else {
-              timeAgo = 'Just now'
-            }
 
-            return {
-              name: contributor.name,
-              amount: Math.round(contributor.netAmount),
-              timeAgo: timeAgo, // Show time for each contributor
-              isNew: diffHours < 2 // Mark as new if within 2 hours
-            }
-          })
+        // Find the most recent transaction date among all contributors
+        const mostRecentDate = positiveContributors.length > 0 
+          ? Math.max(...positiveContributors.map(c => c.latestDate.getTime()))
+          : 0
+
+        contributors = positiveContributors.map((contributor, index) => {
+          const now = new Date()
+          const diffTime = now.getTime() - contributor.latestDate.getTime()
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+          const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+          
+          let timeAgo = ''
+          if (diffDays > 0) {
+            timeAgo = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+          } else if (diffHours > 0) {
+            timeAgo = `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+          } else {
+            timeAgo = 'Just now'
+          }
+
+          // Mark as most recent (newest contributor)
+          const isMostRecent = contributor.latestDate.getTime() === mostRecentDate
+
+          return {
+            name: contributor.name,
+            amount: Math.round(contributor.netAmount),
+            timeAgo: timeAgo,
+            userColor: contributor.userColor,
+            isMostRecent: isMostRecent
+          }
+        })
       }
 
       // 4. Next Birthday in Group - find the next upcoming birthday
