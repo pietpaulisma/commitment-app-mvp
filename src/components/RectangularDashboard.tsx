@@ -1317,6 +1317,9 @@ export default function RectangularDashboard() {
       }
     }
   }, [daysSinceDonation, insaneStreak, personalLongestInsaneStreak])
+  
+  // Prevent group stats from reloading after personal data is set
+  const [personalDataLoaded, setPersonalDataLoaded] = useState(false)
 
   const calculateChallengeInfo = () => {
     if (!groupStartDate) return
@@ -1940,9 +1943,16 @@ export default function RectangularDashboard() {
   const loadGroupStats = async () => {
     if (!profile?.group_id) return
 
+    // Don't reload group stats if personal data is already loaded (prevents overwriting)
+    if (personalDataLoaded) {
+      console.log('🔍 Skipping group stats reload - personal data already loaded')
+      return
+    }
+
     try {
       const stats = await calculateEssentialStats()
       if (stats) {
+        console.log('🔍 Group stats loading with streak data:', stats.streakProgress)
         setGroupStats({
           interestingStats: [
             { ...stats.groupPoints, layout: 'col-span-2' }, // Top row - full width
@@ -2314,6 +2324,7 @@ export default function RectangularDashboard() {
         const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
         console.log('🔍 Setting daysSinceDonation to:', donationGap)
         setDaysSinceDonation(donationGap)
+        setPersonalDataLoaded(true)
 
         // Get logs for streak calculation (last 30 days)
         const past30Days = Array.from({ length: 30 }, (_, i) => {
