@@ -383,6 +383,11 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
     const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
     const dayOfWeek = currentDate.getDay()
     
+    // Skip rest days and recovery days - they don't count toward or break insane streaks
+    if (restDays.includes(dayOfWeek) || recoveryDays.includes(dayOfWeek)) {
+      continue // Skip this day, don't break or count the streak
+    }
+    
     // Calculate what the insane target would have been for this date
     const insaneTarget = calculateDailyTarget({
       daysSinceStart,
@@ -424,6 +429,11 @@ const calculateLongestStreak = (logs: any[], groupStartDate: string, restDays: n
     const currentDate = new Date(date)
     const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
     const dayOfWeek = currentDate.getDay()
+
+    // Skip rest days and recovery days - they don't count toward or break insane streaks
+    if (restDays.includes(dayOfWeek) || recoveryDays.includes(dayOfWeek)) {
+      continue // Skip this day, don't break or count the streak
+    }
 
     // Calculate insane target for this day
     const insaneTarget = calculateDailyTarget({
@@ -1281,15 +1291,15 @@ export default function RectangularDashboard() {
     }
   }, [groupStartDate, restDays, recoveryDays])
 
-  // Update group stats when streak data changes
+  // Update group stats when personal streak data is loaded (prevent race conditions)
   useEffect(() => {
-    if (groupStats && (daysSinceDonation > 0 || insaneStreak >= 0)) {
+    if (groupStats && daysSinceDonation > 0) { // Only update when we have real personal data
       // Update the streak progress data in existing group stats
       const updatedStats = { ...groupStats }
       if (updatedStats.interestingStats) {
         updatedStats.interestingStats = updatedStats.interestingStats.map((stat: any) => {
           if (stat.type === 'streak_progress') {
-            console.log('🔍 Updating streak component with:', {
+            console.log('🔍 Updating streak component with personal data:', {
               commitmentDays: daysSinceDonation,
               insaneDays: insaneStreak,
               personalLongestInsaneStreak: personalLongestInsaneStreak
@@ -1306,7 +1316,7 @@ export default function RectangularDashboard() {
         setGroupStats(updatedStats)
       }
     }
-  }, [daysSinceDonation, insaneStreak, personalLongestInsaneStreak, groupStats?.interestingStats?.length])
+  }, [daysSinceDonation, insaneStreak, personalLongestInsaneStreak])
 
   const calculateChallengeInfo = () => {
     if (!groupStartDate) return
@@ -1916,8 +1926,8 @@ export default function RectangularDashboard() {
           title: 'Streak Progress',
           currentStreak: currentStreak,
           longestStreak: longestStreak,
-          commitmentDays: 0, // Will be updated later with real data
-          insaneDays: currentStreak,
+          commitmentDays: 0, // Will be updated by personal data only
+          insaneDays: 0, // Will be updated by personal data only
           type: 'streak_progress'
         }
       }
