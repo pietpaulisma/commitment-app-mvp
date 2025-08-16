@@ -2069,6 +2069,15 @@ export default function RectangularDashboard() {
             layout: 'square' // Bottom right - square  
           },
           {
+            title: 'Your Streaks',
+            subtitle: 'commitment progress',
+            commitmentDays: daysSinceDonation || 0,
+            insaneDays: insaneStreak || 0,
+            longestRecord: personalLongestInsaneStreak || 0,
+            type: 'streak_progress',
+            layout: 'square' // Square layout to match group stats
+          },
+          {
             title: 'Your Peak Time',
             subtitle: 'most active hour',
             value: peakTime,
