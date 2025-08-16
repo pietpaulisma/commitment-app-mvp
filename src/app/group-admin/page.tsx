@@ -65,6 +65,7 @@ export default function GroupAdminDashboard() {
   const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string }>>({})
   const [potData, setPotData] = useState<any[]>([])
   const [potLoading, setPotLoading] = useState(false)
+  const [potError, setPotError] = useState<string | null>(null)
   const [editingPot, setEditingPot] = useState<string | null>(null)
   const [adjustmentAmount, setAdjustmentAmount] = useState('')
   const [adjustmentReason, setAdjustmentReason] = useState('')
@@ -202,56 +203,142 @@ export default function GroupAdminDashboard() {
   }
 
   const loadPotData = async () => {
-    if (!profile) return
+    console.log('🍯 [POT DEBUG] Starting loadPotData...')
+    console.log('🍯 [POT DEBUG] Profile:', profile)
+    
+    if (!profile) {
+      console.log('🍯 [POT DEBUG] No profile, returning early')
+      return
+    }
 
     try {
       setPotLoading(true)
+      setPotError(null)
+      console.log('🍯 [POT DEBUG] Set loading to true')
 
+      // Step 1: Get group data
+      console.log('🍯 [POT DEBUG] Fetching group data for admin_id:', profile.id)
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
         .select('*')
         .eq('admin_id', profile.id)
         .single()
 
+      console.log('🍯 [POT DEBUG] Group query result:', { groupData, groupError })
       if (groupError) throw groupError
 
+      // Step 2: Get members data
+      console.log('🍯 [POT DEBUG] Fetching members for group_id:', groupData.id)
       const { data: membersData, error: membersError } = await supabase
         .from('profiles')
         .select('id, email, total_penalty_owed')
         .eq('group_id', groupData.id)
         .order('email')
 
+      console.log('🍯 [POT DEBUG] Members query result:', { membersData, membersError })
       if (membersError) throw membersError
 
-      const membersWithTransactions = await Promise.all(
-        (membersData || []).map(async (member) => {
-          const { data: transactions } = await supabase
-            .from('payment_transactions')
-            .select('amount, transaction_type, description, created_at')
-            .eq('user_id', member.id)
-            .order('created_at', { ascending: false })
+      // Step 3: Check payment_transactions table access
+      console.log('🍯 [POT DEBUG] Testing payment_transactions table access...')
+      const { data: testTransactions, error: testError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .limit(1)
 
+      console.log('🍯 [POT DEBUG] Payment transactions test:', { testTransactions, testError })
+
+      // Step 4: Get transactions for each member (with fallback)
+      console.log('🍯 [POT DEBUG] Processing', membersData?.length || 0, 'members...')
+      const membersWithTransactions = await Promise.all(
+        (membersData || []).map(async (member, index) => {
+          console.log(`🍯 [POT DEBUG] Processing member ${index + 1}:`, member.email, 'ID:', member.id)
+          
+          // Try payment_transactions first
+          let transactions = null
+          let transactionError = null
+          
+          try {
+            const result = await supabase
+              .from('payment_transactions')
+              .select('amount, transaction_type, description, created_at')
+              .eq('user_id', member.id)
+              .order('created_at', { ascending: false })
+            
+            transactions = result.data
+            transactionError = result.error
+          } catch (error) {
+            console.log(`🍯 [POT DEBUG] Error accessing payment_transactions for ${member.email}:`, error)
+            transactionError = error
+          }
+
+          console.log(`🍯 [POT DEBUG] Transactions for ${member.email}:`, { transactions, transactionError })
+
+          // If payment_transactions failed, try penalty_logs as fallback
+          let penaltyHistory = []
+          if (!transactions || transactionError) {
+            console.log(`🍯 [POT DEBUG] Trying penalty_logs fallback for ${member.email}...`)
+            try {
+              const { data: penalties } = await supabase
+                .from('penalty_logs')
+                .select('amount, reason, penalty_date, created_at')
+                .eq('user_id', member.id)
+                .order('created_at', { ascending: false })
+                .limit(10)
+              
+              console.log(`🍯 [POT DEBUG] Penalty logs for ${member.email}:`, penalties)
+              
+              if (penalties && penalties.length > 0) {
+                penaltyHistory = penalties.map(p => ({
+                  amount: p.amount,
+                  transaction_type: 'penalty',
+                  description: p.reason,
+                  created_at: p.created_at
+                }))
+              }
+            } catch (penaltyError) {
+              console.log(`🍯 [POT DEBUG] Error accessing penalty_logs for ${member.email}:`, penaltyError)
+            }
+          }
+
+          // Calculate totals
           const totalPaid = transactions
             ?.filter(t => t.transaction_type === 'payment')
             .reduce((sum, t) => sum + t.amount, 0) || 0
 
           const totalPenalties = transactions
             ?.filter(t => t.transaction_type === 'penalty')
-            .reduce((sum, t) => sum + t.amount, 0) || 0
+            .reduce((sum, t) => sum + t.amount, 0) || 
+            penaltyHistory.reduce((sum, p) => sum + p.amount, 0) || 0
+
+          // Use recent transactions or penalty history
+          const recentTransactions = (transactions && transactions.length > 0) 
+            ? transactions.slice(0, 5) 
+            : penaltyHistory.slice(0, 5)
+
+          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: paid=${totalPaid}, penalties=${totalPenalties}, debt=${member.total_penalty_owed}`)
 
           return {
             ...member,
             total_paid: totalPaid,
             total_penalties: totalPenalties,
-            recent_transactions: transactions?.slice(0, 5) || []
+            recent_transactions: recentTransactions
           }
         })
       )
 
+      console.log('🍯 [POT DEBUG] Final membersWithTransactions:', membersWithTransactions)
       setPotData(membersWithTransactions)
     } catch (error) {
-      console.error('Error loading pot data:', error)
+      console.error('🍯 [POT DEBUG] Error loading pot data:', error)
+      console.error('🍯 [POT DEBUG] Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setPotError(`Failed to load pot data: ${errorMessage}`)
     } finally {
+      console.log('🍯 [POT DEBUG] Setting loading to false')
       setPotLoading(false)
     }
   }
@@ -425,7 +512,7 @@ export default function GroupAdminDashboard() {
         if (profileError) throw profileError
       }
 
-      await loadPotData()
+      await Promise.all([loadPotData(), loadGroupData()])
       setEditingPot(null)
       setAdjustmentAmount('')
       setAdjustmentReason('')
@@ -922,6 +1009,30 @@ export default function GroupAdminDashboard() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
                     <p className="mt-2 text-gray-400">Loading pot data...</p>
                   </div>
+                ) : potError ? (
+                  <div className="text-center py-8">
+                    <div className="bg-red-900/30 border border-red-700 p-6 rounded-lg">
+                      <h4 className="text-red-400 font-semibold mb-2">Error Loading Pot Data</h4>
+                      <p className="text-red-300 text-sm mb-4">{potError}</p>
+                      <button
+                        onClick={loadPotData}
+                        className="bg-red-600 text-white px-4 py-2 text-sm hover:bg-red-700 transition-colors"
+                      >
+                        Retry
+                      </button>
+                      <div className="mt-4 text-left">
+                        <details className="text-xs text-gray-400">
+                          <summary className="cursor-pointer hover:text-gray-300">Debug Info</summary>
+                          <div className="mt-2 space-y-1">
+                            <div>User ID: {profile?.id}</div>
+                            <div>User Role: {profile?.role}</div>
+                            <div>Group ID: {profile?.group_id}</div>
+                            <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                          </div>
+                        </details>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <div className="divide-y divide-gray-800">
                     {potData.map((member) => (
@@ -1044,7 +1155,35 @@ export default function GroupAdminDashboard() {
                     
                     {potData.length === 0 && (
                       <div className="text-center py-8">
-                        <p className="text-gray-400">No pot data available</p>
+                        <div className="bg-yellow-900/30 border border-yellow-700 p-6 rounded-lg">
+                          <h4 className="text-yellow-400 font-semibold mb-2">No Pot Data Found</h4>
+                          <p className="text-yellow-300 text-sm mb-4">
+                            No members found or no penalty data available. This could mean:
+                          </p>
+                          <ul className="text-yellow-300 text-sm text-left space-y-1 mb-4">
+                            <li>• No members in your group yet</li>
+                            <li>• Database permissions issue</li>
+                            <li>• Payment transactions table not accessible</li>
+                            <li>• No penalty data has been recorded yet</li>
+                          </ul>
+                          <button
+                            onClick={loadPotData}
+                            className="bg-yellow-600 text-white px-4 py-2 text-sm hover:bg-yellow-700 transition-colors"
+                          >
+                            Refresh Data
+                          </button>
+                          <div className="mt-4 text-left">
+                            <details className="text-xs text-gray-400">
+                              <summary className="cursor-pointer hover:text-gray-300">Debug Info</summary>
+                              <div className="mt-2 space-y-1">
+                                <div>User ID: {profile?.id}</div>
+                                <div>User Role: {profile?.role}</div>
+                                <div>Group ID: {profile?.group_id}</div>
+                                <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                              </div>
+                            </details>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
