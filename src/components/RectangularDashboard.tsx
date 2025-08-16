@@ -854,9 +854,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile }: { stat: 
 
   // Streak Progress - Dual section design with progress fill backgrounds like birthday component
   if (stat.type === 'streak_progress') {
-    // Use the correct data sources: daysSinceDonation for commitment, insaneStreak for insane
-    const commitmentDays = daysSinceDonation || 0
-    const insaneDays = insaneStreak || 0
+    // Use the data from the stat object
+    const commitmentDays = stat.commitmentDays || 0
+    const insaneDays = stat.insaneDays || 0
     
     // Calculate progress percentages for background fills
     const maxDays = 100 // Arbitrary max for progress visualization
@@ -1251,6 +1251,27 @@ export default function RectangularDashboard() {
       calculateChallengeInfo()
     }
   }, [groupStartDate, restDays, recoveryDays])
+
+  // Update group stats when streak data changes
+  useEffect(() => {
+    if (groupStats && (daysSinceDonation > 0 || insaneStreak > 0)) {
+      // Update the streak progress data in existing group stats
+      const updatedStats = { ...groupStats }
+      if (updatedStats.interestingStats) {
+        updatedStats.interestingStats = updatedStats.interestingStats.map((stat: any) => {
+          if (stat.type === 'streak_progress') {
+            return {
+              ...stat,
+              commitmentDays: daysSinceDonation,
+              insaneDays: insaneStreak
+            }
+          }
+          return stat
+        })
+        setGroupStats(updatedStats)
+      }
+    }
+  }, [daysSinceDonation, insaneStreak, groupStats?.interestingStats?.length])
 
   const calculateChallengeInfo = () => {
     if (!groupStartDate) return
@@ -1857,9 +1878,11 @@ export default function RectangularDashboard() {
           type: 'heatmap_grid'
         },
         streakProgress: {
-          title: 'Insane Streak',
+          title: 'Streak Progress',
           currentStreak: currentStreak,
           longestStreak: longestStreak,
+          commitmentDays: 0, // Will be updated later with real data
+          insaneDays: currentStreak,
           type: 'streak_progress'
         }
       }
