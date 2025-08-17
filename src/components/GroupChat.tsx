@@ -14,8 +14,7 @@ import {
   HandThumbUpIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  TrophyIcon,
-  CogIcon
+  TrophyIcon
 } from '@heroicons/react/24/outline'
 import { 
   HeartIcon as HeartIconSolid,
@@ -27,7 +26,6 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { MessageComponent } from './MessageComponent'
 import { SystemMessageComponent } from './SystemMessageComponent'
-import { SystemMessageAdmin } from './SystemMessageAdmin'
 import { WorkoutSummaryPost } from './WorkoutSummaryPost'
 import { SystemMessage } from '@/types/systemMessages'
 import { SystemMessageService } from '@/services/systemMessages'
@@ -205,7 +203,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
   // System message states
-  const [showSystemAdmin, setShowSystemAdmin] = useState(false)
   const [systemMessages, setSystemMessages] = useState<{ [messageId: string]: SystemMessage }>({})
 
   // Available emoji reactions
@@ -978,27 +975,14 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {(profile?.role === 'group_admin' || profile?.role === 'supreme_admin') && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowSystemAdmin(true)}
-                className="text-gray-400 hover:text-white hover:bg-gray-800 w-8 h-8"
-                title="System Message Admin"
-              >
-                <CogIcon className="w-5 h-5" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              className="text-gray-400 hover:text-white hover:bg-gray-800 w-8 h-8"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white hover:bg-gray-800 w-8 h-8"
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
 
         {/* Messages */}
@@ -1149,14 +1133,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           </form>
         </div>
 
-        {/* System Message Admin Modal */}
-        {showSystemAdmin && profile?.group_id && (
-          <SystemMessageAdmin
-            groupId={profile.group_id}
-            isOpen={showSystemAdmin}
-            onClose={() => setShowSystemAdmin(false)}
-          />
-        )}
     </div>
   )
 }

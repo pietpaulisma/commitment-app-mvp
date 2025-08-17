@@ -11,7 +11,6 @@ import {
   MegaphoneIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ChartBarIcon,
   PlayIcon,
   BoltIcon,
   EyeIcon,
@@ -335,34 +334,6 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                 })}
               </div>
 
-              {/* Quick Actions */}
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button
-                    onClick={() => setActiveTab('configuration')}
-                    className="flex items-center gap-2 h-auto p-4 justify-start"
-                    variant="outline"
-                  >
-                    <CogIcon className="w-6 h-6 text-purple-400" />
-                    <div className="text-left">
-                      <div className="font-medium">Configure Message Types</div>
-                      <div className="text-sm text-gray-400">Enable/disable and set default rarities</div>
-                    </div>
-                  </Button>
-                  <Button
-                    onClick={() => setActiveTab('statistics')}
-                    className="flex items-center gap-2 h-auto p-4 justify-start"
-                    variant="outline"
-                  >
-                    <ChartBarIcon className="w-6 h-6 text-blue-400" />
-                    <div className="text-left">
-                      <div className="font-medium">View Statistics</div>
-                      <div className="text-sm text-gray-400">Analyze system message usage</div>
-                    </div>
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
 
