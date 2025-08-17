@@ -181,14 +181,10 @@ export function MessageComponent({
 
       {/* Message content */}
       <div className={`${isWorkoutPost ? 'max-w-full w-full' : 'max-w-md'} relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
-        {/* User name - only show for other users and only on first message in group */}
-        {!isCurrentUser && isFirstInGroup && (
-          <div 
-            className={`text-sm mb-1 ml-3 font-medium ${getUserColor(message.user_email || '', message.user_role || 'user')}`}
-          >
-            {message.username || 'User'}
-          </div>
-        )}
+        {/* Timestamp - positioned at top right outside the bubble */}
+        <div className={`absolute -top-5 text-xs text-gray-400 ${isCurrentUser ? 'right-0' : 'left-0'}`}>
+          {formatTime(message.created_at)}
+        </div>
 
         {/* Message bubble */}
         <div className="relative">
@@ -204,6 +200,18 @@ export function MessageComponent({
             `}
             onClick={handleShowActionMenu}
           >
+            {/* User name - show for all users and only on first message in group, inside the bubble */}
+            {isFirstInGroup && (
+              <div 
+                className={`text-sm font-medium mb-1 ${
+                  isCurrentUser 
+                    ? 'text-orange-200' 
+                    : getUserColor(message.user_email || '', message.user_role || 'user')
+                }`}
+              >
+                {message.username || 'User'}
+              </div>
+            )}
             {/* Speech bubble tail - only show on last message in group */}
             {isLastInGroup && (
               <div 
@@ -262,16 +270,12 @@ export function MessageComponent({
               </div>
             ) : null}
 
-            {/* Timestamp */}
-            <div className={`
-              flex items-center justify-end gap-1 mt-1 text-xs opacity-60
-              ${isCurrentUser ? 'text-orange-100' : 'text-gray-300'}
-            `}>
-              <span>{formatTime(message.created_at)}</span>
-              {message.id.startsWith('temp-') && (
+            {/* Sending indicator for pending messages */}
+            {message.id.startsWith('temp-') && (
+              <div className="flex items-center justify-end mt-1">
                 <div className="w-3 h-3 animate-spin border border-white border-t-transparent rounded-full opacity-50"></div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Existing reactions */}
