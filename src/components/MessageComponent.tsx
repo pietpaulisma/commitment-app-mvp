@@ -181,6 +181,13 @@ export function MessageComponent({
 
       {/* Message content */}
       <div className={`${isWorkoutPost ? 'max-w-full w-full' : 'max-w-md'} relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
+        {/* Timestamp - positioned at top right */}
+        {isFirstInGroup && (
+          <div className="absolute -top-1 -right-12 text-xs text-gray-400 z-20">
+            {formatTime(message.created_at)}
+          </div>
+        )}
+        
         {/* Message bubble */}
         <div className="relative">
           <div 
@@ -273,12 +280,6 @@ export function MessageComponent({
             )}
           </div>
 
-          {/* Timestamp - positioned outside bubble, aligned with username */}
-          {isFirstInGroup && (
-            <div className="absolute top-2 -right-16 text-xs text-gray-400 whitespace-nowrap z-10">
-              {formatTime(message.created_at)}
-            </div>
-          )}
 
           {/* Existing reactions */}
           {hasReactions && (
