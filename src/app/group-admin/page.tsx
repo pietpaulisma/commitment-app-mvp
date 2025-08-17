@@ -76,11 +76,6 @@ export default function GroupAdminDashboard() {
   const [originalSenderName, setOriginalSenderName] = useState('Barry')
   const [chatLoading, setChatLoading] = useState(false)
   
-  // System message states
-  const [newDeveloperNote, setNewDeveloperNote] = useState('')
-  const [noteCategory, setNoteCategory] = useState('')
-  const [notePriority, setNotePriority] = useState<'low' | 'medium' | 'high'>('medium')
-  const [sendingMessage, setSendingMessage] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -553,53 +548,6 @@ export default function GroupAdminDashboard() {
     }
   }
 
-  const sendDeveloperNote = async () => {
-    if (!group?.id || !newDeveloperNote.trim()) return
-
-    try {
-      setSendingMessage(true)
-      const message = await SystemMessageService.createDeveloperNote(
-        group.id,
-        newDeveloperNote.trim(),
-        notePriority,
-        noteCategory.trim() || undefined
-      )
-
-      if (message) {
-        setNewDeveloperNote('')
-        setNoteCategory('')
-        setNotePriority('medium')
-        alert('Developer note sent successfully!')
-      } else {
-        alert('Failed to send developer note')
-      }
-    } catch (error) {
-      console.error('Error sending developer note:', error)
-      alert('Failed to send developer note')
-    } finally {
-      setSendingMessage(false)
-    }
-  }
-
-  const generateDailySummary = async () => {
-    if (!group?.id) return
-
-    try {
-      setSendingMessage(true)
-      const message = await SystemMessageService.generateDailySummary(group.id)
-      
-      if (message) {
-        alert('Daily summary generated successfully!')
-      } else {
-        alert('Failed to generate daily summary')
-      }
-    } catch (error) {
-      console.error('Error generating daily summary:', error)
-      alert('Failed to generate daily summary')
-    } finally {
-      setSendingMessage(false)
-    }
-  }
 
   if (authLoading || profileLoading) {
     return (
@@ -1354,116 +1302,23 @@ export default function GroupAdminDashboard() {
                         </div>
                       </div>
                       
-                      {/* System Message Actions */}
-                      <div className="bg-gray-800/50 border border-gray-700 p-6 rounded-lg">
-                        <h4 className="text-lg font-semibold text-white mb-4">System Message Management</h4>
-                        <p className="text-sm text-gray-400 mb-6">
-                          Send system messages to your group and generate daily summaries.
-                        </p>
-                        
-                        <div className="space-y-6">
-                          {/* Daily Summary */}
-                          <div className="bg-gray-900/50 border border-gray-600 p-4 rounded-lg">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h5 className="text-white font-medium">Daily Summary</h5>
-                                <p className="text-sm text-gray-400">Generate today's commitment summary</p>
-                              </div>
-                              <button
-                                onClick={generateDailySummary}
-                                disabled={sendingMessage}
-                                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                {sendingMessage ? 'Generating...' : 'Generate Summary'}
-                              </button>
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              Creates an automated summary showing commitment rates, top performers, and motivational messages.
-                            </p>
-                          </div>
-
-                          {/* Developer Notes */}
-                          <div className="bg-gray-900/50 border border-gray-600 p-4 rounded-lg">
-                            <h5 className="text-white font-medium mb-4">Send Developer Note</h5>
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Category (Optional)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={noteCategory}
-                                    onChange={(e) => setNoteCategory(e.target.value)}
-                                    placeholder="e.g., Update, Announcement"
-                                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                    maxLength={30}
-                                    disabled={sendingMessage}
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Priority
-                                  </label>
-                                  <select
-                                    value={notePriority}
-                                    onChange={(e) => setNotePriority(e.target.value as 'low' | 'medium' | 'high')}
-                                    className="w-full p-2 bg-gray-800 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                                    disabled={sendingMessage}
-                                  >
-                                    <option value="low">Low Priority</option>
-                                    <option value="medium">Medium Priority</option>
-                                    <option value="high">High Priority</option>
-                                  </select>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                  Message Content
-                                </label>
-                                <textarea
-                                  value={newDeveloperNote}
-                                  onChange={(e) => setNewDeveloperNote(e.target.value)}
-                                  placeholder="Enter your message to the group..."
-                                  rows={4}
-                                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
-                                  maxLength={500}
-                                  disabled={sendingMessage}
-                                />
-                                <div className="text-xs text-gray-400 mt-1">
-                                  {newDeveloperNote.length}/500 characters
-                                </div>
-                              </div>
-                              
-                              <button
-                                onClick={sendDeveloperNote}
-                                disabled={sendingMessage || !newDeveloperNote.trim()}
-                                className="w-full px-4 py-2 bg-orange-600 text-white hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                {sendingMessage ? 'Sending...' : 'Send Developer Note'}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
                       
                       {/* Information Section */}
                       <div className="bg-blue-900/20 border border-blue-700/50 p-4 rounded-lg">
                         <h5 className="text-sm font-medium text-blue-300 mb-2">💡 About System Messages</h5>
                         <div className="text-sm text-gray-300 space-y-2">
                           <p>
-                            System messages keep your group engaged and informed:
+                            System messages are automated notifications that keep your group engaged and informed:
                           </p>
                           <ul className="list-disc list-inside space-y-1 text-gray-400 ml-4">
-                            <li><strong className="text-white">Daily Summaries:</strong> Automated end-of-day reports with stats and motivation</li>
-                            <li><strong className="text-white">Developer Notes:</strong> Important announcements and updates from group admins</li>
-                            <li><strong className="text-white">Milestones:</strong> Automatic celebrations for achievements (managed by Supreme Admins)</li>
-                            <li><strong className="text-white">Challenges:</strong> Special group challenges (managed by Supreme Admins)</li>
+                            <li><strong className="text-white">Daily Summaries:</strong> Automated end-of-day reports showing commitment rates and top performers</li>
+                            <li><strong className="text-white">Milestones:</strong> Celebrations for pot goals, streaks, and group achievements</li>
+                            <li><strong className="text-white">Challenges:</strong> Special group challenges and competitions</li>
+                            <li><strong className="text-white">Developer Notes:</strong> Important announcements and updates</li>
                           </ul>
                           <p className="text-xs text-gray-500 mt-3">
-                            Global system message settings are controlled by Supreme Admins.
-                            As a Group Admin, you can send developer notes and generate daily summaries.
+                            All system message types and functionality are controlled by Supreme Admins.
+                            As a Group Admin, you can only customize the sender name that appears on these messages for your group.
                           </p>
                         </div>
                       </div>
