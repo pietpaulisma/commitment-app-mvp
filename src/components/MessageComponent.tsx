@@ -164,9 +164,9 @@ export function MessageComponent({
 
   return (
     <div className={`flex gap-2 ${isLastInGroup ? 'mb-3' : 'mb-1'} items-end ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'} relative`}>
-      {/* Timestamp - positioned at top right of entire message */}
+      {/* Timestamp - positioned at top right, aligned with username */}
       {isFirstInGroup && (
-        <div className="absolute -top-6 right-0 text-xs text-gray-400 z-50">
+        <div className="absolute top-2 right-0 text-xs text-gray-400 z-50">
           {formatTime(message.created_at)}
         </div>
       )}
