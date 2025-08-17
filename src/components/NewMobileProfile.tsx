@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { 
   CogIcon,
@@ -12,13 +12,16 @@ import {
   ClipboardDocumentListIcon,
   AdjustmentsHorizontalIcon,
   ArrowRightOnRectangleIcon,
-  XMarkIcon
+  XMarkIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
+import { SystemMessageConfigAdmin } from './SystemMessageConfigAdmin'
 
 export default function NewMobileProfile() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
+  const [showSystemMessageConfig, setShowSystemMessageConfig] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -124,6 +127,18 @@ export default function NewMobileProfile() {
                     </div>
                     <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
                   </Link>
+                  
+                  <button
+                    onClick={() => setShowSystemMessageConfig(true)}
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
+                  >
+                    <SparklesIcon className="w-6 h-6 text-purple-400 group-hover:text-purple-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">System Messages</div>
+                      <div className="text-sm text-gray-400">Configure automated chat messages</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                  </button>
                 </>
               )}
               {(profile.role === 'group_admin' || profile.role === 'supreme_admin') && (
@@ -155,6 +170,14 @@ export default function NewMobileProfile() {
           </button>
         </div>
       </div>
+
+      {/* System Message Configuration Modal */}
+      {showSystemMessageConfig && (
+        <SystemMessageConfigAdmin
+          isOpen={showSystemMessageConfig}
+          onClose={() => setShowSystemMessageConfig(false)}
+        />
+      )}
     </div>
   )
 }

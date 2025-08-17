@@ -43,6 +43,23 @@ export interface DeveloperNoteMetadata {
   category?: string
 }
 
+export interface SystemMessageTypeConfig {
+  message_type: SystemMessageType
+  enabled: boolean
+  default_rarity: SystemMessageRarity
+  description: string
+  can_be_automated: boolean
+  frequency?: 'daily' | 'weekly' | 'on_event' | 'manual'
+}
+
+export interface GlobalSystemMessageConfig {
+  id: string
+  is_globally_enabled: boolean
+  created_at: string
+  updated_at: string
+  message_type_configs: SystemMessageTypeConfig[]
+}
+
 export interface SystemMessageConfig {
   daily_summaries_enabled: boolean
   challenges_enabled: boolean

@@ -228,10 +228,10 @@ FOR SELECT USING (
 DROP POLICY IF EXISTS "Users can send messages to their group" ON chat_messages;
 CREATE POLICY "Users can send messages to their group" ON chat_messages
 FOR INSERT WITH CHECK (
-  (user_id = auth.uid() AND is_system_message = false) OR
+  (user_id = auth.uid() AND (is_system_message IS NULL OR is_system_message = false)) OR
   (user_id IS NULL AND is_system_message = true AND auth.uid() IN (
     SELECT id FROM profiles 
-    WHERE group_id = NEW.group_id 
+    WHERE group_id = chat_messages.group_id 
     AND role IN ('group_admin', 'supreme_admin')
   ))
 );
