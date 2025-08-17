@@ -181,8 +181,8 @@ export function MessageComponent({
 
       {/* Message content */}
       <div className={`${isWorkoutPost ? 'max-w-full w-full' : 'max-w-md'} relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
-        {/* Timestamp - positioned at top right outside the bubble */}
-        <div className="absolute -top-5 right-0 text-xs text-gray-400">
+        {/* Timestamp - positioned at top right, aligned with username */}
+        <div className="absolute top-0 right-0 text-xs text-gray-400">
           {formatTime(message.created_at)}
         </div>
 
