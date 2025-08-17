@@ -163,7 +163,14 @@ export function MessageComponent({
   };
 
   return (
-    <div className={`flex gap-2 ${isLastInGroup ? 'mb-3' : 'mb-1'} items-end ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex gap-2 ${isLastInGroup ? 'mb-3' : 'mb-1'} items-end ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'} relative`}>
+      {/* Timestamp - positioned at top right of entire message */}
+      {isFirstInGroup && (
+        <div className="absolute -top-6 right-0 text-xs text-gray-400 z-50">
+          {formatTime(message.created_at)}
+        </div>
+      )}
+      
       {/* Avatar - only show for other users and only on last message in group */}
       {!isCurrentUser && isLastInGroup && (
         <div 
@@ -181,13 +188,6 @@ export function MessageComponent({
 
       {/* Message content */}
       <div className={`${isWorkoutPost ? 'max-w-full w-full' : 'max-w-md'} relative ${isCurrentUser ? 'mr-2' : 'ml-1'}`}>
-        {/* Timestamp - positioned at top right */}
-        {isFirstInGroup && (
-          <div className="absolute -top-1 -right-12 text-xs text-gray-400 z-20">
-            {formatTime(message.created_at)}
-          </div>
-        )}
-        
         {/* Message bubble */}
         <div className="relative">
           <div 
