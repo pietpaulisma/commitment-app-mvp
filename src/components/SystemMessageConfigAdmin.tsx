@@ -435,9 +435,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-950 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-800">
-        <div className="p-6">
+    <div className="fixed inset-0 bg-slate-950 z-50 overflow-y-auto">
+      <div className="min-h-screen">
+        <div className="p-6 max-w-4xl mx-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
