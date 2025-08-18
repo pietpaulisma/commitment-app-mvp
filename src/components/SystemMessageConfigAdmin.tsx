@@ -435,8 +435,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-950 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-800">
+        <div className="p-6">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -813,6 +814,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
           <Button className="bg-green-600 hover:bg-green-700">
             Save Settings
           </Button>
+        </div>
         </div>
       </div>
     </div>
