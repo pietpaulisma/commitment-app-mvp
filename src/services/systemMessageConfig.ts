@@ -1,5 +1,17 @@
 import { supabase } from '@/lib/supabase'
-import { SystemMessageTypeConfig, GlobalSystemMessageConfig, SystemMessageType, SystemMessageRarity, DailySummaryConfig, MilestoneConfig } from '@/types/systemMessages'
+import { 
+  SystemMessageTypeConfig, 
+  GlobalSystemMessageConfig, 
+  SystemMessageType, 
+  SystemMessageRarity, 
+  DailySummaryConfig, 
+  MilestoneConfig,
+  WeeklyChallengeConfig,
+  WeeklySummaryConfig,
+  PersonalSummaryConfig,
+  MilestoneProgress,
+  EnhancedMilestoneConfig
+} from '@/types/systemMessages'
 
 export class SystemMessageConfigService {
   
@@ -343,6 +355,289 @@ export class SystemMessageConfigService {
       return true
     } catch (error) {
       console.error('Error updating milestone config:', error)
+      return false
+    }
+  }
+
+  // Weekly Challenge Methods
+  static async getWeeklyChallengeConfig(): Promise<WeeklyChallengeConfig | null> {
+    try {
+      const { data, error } = await supabase
+        .from('weekly_challenge_config')
+        .select('*')
+        .limit(1)
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      console.error('Error fetching weekly challenge config:', error)
+      return null
+    }
+  }
+
+  static async updateWeeklyChallengeConfig(config: Partial<WeeklyChallengeConfig>): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('weekly_challenge_config')
+        .update({
+          ...config,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', (await this.getWeeklyChallengeConfig())?.id)
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error updating weekly challenge config:', error)
+      return false
+    }
+  }
+
+  // Weekly Summary Methods
+  static async getWeeklySummaryConfig(): Promise<WeeklySummaryConfig | null> {
+    try {
+      const { data, error } = await supabase
+        .from('weekly_summary_config')
+        .select('*')
+        .limit(1)
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      console.error('Error fetching weekly summary config:', error)
+      return null
+    }
+  }
+
+  static async updateWeeklySummaryConfig(config: Partial<WeeklySummaryConfig>): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('weekly_summary_config')
+        .update({
+          ...config,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', (await this.getWeeklySummaryConfig())?.id)
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error updating weekly summary config:', error)
+      return false
+    }
+  }
+
+  // Personal Summary Methods
+  static async getPersonalSummaryConfig(): Promise<PersonalSummaryConfig | null> {
+    try {
+      const { data, error } = await supabase
+        .from('personal_summary_config')
+        .select('*')
+        .limit(1)
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      console.error('Error fetching personal summary config:', error)
+      return null
+    }
+  }
+
+  static async updatePersonalSummaryConfig(config: Partial<PersonalSummaryConfig>): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('personal_summary_config')
+        .update({
+          ...config,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', (await this.getPersonalSummaryConfig())?.id)
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error updating personal summary config:', error)
+      return false
+    }
+  }
+
+  // Enhanced Milestone Methods with Progress Tracking
+  static async getEnhancedMilestoneConfigs(groupId?: string): Promise<EnhancedMilestoneConfig[]> {
+    try {
+      if (groupId) {
+        // Get milestones with progress for specific group using the database function
+        const { data, error } = await supabase.rpc('get_milestone_progress', {
+          p_group_id: groupId
+        })
+
+        if (error) throw error
+
+        return data?.map((milestone: any) => ({
+          id: milestone.milestone_id,
+          milestone_type: milestone.milestone_type,
+          milestone_name: milestone.milestone_name,
+          threshold_value: milestone.threshold_value,
+          enabled: milestone.enabled,
+          rarity: milestone.rarity as SystemMessageRarity,
+          description: milestone.description,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          current_progress: milestone.current_value,
+          target: milestone.threshold_value,
+          unit: this.getMilestoneUnit(milestone.milestone_type),
+          percentage: milestone.percentage,
+          is_completed: milestone.is_completed,
+          preview_message: this.generateMilestonePreview(milestone)
+        })) || []
+      } else {
+        // Get all milestones without progress (for admin view)
+        const milestones = await this.getMilestoneConfigs()
+        return milestones.map(milestone => ({
+          ...milestone,
+          target: milestone.threshold_value,
+          unit: this.getMilestoneUnit(milestone.milestone_type),
+          current_progress: 0,
+          percentage: 0,
+          is_completed: false,
+          preview_message: this.generateMilestonePreview({
+            milestone_name: milestone.milestone_name,
+            milestone_type: milestone.milestone_type,
+            threshold_value: milestone.threshold_value,
+            rarity: milestone.rarity
+          })
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching enhanced milestone configs:', error)
+      return []
+    }
+  }
+
+  static async updateMilestoneProgress(groupId: string, milestoneType: string, currentValue: number): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc('update_milestone_progress', {
+        p_group_id: groupId,
+        p_milestone_type: milestoneType,
+        p_current_value: currentValue
+      })
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error updating milestone progress:', error)
+      return false
+    }
+  }
+
+  // Helper Methods
+  static getMilestoneUnit(milestoneType: string): string {
+    switch (milestoneType) {
+      case 'pot_amount': return '€'
+      case 'group_streak': return 'days'
+      case 'total_points': return 'pts'
+      case 'member_count': return 'members'
+      default: return ''
+    }
+  }
+
+  static generateMilestonePreview(milestone: any): string {
+    const { milestone_name, milestone_type, threshold_value, rarity } = milestone
+    const unit = this.getMilestoneUnit(milestone_type)
+    
+    const rarityPrefix = {
+      'legendary': '✨ LEGENDARY ACHIEVEMENT',
+      'rare': '💎 RARE MILESTONE',
+      'common': '🌟 MILESTONE ACHIEVED'
+    }[rarity] || '🎉 ACHIEVEMENT'
+
+    const typeEmoji = {
+      'pot_amount': '💰',
+      'group_streak': '🔥',
+      'total_points': '🏆',
+      'member_count': '👥'
+    }[milestone_type] || '🎯'
+
+    return `${rarityPrefix}: ${milestone_name}! ${typeEmoji} Your group has reached ${threshold_value}${unit}!`
+  }
+
+  // Preview Generation Methods
+  static generateDailySummaryPreviews(options: any[]): string[] {
+    const previews = []
+    
+    if (options.find(opt => opt.id === 'workout_completion' && opt.enabled)) {
+      previews.push("💪 Workout Update: 8/10 members crushed their workouts today! Amazing commitment team!")
+    }
+    
+    if (options.find(opt => opt.id === 'top_performer' && opt.enabled)) {
+      previews.push("🏆 Today's MVP: Sarah with an intense 90-minute strength session! Way to lead by example!")
+    }
+    
+    if (options.find(opt => opt.id === 'streak_info' && opt.enabled)) {
+      previews.push("🔥 STREAK ALERT: We're on a 12-day group streak! Let's keep this momentum going strong!")
+    }
+    
+    if (options.find(opt => opt.id === 'motivation' && opt.enabled)) {
+      previews.push("✨ \"The only bad workout is the one that didn't happen.\" - Keep pushing forward, team!")
+    }
+    
+    return previews
+  }
+
+  static generateWeeklySummaryPreviews(options: any[]): string[] {
+    const previews = []
+    
+    if (options.find(opt => opt.id === 'weekly_stats' && opt.enabled)) {
+      previews.push("📊 Week 12 Recap: 89% completion rate, 47 total workouts, and 3 new personal bests!")
+    }
+    
+    if (options.find(opt => opt.id === 'member_spotlight' && opt.enabled)) {
+      previews.push("🌟 Member Spotlight: Mike improved his 5K time by 2 minutes this week! Incredible progress!")
+    }
+    
+    return previews
+  }
+
+  static generatePersonalSummaryPreviews(options: any[]): string[] {
+    const previews = []
+    
+    if (options.find(opt => opt.id === 'personal_streak' && opt.enabled)) {
+      previews.push("🔥 @Alex: You're on a 15-day streak! Your consistency is inspiring the whole team!")
+    }
+    
+    if (options.find(opt => opt.id === 'goal_progress' && opt.enabled)) {
+      previews.push("🎯 @Sam just hit their monthly goal of 20 workouts! Incredible dedication this month!")
+    }
+    
+    return previews
+  }
+
+  // Send Weekly Challenge
+  static async sendWeeklyChallenge(groupId: string, message: string, rarity: SystemMessageRarity = 'common'): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc('insert_system_message_to_chat', {
+        p_group_id: groupId,
+        p_message_type: 'weekly_challenge',
+        p_rarity: rarity,
+        p_title: 'Weekly Challenge',
+        p_content: message,
+        p_metadata: JSON.stringify({ sent_at: new Date().toISOString() })
+      })
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error sending weekly challenge:', error)
       return false
     }
   }

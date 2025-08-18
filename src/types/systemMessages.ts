@@ -1,4 +1,4 @@
-export type SystemMessageType = 'daily_summary' | 'milestone' | 'developer_note' | 'public_message'
+export type SystemMessageType = 'daily_summary' | 'milestone' | 'developer_note' | 'public_message' | 'weekly_challenge'
 export type SystemMessageRarity = 'common' | 'rare' | 'legendary'
 
 export interface SystemMessage {
@@ -90,4 +90,112 @@ export interface SystemMessageConfig {
   milestones_enabled: boolean
   sender_name: string
   rarity_filters: SystemMessageRarity[]
+}
+
+// New interfaces for redesigned system
+
+export interface TimingConfig {
+  type: 'end_of_day' | 'custom'
+  customTime?: string
+}
+
+export interface WeeklyChallengeConfig {
+  id: string
+  enabled: boolean
+  message?: string
+  timing_type: 'end_of_day' | 'custom'
+  custom_time?: string
+  timezone: string
+  created_at: string
+  updated_at: string
+}
+
+export interface WeeklySummaryConfig {
+  id: string
+  include_weekly_stats: boolean
+  include_member_spotlight: boolean
+  include_group_achievements: boolean
+  include_progress_comparison: boolean
+  enabled: boolean
+  send_day: number // 1-7, where 7 = Sunday
+  send_time: string // HH:MM:SS format
+  timezone: string
+  created_at: string
+  updated_at: string
+}
+
+export interface PersonalSummaryConfig {
+  id: string
+  include_personal_streak: boolean
+  include_goal_progress: boolean
+  include_achievements: boolean
+  include_encouragement: boolean
+  enabled: boolean
+  send_frequency: 'daily' | 'weekly' | 'monthly'
+  send_day: number // For weekly/monthly frequency
+  send_time: string // HH:MM:SS format
+  timezone: string
+  created_at: string
+  updated_at: string
+}
+
+export interface MilestoneProgress {
+  id: string
+  milestone_config_id: string
+  group_id: string
+  current_value: number
+  is_completed: boolean
+  completed_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface EnhancedMilestoneConfig extends MilestoneConfig {
+  current_progress?: number
+  target: number
+  unit: string
+  percentage?: number
+  is_completed?: boolean
+  preview_message: string
+}
+
+// UI-specific interfaces for the new design
+export interface MessagePreview {
+  id: string
+  type: string
+  content: string
+  rarity: SystemMessageRarity
+  timestamp?: string
+}
+
+export interface SectionConfig {
+  id: string
+  title: string
+  description: string
+  icon: string
+  enabled: boolean
+  count: number
+}
+
+export interface SummaryOption {
+  id: string
+  title: string
+  description: string
+  enabled: boolean
+  preview: string
+}
+
+export interface ChallengeOption {
+  id: string
+  title: string
+  description: string
+  enabled: boolean
+  rarity: SystemMessageRarity
+  preview: string
+}
+
+export interface AdminMessageConfig {
+  message: string
+  timing: TimingConfig
+  rarity: SystemMessageRarity
 }

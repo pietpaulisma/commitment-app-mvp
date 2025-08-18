@@ -1,65 +1,61 @@
-import React, { useState, useEffect } from 'react'
-import { Button } from './ui/button'
-import { Switch } from './ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { Input } from './ui/input'
-import { Label } from './ui/label'
-import { Badge } from './ui/badge'
-import { Textarea } from './ui/textarea'
-import { Checkbox } from './ui/checkbox'
-import { SystemMessageConfigService } from '@/services/systemMessageConfig'
-import { 
-  SystemMessageTypeConfig, 
-  SystemMessageRarity, 
-  DailySummaryConfig, 
-  WeeklyChallengeConfig,
-  WeeklySummaryConfig,
-  PersonalSummaryConfig,
-  EnhancedMilestoneConfig,
-  TimingConfig,
-  SummaryOption
-} from '@/types/systemMessages'
-import { useProfile } from '@/hooks/useProfile'
-import { 
-  X, 
-  ChevronDown, 
-  ChevronRight, 
-  Eye, 
-  Target, 
-  MessageSquare, 
-  Settings, 
-  Trophy
-} from 'lucide-react'
+import React, { useState } from 'react';
+import { Button } from './ui/button';
+import { Switch } from './ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Badge } from './ui/badge';
+import { Textarea } from './ui/textarea';
+import { Checkbox } from './ui/checkbox';
+import { X, ChevronDown, ChevronRight, Eye, Target, MessageSquare, Settings, Trophy } from 'lucide-react';
 
-interface SystemMessageConfigAdminProps {
-  isOpen: boolean
-  onClose: () => void
+interface MessageOption {
+  id: string;
+  title: string;
+  description: string;
+  enabled: boolean;
+  rarity: 'common' | 'rare' | 'legendary';
+  preview: string;
 }
 
-export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfigAdminProps) {
-  const { profile } = useProfile()
-  const [isLoading, setIsLoading] = useState(false)
-  const [expandedSection, setExpandedSection] = useState<string | null>('summary')
-  const [previewMode, setPreviewMode] = useState<string | null>(null)
-  
-  // Configuration states
-  const [challengeConfig, setChallengeConfig] = useState<WeeklyChallengeConfig | null>(null)
-  const [dailySummaryConfig, setDailySummaryConfig] = useState<DailySummaryConfig | null>(null)
-  const [weeklySummaryConfig, setWeeklySummaryConfig] = useState<WeeklySummaryConfig | null>(null)
-  const [personalSummaryConfig, setPersonalSummaryConfig] = useState<PersonalSummaryConfig | null>(null)
-  const [milestoneConfigs, setMilestoneConfigs] = useState<EnhancedMilestoneConfig[]>([])
-  
-  // UI state
-  const [challengeTiming, setChallengeTiming] = useState<TimingConfig>({ type: 'end_of_day' })
-  const [summaryTiming, setSummaryTiming] = useState<TimingConfig>({ type: 'end_of_day' })
-  const [developerTiming, setDeveloperTiming] = useState<TimingConfig>({ type: 'custom', customTime: '09:00' })
-  const [challengeMessage, setChallengeMessage] = useState('')
-  const [developerMessage, setDeveloperMessage] = useState('')
-  const [sendingMessage, setSendingMessage] = useState(false)
+interface SummaryOption {
+  id: string;
+  title: string;
+  description: string;
+  enabled: boolean;
+  preview: string;
+}
 
-  const isSupremeAdmin = profile?.role === 'supreme_admin'
+interface MilestoneOption {
+  id: string;
+  title: string;
+  description: string;
+  enabled: boolean;
+  rarity: 'common' | 'rare' | 'legendary';
+  preview: string;
+  currentProgress: number;
+  target: number;
+  unit: string;
+}
 
-  // Sample data for summary options (matches Figma design)
+interface TimingConfig {
+  type: 'end_of_day' | 'custom';
+  customTime?: string;
+}
+
+export default function SystemMessageConfig() {
+  const [isOpen, setIsOpen] = useState(true);
+  const [expandedSection, setExpandedSection] = useState<string | null>('summary');
+  const [previewMode, setPreviewMode] = useState<string | null>(null);
+  
+  // Challenge configuration
+  const [challengeEnabled, setChallengeEnabled] = useState(false);
+  const [challengeMessage, setChallengeMessage] = useState('');
+  const [challengeTiming, setChallengeTiming] = useState<TimingConfig>({ type: 'end_of_day' });
+
+  // Summary configuration
+  const [summaryEnabled, setSummaryEnabled] = useState(true);
+  const [summaryTiming, setSummaryTiming] = useState<TimingConfig>({ type: 'end_of_day' });
   const [dailySummaryOptions, setDailySummaryOptions] = useState<SummaryOption[]>([
     {
       id: 'workout_completion',
@@ -89,7 +85,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       enabled: false,
       preview: "✨ \"The only bad workout is the one that didn't happen.\" - Keep pushing forward, team!"
     }
-  ])
+  ]);
 
   const [weeklySummaryOptions, setWeeklySummaryOptions] = useState<SummaryOption[]>([
     {
@@ -106,7 +102,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       enabled: true,
       preview: "🌟 Member Spotlight: Mike improved his 5K time by 2 minutes this week! Incredible progress!"
     }
-  ])
+  ]);
 
   const [personalSummaryOptions, setPersonalSummaryOptions] = useState<SummaryOption[]>([
     {
@@ -123,61 +119,57 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       enabled: true,
       preview: "🎯 @Sam just hit their monthly goal of 20 workouts! Incredible dedication this month!"
     }
-  ])
+  ]);
 
-  useEffect(() => {
-    if (isOpen && isSupremeAdmin) {
-      loadConfigurations()
+  // Admin Messages configuration
+  const [developerMessage, setDeveloperMessage] = useState('');
+  const [developerTiming, setDeveloperTiming] = useState<TimingConfig>({ type: 'custom', customTime: '09:00' });
+
+  // Milestone configuration
+  const [milestoneOptions, setMilestoneOptions] = useState<MilestoneOption[]>([
+    { 
+      id: 'first_100', 
+      title: 'Century Club', 
+      description: 'Group completes 100 total workouts', 
+      enabled: true, 
+      rarity: 'rare' as const,
+      preview: "🎉 MILESTONE UNLOCKED: Century Club! We've completed 100 workouts together as a team!",
+      currentProgress: 87,
+      target: 100,
+      unit: 'workouts'
+    },
+    { 
+      id: 'workout_streak_week', 
+      title: 'Week Warriors', 
+      description: 'Everyone completes workouts for 7 days straight', 
+      enabled: true, 
+      rarity: 'legendary' as const,
+      preview: "🏆 LEGENDARY ACHIEVEMENT: Week Warriors! Every single member completed their workouts for 7 days straight!",
+      currentProgress: 4,
+      target: 7,
+      unit: 'days'
+    },
+    { 
+      id: 'streak_master', 
+      title: 'Streak Master', 
+      description: 'Member maintains 30-day workout streak', 
+      enabled: true, 
+      rarity: 'legendary' as const,
+      preview: "⚡ STREAK MASTER UNLOCKED: @Chris just hit an incredible 30-day workout streak! Legend status achieved!",
+      currentProgress: 22,
+      target: 30,
+      unit: 'days'
     }
-  }, [isOpen, isSupremeAdmin])
+  ]);
 
-  const loadConfigurations = async () => {
-    setIsLoading(true)
-    try {
-      const [
-        challengeData,
-        dailyData,
-        weeklyData,
-        personalData,
-        milestoneData
-      ] = await Promise.all([
-        SystemMessageConfigService.getWeeklyChallengeConfig(),
-        SystemMessageConfigService.getDailySummaryConfig(),
-        SystemMessageConfigService.getWeeklySummaryConfig(),
-        SystemMessageConfigService.getPersonalSummaryConfig(),
-        SystemMessageConfigService.getEnhancedMilestoneConfigs()
-      ])
-      
-      setChallengeConfig(challengeData)
-      setDailySummaryConfig(dailyData)
-      setWeeklySummaryConfig(weeklyData)
-      setPersonalSummaryConfig(personalData)
-      setMilestoneConfigs(milestoneData)
-      
-      // Set initial values
-      if (challengeData) {
-        setChallengeMessage(challengeData.message || '')
-        setChallengeTiming({
-          type: challengeData.timing_type as 'end_of_day' | 'custom',
-          customTime: challengeData.custom_time || undefined
-        })
-      }
-      
-    } catch (error) {
-      console.error('Error loading configurations:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Main sections configuration
+  // Main sections
   const sections = [
     {
       id: 'challenge',
       title: 'Weekly Challenges',
       description: 'Motivational fitness challenges for the group',
       icon: Target,
-      enabled: challengeConfig?.enabled || false,
+      enabled: challengeEnabled,
       count: 0
     },
     {
@@ -185,7 +177,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       title: 'Workout Summaries',
       description: 'Daily, weekly, and personal progress updates',
       icon: MessageSquare,
-      enabled: dailySummaryConfig?.enabled || false,
+      enabled: summaryEnabled,
       count: dailySummaryOptions.filter(opt => opt.enabled).length + 
              weeklySummaryOptions.filter(opt => opt.enabled).length + 
              personalSummaryOptions.filter(opt => opt.enabled).length
@@ -204,50 +196,48 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       description: 'Milestone notifications and achievement unlocks',
       icon: Trophy,
       enabled: true,
-      count: milestoneConfigs.filter(m => m.enabled).length
+      count: milestoneOptions.filter(opt => opt.enabled).length
     }
-  ]
+  ];
 
-  // Helper functions
   const toggleSummaryOption = (options: SummaryOption[], setOptions: React.Dispatch<React.SetStateAction<SummaryOption[]>>, id: string) => {
     setOptions(options.map(option => 
       option.id === id ? { ...option, enabled: !option.enabled } : option
-    ))
-  }
+    ));
+  };
 
-  const toggleMilestoneOption = async (milestoneId: string) => {
-    const milestone = milestoneConfigs.find(m => m.id === milestoneId)
-    if (!milestone) return
+  const toggleMessageOption = (options: MessageOption[], setOptions: React.Dispatch<React.SetStateAction<MessageOption[]>>, id: string) => {
+    setOptions(options.map(option => 
+      option.id === id ? { ...option, enabled: !option.enabled } : option
+    ));
+  };
 
-    const success = await SystemMessageConfigService.updateMilestoneConfig(milestoneId, { 
-      enabled: !milestone.enabled 
-    })
-    
-    if (success) {
-      setMilestoneConfigs(prev => prev.map(m => 
-        m.id === milestoneId ? { ...m, enabled: !m.enabled } : m
-      ))
-    }
-  }
+  const toggleMilestoneOption = (id: string) => {
+    setMilestoneOptions(milestoneOptions.map(option => 
+      option.id === id ? { ...option, enabled: !option.enabled } : option
+    ));
+  };
 
-  const updateMilestoneRarity = async (milestoneId: string, rarity: SystemMessageRarity) => {
-    const success = await SystemMessageConfigService.updateMilestoneConfig(milestoneId, { rarity })
-    
-    if (success) {
-      setMilestoneConfigs(prev => prev.map(m => 
-        m.id === milestoneId ? { ...m, rarity } : m
-      ))
-    }
-  }
+  const updateMessageRarity = (options: MessageOption[], setOptions: React.Dispatch<React.SetStateAction<MessageOption[]>>, id: string, rarity: 'common' | 'rare' | 'legendary') => {
+    setOptions(options.map(option => 
+      option.id === id ? { ...option, rarity } : option
+    ));
+  };
+
+  const updateMilestoneRarity = (id: string, rarity: 'common' | 'rare' | 'legendary') => {
+    setMilestoneOptions(milestoneOptions.map(option => 
+      option.id === id ? { ...option, rarity } : option
+    ));
+  };
 
   const getRarityBadgeStyle = (rarity: string) => {
     switch (rarity) {
-      case 'common': return 'bg-green-500/20 text-green-400 border-green-500/30'
-      case 'rare': return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-      case 'legendary': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-      default: return ''
+      case 'common': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'rare': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'legendary': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      default: return '';
     }
-  }
+  };
 
   const getRarityPreviewStyle = (rarity: string) => {
     switch (rarity) {
@@ -256,57 +246,64 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
           container: 'mt-3 p-3 bg-green-500/10 rounded-lg border border-green-500/30',
           header: 'text-green-400 text-xs',
           text: 'mt-1 text-green-200 text-xs leading-relaxed'
-        }
+        };
       case 'rare':
         return {
           container: 'mt-3 p-4 bg-blue-500/15 rounded-lg border-2 border-blue-500/40 shadow-lg shadow-blue-500/10',
           header: 'text-blue-300 text-xs font-medium',
           text: 'mt-1 text-blue-100 text-xs leading-relaxed'
-        }
+        };
       case 'legendary':
         return {
           container: 'mt-3 p-4 bg-gradient-to-br from-yellow-400/30 via-amber-500/25 to-orange-500/20 rounded-lg border-2 border-yellow-400/60 shadow-xl shadow-yellow-500/20 relative overflow-hidden',
           header: 'text-yellow-200 text-xs font-semibold tracking-wide uppercase',
           text: 'mt-2 text-yellow-50 text-sm leading-relaxed font-medium'
-        }
+        };
       default:
         return {
           container: 'mt-3 p-3 bg-slate-500/10 rounded-lg border border-slate-500/30',
           header: 'text-slate-400 text-xs',
           text: 'mt-1 text-slate-300 text-xs leading-relaxed'
-        }
+        };
     }
-  }
+  };
 
   const getProgressBarColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-yellow-500'
-    if (percentage >= 70) return 'bg-blue-500'
-    return 'bg-green-500'
-  }
+    if (percentage >= 90) return 'bg-yellow-500'; // Near completion - legendary
+    if (percentage >= 70) return 'bg-blue-500'; // Good progress - rare  
+    return 'bg-green-500'; // Early progress - common
+  };
 
-  const sendDeveloperNote = async () => {
-    if (!developerMessage.trim() || !profile?.group_id) return
+  const renderRaritySelector = (
+    option: MessageOption,
+    options: MessageOption[], 
+    setOptions: React.Dispatch<React.SetStateAction<MessageOption[]>>
+  ) => (
+    <Select 
+      value={option.rarity} 
+      onValueChange={(value: 'common' | 'rare' | 'legendary') => 
+        updateMessageRarity(options, setOptions, option.id, value)
+      }
+    >
+      <SelectTrigger 
+        className={`inline-flex items-center h-auto px-2 py-0.5 text-xs border rounded-md cursor-pointer hover:opacity-80 transition-opacity w-auto ${getRarityBadgeStyle(option.rarity)}`}
+      >
+        {option.rarity}
+      </SelectTrigger>
+      <SelectContent className="bg-slate-800 border-slate-600">
+        <SelectItem value="common">Common</SelectItem>
+        <SelectItem value="rare">Rare</SelectItem>
+        <SelectItem value="legendary">Legendary</SelectItem>
+      </SelectContent>
+    </Select>
+  );
 
-    setSendingMessage(true)
-    const success = await SystemMessageConfigService.createDeveloperNote(
-      profile.group_id,
-      developerMessage.trim(),
-      'medium'
-    )
-    
-    if (success) {
-      setDeveloperMessage('')
-      alert('Admin message sent successfully!')
-    } else {
-      alert('Failed to send admin message')
-    }
-    setSendingMessage(false)
-  }
-
-  const renderMilestoneRaritySelector = (milestone: EnhancedMilestoneConfig) => (
+  const renderMilestoneRaritySelector = (milestone: MilestoneOption) => (
     <Select 
       value={milestone.rarity} 
-      onValueChange={(value: SystemMessageRarity) => updateMilestoneRarity(milestone.id, value)}
+      onValueChange={(value: 'common' | 'rare' | 'legendary') => 
+        updateMilestoneRarity(milestone.id, value)
+      }
     >
       <SelectTrigger 
         className={`inline-flex items-center h-auto px-2 py-0.5 text-xs border rounded-md cursor-pointer hover:opacity-80 transition-opacity w-auto ${getRarityBadgeStyle(milestone.rarity)}`}
@@ -319,7 +316,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         <SelectItem value="legendary">Legendary</SelectItem>
       </SelectContent>
     </Select>
-  )
+  );
 
   const renderSummaryOption = (
     option: SummaryOption, 
@@ -337,20 +334,41 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         className="mt-1 shrink-0"
       />
     </div>
-  )
+  );
 
-  const renderMilestoneOption = (milestone: EnhancedMilestoneConfig) => {
-    const percentage = Math.min((milestone.current_progress || 0) / milestone.target * 100, 100)
-    const isCompleted = percentage >= 100
-    const isPreviewVisible = previewMode === `milestone-${milestone.id}`
-    const previewStyle = getRarityPreviewStyle(milestone.rarity)
+  const renderMessageOption = (
+    option: MessageOption, 
+    options: MessageOption[], 
+    setOptions: React.Dispatch<React.SetStateAction<MessageOption[]>>
+  ) => (
+    <div key={option.id} className="flex items-start justify-between py-3">
+      <div className="flex-1 min-w-0 pr-3">
+        <h5 className="text-white text-sm">{option.title}</h5>
+        <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{option.description}</p>
+        <div className="mt-2">
+          {renderRaritySelector(option, options, setOptions)}
+        </div>
+      </div>
+      <Checkbox
+        checked={option.enabled}
+        onCheckedChange={() => toggleMessageOption(options, setOptions, option.id)}
+        className="mt-1 shrink-0"
+      />
+    </div>
+  );
+
+  const renderMilestoneOption = (milestone: MilestoneOption) => {
+    const percentage = Math.min((milestone.currentProgress / milestone.target) * 100, 100);
+    const isCompleted = percentage >= 100;
+    const isPreviewVisible = previewMode === `milestone-${milestone.id}`;
+    const previewStyle = getRarityPreviewStyle(milestone.rarity);
     
     return (
       <div key={milestone.id} className="py-4 border-b border-slate-700/30 last:border-b-0">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0 pr-3">
             <div className="flex items-center gap-2 mb-1">
-              <h5 className="text-white text-sm">{milestone.milestone_name}</h5>
+              <h5 className="text-white text-sm">{milestone.title}</h5>
               {isCompleted && <span className="text-xs text-yellow-400">✓ Complete</span>}
             </div>
             <p className="text-slate-400 text-xs mb-3 leading-relaxed">{milestone.description}</p>
@@ -360,7 +378,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-500">Progress</span>
                 <span className="text-xs text-slate-400">
-                  {milestone.current_progress || 0}/{milestone.target} {milestone.unit}
+                  {milestone.currentProgress}/{milestone.target} {milestone.unit}
                 </span>
               </div>
               <div className="w-full bg-slate-800 rounded-full h-2">
@@ -401,7 +419,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                    milestone.rarity === 'rare' ? '💎 Rare Achievement Preview' : 
                    '🌟 Achievement Preview'}
                 </span>
-                <p className={previewStyle.text}>{milestone.preview_message}</p>
+                <p className={previewStyle.text}>{milestone.preview}</p>
                 {milestone.rarity === 'legendary' && (
                   <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                 )}
@@ -415,24 +433,10 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
           />
         </div>
       </div>
-    )
-  }
+    );
+  };
 
-  if (!isOpen) return null
-
-  if (!isSupremeAdmin) {
-    return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full">
-          <h3 className="text-xl font-bold text-white mb-4">Access Denied</h3>
-          <p className="text-gray-400 mb-6">You need supreme admin privileges to access system message configuration.</p>
-          <Button onClick={onClose} className="w-full">
-            Close
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  if (!isOpen) return null;
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -447,7 +451,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
           <Button
             variant="ghost"
             size="sm"
-            onClick={onClose}
+            onClick={() => setIsOpen(false)}
             className="text-slate-400 hover:text-slate-300 h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
@@ -456,9 +460,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
 
         {/* Section List */}
         <div className="space-y-3">
-          {sections.map((section) => {
-            const isExpanded = expandedSection === section.id
-            const IconComponent = section.icon
+          {sections.map((section, index) => {
+            const isExpanded = expandedSection === section.id;
+            const IconComponent = section.icon;
             
             return (
               <div key={section.id} className="bg-slate-900/40 rounded-lg border border-slate-800/60">
@@ -505,16 +509,13 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                             <p className="text-slate-400 text-xs mt-1">Send motivational challenges to keep the group engaged</p>
                           </div>
                           <Switch
-                            checked={challengeConfig?.enabled || false}
-                            onCheckedChange={async (enabled) => {
-                              await SystemMessageConfigService.updateWeeklyChallengeConfig({ enabled })
-                              setChallengeConfig(prev => prev ? { ...prev, enabled } : null)
-                            }}
+                            checked={challengeEnabled}
+                            onCheckedChange={setChallengeEnabled}
                             className="data-[state=checked]:bg-green-600"
                           />
                         </div>
 
-                        {challengeConfig?.enabled && (
+                        {challengeEnabled && (
                           <>
                             <div className="space-y-2">
                               <Label className="text-white text-sm">Weekly Challenge Message</Label>
@@ -578,18 +579,13 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                             <p className="text-slate-400 text-xs mt-1">Send daily, weekly, and personal workout progress updates</p>
                           </div>
                           <Switch
-                            checked={dailySummaryConfig?.enabled || false}
-                            onCheckedChange={async (enabled) => {
-                              if (dailySummaryConfig) {
-                                await SystemMessageConfigService.updateDailySummaryConfig({ ...dailySummaryConfig, enabled })
-                                setDailySummaryConfig(prev => prev ? { ...prev, enabled } : null)
-                              }
-                            }}
+                            checked={summaryEnabled}
+                            onCheckedChange={setSummaryEnabled}
                             className="data-[state=checked]:bg-green-600"
                           />
                         </div>
 
-                        {dailySummaryConfig?.enabled && (
+                        {summaryEnabled && (
                           <>
                             {/* Daily Summaries */}
                             <div className="space-y-4">
@@ -774,11 +770,16 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                           
                           <div className="flex items-end">
                             <Button
-                              onClick={sendDeveloperNote}
-                              disabled={!developerMessage.trim() || sendingMessage}
+                              onClick={() => {
+                                if (developerMessage.trim()) {
+                                  console.log('Sending admin message:', developerMessage);
+                                  setDeveloperMessage('');
+                                }
+                              }}
+                              disabled={!developerMessage.trim()}
                               className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
                             >
-                              {sendingMessage ? 'Sending...' : 'Send Now'}
+                              Send Now
                             </Button>
                           </div>
                         </div>
@@ -793,7 +794,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                           <p className="text-slate-400 text-sm">Celebrations are sent instantly when milestones are reached</p>
                           
                           <div className="p-4 bg-slate-800/20 rounded-lg border border-slate-700/20">
-                            {milestoneConfigs.map((milestone) => renderMilestoneOption(milestone))}
+                            {milestoneOptions.map((milestone) => renderMilestoneOption(milestone))}
                           </div>
                         </div>
                       </div>
@@ -801,13 +802,13 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
 
         {/* Footer */}
         <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-700/50">
-          <Button variant="outline" onClick={onClose} className="border-slate-600 text-slate-300 hover:bg-slate-800">
+          <Button variant="outline" onClick={() => setIsOpen(false)} className="border-slate-600 text-slate-300 hover:bg-slate-800">
             Cancel
           </Button>
           <Button className="bg-green-600 hover:bg-green-700">
@@ -816,5 +817,5 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         </div>
       </div>
     </div>
-  )
+  );
 }
