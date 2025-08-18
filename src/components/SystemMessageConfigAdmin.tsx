@@ -220,183 +220,186 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-8">
-          <div className="space-y-6">
+        <div className="w-full p-8">
+          <div className="space-y-8">
             {/* Message Type Cards */}
             {messageConfigs.map((typeConfig) => {
-              const IconComponent = getMessageTypeIcon(typeConfig.message_type)
               const isExpanded = expandedCard === typeConfig.message_type
               
               return (
-                <div
-                  key={typeConfig.message_type}
-                  className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden transition-all duration-200 hover:border-gray-600"
-                >
-                  {/* Card Header - Always Visible */}
-                  <div 
-                    className="p-8 cursor-pointer"
-                    onClick={() => setExpandedCard(isExpanded ? null : typeConfig.message_type)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
-                        <div>
-                          <h2 className="text-xl font-semibold text-white">
-                            {formatMessageType(typeConfig.message_type)}
-                          </h2>
-                          <p className="text-gray-400 mt-2">
-                            {typeConfig.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-6">
-                        {/* Status Indicator */}
-                        <div className="flex items-center gap-3">
-                          {typeConfig.enabled ? (
-                            <>
-                              <CheckCircleIcon className="w-6 h-6 text-green-400" />
-                              <span className="text-green-400 font-medium">Enabled</span>
-                            </>
-                          ) : (
-                            <>
-                              <XCircleIcon className="w-6 h-6 text-red-400" />
-                              <span className="text-red-400 font-medium">Disabled</span>
-                            </>
-                          )}
-                        </div>
-                        {/* Expand/Collapse Icon */}
-                        {isExpanded ? (
-                          <ChevronUpIcon className="w-6 h-6 text-gray-400" />
+                <div key={typeConfig.message_type} className="space-y-4">
+                  {/* Card Header */}
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {formatMessageType(typeConfig.message_type)}
+                    </h2>
+                    <p className="text-gray-400 mt-2 text-lg">
+                      {typeConfig.description}
+                    </p>
+                    
+                    {/* Controls below description */}
+                    <div className="flex items-center gap-4 mt-4">
+                      <button
+                        onClick={() => toggleMessageType(typeConfig.message_type)}
+                        disabled={isLoading}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                          typeConfig.enabled 
+                            ? 'bg-green-600 text-white hover:bg-green-700' 
+                            : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                        }`}
+                      >
+                        {typeConfig.enabled ? (
+                          <>
+                            <CheckCircleIcon className="w-5 h-5" />
+                            Enabled
+                          </>
                         ) : (
-                          <ChevronDownIcon className="w-6 h-6 text-gray-400" />
+                          <>
+                            <XCircleIcon className="w-5 h-5" />
+                            Disabled
+                          </>
                         )}
-                      </div>
+                      </button>
+                      
+                      <button
+                        onClick={() => setExpandedCard(isExpanded ? null : typeConfig.message_type)}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        {isExpanded ? (
+                          <>
+                            <ChevronUpIcon className="w-5 h-5" />
+                            Hide Configuration
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDownIcon className="w-5 h-5" />
+                            Configure
+                          </>
+                        )}
+                      </button>
+                      
+                      <span className={`px-3 py-1 rounded-full border text-sm ${getRarityColor(typeConfig.default_rarity)}`}>
+                        {typeConfig.default_rarity}
+                      </span>
                     </div>
                   </div>
 
                   {/* Expanded Content */}
                   {isExpanded && (
-                    <div className="border-t border-gray-700 p-8 bg-gray-800/50">
+                    <div className="pt-8 space-y-8">
                       {typeConfig.message_type === 'daily_summary' && (
-                        <div className="space-y-6">
+                        <div className="space-y-8">
+                          {/* Daily Summaries Section */}
                           <div>
-                            <h3 className="text-lg font-semibold text-white">Summary Configuration</h3>
-                            <p className="text-sm text-gray-400 mt-1">Configure automated summaries for groups</p>
-                          </div>
+                            <h3 className="text-xl font-bold text-white mb-4">Daily Summaries</h3>
                           
                           {dailySummaryConfig ? (
                             <div className="space-y-6">
-                              {/* Content Elements */}
-                              <div>
-                                <h4 className="text-base font-medium text-white mb-4">Content Elements</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <label className="flex items-center gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
-                                    <input
-                                      type="checkbox"
-                                      checked={dailySummaryConfig.include_commitment_rate}
-                                      onChange={(e) => updateDailySummaryConfig('include_commitment_rate', e.target.checked)}
-                                      className="w-4 h-4 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                    />
-                                    <div>
-                                      <div className="text-sm font-medium text-white">Commitment Rate</div>
-                                      <div className="text-xs text-gray-400">Show daily commitment percentage</div>
-                                    </div>
-                                  </label>
-
-                                  <label className="flex items-center gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
-                                    <input
-                                      type="checkbox"
-                                      checked={dailySummaryConfig.include_top_performer}
-                                      onChange={(e) => updateDailySummaryConfig('include_top_performer', e.target.checked)}
-                                      className="w-4 h-4 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                    />
-                                    <div>
-                                      <div className="text-sm font-medium text-white">Top Performer</div>
-                                      <div className="text-xs text-gray-400">Highlight best performing member</div>
-                                    </div>
-                                  </label>
-
-                                  <label className="flex items-center gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
-                                    <input
-                                      type="checkbox"
-                                      checked={dailySummaryConfig.include_member_count}
-                                      onChange={(e) => updateDailySummaryConfig('include_member_count', e.target.checked)}
-                                      className="w-4 h-4 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                    />
-                                    <div>
-                                      <div className="text-sm font-medium text-white">Member Count</div>
-                                      <div className="text-xs text-gray-400">Show total active members</div>
-                                    </div>
-                                  </label>
-
-                                  <label className="flex items-center gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
-                                    <input
-                                      type="checkbox"
-                                      checked={dailySummaryConfig.include_motivational_message}
-                                      onChange={(e) => updateDailySummaryConfig('include_motivational_message', e.target.checked)}
-                                      className="w-4 h-4 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                    />
-                                    <div>
-                                      <div className="text-sm font-medium text-white">Motivational Message</div>
-                                      <div className="text-xs text-gray-400">Include inspiring quotes</div>
-                                    </div>
-                                  </label>
-
-                                  <label className="flex items-center gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
-                                    <input
-                                      type="checkbox"
-                                      checked={dailySummaryConfig.include_streak_info}
-                                      onChange={(e) => updateDailySummaryConfig('include_streak_info', e.target.checked)}
-                                      className="w-4 h-4 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                    />
-                                    <div>
-                                      <div className="text-sm font-medium text-white">Streak Information</div>
-                                      <div className="text-xs text-gray-400">Show current group streak</div>
-                                    </div>
-                                  </label>
-
-                                  <label className="flex items-center gap-3 p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
-                                    <input
-                                      type="checkbox"
-                                      checked={dailySummaryConfig.include_weekly_progress}
-                                      onChange={(e) => updateDailySummaryConfig('include_weekly_progress', e.target.checked)}
-                                      className="w-4 h-4 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                    />
-                                    <div>
-                                      <div className="text-sm font-medium text-white">Weekly Progress</div>
-                                      <div className="text-xs text-gray-400">Show week-over-week trends</div>
-                                    </div>
-                                  </label>
+                            <div className="grid grid-cols-3 gap-6">
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={dailySummaryConfig.include_commitment_rate}
+                                  onChange={(e) => updateDailySummaryConfig('include_commitment_rate', e.target.checked)}
+                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                  <div className="text-base font-medium text-white">Commitment Rate</div>
+                                  <div className="text-sm text-gray-400">Show daily commitment percentage</div>
                                 </div>
+                              </label>
+
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={dailySummaryConfig.include_top_performer}
+                                  onChange={(e) => updateDailySummaryConfig('include_top_performer', e.target.checked)}
+                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                  <div className="text-base font-medium text-white">Top Performer</div>
+                                  <div className="text-sm text-gray-400">Highlight best performing member</div>
+                                </div>
+                              </label>
+
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={dailySummaryConfig.include_member_count}
+                                  onChange={(e) => updateDailySummaryConfig('include_member_count', e.target.checked)}
+                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                  <div className="text-base font-medium text-white">Member Count</div>
+                                  <div className="text-sm text-gray-400">Show total active members</div>
+                                </div>
+                              </label>
+
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={dailySummaryConfig.include_motivational_message}
+                                  onChange={(e) => updateDailySummaryConfig('include_motivational_message', e.target.checked)}
+                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                  <div className="text-base font-medium text-white">Motivational Message</div>
+                                  <div className="text-sm text-gray-400">Include inspiring quotes</div>
+                                </div>
+                              </label>
+
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={dailySummaryConfig.include_streak_info}
+                                  onChange={(e) => updateDailySummaryConfig('include_streak_info', e.target.checked)}
+                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                  <div className="text-base font-medium text-white">Streak Information</div>
+                                  <div className="text-sm text-gray-400">Show current group streak</div>
+                                </div>
+                              </label>
+
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={dailySummaryConfig.include_weekly_progress}
+                                  onChange={(e) => updateDailySummaryConfig('include_weekly_progress', e.target.checked)}
+                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                />
+                                <div>
+                                  <div className="text-base font-medium text-white">Weekly Progress</div>
+                                  <div className="text-sm text-gray-400">Show week-over-week trends</div>
+                                </div>
+                              </label>
+                            </div>
+
+                            <div className="grid grid-cols-4 gap-6">
+                              <div>
+                                <label className="block text-base font-medium text-white mb-2">Send Time</label>
+                                <input
+                                  type="time"
+                                  value={dailySummaryConfig.send_time}
+                                  onChange={(e) => updateDailySummaryConfig('send_time', e.target.value)}
+                                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
                               </div>
-
-                              {/* Timing & Schedule */}
                               <div>
-                                <h4 className="text-base font-medium text-white mb-4">Schedule</h4>
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                  <div>
-                                    <label className="block text-sm text-gray-300 mb-2">Send Time</label>
-                                    <input
-                                      type="time"
-                                      value={dailySummaryConfig.send_time}
-                                      onChange={(e) => updateDailySummaryConfig('send_time', e.target.value)}
-                                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm text-gray-300 mb-2">Timezone</label>
-                                    <select
-                                      value={dailySummaryConfig.timezone}
-                                      onChange={(e) => updateDailySummaryConfig('timezone', e.target.value)}
-                                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                      <option value="UTC">UTC</option>
-                                      <option value="America/New_York">Eastern Time</option>
-                                      <option value="Europe/London">London</option>
-                                      <option value="Europe/Paris">Paris/Berlin</option>
-                                    </select>
-                                  </div>
-                                </div>
-                                
+                                <label className="block text-base font-medium text-white mb-2">Timezone</label>
+                                <select
+                                  value={dailySummaryConfig.timezone}
+                                  onChange={(e) => updateDailySummaryConfig('timezone', e.target.value)}
+                                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="UTC">UTC</option>
+                                  <option value="America/New_York">Eastern Time</option>
+                                  <option value="Europe/London">London</option>
+                                  <option value="Europe/Paris">Paris/Berlin</option>
+                                </select>
+                              </div>
+                              <div className="col-span-2">
+                                <label className="block text-base font-medium text-white mb-2">Active Days</label>
                                 <div className="grid grid-cols-7 gap-2">
                                   {[
                                     { num: 1, short: 'Mon' },
@@ -426,11 +429,19 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                         }}
                                         className="sr-only"
                                       />
-                                      <span className="text-xs font-medium">{day.short}</span>
+                                      <span className="text-sm font-medium">{day.short}</span>
                                     </label>
                                   ))}
                                 </div>
                               </div>
+                            </div>
+                          </div>
+                          
+                          {/* Weekly Summaries Section */}
+                          <div>
+                            <h3 className="text-xl font-bold text-white mb-4">Weekly Summaries</h3>
+                            <div className="text-gray-400 text-lg">Coming soon - weekly recap summaries</div>
+                          </div>
                             </div>
                           ) : (
                             <div className="text-center py-8 text-gray-400">
@@ -441,15 +452,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                       )}
 
                       {typeConfig.message_type === 'milestone' && (
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-semibold text-white">Milestone Configuration</h3>
-                            <p className="text-sm text-gray-400 mt-1">Configure milestone notifications for group achievements</p>
-                          </div>
-                          
+                        <div className="space-y-8">
                           {milestoneConfigs.length > 0 ? (
-                            <div className="space-y-6">
-                              {/* Milestone Types */}
+                            <>
                               {['pot_amount', 'group_streak', 'total_points', 'member_count'].map((type) => {
                                 const typeMilestones = milestoneConfigs.filter(m => m.milestone_type === type)
                                 const typeTitle = type.split('_').map(word => 
@@ -457,38 +462,30 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                 ).join(' ')
                                 
                                 return (
-                                  <div key={type} className="bg-gray-700 rounded-lg p-4">
-                                    <h4 className="text-base font-medium text-white mb-3">{typeTitle} Milestones</h4>
-                                    <div className="space-y-2">
+                                  <div key={type}>
+                                    <h3 className="text-xl font-bold text-white mb-6">{typeTitle} Milestones</h3>
+                                    <div className="grid grid-cols-2 gap-6">
                                       {typeMilestones.map((milestone) => (
-                                        <div key={milestone.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                                          <div className="flex items-center gap-3">
-                                            <button
-                                              onClick={() => updateMilestoneEnabled(milestone.id, !milestone.enabled)}
-                                              className={`w-4 h-4 rounded border-2 transition-colors ${
-                                                milestone.enabled 
-                                                  ? 'bg-green-500 border-green-500' 
-                                                  : 'border-gray-500 hover:border-gray-400'
-                                              }`}
-                                            >
-                                              {milestone.enabled && (
-                                                <CheckCircleIcon className="w-3 h-3 text-white" />
-                                              )}
-                                            </button>
-                                            <div>
-                                              <div className="text-sm font-medium text-white">
-                                                {milestone.milestone_name}
-                                              </div>
-                                              <div className="text-xs text-gray-400">
-                                                {milestone.description || `Reach ${milestone.threshold_value}`}
-                                              </div>
+                                        <label key={milestone.id} className="flex items-center gap-4 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={milestone.enabled}
+                                            onChange={(e) => updateMilestoneEnabled(milestone.id, e.target.checked)}
+                                            className="w-5 h-5 text-green-600 bg-gray-600 border-gray-500 rounded focus:ring-green-500"
+                                          />
+                                          <div className="flex-1">
+                                            <div className="text-base font-medium text-white">
+                                              {milestone.milestone_name}
+                                            </div>
+                                            <div className="text-sm text-gray-400 mt-1">
+                                              {milestone.description}
                                             </div>
                                           </div>
                                           <div className="flex items-center gap-3">
-                                            <span className={`text-xs px-2 py-1 rounded-full border ${getRarityColor(milestone.rarity)}`}>
+                                            <span className={`text-sm px-3 py-1 rounded-full border ${getRarityColor(milestone.rarity)}`}>
                                               {milestone.rarity}
                                             </span>
-                                            <span className="text-xs text-gray-400 font-medium">
+                                            <span className="text-base font-semibold text-white">
                                               {type === 'pot_amount' && '€'}
                                               {milestone.threshold_value.toLocaleString()}
                                               {type === 'group_streak' && ' days'}
@@ -496,21 +493,21 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                               {type === 'member_count' && ' members'}
                                             </span>
                                           </div>
-                                        </div>
+                                        </label>
                                       ))}
                                     </div>
                                   </div>
                                 )
                               })}
                               
-                              <div className="text-center p-4 bg-gray-700 rounded-lg">
-                                <div className="text-sm text-gray-400">
+                              <div className="text-center py-4">
+                                <div className="text-lg text-gray-400">
                                   {milestoneConfigs.filter(m => m.enabled).length} of {milestoneConfigs.length} milestones enabled
                                 </div>
                               </div>
-                            </div>
+                            </>
                           ) : (
-                            <div className="text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-gray-400 text-lg">
                               Loading milestone configuration...
                             </div>
                           )}
@@ -518,90 +515,56 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                       )}
 
                       {typeConfig.message_type === 'developer_note' && (
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-semibold text-white">Send Developer Note</h3>
-                            <p className="text-sm text-gray-400 mt-1">Send updates or notices to your group</p>
-                          </div>
-                          
-                          <div>
-                            <textarea
-                              value={developerNote}
-                              onChange={(e) => setDeveloperNote(e.target.value)}
-                              placeholder="Enter your developer note message..."
-                              className="w-full px-3 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              rows={4}
-                            />
-                            <div className="flex justify-end mt-3">
-                              <Button
-                                onClick={sendDeveloperNote}
-                                disabled={sendingMessage || !developerNote.trim() || !typeConfig.enabled}
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                {sendingMessage ? 'Sending...' : 'Send Note'}
-                              </Button>
-                            </div>
+                        <div>
+                          <textarea
+                            value={developerNote}
+                            onChange={(e) => setDeveloperNote(e.target.value)}
+                            placeholder="Enter your developer note message..."
+                            className="w-full px-4 py-4 bg-gray-700 border border-gray-600 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={6}
+                          />
+                          <div className="flex justify-end mt-4">
+                            <Button
+                              onClick={sendDeveloperNote}
+                              disabled={sendingMessage || !developerNote.trim() || !typeConfig.enabled}
+                              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 text-base"
+                            >
+                              {sendingMessage ? 'Sending...' : 'Send Developer Note'}
+                            </Button>
                           </div>
                         </div>
                       )}
 
                       {typeConfig.message_type === 'public_message' && (
-                        <div className="space-y-6">
-                          <div>
-                            <h3 className="text-lg font-semibold text-white">Send Public Message</h3>
-                            <p className="text-sm text-gray-400 mt-1">Send announcements to all groups simultaneously</p>
+                        <div>
+                          <textarea
+                            value={publicMessage}
+                            onChange={(e) => setPublicMessage(e.target.value)}
+                            placeholder="Enter your public announcement message..."
+                            className="w-full px-4 py-4 bg-gray-700 border border-gray-600 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={6}
+                          />
+                          
+                          <div className="p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-lg mt-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-yellow-400 text-xl">⚠️</span>
+                              <span className="text-base text-yellow-300">
+                                This message will be sent to every group on the platform
+                              </span>
+                            </div>
                           </div>
                           
-                          <div>
-                            <textarea
-                              value={publicMessage}
-                              onChange={(e) => setPublicMessage(e.target.value)}
-                              placeholder="Enter your public announcement message..."
-                              className="w-full px-3 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              rows={4}
-                            />
-                            
-                            <div className="p-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg mt-3">
-                              <div className="flex items-center gap-2">
-                                <span className="text-yellow-400">⚠️</span>
-                                <span className="text-sm text-yellow-300">
-                                  This will be sent to every group on the platform
-                                </span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex justify-end mt-3">
-                              <Button
-                                onClick={sendPublicMessage}
-                                disabled={sendingMessage || !publicMessage.trim() || !typeConfig.enabled}
-                                className="bg-orange-600 hover:bg-orange-700"
-                              >
-                                {sendingMessage ? 'Sending...' : 'Send to All Groups'}
-                              </Button>
-                            </div>
+                          <div className="flex justify-end mt-4">
+                            <Button
+                              onClick={sendPublicMessage}
+                              disabled={sendingMessage || !publicMessage.trim() || !typeConfig.enabled}
+                              className="bg-orange-600 hover:bg-orange-700 px-6 py-3 text-base"
+                            >
+                              {sendingMessage ? 'Sending...' : 'Send to All Groups'}
+                            </Button>
                           </div>
                         </div>
                       )}
-
-                      {/* Controls */}
-                      <div className="flex items-center justify-between pt-6 border-t border-gray-700">
-                        <div className="flex items-center gap-4">
-                          <span className={`text-sm px-2 py-1 rounded-full border ${getRarityColor(typeConfig.default_rarity)}`}>
-                            {typeConfig.default_rarity}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {typeConfig.frequency}
-                          </span>
-                        </div>
-                        <Button
-                          onClick={() => toggleMessageType(typeConfig.message_type)}
-                          disabled={isLoading}
-                          variant={typeConfig.enabled ? "destructive" : "default"}
-                          size="sm"
-                        >
-                          {typeConfig.enabled ? 'Disable' : 'Enable'}
-                        </Button>
-                      </div>
                     </div>
                   )}
                 </div>
