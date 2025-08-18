@@ -1,4 +1,4 @@
-export type SystemMessageType = 'daily_summary' | 'challenge' | 'milestone' | 'developer_note'
+export type SystemMessageType = 'daily_summary' | 'milestone' | 'developer_note' | 'public_message'
 export type SystemMessageRarity = 'common' | 'rare' | 'legendary'
 
 export interface SystemMessage {
@@ -24,12 +24,9 @@ export interface DailySummaryMetadata {
   top_points?: number
 }
 
-export interface ChallengeMetadata {
-  challenge_id: string
-  challenge_name: string
-  start_date: string
-  end_date: string
-  participants?: string[]
+export interface PublicMessageMetadata {
+  sent_at: string
+  target_groups?: 'all' | string[]
 }
 
 export interface MilestoneMetadata {
@@ -60,9 +57,36 @@ export interface GlobalSystemMessageConfig {
   message_type_configs: SystemMessageTypeConfig[]
 }
 
+export interface DailySummaryConfig {
+  id: string
+  include_commitment_rate: boolean
+  include_top_performer: boolean
+  include_member_count: boolean
+  include_motivational_message: boolean
+  include_streak_info: boolean
+  include_weekly_progress: boolean
+  send_time: string // HH:MM:SS format
+  send_days: number[] // 1=Monday, 7=Sunday
+  timezone: string
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface MilestoneConfig {
+  id: string
+  milestone_type: 'pot_amount' | 'group_streak' | 'total_points' | 'member_count'
+  milestone_name: string
+  threshold_value: number
+  enabled: boolean
+  rarity: SystemMessageRarity
+  description?: string
+  created_at: string
+  updated_at: string
+}
+
 export interface SystemMessageConfig {
   daily_summaries_enabled: boolean
-  challenges_enabled: boolean
   milestones_enabled: boolean
   sender_name: string
   rarity_filters: SystemMessageRarity[]

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { SystemMessageTypeConfig, GlobalSystemMessageConfig, SystemMessageType, SystemMessageRarity } from '@/types/systemMessages'
+import { SystemMessageTypeConfig, GlobalSystemMessageConfig, SystemMessageType, SystemMessageRarity, DailySummaryConfig, MilestoneConfig } from '@/types/systemMessages'
 
 export class SystemMessageConfigService {
   
@@ -218,6 +218,131 @@ export class SystemMessageConfigService {
       return results.every(result => result === true)
     } catch (error) {
       console.error('Error bulk updating message types:', error)
+      return false
+    }
+  }
+
+  static async getDailySummaryConfig(): Promise<DailySummaryConfig | null> {
+    try {
+      const { data, error } = await supabase
+        .from('daily_summary_config')
+        .select('*')
+        .limit(1)
+        .single()
+
+      if (error) throw error
+
+      return data
+    } catch (error) {
+      console.error('Error fetching daily summary config:', error)
+      return null
+    }
+  }
+
+  static async getMilestoneConfigs(): Promise<MilestoneConfig[]> {
+    try {
+      const { data, error } = await supabase
+        .from('milestone_config')
+        .select('*')
+        .order('milestone_type, threshold_value')
+
+      if (error) throw error
+
+      return data || []
+    } catch (error) {
+      console.error('Error fetching milestone configs:', error)
+      return []
+    }
+  }
+
+  static async createDeveloperNote(
+    groupId: string,
+    content: string,
+    rarity: SystemMessageRarity = 'common'
+  ): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc('insert_system_message_to_chat', {
+        p_group_id: groupId,
+        p_message_type: 'developer_note',
+        p_rarity: rarity,
+        p_title: 'Developer Note',
+        p_content: content,
+        p_metadata: JSON.stringify({ priority: 'medium' })
+      })
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error creating developer note:', error)
+      return false
+    }
+  }
+
+  static async sendPublicMessage(
+    title: string,
+    content: string,
+    rarity: SystemMessageRarity = 'common'
+  ): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc('send_public_message', {
+        p_title: title,
+        p_content: content,
+        p_rarity: rarity
+      })
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error sending public message:', error)
+      return false
+    }
+  }
+
+  static async updateDailySummaryConfig(config: DailySummaryConfig): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('daily_summary_config')
+        .update({
+          include_commitment_rate: config.include_commitment_rate,
+          include_top_performer: config.include_top_performer,
+          include_member_count: config.include_member_count,
+          include_motivational_message: config.include_motivational_message,
+          include_streak_info: config.include_streak_info,
+          include_weekly_progress: config.include_weekly_progress,
+          send_time: config.send_time,
+          send_days: config.send_days,
+          timezone: config.timezone,
+          enabled: config.enabled,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', config.id)
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error updating daily summary config:', error)
+      return false
+    }
+  }
+
+  static async updateMilestoneConfig(milestoneId: string, updates: Partial<MilestoneConfig>): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('milestone_config')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', milestoneId)
+
+      if (error) throw error
+
+      return true
+    } catch (error) {
+      console.error('Error updating milestone config:', error)
       return false
     }
   }

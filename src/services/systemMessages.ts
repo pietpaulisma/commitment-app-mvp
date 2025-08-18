@@ -4,9 +4,9 @@ import {
   SystemMessageType, 
   SystemMessageRarity,
   DailySummaryMetadata,
-  ChallengeMetadata,
   MilestoneMetadata,
-  DeveloperNoteMetadata
+  DeveloperNoteMetadata,
+  PublicMessageMetadata
 } from '@/types/systemMessages'
 
 export class SystemMessageService {
@@ -73,40 +73,7 @@ export class SystemMessageService {
     }
   }
 
-  static async createChallenge(
-    groupId: string,
-    challengeName: string,
-    description: string,
-    startDate: string,
-    endDate: string,
-    rarity: SystemMessageRarity = 'rare'
-  ): Promise<SystemMessage | null> {
-    const metadata: ChallengeMetadata = {
-      challenge_id: `challenge_${Date.now()}`,
-      challenge_name: challengeName,
-      start_date: startDate,
-      end_date: endDate
-    }
-
-    const content = `🎯 **New Challenge Alert!** 🎯
-
-**${challengeName}**
-
-${description}
-
-📅 **Duration**: ${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}
-
-Ready to take on the challenge? Let's see what you've got! 💪`
-
-    return this.createSystemMessage(
-      groupId,
-      'challenge',
-      rarity,
-      `New Challenge: ${challengeName}`,
-      content,
-      metadata
-    )
-  }
+  // Challenge functionality has been removed - use public messages or developer notes instead
 
   static async createMilestone(
     groupId: string,

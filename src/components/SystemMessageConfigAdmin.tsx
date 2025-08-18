@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { SystemMessageConfigService } from '@/services/systemMessageConfig'
-import { GlobalSystemMessageConfig, SystemMessageTypeConfig, SystemMessageType, SystemMessageRarity } from '@/types/systemMessages'
+import { SystemMessageTypeConfig, SystemMessageType, SystemMessageRarity, DailySummaryConfig, MilestoneConfig } from '@/types/systemMessages'
 import { useProfile } from '@/hooks/useProfile'
 import { 
   CogIcon,
   SparklesIcon,
-  TrophyIcon,
   CalendarDaysIcon,
   MegaphoneIcon,
   CheckCircleIcon,
   XCircleIcon,
   PlayIcon,
-  BoltIcon,
-  EyeIcon,
-  EyeSlashIcon
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ClockIcon,
+  BellIcon
 } from '@heroicons/react/24/outline'
 
 interface SystemMessageConfigAdminProps {
@@ -24,151 +24,140 @@ interface SystemMessageConfigAdminProps {
 
 export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfigAdminProps) {
   const { profile } = useProfile()
-  const [config, setConfig] = useState<GlobalSystemMessageConfig | null>(null)
-  const [stats, setStats] = useState<any>(null)
+  const [messageConfigs, setMessageConfigs] = useState<SystemMessageTypeConfig[]>([])
+  const [dailySummaryConfig, setDailySummaryConfig] = useState<DailySummaryConfig | null>(null)
+  const [milestoneConfigs, setMilestoneConfigs] = useState<MilestoneConfig[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'configuration' | 'statistics'>('overview')
-  const [pendingChanges, setPendingChanges] = useState<{ [key: string]: any }>({})
-  const [testMessages, setTestMessages] = useState<{ [key in SystemMessageType]?: string }>({
-    daily_summary: "🌅 **Test Daily Summary**\n\n💪 **Commitment Rate**: 85% (4/5 members)\n🏆 **Top Performer**: TestUser (150 points)\n\n✨ Great commitment from the team!",
-    challenge: "🎯 **Test Challenge Alert!**\n\n**30-Day Plank Challenge**\n\nHold a plank for 2 minutes every day for the next 30 days. Who's ready to take on the challenge? 💪",
-    milestone: "💰 **MILESTONE REACHED!**\n\nThe group pot has hit €1000! 🎉\n\nThis is a legendary moment - you've all been crushing your commitments!\n\nKeep up the amazing work, team! 💪",
-    developer_note: "📢 **Developer Update**\n\nWe've added some exciting new features to help you track your progress better. Check out the updated dashboard!\n\nThanks for your attention! 🙏"
-  })
+  const [expandedCard, setExpandedCard] = useState<SystemMessageType | null>(null)
+  const [developerNote, setDeveloperNote] = useState('')
+  const [publicMessage, setPublicMessage] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   const isSupremeAdmin = profile?.role === 'supreme_admin'
 
   useEffect(() => {
     if (isOpen && isSupremeAdmin) {
-      loadConfig()
-      loadStats()
+      loadConfigurations()
     }
   }, [isOpen, isSupremeAdmin])
 
-  const loadConfig = async () => {
+  const loadConfigurations = async () => {
     setIsLoading(true)
-    const configData = await SystemMessageConfigService.getGlobalConfig()
-    setConfig(configData)
+    try {
+      // Load all configuration data
+      const [globalConfig, dailyConfig, milestoneConfig] = await Promise.all([
+        SystemMessageConfigService.getGlobalConfig(),
+        SystemMessageConfigService.getDailySummaryConfig(),
+        SystemMessageConfigService.getMilestoneConfigs()
+      ])
+      
+      if (globalConfig) {
+        setMessageConfigs(globalConfig.message_type_configs)
+      }
+      setDailySummaryConfig(dailyConfig)
+      setMilestoneConfigs(milestoneConfig)
+    } catch (error) {
+      console.error('Error loading configurations:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const toggleMessageType = async (messageType: SystemMessageType) => {
+    const config = messageConfigs.find(c => c.message_type === messageType)
+    if (!config) return
+
+    setIsLoading(true)
+    const success = await SystemMessageConfigService.updateMessageTypeConfig(messageType, {
+      enabled: !config.enabled
+    })
+    
+    if (success) {
+      setMessageConfigs(prev => prev.map(c => 
+        c.message_type === messageType ? { ...c, enabled: !c.enabled } : c
+      ))
+    }
     setIsLoading(false)
   }
 
-  const loadStats = async () => {
-    const statsData = await SystemMessageConfigService.getMessageTypeStats()
-    setStats(statsData)
-  }
+  const sendDeveloperNote = async () => {
+    if (!developerNote.trim() || !profile?.group_id) return
 
-  const handleGlobalToggle = async () => {
-    if (!config) return
-
-    const newValue = !config.is_globally_enabled
-    const success = await SystemMessageConfigService.updateGlobalEnabled(newValue)
-    
-    if (success) {
-      setConfig({ ...config, is_globally_enabled: newValue })
-      alert(`System messages ${newValue ? 'enabled' : 'disabled'} globally`)
-    } else {
-      alert('Failed to update global setting')
-    }
-  }
-
-  const handleMessageTypeToggle = (messageType: SystemMessageType) => {
-    if (!config) return
-
-    const currentConfig = config.message_type_configs.find(c => c.message_type === messageType)
-    if (!currentConfig) return
-
-    const newEnabled = !currentConfig.enabled
-    
-    setPendingChanges(prev => ({
-      ...prev,
-      [messageType]: {
-        ...prev[messageType],
-        enabled: newEnabled
-      }
-    }))
-
-    // Update local state immediately for UI feedback
-    const updatedConfigs = config.message_type_configs.map(c =>
-      c.message_type === messageType ? { ...c, enabled: newEnabled } : c
-    )
-    setConfig({ ...config, message_type_configs: updatedConfigs })
-  }
-
-  const handleRarityChange = (messageType: SystemMessageType, rarity: SystemMessageRarity) => {
-    if (!config) return
-
-    setPendingChanges(prev => ({
-      ...prev,
-      [messageType]: {
-        ...prev[messageType],
-        default_rarity: rarity
-      }
-    }))
-
-    // Update local state immediately for UI feedback
-    const updatedConfigs = config.message_type_configs.map(c =>
-      c.message_type === messageType ? { ...c, default_rarity: rarity } : c
-    )
-    setConfig({ ...config, message_type_configs: updatedConfigs })
-  }
-
-  const savePendingChanges = async () => {
-    if (Object.keys(pendingChanges).length === 0) {
-      alert('No changes to save')
-      return
-    }
-
-    setIsLoading(true)
-    
-    const updates = Object.entries(pendingChanges).map(([messageType, changes]) => ({
-      messageType: messageType as SystemMessageType,
-      enabled: changes.enabled !== undefined ? changes.enabled : config?.message_type_configs.find(c => c.message_type === messageType)?.enabled || true,
-      defaultRarity: changes.default_rarity || config?.message_type_configs.find(c => c.message_type === messageType)?.default_rarity || 'common'
-    }))
-
-    const success = await SystemMessageConfigService.bulkUpdateMessageTypes(updates)
-    
-    if (success) {
-      setPendingChanges({})
-      await loadConfig()
-      await loadStats()
-      alert('Settings saved successfully!')
-    } else {
-      alert('Failed to save some settings')
-    }
-    
-    setIsLoading(false)
-  }
-
-  const sendTestMessage = async (messageType: SystemMessageType) => {
-    if (!profile?.group_id || !testMessages[messageType]) return
-
-    setIsLoading(true)
-    const success = await SystemMessageConfigService.testSystemMessage(
+    setSendingMessage(true)
+    const success = await SystemMessageConfigService.createDeveloperNote(
       profile.group_id,
-      messageType,
-      testMessages[messageType]!
+      developerNote.trim(),
+      'medium'
     )
     
     if (success) {
-      alert(`Test ${messageType.replace('_', ' ')} sent successfully!`)
+      setDeveloperNote('')
+      alert('Developer note sent successfully!')
     } else {
-      alert(`Failed to send test ${messageType.replace('_', ' ')}`)
+      alert('Failed to send developer note')
+    }
+    setSendingMessage(false)
+  }
+
+  const sendPublicMessage = async () => {
+    if (!publicMessage.trim()) return
+
+    setSendingMessage(true)
+    const success = await SystemMessageConfigService.sendPublicMessage(
+      'System Announcement',
+      publicMessage.trim()
+    )
+    
+    if (success) {
+      setPublicMessage('')
+      alert('Public message sent to all groups!')
+    } else {
+      alert('Failed to send public message')
+    }
+    setSendingMessage(false)
+  }
+
+  const updateDailySummaryConfig = async (field: keyof DailySummaryConfig, value: any) => {
+    if (!dailySummaryConfig) return
+
+    const updatedConfig = {
+      ...dailySummaryConfig,
+      [field]: value
     }
     
-    setIsLoading(false)
+    setDailySummaryConfig(updatedConfig)
+    
+    // Save to database
+    const success = await SystemMessageConfigService.updateDailySummaryConfig(updatedConfig)
+    if (!success) {
+      // Revert on failure
+      setDailySummaryConfig(dailySummaryConfig)
+      alert('Failed to update daily summary configuration')
+    }
+  }
+
+  const updateMilestoneEnabled = async (milestoneId: string, enabled: boolean) => {
+    const success = await SystemMessageConfigService.updateMilestoneConfig(milestoneId, { enabled })
+    
+    if (success) {
+      setMilestoneConfigs(prev => prev.map(m => 
+        m.id === milestoneId ? { ...m, enabled } : m
+      ))
+    } else {
+      alert('Failed to update milestone configuration')
+    }
   }
 
   const getMessageTypeIcon = (messageType: SystemMessageType) => {
     switch (messageType) {
       case 'daily_summary':
         return CalendarDaysIcon
-      case 'challenge':
-        return TrophyIcon
       case 'milestone':
         return SparklesIcon
       case 'developer_note':
         return CogIcon
+      case 'public_message':
+        return BellIcon
       default:
         return MegaphoneIcon
     }
@@ -217,365 +206,446 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
             <SparklesIcon className="w-8 h-8 text-purple-400" />
             <div>
               <h2 className="text-xl font-bold text-white">System Message Configuration</h2>
-              <p className="text-sm text-gray-400">Global settings for all system messages</p>
+              <p className="text-sm text-gray-400">Configure and manage system message types</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Global Toggle */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-300">Global System Messages</span>
-              <button
-                onClick={handleGlobalToggle}
-                disabled={isLoading}
-                className={`
-                  relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                  ${config?.is_globally_enabled ? 'bg-green-600' : 'bg-gray-600'}
-                  ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                `}
-              >
-                <span
-                  className={`
-                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                    ${config?.is_globally_enabled ? 'translate-x-6' : 'translate-x-1'}
-                  `}
-                />
-              </button>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-gray-400 hover:text-white"
-            >
-              ✕
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
+            ✕
+          </Button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-700">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-6 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'overview'
-                ? 'text-purple-400 border-b-2 border-purple-400'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('configuration')}
-            className={`px-6 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'configuration'
-                ? 'text-purple-400 border-b-2 border-purple-400'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Configuration
-          </button>
-          <button
-            onClick={() => setActiveTab('statistics')}
-            className={`px-6 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'statistics'
-                ? 'text-purple-400 border-b-2 border-purple-400'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            Statistics
-          </button>
-        </div>
-
-        {/* Content */}
+        {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {config?.message_type_configs.map((typeConfig) => {
-                  const IconComponent = getMessageTypeIcon(typeConfig.message_type)
-                  return (
-                    <div
-                      key={typeConfig.message_type}
-                      className={`
-                        bg-gray-800 rounded-lg p-4 border transition-all duration-200
-                        ${typeConfig.enabled 
-                          ? 'border-green-500/30 bg-green-500/5' 
-                          : 'border-red-500/30 bg-red-500/5'
-                        }
-                      `}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <IconComponent className={`w-6 h-6 ${typeConfig.enabled ? 'text-green-400' : 'text-red-400'}`} />
-                        {typeConfig.enabled ? (
-                          <CheckCircleIcon className="w-5 h-5 text-green-400" />
-                        ) : (
-                          <XCircleIcon className="w-5 h-5 text-red-400" />
-                        )}
-                      </div>
-                      <h3 className="font-semibold text-white mb-1">
-                        {formatMessageType(typeConfig.message_type)}
-                      </h3>
-                      <p className="text-xs text-gray-400 mb-2">
-                        {typeConfig.description.slice(0, 60)}...
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className={`
-                          text-xs px-2 py-1 rounded-full border
-                          ${getRarityColor(typeConfig.default_rarity)}
-                        `}>
-                          {typeConfig.default_rarity}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {typeConfig.frequency}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-            </div>
-          )}
-
-          {activeTab === 'configuration' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Message Type Configuration</h3>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={savePendingChanges}
-                    disabled={isLoading || Object.keys(pendingChanges).length === 0}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {isLoading ? 'Saving...' : `Save Changes ${Object.keys(pendingChanges).length > 0 ? `(${Object.keys(pendingChanges).length})` : ''}`}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {config?.message_type_configs.map((typeConfig) => {
-                  const IconComponent = getMessageTypeIcon(typeConfig.message_type)
-                  const hasPendingChanges = pendingChanges[typeConfig.message_type]
-                  
-                  return (
-                    <div
-                      key={typeConfig.message_type}
-                      className={`
-                        bg-gray-800 rounded-lg p-6 border transition-all duration-200
-                        ${hasPendingChanges ? 'border-yellow-400/50 bg-yellow-400/5' : 'border-gray-700'}
-                      `}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <IconComponent className="w-8 h-8 text-purple-400" />
-                          <div>
-                            <h4 className="text-lg font-semibold text-white">
-                              {formatMessageType(typeConfig.message_type)}
-                            </h4>
-                            <p className="text-sm text-gray-400">
-                              {typeConfig.description}
-                            </p>
-                          </div>
-                        </div>
-                        {hasPendingChanges && (
-                          <span className="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded">
-                            Modified
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Enable/Disable */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Status
-                          </label>
-                          <button
-                            onClick={() => handleMessageTypeToggle(typeConfig.message_type)}
-                            disabled={isLoading}
-                            className={`
-                              flex items-center gap-2 px-4 py-2 rounded-lg border transition-all
-                              ${typeConfig.enabled 
-                                ? 'bg-green-500/10 border-green-500/30 text-green-400' 
-                                : 'bg-red-500/10 border-red-500/30 text-red-400'
-                              }
-                              ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-opacity-20'}
-                            `}
-                          >
-                            {typeConfig.enabled ? (
-                              <>
-                                <EyeIcon className="w-4 h-4" />
-                                Enabled
-                              </>
-                            ) : (
-                              <>
-                                <EyeSlashIcon className="w-4 h-4" />
-                                Disabled
-                              </>
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Default Rarity */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Default Rarity
-                          </label>
-                          <div className="flex gap-2">
-                            {(['common', 'rare', 'legendary'] as SystemMessageRarity[]).map((rarity) => (
-                              <button
-                                key={rarity}
-                                onClick={() => handleRarityChange(typeConfig.message_type, rarity)}
-                                disabled={isLoading}
-                                className={`
-                                  px-3 py-2 text-xs rounded-lg border transition-all
-                                  ${typeConfig.default_rarity === rarity
-                                    ? getRarityColor(rarity)
-                                    : 'text-gray-400 bg-gray-700 border-gray-600 hover:bg-gray-600'
-                                  }
-                                `}
-                              >
-                                {rarity}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Test Message */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Test Message
-                          </label>
-                          <Button
-                            onClick={() => sendTestMessage(typeConfig.message_type)}
-                            disabled={isLoading || !typeConfig.enabled || !config?.is_globally_enabled}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
-                          >
-                            <PlayIcon className="w-4 h-4" />
-                            Send Test
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Additional Info */}
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>
-                            Automation: {typeConfig.can_be_automated ? 'Yes' : 'No'}
-                          </span>
-                          <span>
-                            Frequency: {typeConfig.frequency}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'statistics' && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white">System Message Statistics</h3>
+          <div className="space-y-4">
+            {/* Message Type Cards */}
+            {messageConfigs.map((typeConfig) => {
+              const IconComponent = getMessageTypeIcon(typeConfig.message_type)
+              const isExpanded = expandedCard === typeConfig.message_type
               
-              {stats ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Total Messages */}
-                  <div className="bg-gray-800 rounded-lg p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <ChartBarIcon className="w-8 h-8 text-blue-400" />
-                      <div>
-                        <h4 className="font-semibold text-white">Total Messages</h4>
-                        <p className="text-sm text-gray-400">All time</p>
+              return (
+                <div
+                  key={typeConfig.message_type}
+                  className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden transition-all duration-200 hover:border-purple-500/30"
+                >
+                  {/* Card Header - Always Visible */}
+                  <div 
+                    className="p-6 cursor-pointer"
+                    onClick={() => setExpandedCard(isExpanded ? null : typeConfig.message_type)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <IconComponent className="w-8 h-8 text-purple-400" />
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">
+                            {formatMessageType(typeConfig.message_type)}
+                          </h3>
+                          <p className="text-sm text-gray-400 mt-1">
+                            {typeConfig.description}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {/* Status Indicator */}
+                        <div className="flex items-center gap-2">
+                          {typeConfig.enabled ? (
+                            <>
+                              <CheckCircleIcon className="w-5 h-5 text-green-400" />
+                              <span className="text-sm text-green-400">Enabled</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircleIcon className="w-5 h-5 text-red-400" />
+                              <span className="text-sm text-red-400">Disabled</span>
+                            </>
+                          )}
+                        </div>
+                        {/* Expand/Collapse Icon */}
+                        {isExpanded ? (
+                          <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                        )}
                       </div>
                     </div>
-                    <div className="text-3xl font-bold text-white">
-                      {stats.total_messages.toLocaleString()}
-                    </div>
                   </div>
 
-                  {/* Messages by Type */}
-                  <div className="bg-gray-800 rounded-lg p-6">
-                    <h4 className="font-semibold text-white mb-4">By Message Type</h4>
-                    <div className="space-y-2">
-                      {Object.entries(stats.messages_by_type).map(([type, count]) => (
-                        <div key={type} className="flex justify-between">
-                          <span className="text-sm text-gray-400">
-                            {formatMessageType(type as SystemMessageType)}
-                          </span>
-                          <span className="text-sm text-white font-medium">
-                            {count}
-                          </span>
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-700 p-6 bg-gray-800/50">
+                      {typeConfig.message_type === 'daily_summary' && (
+                        <div className="space-y-6">
+                          <h4 className="text-md font-semibold text-white mb-4">Daily Summary Configuration</h4>
+                          
+                          {dailySummaryConfig ? (
+                            <div className="space-y-6">
+                              {/* Content Sections */}
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-300 mb-3">Content Elements</h5>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={dailySummaryConfig.include_commitment_rate}
+                                      onChange={(e) => updateDailySummaryConfig('include_commitment_rate', e.target.checked)}
+                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                    />
+                                    <div>
+                                      <div className="text-sm font-medium text-white">Commitment Rate</div>
+                                      <div className="text-xs text-gray-400">Show daily commitment percentage</div>
+                                    </div>
+                                  </label>
+
+                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={dailySummaryConfig.include_top_performer}
+                                      onChange={(e) => updateDailySummaryConfig('include_top_performer', e.target.checked)}
+                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                    />
+                                    <div>
+                                      <div className="text-sm font-medium text-white">Top Performer</div>
+                                      <div className="text-xs text-gray-400">Highlight best performing member</div>
+                                    </div>
+                                  </label>
+
+                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={dailySummaryConfig.include_member_count}
+                                      onChange={(e) => updateDailySummaryConfig('include_member_count', e.target.checked)}
+                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                    />
+                                    <div>
+                                      <div className="text-sm font-medium text-white">Member Count</div>
+                                      <div className="text-xs text-gray-400">Show total active members</div>
+                                    </div>
+                                  </label>
+
+                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={dailySummaryConfig.include_motivational_message}
+                                      onChange={(e) => updateDailySummaryConfig('include_motivational_message', e.target.checked)}
+                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                    />
+                                    <div>
+                                      <div className="text-sm font-medium text-white">Motivational Message</div>
+                                      <div className="text-xs text-gray-400">Include inspiring quotes</div>
+                                    </div>
+                                  </label>
+
+                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={dailySummaryConfig.include_streak_info}
+                                      onChange={(e) => updateDailySummaryConfig('include_streak_info', e.target.checked)}
+                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                    />
+                                    <div>
+                                      <div className="text-sm font-medium text-white">Streak Information</div>
+                                      <div className="text-xs text-gray-400">Show current group streak</div>
+                                    </div>
+                                  </label>
+
+                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      checked={dailySummaryConfig.include_weekly_progress}
+                                      onChange={(e) => updateDailySummaryConfig('include_weekly_progress', e.target.checked)}
+                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                    />
+                                    <div>
+                                      <div className="text-sm font-medium text-white">Weekly Progress</div>
+                                      <div className="text-xs text-gray-400">Show week-over-week trends</div>
+                                    </div>
+                                  </label>
+                                </div>
+                              </div>
+
+                              {/* Timing Settings */}
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-300 mb-3">Timing & Schedule</h5>
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                      Send Time
+                                    </label>
+                                    <input
+                                      type="time"
+                                      value={dailySummaryConfig.send_time}
+                                      onChange={(e) => updateDailySummaryConfig('send_time', e.target.value)}
+                                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                      Timezone
+                                    </label>
+                                    <select
+                                      value={dailySummaryConfig.timezone}
+                                      onChange={(e) => updateDailySummaryConfig('timezone', e.target.value)}
+                                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                      <option value="UTC">UTC</option>
+                                      <option value="America/New_York">Eastern Time</option>
+                                      <option value="America/Chicago">Central Time</option>
+                                      <option value="America/Denver">Mountain Time</option>
+                                      <option value="America/Los_Angeles">Pacific Time</option>
+                                      <option value="Europe/London">London</option>
+                                      <option value="Europe/Paris">Paris/Berlin</option>
+                                      <option value="Asia/Tokyo">Tokyo</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Days of Week */}
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-300 mb-3">Days of Week</h5>
+                                <div className="grid grid-cols-7 gap-2">
+                                  {[
+                                    { num: 1, name: 'Mon' },
+                                    { num: 2, name: 'Tue' },
+                                    { num: 3, name: 'Wed' },
+                                    { num: 4, name: 'Thu' },
+                                    { num: 5, name: 'Fri' },
+                                    { num: 6, name: 'Sat' },
+                                    { num: 7, name: 'Sun' }
+                                  ].map((day) => (
+                                    <label
+                                      key={day.num}
+                                      className={`flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors ${
+                                        dailySummaryConfig.send_days.includes(day.num)
+                                          ? 'bg-purple-600 text-white'
+                                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={dailySummaryConfig.send_days.includes(day.num)}
+                                        onChange={(e) => {
+                                          const newDays = e.target.checked
+                                            ? [...dailySummaryConfig.send_days, day.num]
+                                            : dailySummaryConfig.send_days.filter(d => d !== day.num)
+                                          updateDailySummaryConfig('send_days', newDays)
+                                        }}
+                                        className="sr-only"
+                                      />
+                                      <span className="text-xs font-medium">{day.name}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Summary Status */}
+                              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                                <div>
+                                  <div className="text-sm font-medium text-white">Daily Summary Status</div>
+                                  <div className="text-xs text-gray-400">
+                                    {dailySummaryConfig.enabled ? 'Automated daily summaries are active' : 'Daily summaries are disabled'}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => updateDailySummaryConfig('enabled', !dailySummaryConfig.enabled)}
+                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                    dailySummaryConfig.enabled ? 'bg-green-600' : 'bg-gray-600'
+                                  }`}
+                                >
+                                  <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                      dailySummaryConfig.enabled ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-gray-400">
+                              Loading daily summary configuration...
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      )}
 
-                  {/* Messages by Rarity */}
-                  <div className="bg-gray-800 rounded-lg p-6">
-                    <h4 className="font-semibold text-white mb-4">By Rarity</h4>
-                    <div className="space-y-2">
-                      {Object.entries(stats.messages_by_rarity).map(([rarity, count]) => (
-                        <div key={rarity} className="flex justify-between">
-                          <span className={`text-sm font-medium ${
-                            rarity === 'legendary' ? 'text-yellow-400' :
-                            rarity === 'rare' ? 'text-purple-400' : 'text-blue-400'
-                          }`}>
-                            {rarity}
-                          </span>
-                          <span className="text-sm text-white font-medium">
-                            {count}
-                          </span>
+                      {typeConfig.message_type === 'milestone' && (
+                        <div className="space-y-6">
+                          <h4 className="text-md font-semibold text-white mb-4">Milestone Configuration</h4>
+                          
+                          {milestoneConfigs.length > 0 ? (
+                            <div className="space-y-4">
+                              {/* Milestone Types */}
+                              {['pot_amount', 'group_streak', 'total_points', 'member_count'].map((type) => {
+                                const typeMilestones = milestoneConfigs.filter(m => m.milestone_type === type)
+                                const typeTitle = type.split('_').map(word => 
+                                  word.charAt(0).toUpperCase() + word.slice(1)
+                                ).join(' ')
+                                
+                                return (
+                                  <div key={type} className="bg-gray-700 rounded-lg p-4">
+                                    <h5 className="text-sm font-medium text-white mb-3">{typeTitle} Milestones</h5>
+                                    <div className="space-y-2">
+                                      {typeMilestones.map((milestone) => (
+                                        <div key={milestone.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <button
+                                              onClick={() => updateMilestoneEnabled(milestone.id, !milestone.enabled)}
+                                              className={`w-4 h-4 rounded border-2 transition-colors ${
+                                                milestone.enabled 
+                                                  ? 'bg-green-500 border-green-500' 
+                                                  : 'border-gray-500 hover:border-gray-400'
+                                              }`}
+                                            >
+                                              {milestone.enabled && (
+                                                <CheckCircleIcon className="w-3 h-3 text-white" />
+                                              )}
+                                            </button>
+                                            <div>
+                                              <div className="text-sm font-medium text-white">
+                                                {milestone.milestone_name}
+                                              </div>
+                                              <div className="text-xs text-gray-400">
+                                                {milestone.description || `Reach ${milestone.threshold_value}`}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <span className={`text-xs px-2 py-1 rounded-full border ${getRarityColor(milestone.rarity)}`}>
+                                              {milestone.rarity}
+                                            </span>
+                                            <span className="text-xs text-gray-400">
+                                              {type === 'pot_amount' && '€'}
+                                              {milestone.threshold_value.toLocaleString()}
+                                              {type === 'group_streak' && ' days'}
+                                              {type === 'total_points' && ' pts'}
+                                              {type === 'member_count' && ' members'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                              
+                              {/* Overall Milestone Status */}
+                              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg mt-6">
+                                <div>
+                                  <div className="text-sm font-medium text-white">Milestone Notifications</div>
+                                  <div className="text-xs text-gray-400">
+                                    {typeConfig.enabled ? 'Milestone notifications are active' : 'Milestone notifications are disabled'}
+                                  </div>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {milestoneConfigs.filter(m => m.enabled).length} of {milestoneConfigs.length} milestones enabled
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-gray-400">
+                              Loading milestone configuration...
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      )}
 
-                  {/* Recent Activity */}
-                  {stats.recent_activity.length > 0 && (
-                    <div className="bg-gray-800 rounded-lg p-6 md:col-span-2 lg:col-span-3">
-                      <h4 className="font-semibold text-white mb-4">Recent Activity (Last 7 Days)</h4>
-                      <div className="space-y-2">
-                        {stats.recent_activity.map((activity: any, index: number) => (
-                          <div key={index} className="flex justify-between">
-                            <span className="text-sm text-gray-400">
-                              {new Date(activity.date).toLocaleDateString()}
-                            </span>
-                            <span className="text-sm text-white font-medium">
-                              {activity.count} messages
+                      {typeConfig.message_type === 'developer_note' && (
+                        <div className="space-y-6">
+                          <h4 className="text-md font-semibold text-white mb-4">Send Developer Note</h4>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Message Content
+                              </label>
+                              <textarea
+                                value={developerNote}
+                                onChange={(e) => setDeveloperNote(e.target.value)}
+                                placeholder="Enter your developer note message..."
+                                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                rows={4}
+                              />
+                            </div>
+                            <div className="flex justify-end">
+                              <Button
+                                onClick={sendDeveloperNote}
+                                disabled={sendingMessage || !developerNote.trim() || !typeConfig.enabled}
+                                className="bg-purple-600 hover:bg-purple-700"
+                              >
+                                {sendingMessage ? 'Sending...' : 'Send Developer Note'}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {typeConfig.message_type === 'public_message' && (
+                        <div className="space-y-6">
+                          <h4 className="text-md font-semibold text-white mb-4">Send Public Message</h4>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Message Content
+                              </label>
+                              <textarea
+                                value={publicMessage}
+                                onChange={(e) => setPublicMessage(e.target.value)}
+                                placeholder="Enter your public announcement message..."
+                                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                rows={4}
+                              />
+                            </div>
+                            <div className="flex justify-end">
+                              <Button
+                                onClick={sendPublicMessage}
+                                disabled={sendingMessage || !publicMessage.trim() || !typeConfig.enabled}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                {sendingMessage ? 'Sending...' : 'Send to All Groups'}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Common Controls */}
+                      <div className="mt-6 pt-6 border-t border-gray-700">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <Button
+                              onClick={() => toggleMessageType(typeConfig.message_type)}
+                              disabled={isLoading}
+                              variant={typeConfig.enabled ? "destructive" : "default"}
+                              size="sm"
+                            >
+                              {typeConfig.enabled ? 'Disable' : 'Enable'}
+                            </Button>
+                            <span className={`text-xs px-2 py-1 rounded-full border ${getRarityColor(typeConfig.default_rarity)}`}>
+                              {typeConfig.default_rarity} rarity
                             </span>
                           </div>
-                        ))}
+                          <div className="text-xs text-gray-500">
+                            {typeConfig.frequency} • {typeConfig.can_be_automated ? 'Automated' : 'Manual'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400">
-                  Loading statistics...
-                </div>
-              )}
-            </div>
-          )}
+              )
+            })}
+          </div>
         </div>
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-700 bg-gray-800/50">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-400">
-              {config && (
-                <>
-                  System messages are {config.is_globally_enabled ? 'enabled' : 'disabled'} globally
-                  {Object.keys(pendingChanges).length > 0 && (
-                    <span className="ml-2 text-yellow-400">
-                      • {Object.keys(pendingChanges).length} unsaved changes
-                    </span>
-                  )}
-                </>
-              )}
+              Click on any message type above to configure its settings
             </div>
             <Button variant="outline" onClick={onClose}>
               Close
