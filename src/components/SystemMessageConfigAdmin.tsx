@@ -289,159 +289,160 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                     <div className="pt-8 space-y-8">
                       {typeConfig.message_type === 'daily_summary' && (
                         <div className="space-y-8">
-                          {/* Daily Summaries Section */}
-                          <div>
-                            <h3 className="text-xl font-bold text-white mb-4">Daily Summaries</h3>
-                          
                           {dailySummaryConfig ? (
-                            <div className="space-y-6">
-                            <div className="grid grid-cols-3 gap-6">
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={dailySummaryConfig.include_commitment_rate}
-                                  onChange={(e) => updateDailySummaryConfig('include_commitment_rate', e.target.checked)}
-                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                />
-                                <div>
-                                  <div className="text-base font-medium text-white">Commitment Rate</div>
-                                  <div className="text-sm text-gray-400">Show daily commitment percentage</div>
-                                </div>
-                              </label>
-
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={dailySummaryConfig.include_top_performer}
-                                  onChange={(e) => updateDailySummaryConfig('include_top_performer', e.target.checked)}
-                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                />
-                                <div>
-                                  <div className="text-base font-medium text-white">Top Performer</div>
-                                  <div className="text-sm text-gray-400">Highlight best performing member</div>
-                                </div>
-                              </label>
-
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={dailySummaryConfig.include_member_count}
-                                  onChange={(e) => updateDailySummaryConfig('include_member_count', e.target.checked)}
-                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                />
-                                <div>
-                                  <div className="text-base font-medium text-white">Member Count</div>
-                                  <div className="text-sm text-gray-400">Show total active members</div>
-                                </div>
-                              </label>
-
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={dailySummaryConfig.include_motivational_message}
-                                  onChange={(e) => updateDailySummaryConfig('include_motivational_message', e.target.checked)}
-                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                />
-                                <div>
-                                  <div className="text-base font-medium text-white">Motivational Message</div>
-                                  <div className="text-sm text-gray-400">Include inspiring quotes</div>
-                                </div>
-                              </label>
-
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={dailySummaryConfig.include_streak_info}
-                                  onChange={(e) => updateDailySummaryConfig('include_streak_info', e.target.checked)}
-                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                />
-                                <div>
-                                  <div className="text-base font-medium text-white">Streak Information</div>
-                                  <div className="text-sm text-gray-400">Show current group streak</div>
-                                </div>
-                              </label>
-
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={dailySummaryConfig.include_weekly_progress}
-                                  onChange={(e) => updateDailySummaryConfig('include_weekly_progress', e.target.checked)}
-                                  className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
-                                />
-                                <div>
-                                  <div className="text-base font-medium text-white">Weekly Progress</div>
-                                  <div className="text-sm text-gray-400">Show week-over-week trends</div>
-                                </div>
-                              </label>
-                            </div>
-
-                            <div className="grid grid-cols-4 gap-6">
+                            <div className="space-y-8">
+                              {/* Daily Summaries Section */}
                               <div>
-                                <label className="block text-base font-medium text-white mb-2">Send Time</label>
-                                <input
-                                  type="time"
-                                  value={dailySummaryConfig.send_time}
-                                  onChange={(e) => updateDailySummaryConfig('send_time', e.target.value)}
-                                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-base font-medium text-white mb-2">Timezone</label>
-                                <select
-                                  value={dailySummaryConfig.timezone}
-                                  onChange={(e) => updateDailySummaryConfig('timezone', e.target.value)}
-                                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                  <option value="UTC">UTC</option>
-                                  <option value="America/New_York">Eastern Time</option>
-                                  <option value="Europe/London">London</option>
-                                  <option value="Europe/Paris">Paris/Berlin</option>
-                                </select>
-                              </div>
-                              <div className="col-span-2">
-                                <label className="block text-base font-medium text-white mb-2">Active Days</label>
-                                <div className="grid grid-cols-7 gap-2">
-                                  {[
-                                    { num: 1, short: 'Mon' },
-                                    { num: 2, short: 'Tue' },
-                                    { num: 3, short: 'Wed' },
-                                    { num: 4, short: 'Thu' },
-                                    { num: 5, short: 'Fri' },
-                                    { num: 6, short: 'Sat' },
-                                    { num: 7, short: 'Sun' }
-                                  ].map((day) => (
-                                    <label
-                                      key={day.num}
-                                      className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
-                                        dailySummaryConfig.send_days.includes(day.num)
-                                          ? 'bg-blue-600 text-white'
-                                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                      }`}
-                                    >
+                                <h3 className="text-xl font-bold text-white mb-4">Daily Summaries</h3>
+                                <div className="space-y-6">
+                                  <div className="grid grid-cols-3 gap-6">
+                                    <label className="flex items-center gap-3 cursor-pointer">
                                       <input
                                         type="checkbox"
-                                        checked={dailySummaryConfig.send_days.includes(day.num)}
-                                        onChange={(e) => {
-                                          const newDays = e.target.checked
-                                            ? [...dailySummaryConfig.send_days, day.num]
-                                            : dailySummaryConfig.send_days.filter(d => d !== day.num)
-                                          updateDailySummaryConfig('send_days', newDays)
-                                        }}
-                                        className="sr-only"
+                                        checked={dailySummaryConfig.include_commitment_rate}
+                                        onChange={(e) => updateDailySummaryConfig('include_commitment_rate', e.target.checked)}
+                                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
                                       />
-                                      <span className="text-sm font-medium">{day.short}</span>
+                                      <div>
+                                        <div className="text-base font-medium text-white">Commitment Rate</div>
+                                        <div className="text-sm text-gray-400">Show daily commitment percentage</div>
+                                      </div>
                                     </label>
-                                  ))}
+
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={dailySummaryConfig.include_top_performer}
+                                        onChange={(e) => updateDailySummaryConfig('include_top_performer', e.target.checked)}
+                                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                      />
+                                      <div>
+                                        <div className="text-base font-medium text-white">Top Performer</div>
+                                        <div className="text-sm text-gray-400">Highlight best performing member</div>
+                                      </div>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={dailySummaryConfig.include_member_count}
+                                        onChange={(e) => updateDailySummaryConfig('include_member_count', e.target.checked)}
+                                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                      />
+                                      <div>
+                                        <div className="text-base font-medium text-white">Member Count</div>
+                                        <div className="text-sm text-gray-400">Show total active members</div>
+                                      </div>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={dailySummaryConfig.include_motivational_message}
+                                        onChange={(e) => updateDailySummaryConfig('include_motivational_message', e.target.checked)}
+                                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                      />
+                                      <div>
+                                        <div className="text-base font-medium text-white">Motivational Message</div>
+                                        <div className="text-sm text-gray-400">Include inspiring quotes</div>
+                                      </div>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={dailySummaryConfig.include_streak_info}
+                                        onChange={(e) => updateDailySummaryConfig('include_streak_info', e.target.checked)}
+                                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                      />
+                                      <div>
+                                        <div className="text-base font-medium text-white">Streak Information</div>
+                                        <div className="text-sm text-gray-400">Show current group streak</div>
+                                      </div>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={dailySummaryConfig.include_weekly_progress}
+                                        onChange={(e) => updateDailySummaryConfig('include_weekly_progress', e.target.checked)}
+                                        className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500"
+                                      />
+                                      <div>
+                                        <div className="text-base font-medium text-white">Weekly Progress</div>
+                                        <div className="text-sm text-gray-400">Show week-over-week trends</div>
+                                      </div>
+                                    </label>
+                                  </div>
+
+                                  <div className="grid grid-cols-4 gap-6">
+                                    <div>
+                                      <label className="block text-base font-medium text-white mb-2">Send Time</label>
+                                      <input
+                                        type="time"
+                                        value={dailySummaryConfig.send_time}
+                                        onChange={(e) => updateDailySummaryConfig('send_time', e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-base font-medium text-white mb-2">Timezone</label>
+                                      <select
+                                        value={dailySummaryConfig.timezone}
+                                        onChange={(e) => updateDailySummaryConfig('timezone', e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      >
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">Eastern Time</option>
+                                        <option value="Europe/London">London</option>
+                                        <option value="Europe/Paris">Paris/Berlin</option>
+                                      </select>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <label className="block text-base font-medium text-white mb-2">Active Days</label>
+                                      <div className="grid grid-cols-7 gap-2">
+                                        {[
+                                          { num: 1, short: 'Mon' },
+                                          { num: 2, short: 'Tue' },
+                                          { num: 3, short: 'Wed' },
+                                          { num: 4, short: 'Thu' },
+                                          { num: 5, short: 'Fri' },
+                                          { num: 6, short: 'Sat' },
+                                          { num: 7, short: 'Sun' }
+                                        ].map((day) => (
+                                          <label
+                                            key={day.num}
+                                            className={`flex items-center justify-center p-3 rounded-lg cursor-pointer transition-colors ${
+                                              dailySummaryConfig.send_days.includes(day.num)
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                            }`}
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={dailySummaryConfig.send_days.includes(day.num)}
+                                              onChange={(e) => {
+                                                const newDays = e.target.checked
+                                                  ? [...dailySummaryConfig.send_days, day.num]
+                                                  : dailySummaryConfig.send_days.filter(d => d !== day.num)
+                                                updateDailySummaryConfig('send_days', newDays)
+                                              }}
+                                              className="sr-only"
+                                            />
+                                            <span className="text-sm font-medium">{day.short}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
                           
-                          {/* Weekly Summaries Section */}
-                          <div>
-                            <h3 className="text-xl font-bold text-white mb-4">Weekly Summaries</h3>
-                            <div className="text-gray-400 text-lg">Coming soon - weekly recap summaries</div>
-                          </div>
+                              {/* Weekly Summaries Section */}
+                              <div>
+                                <h3 className="text-xl font-bold text-white mb-4">Weekly Summaries</h3>
+                                <div className="text-gray-400 text-lg">Coming soon - weekly recap summaries</div>
+                              </div>
                             </div>
                           ) : (
                             <div className="text-center py-8 text-gray-400">
