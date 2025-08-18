@@ -176,6 +176,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   }
 
   const formatMessageType = (messageType: SystemMessageType) => {
+    if (messageType === 'daily_summary') {
+      return 'Summary'
+    }
     return messageType.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ')
@@ -198,30 +201,27 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <div className="flex items-center gap-3">
-            <SparklesIcon className="w-8 h-8 text-purple-400" />
-            <div>
-              <h2 className="text-xl font-bold text-white">System Message Configuration</h2>
-              <p className="text-sm text-gray-400">Configure and manage system message types</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-gray-400 hover:text-white"
-          >
-            ✕
-          </Button>
+    <div className="fixed inset-0 bg-gray-900 z-50 overflow-hidden flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-8 border-b border-gray-800">
+        <div>
+          <h1 className="text-2xl font-bold text-white">System Message Configuration</h1>
+          <p className="text-gray-400 mt-2">Configure and manage system message types</p>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="text-gray-400 hover:text-white h-10 w-10"
+        >
+          ✕
+        </Button>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-4">
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-6xl mx-auto p-8">
+          <div className="space-y-6">
             {/* Message Type Cards */}
             {messageConfigs.map((typeConfig) => {
               const IconComponent = getMessageTypeIcon(typeConfig.message_type)
@@ -230,45 +230,44 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
               return (
                 <div
                   key={typeConfig.message_type}
-                  className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden transition-all duration-200 hover:border-purple-500/30"
+                  className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden transition-all duration-200 hover:border-gray-600"
                 >
                   {/* Card Header - Always Visible */}
                   <div 
-                    className="p-6 cursor-pointer"
+                    className="p-8 cursor-pointer"
                     onClick={() => setExpandedCard(isExpanded ? null : typeConfig.message_type)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <IconComponent className="w-8 h-8 text-purple-400" />
+                      <div className="flex items-center gap-6">
                         <div>
-                          <h3 className="text-lg font-semibold text-white">
+                          <h2 className="text-xl font-semibold text-white">
                             {formatMessageType(typeConfig.message_type)}
-                          </h3>
-                          <p className="text-sm text-gray-400 mt-1">
+                          </h2>
+                          <p className="text-gray-400 mt-2">
                             {typeConfig.description}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-6">
                         {/* Status Indicator */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           {typeConfig.enabled ? (
                             <>
-                              <CheckCircleIcon className="w-5 h-5 text-green-400" />
-                              <span className="text-sm text-green-400">Enabled</span>
+                              <CheckCircleIcon className="w-6 h-6 text-green-400" />
+                              <span className="text-green-400 font-medium">Enabled</span>
                             </>
                           ) : (
                             <>
-                              <XCircleIcon className="w-5 h-5 text-red-400" />
-                              <span className="text-sm text-red-400">Disabled</span>
+                              <XCircleIcon className="w-6 h-6 text-red-400" />
+                              <span className="text-red-400 font-medium">Disabled</span>
                             </>
                           )}
                         </div>
                         {/* Expand/Collapse Icon */}
                         {isExpanded ? (
-                          <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+                          <ChevronUpIcon className="w-6 h-6 text-gray-400" />
                         ) : (
-                          <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                          <ChevronDownIcon className="w-6 h-6 text-gray-400" />
                         )}
                       </div>
                     </div>
@@ -276,92 +275,95 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
 
                   {/* Expanded Content */}
                   {isExpanded && (
-                    <div className="border-t border-gray-700 p-6 bg-gray-800/50">
+                    <div className="border-t border-gray-700 p-8 bg-gray-800/50">
                       {typeConfig.message_type === 'daily_summary' && (
-                        <div className="space-y-6">
-                          <h4 className="text-md font-semibold text-white mb-4">Daily Summary Configuration</h4>
+                        <div className="space-y-8">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">Summary Configuration</h3>
+                            <p className="text-gray-400">Configure automated summaries for groups including daily, weekly, and milestone recaps</p>
+                          </div>
                           
                           {dailySummaryConfig ? (
                             <div className="space-y-6">
                               {/* Content Sections */}
                               <div>
-                                <h5 className="text-sm font-medium text-gray-300 mb-3">Content Elements</h5>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                <h4 className="text-lg font-medium text-white mb-6">Content Elements</h4>
+                                <div className="grid grid-cols-2 gap-6">
+                                  <label className="flex items-start gap-4 p-6 bg-gray-700 rounded-xl cursor-pointer hover:bg-gray-600 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={dailySummaryConfig.include_commitment_rate}
                                       onChange={(e) => updateDailySummaryConfig('include_commitment_rate', e.target.checked)}
-                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                      className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 mt-1"
                                     />
                                     <div>
-                                      <div className="text-sm font-medium text-white">Commitment Rate</div>
-                                      <div className="text-xs text-gray-400">Show daily commitment percentage</div>
+                                      <div className="text-base font-medium text-white">Commitment Rate</div>
+                                      <div className="text-sm text-gray-400 mt-1">Show daily commitment percentage and group performance</div>
                                     </div>
                                   </label>
 
-                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                  <label className="flex items-start gap-4 p-6 bg-gray-700 rounded-xl cursor-pointer hover:bg-gray-600 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={dailySummaryConfig.include_top_performer}
                                       onChange={(e) => updateDailySummaryConfig('include_top_performer', e.target.checked)}
-                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                      className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 mt-1"
                                     />
                                     <div>
-                                      <div className="text-sm font-medium text-white">Top Performer</div>
-                                      <div className="text-xs text-gray-400">Highlight best performing member</div>
+                                      <div className="text-base font-medium text-white">Top Performer</div>
+                                      <div className="text-sm text-gray-400 mt-1">Highlight best performing member and celebrate achievements</div>
                                     </div>
                                   </label>
 
-                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                  <label className="flex items-start gap-4 p-6 bg-gray-700 rounded-xl cursor-pointer hover:bg-gray-600 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={dailySummaryConfig.include_member_count}
                                       onChange={(e) => updateDailySummaryConfig('include_member_count', e.target.checked)}
-                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                      className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 mt-1"
                                     />
                                     <div>
-                                      <div className="text-sm font-medium text-white">Member Count</div>
-                                      <div className="text-xs text-gray-400">Show total active members</div>
+                                      <div className="text-base font-medium text-white">Member Count</div>
+                                      <div className="text-sm text-gray-400 mt-1">Show total active members and participation stats</div>
                                     </div>
                                   </label>
 
-                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                  <label className="flex items-start gap-4 p-6 bg-gray-700 rounded-xl cursor-pointer hover:bg-gray-600 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={dailySummaryConfig.include_motivational_message}
                                       onChange={(e) => updateDailySummaryConfig('include_motivational_message', e.target.checked)}
-                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                      className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 mt-1"
                                     />
                                     <div>
-                                      <div className="text-sm font-medium text-white">Motivational Message</div>
-                                      <div className="text-xs text-gray-400">Include inspiring quotes</div>
+                                      <div className="text-base font-medium text-white">Motivational Message</div>
+                                      <div className="text-sm text-gray-400 mt-1">Include inspiring quotes and encouragement</div>
                                     </div>
                                   </label>
 
-                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                  <label className="flex items-start gap-4 p-6 bg-gray-700 rounded-xl cursor-pointer hover:bg-gray-600 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={dailySummaryConfig.include_streak_info}
                                       onChange={(e) => updateDailySummaryConfig('include_streak_info', e.target.checked)}
-                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                      className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 mt-1"
                                     />
                                     <div>
-                                      <div className="text-sm font-medium text-white">Streak Information</div>
-                                      <div className="text-xs text-gray-400">Show current group streak</div>
+                                      <div className="text-base font-medium text-white">Streak Information</div>
+                                      <div className="text-sm text-gray-400 mt-1">Show current group streak and streak milestones</div>
                                     </div>
                                   </label>
 
-                                  <label className="flex items-center gap-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors">
+                                  <label className="flex items-start gap-4 p-6 bg-gray-700 rounded-xl cursor-pointer hover:bg-gray-600 transition-colors">
                                     <input
                                       type="checkbox"
                                       checked={dailySummaryConfig.include_weekly_progress}
                                       onChange={(e) => updateDailySummaryConfig('include_weekly_progress', e.target.checked)}
-                                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                                      className="w-5 h-5 text-blue-600 bg-gray-600 border-gray-500 rounded focus:ring-blue-500 mt-1"
                                     />
                                     <div>
-                                      <div className="text-sm font-medium text-white">Weekly Progress</div>
-                                      <div className="text-xs text-gray-400">Show week-over-week trends</div>
+                                      <div className="text-base font-medium text-white">Weekly Progress</div>
+                                      <div className="text-sm text-gray-400 mt-1">Show week-over-week trends and improvements</div>
                                     </div>
                                   </label>
                                 </div>
@@ -369,28 +371,29 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
 
                               {/* Timing Settings */}
                               <div>
-                                <h5 className="text-sm font-medium text-gray-300 mb-3">Timing & Schedule</h5>
-                                <div className="grid grid-cols-2 gap-6">
+                                <h4 className="text-lg font-medium text-white mb-6">Timing & Schedule</h4>
+                                <div className="grid grid-cols-2 gap-8">
                                   <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-base font-medium text-white mb-3">
                                       Send Time
                                     </label>
                                     <input
                                       type="time"
                                       value={dailySummaryConfig.send_time}
                                       onChange={(e) => updateDailySummaryConfig('send_time', e.target.value)}
-                                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
+                                    <p className="text-sm text-gray-400 mt-2">Time when summaries are automatically sent</p>
                                   </div>
 
                                   <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    <label className="block text-base font-medium text-white mb-3">
                                       Timezone
                                     </label>
                                     <select
                                       value={dailySummaryConfig.timezone}
                                       onChange={(e) => updateDailySummaryConfig('timezone', e.target.value)}
-                                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     >
                                       <option value="UTC">UTC</option>
                                       <option value="America/New_York">Eastern Time</option>
@@ -401,30 +404,32 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                       <option value="Europe/Paris">Paris/Berlin</option>
                                       <option value="Asia/Tokyo">Tokyo</option>
                                     </select>
+                                    <p className="text-sm text-gray-400 mt-2">Timezone for sending summaries</p>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Days of Week */}
                               <div>
-                                <h5 className="text-sm font-medium text-gray-300 mb-3">Days of Week</h5>
-                                <div className="grid grid-cols-7 gap-2">
+                                <h4 className="text-lg font-medium text-white mb-6">Active Days</h4>
+                                <div className="grid grid-cols-7 gap-4">
                                   {[
-                                    { num: 1, name: 'Mon' },
-                                    { num: 2, name: 'Tue' },
-                                    { num: 3, name: 'Wed' },
-                                    { num: 4, name: 'Thu' },
-                                    { num: 5, name: 'Fri' },
-                                    { num: 6, name: 'Sat' },
-                                    { num: 7, name: 'Sun' }
+                                    { num: 1, name: 'Monday', short: 'Mon' },
+                                    { num: 2, name: 'Tuesday', short: 'Tue' },
+                                    { num: 3, name: 'Wednesday', short: 'Wed' },
+                                    { num: 4, name: 'Thursday', short: 'Thu' },
+                                    { num: 5, name: 'Friday', short: 'Fri' },
+                                    { num: 6, name: 'Saturday', short: 'Sat' },
+                                    { num: 7, name: 'Sunday', short: 'Sun' }
                                   ].map((day) => (
                                     <label
                                       key={day.num}
-                                      className={`flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors ${
+                                      className={`flex flex-col items-center p-4 rounded-xl cursor-pointer transition-colors ${
                                         dailySummaryConfig.send_days.includes(day.num)
-                                          ? 'bg-purple-600 text-white'
+                                          ? 'bg-blue-600 text-white shadow-lg'
                                           : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                       }`}
+                                      title={day.name}
                                     >
                                       <input
                                         type="checkbox"
@@ -437,28 +442,29 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                         }}
                                         className="sr-only"
                                       />
-                                      <span className="text-xs font-medium">{day.name}</span>
+                                      <span className="text-sm font-medium">{day.short}</span>
                                     </label>
                                   ))}
                                 </div>
+                                <p className="text-sm text-gray-400 mt-3">Select which days summaries should be automatically sent</p>
                               </div>
 
                               {/* Summary Status */}
-                              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                              <div className="flex items-center justify-between p-6 bg-gray-700 rounded-xl border border-gray-600">
                                 <div>
-                                  <div className="text-sm font-medium text-white">Daily Summary Status</div>
-                                  <div className="text-xs text-gray-400">
-                                    {dailySummaryConfig.enabled ? 'Automated daily summaries are active' : 'Daily summaries are disabled'}
+                                  <div className="text-base font-medium text-white">Summary Automation</div>
+                                  <div className="text-sm text-gray-400 mt-1">
+                                    {dailySummaryConfig.enabled ? 'Automated summaries are active and will be sent according to the schedule above' : 'Summary automation is disabled'}
                                   </div>
                                 </div>
                                 <button
                                   onClick={() => updateDailySummaryConfig('enabled', !dailySummaryConfig.enabled)}
-                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
                                     dailySummaryConfig.enabled ? 'bg-green-600' : 'bg-gray-600'
                                   }`}
                                 >
                                   <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
                                       dailySummaryConfig.enabled ? 'translate-x-6' : 'translate-x-1'
                                     }`}
                                   />
@@ -474,11 +480,14 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                       )}
 
                       {typeConfig.message_type === 'milestone' && (
-                        <div className="space-y-6">
-                          <h4 className="text-md font-semibold text-white mb-4">Milestone Configuration</h4>
+                        <div className="space-y-8">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">Milestone Configuration</h3>
+                            <p className="text-gray-400">Configure milestone notifications for group achievements and progress markers</p>
+                          </div>
                           
                           {milestoneConfigs.length > 0 ? (
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                               {/* Milestone Types */}
                               {['pot_amount', 'group_streak', 'total_points', 'member_count'].map((type) => {
                                 const typeMilestones = milestoneConfigs.filter(m => m.milestone_type === type)
@@ -487,15 +496,15 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                 ).join(' ')
                                 
                                 return (
-                                  <div key={type} className="bg-gray-700 rounded-lg p-4">
-                                    <h5 className="text-sm font-medium text-white mb-3">{typeTitle} Milestones</h5>
-                                    <div className="space-y-2">
+                                  <div key={type} className="bg-gray-700 rounded-xl p-6 border border-gray-600">
+                                    <h4 className="text-lg font-medium text-white mb-4">{typeTitle} Milestones</h4>
+                                    <div className="space-y-3">
                                       {typeMilestones.map((milestone) => (
-                                        <div key={milestone.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                                          <div className="flex items-center gap-3">
+                                        <div key={milestone.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors">
+                                          <div className="flex items-center gap-4">
                                             <button
                                               onClick={() => updateMilestoneEnabled(milestone.id, !milestone.enabled)}
-                                              className={`w-4 h-4 rounded border-2 transition-colors ${
+                                              className={`w-5 h-5 rounded border-2 transition-colors flex items-center justify-center ${
                                                 milestone.enabled 
                                                   ? 'bg-green-500 border-green-500' 
                                                   : 'border-gray-500 hover:border-gray-400'
@@ -506,19 +515,19 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                               )}
                                             </button>
                                             <div>
-                                              <div className="text-sm font-medium text-white">
+                                              <div className="text-base font-medium text-white">
                                                 {milestone.milestone_name}
                                               </div>
-                                              <div className="text-xs text-gray-400">
+                                              <div className="text-sm text-gray-400 mt-1">
                                                 {milestone.description || `Reach ${milestone.threshold_value}`}
                                               </div>
                                             </div>
                                           </div>
-                                          <div className="flex items-center gap-2">
-                                            <span className={`text-xs px-2 py-1 rounded-full border ${getRarityColor(milestone.rarity)}`}>
+                                          <div className="flex items-center gap-4">
+                                            <span className={`text-sm px-3 py-1 rounded-full border font-medium ${getRarityColor(milestone.rarity)}`}>
                                               {milestone.rarity}
                                             </span>
-                                            <span className="text-xs text-gray-400">
+                                            <span className="text-sm text-gray-400 font-medium min-w-0">
                                               {type === 'pot_amount' && '€'}
                                               {milestone.threshold_value.toLocaleString()}
                                               {type === 'group_streak' && ' days'}
@@ -534,20 +543,23 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                               })}
                               
                               {/* Overall Milestone Status */}
-                              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg mt-6">
+                              <div className="flex items-center justify-between p-6 bg-gray-700 rounded-xl border border-gray-600">
                                 <div>
-                                  <div className="text-sm font-medium text-white">Milestone Notifications</div>
-                                  <div className="text-xs text-gray-400">
-                                    {typeConfig.enabled ? 'Milestone notifications are active' : 'Milestone notifications are disabled'}
+                                  <div className="text-base font-medium text-white">Milestone System Overview</div>
+                                  <div className="text-sm text-gray-400 mt-1">
+                                    {typeConfig.enabled ? 'Milestone notifications are active and will be sent when thresholds are reached' : 'Milestone notifications are disabled'}
                                   </div>
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                  {milestoneConfigs.filter(m => m.enabled).length} of {milestoneConfigs.length} milestones enabled
+                                <div className="text-right">
+                                  <div className="text-lg font-semibold text-white">
+                                    {milestoneConfigs.filter(m => m.enabled).length}/{milestoneConfigs.length}
+                                  </div>
+                                  <div className="text-sm text-gray-400">milestones active</div>
                                 </div>
                               </div>
                             </div>
                           ) : (
-                            <div className="text-center py-8 text-gray-400">
+                            <div className="text-center py-12 text-gray-400">
                               Loading milestone configuration...
                             </div>
                           )}
@@ -555,26 +567,35 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                       )}
 
                       {typeConfig.message_type === 'developer_note' && (
-                        <div className="space-y-6">
-                          <h4 className="text-md font-semibold text-white mb-4">Send Developer Note</h4>
-                          <div className="space-y-4">
+                        <div className="space-y-8">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">Send Developer Note</h3>
+                            <p className="text-gray-400">Send development updates, maintenance notices, or technical information to your group</p>
+                          </div>
+                          
+                          <div className="space-y-6">
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">
+                              <label className="block text-base font-medium text-white mb-3">
                                 Message Content
                               </label>
                               <textarea
                                 value={developerNote}
                                 onChange={(e) => setDeveloperNote(e.target.value)}
                                 placeholder="Enter your developer note message..."
-                                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                rows={4}
+                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                                rows={5}
                               />
+                              <p className="text-sm text-gray-400 mt-2">This message will be sent to your current group with developer note formatting</p>
                             </div>
-                            <div className="flex justify-end">
+                            
+                            <div className="flex justify-between items-center">
+                              <div className="text-sm text-gray-400">
+                                Note: Developer notes are sent with medium priority and appear as system messages
+                              </div>
                               <Button
                                 onClick={sendDeveloperNote}
                                 disabled={sendingMessage || !developerNote.trim() || !typeConfig.enabled}
-                                className="bg-purple-600 hover:bg-purple-700"
+                                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 text-base"
                               >
                                 {sendingMessage ? 'Sending...' : 'Send Developer Note'}
                               </Button>
@@ -584,26 +605,47 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                       )}
 
                       {typeConfig.message_type === 'public_message' && (
-                        <div className="space-y-6">
-                          <h4 className="text-md font-semibold text-white mb-4">Send Public Message</h4>
-                          <div className="space-y-4">
+                        <div className="space-y-8">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">Send Public Message</h3>
+                            <p className="text-gray-400">Send system-wide announcements to all groups simultaneously - use for maintenance notices, platform updates, and important communications</p>
+                          </div>
+                          
+                          <div className="space-y-6">
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Message Content
+                              <label className="block text-base font-medium text-white mb-3">
+                                Announcement Content
                               </label>
                               <textarea
                                 value={publicMessage}
                                 onChange={(e) => setPublicMessage(e.target.value)}
                                 placeholder="Enter your public announcement message..."
-                                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                rows={4}
+                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                                rows={5}
                               />
+                              <p className="text-sm text-gray-400 mt-2">This message will be sent to all groups across the platform</p>
                             </div>
-                            <div className="flex justify-end">
+                            
+                            <div className="p-4 bg-yellow-900/20 border border-yellow-700/50 rounded-xl">
+                              <div className="flex items-start gap-3">
+                                <span className="text-yellow-400 text-xl">⚠️</span>
+                                <div>
+                                  <div className="text-sm font-medium text-yellow-400">Important</div>
+                                  <div className="text-sm text-yellow-300 mt-1">
+                                    This message will be delivered to every group on the platform. Use responsibly for critical announcements only.
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between items-center">
+                              <div className="text-sm text-gray-400">
+                                Public messages appear as system announcements from "System"
+                              </div>
                               <Button
                                 onClick={sendPublicMessage}
                                 disabled={sendingMessage || !publicMessage.trim() || !typeConfig.enabled}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                className="bg-orange-600 hover:bg-orange-700 px-6 py-3 text-base font-medium"
                               >
                                 {sendingMessage ? 'Sending...' : 'Send to All Groups'}
                               </Button>
@@ -613,23 +655,26 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                       )}
 
                       {/* Common Controls */}
-                      <div className="mt-6 pt-6 border-t border-gray-700">
+                      <div className="mt-8 pt-8 border-t border-gray-700">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-6">
                             <Button
                               onClick={() => toggleMessageType(typeConfig.message_type)}
                               disabled={isLoading}
                               variant={typeConfig.enabled ? "destructive" : "default"}
-                              size="sm"
+                              size="lg"
+                              className="px-6 py-3 text-base"
                             >
-                              {typeConfig.enabled ? 'Disable' : 'Enable'}
+                              {typeConfig.enabled ? 'Disable Message Type' : 'Enable Message Type'}
                             </Button>
-                            <span className={`text-xs px-2 py-1 rounded-full border ${getRarityColor(typeConfig.default_rarity)}`}>
-                              {typeConfig.default_rarity} rarity
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {typeConfig.frequency} • {typeConfig.can_be_automated ? 'Automated' : 'Manual'}
+                            <div className="flex items-center gap-3">
+                              <span className={`text-sm px-3 py-2 rounded-full border font-medium ${getRarityColor(typeConfig.default_rarity)}`}>
+                                {typeConfig.default_rarity} rarity
+                              </span>
+                              <span className="text-sm text-gray-400">
+                                {typeConfig.frequency} • {typeConfig.can_be_automated ? 'Automated' : 'Manual'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -638,18 +683,6 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                 </div>
               )
             })}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-700 bg-gray-800/50">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-400">
-              Click on any message type above to configure its settings
-            </div>
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
           </div>
         </div>
       </div>
