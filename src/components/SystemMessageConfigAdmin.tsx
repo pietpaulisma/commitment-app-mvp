@@ -291,7 +291,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
     const success = await SystemMessageConfigService.createDeveloperNote(
       profile.group_id,
       developerMessage.trim(),
-      'medium'
+      'common'
     )
     
     if (success) {
