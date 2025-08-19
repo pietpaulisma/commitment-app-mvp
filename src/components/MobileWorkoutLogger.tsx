@@ -257,6 +257,9 @@ export default function MobileWorkoutLogger() {
 
         if (profile?.group_id) {
           await loadDailyTarget(user.id, profile)
+        } else {
+          // Fallback if no group - set a reasonable default
+          setDailyTarget(1)
         }
       }
 
@@ -341,6 +344,7 @@ export default function MobileWorkoutLogger() {
   async function loadTodaysLogs(userId: string) {
     try {
       const today = new Date().toISOString().split('T')[0]
+      console.log('Loading logs for date:', today, 'user:', userId)
       const { data } = await supabase
         .from('logs')
         .select(`
@@ -351,6 +355,7 @@ export default function MobileWorkoutLogger() {
         .eq('date', today)
         .order('timestamp', { ascending: false })
 
+      console.log('Loaded logs:', data)
       setTodaysLogs(data || [])
       
       // Trigger subtle animation after data loads
@@ -539,16 +544,28 @@ export default function MobileWorkoutLogger() {
     
     const recoveryPoints = getRecoveryPoints()
     
+    console.log('getCappedTotalPoints:', { 
+      todaysLogsLength: todaysLogs.length, 
+      regularPoints, 
+      recoveryPoints, 
+      dailyTarget, 
+      isRecoveryDay 
+    })
+    
     // On recovery days, no cap applies
     if (isRecoveryDay) {
       return regularPoints + recoveryPoints
     }
     
     // Recovery is capped at 25% of daily target (fixed amount)
-    const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+    // Ensure dailyTarget is at least 1 to prevent division issues
+    const effectiveDailyTarget = Math.max(1, dailyTarget)
+    const maxRecoveryAllowed = Math.floor(effectiveDailyTarget * 0.25)
     const effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
     
-    return regularPoints + effectiveRecoveryPoints
+    const total = regularPoints + effectiveRecoveryPoints
+    console.log('getCappedTotalPoints result:', total)
+    return total
   }
 
   const getEffectivePoints = (log: WorkoutLog) => {
@@ -647,13 +664,13 @@ export default function MobileWorkoutLogger() {
                 LOG WORKOUT
               </span>
               <span className="text-xs opacity-75 font-medium">
-                {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}/{dailyTarget} pts
+                {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}/{Math.max(1, dailyTarget)} pts
               </span>
             </div>
             
             <div className="flex flex-col items-end justify-center h-full">
               <span className="text-2xl font-black tracking-tight leading-none">
-                {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / dailyTarget * 100)}%
+                {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / Math.max(1, dailyTarget) * 100)}%
               </span>
             </div>
           </div>
