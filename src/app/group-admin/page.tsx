@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
 import { getDaysSinceStart } from '@/utils/targetCalculation'
+import { SystemMessageService } from '@/services/systemMessages'
 
 type Member = {
   id: string
@@ -60,7 +61,7 @@ export default function GroupAdminDashboard() {
   const [groupSettings, setGroupSettings] = useState<GroupSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [settingsLoading, setSettingsLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'pot'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'pot' | 'chat'>('overview')
   const [editingSettings, setEditingSettings] = useState(false)
   const [settingsForm, setSettingsForm] = useState<Partial<GroupSettings & { start_date?: string }>>({})
   const [potData, setPotData] = useState<any[]>([])
@@ -69,6 +70,12 @@ export default function GroupAdminDashboard() {
   const [editingPot, setEditingPot] = useState<string | null>(null)
   const [adjustmentAmount, setAdjustmentAmount] = useState('')
   const [adjustmentReason, setAdjustmentReason] = useState('')
+  
+  // Chat settings state
+  const [systemSenderName, setSystemSenderName] = useState('Barry')
+  const [originalSenderName, setOriginalSenderName] = useState('Barry')
+  const [chatLoading, setChatLoading] = useState(false)
+  
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -87,6 +94,7 @@ export default function GroupAdminDashboard() {
       loadGroupData()
       loadGroupSettings()
       loadPotData()
+      loadChatSettings()
     }
   }, [isGroupAdmin, isSupremeAdmin, profile])
 
@@ -502,6 +510,45 @@ export default function GroupAdminDashboard() {
     }
   }
 
+  const loadChatSettings = async () => {
+    if (!group?.id) return
+
+    try {
+      setChatLoading(true)
+      const senderName = await SystemMessageService.getSystemSenderName(group.id)
+      setSystemSenderName(senderName)
+      setOriginalSenderName(senderName)
+    } catch (error) {
+      console.error('Error loading chat settings:', error)
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
+  const saveChatSettings = async () => {
+    if (!group?.id || systemSenderName === originalSenderName) return
+
+    try {
+      setChatLoading(true)
+      const success = await SystemMessageService.updateSystemSenderName(group.id, systemSenderName.trim())
+      
+      if (success) {
+        setOriginalSenderName(systemSenderName.trim())
+        alert('Chat settings saved successfully!')
+      } else {
+        alert('Failed to save chat settings')
+        setSystemSenderName(originalSenderName)
+      }
+    } catch (error) {
+      console.error('Error saving chat settings:', error)
+      alert('Failed to save chat settings')
+      setSystemSenderName(originalSenderName)
+    } finally {
+      setChatLoading(false)
+    }
+  }
+
+
   if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -582,6 +629,16 @@ export default function GroupAdminDashboard() {
                     }`}
                   >
                     Pot
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('chat')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'chat'
+                        ? 'border-orange-500 text-orange-500'
+                        : 'border-transparent text-gray-400 hover:text-white hover:border-gray-600'
+                    }`}
+                  >
+                    Chat
                   </button>
                 </nav>
               </div>
@@ -1165,6 +1222,109 @@ export default function GroupAdminDashboard() {
                     )}
                   </div>
                 )}
+              </div>
+            ) : activeTab === 'chat' ? (
+              /* Chat Tab */
+              <div className="bg-gray-900/30 border border-gray-800">
+                <div className="px-6 py-4 border-b border-gray-800">
+                  <h3 className="text-lg font-semibold text-white">Chat Settings</h3>
+                  <p className="text-gray-400 text-sm mt-1">Configure group chat settings and system message sender name</p>
+                </div>
+                
+                <div className="p-6">
+                  {chatLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                      <p className="mt-2 text-gray-400">Loading chat settings...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* System Sender Name */}
+                      <div className="bg-gray-800/50 border border-gray-700 p-6 rounded-lg">
+                        <h4 className="text-lg font-semibold text-white mb-4">System Message Sender</h4>
+                        <p className="text-sm text-gray-400 mb-4">
+                          Customize the name that appears on automated system messages in your group chat.
+                          This includes daily summaries, milestones, and other automated notifications.
+                        </p>
+                        
+                        <div className="max-w-md">
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Sender Name
+                          </label>
+                          <div className="flex gap-3">
+                            <input
+                              type="text"
+                              value={systemSenderName}
+                              onChange={(e) => setSystemSenderName(e.target.value)}
+                              placeholder="Enter sender name (e.g., Barry, Coach, Assistant)"
+                              className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                              maxLength={50}
+                              disabled={chatLoading}
+                            />
+                            <button
+                              onClick={saveChatSettings}
+                              disabled={chatLoading || !systemSenderName.trim() || systemSenderName === originalSenderName}
+                              className="px-6 py-2 bg-orange-600 text-white hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {chatLoading ? 'Saving...' : 'Save'}
+                            </button>
+                          </div>
+                          <div className="text-xs text-gray-400 mt-2">
+                            {systemSenderName.length}/50 characters
+                          </div>
+                        </div>
+                        
+                        {/* Preview */}
+                        <div className="mt-6">
+                          <h5 className="text-sm font-medium text-gray-300 mb-3">Preview</h5>
+                          <div className="bg-gray-900/50 border border-gray-700 p-4 rounded-lg">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm">🤖</span>
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-blue-300">{systemSenderName || 'Barry'}</div>
+                                <div className="text-xs text-gray-400">System Message</div>
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-300 bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                              🌅 **Daily Summary** - {new Date().toDateString()}
+                              <br />
+                              <br />
+                              💪 **Commitment Rate**: 85% (4/5 members)
+                              <br />
+                              🏆 **Top Performer**: TestUser (150 points)
+                              <br />
+                              <br />
+                              ✨ Great commitment from the team!
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      
+                      {/* Information Section */}
+                      <div className="bg-blue-900/20 border border-blue-700/50 p-4 rounded-lg">
+                        <h5 className="text-sm font-medium text-blue-300 mb-2">💡 About System Messages</h5>
+                        <div className="text-sm text-gray-300 space-y-2">
+                          <p>
+                            System messages are automated notifications that keep your group engaged and informed:
+                          </p>
+                          <ul className="list-disc list-inside space-y-1 text-gray-400 ml-4">
+                            <li><strong className="text-white">Daily Summaries:</strong> Automated end-of-day reports showing commitment rates and top performers</li>
+                            <li><strong className="text-white">Milestones:</strong> Celebrations for pot goals, streaks, and group achievements</li>
+                            <li><strong className="text-white">Challenges:</strong> Special group challenges and competitions</li>
+                            <li><strong className="text-white">Developer Notes:</strong> Important announcements and updates</li>
+                          </ul>
+                          <p className="text-xs text-gray-500 mt-3">
+                            All system message types and functionality are controlled by Supreme Admins.
+                            As a Group Admin, you can only customize the sender name that appears on these messages for your group.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : null}
           </div>

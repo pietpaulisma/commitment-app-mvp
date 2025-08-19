@@ -25,12 +25,15 @@ import { MessageCircle, Plus, Send, X, Reply } from 'lucide-react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { MessageComponent } from './MessageComponent'
+import { SystemMessageComponent } from './SystemMessageComponent'
 import { WorkoutSummaryPost } from './WorkoutSummaryPost'
+import { SystemMessage } from '@/types/systemMessages'
+import { SystemMessageService } from '@/services/systemMessages'
 
 type ChatMessage = {
   id: string
   group_id: string
-  user_id: string
+  user_id: string | null
   message: string
   message_type?: 'text' | 'image' | 'workout_completion'
   image_url?: string
@@ -40,6 +43,8 @@ type ChatMessage = {
   user_role?: string
   username?: string
   reactions?: MessageReaction[]
+  is_system_message?: boolean
+  system_message_id?: string
   replyTo?: {
     messageId: string
     userName: string
@@ -197,6 +202,9 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   // Reply states
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
+  // System message states
+  const [systemMessages, setSystemMessages] = useState<{ [messageId: string]: SystemMessage }>({})
+
   // Available emoji reactions
   const emojiOptions: EmojiOption[] = [
     { emoji: '❤️', label: 'heart', icon: HeartIcon, solidIcon: HeartIconSolid },
@@ -254,15 +262,20 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           },
           async (payload) => {
             console.log('Real-time message received:', payload)
-            // Skip if this is our own message (already added optimistically)
-            if (payload.new && payload.new.user_id !== user?.id) {
+            // Skip if this is our own message (already added optimistically) and it's not a system message
+            if (payload.new && (payload.new.user_id !== user?.id || payload.new.is_system_message)) {
               try {
-                // Get user info for the new message
-                const { data: userInfo } = await supabase
-                  .from('profiles')
-                  .select('email, role, username')
-                  .eq('id', payload.new.user_id)
-                  .single()
+                let userInfo = null
+                
+                // Get user info for regular messages
+                if (payload.new.user_id && !payload.new.is_system_message) {
+                  const { data } = await supabase
+                    .from('profiles')
+                    .select('email, role, username')
+                    .eq('id', payload.new.user_id)
+                    .single()
+                  userInfo = data
+                }
 
                 const newMessage: ChatMessage = {
                   id: payload.new.id,
@@ -272,10 +285,17 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                   message_type: payload.new.message_type || 'text',
                   image_url: payload.new.image_url,
                   created_at: payload.new.created_at,
+                  is_system_message: payload.new.is_system_message || false,
+                  system_message_id: payload.new.system_message_id,
                   user_email: userInfo?.email || 'Unknown',
                   user_role: userInfo?.role || 'user',
                   username: userInfo?.username,
                   reactions: []
+                }
+
+                // Load system message data if it's a system message
+                if (newMessage.is_system_message && newMessage.system_message_id) {
+                  await loadSystemMessages([newMessage.system_message_id])
                 }
 
                 setMessages(prev => [...prev, newMessage])
@@ -397,6 +417,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           message_type,
           image_url,
           created_at,
+          is_system_message,
+          system_message_id,
           profiles (email, role, username)
         `)
         .eq('group_id', profile.group_id)
@@ -413,11 +435,16 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         message_type: msg.message_type || 'text',
         image_url: msg.image_url,
         created_at: msg.created_at,
+        is_system_message: msg.is_system_message || false,
+        system_message_id: msg.system_message_id,
         user_email: msg.profiles?.email || 'Unknown',
         user_role: msg.profiles?.role || 'user',
         username: msg.profiles?.username,
         reactions: []
       })) || []
+
+      // Load system message data for system messages
+      await loadSystemMessages(formattedMessages.filter(m => m.is_system_message && m.system_message_id).map(m => m.system_message_id!))
 
       // Load reactions for all messages
       await loadReactions(formattedMessages.map(m => m.id))
@@ -426,6 +453,28 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
       console.error('Error loading messages:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadSystemMessages = async (systemMessageIds: string[]) => {
+    if (systemMessageIds.length === 0) return
+
+    try {
+      const { data: systemMessagesData, error } = await supabase
+        .from('system_messages')
+        .select('*')
+        .in('id', systemMessageIds)
+
+      if (error) throw error
+
+      const systemMessagesMap: { [messageId: string]: SystemMessage } = {}
+      systemMessagesData?.forEach(msg => {
+        systemMessagesMap[msg.id] = msg
+      })
+
+      setSystemMessages(prev => ({ ...prev, ...systemMessagesMap }))
+    } catch (error) {
+      console.error('Error loading system messages:', error)
     }
   }
 
@@ -960,6 +1009,21 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                     {item.day}
                   </div>
                 </div>
+              ) : item.message.is_system_message ? (
+                <SystemMessageComponent
+                  key={item.message.id}
+                  message={item.message}
+                  systemMessageData={item.message.system_message_id ? systemMessages[item.message.system_message_id] : undefined}
+                  currentUser={{ id: user?.id || '', email: profile?.email, username: profile?.username }}
+                  onDelete={profile?.role === 'group_admin' || profile?.role === 'supreme_admin' ? async (messageId: string) => {
+                    const success = await SystemMessageService.deleteSystemMessage(messageId)
+                    if (success) {
+                      loadMessages()
+                    }
+                  } : undefined}
+                  isFirstInGroup={'isFirstInGroup' in item ? item.isFirstInGroup : true}
+                  isLastInGroup={'isLastInGroup' in item ? item.isLastInGroup : true}
+                />
               ) : (
                 <MessageComponent
                   key={item.message.id}
@@ -1071,6 +1135,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             </Button>
           </form>
         </div>
+
     </div>
   )
 }
