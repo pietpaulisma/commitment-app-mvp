@@ -1236,8 +1236,31 @@ export default function RectangularDashboard() {
       // Set up real-time updates
       const interval = setInterval(loadDashboardData, 30000) // Refresh every 30 seconds
       return () => clearInterval(interval)
+    } else if (!authLoading && !profileLoading) {
+      // If auth and profile loading are done but we don't have user or profile, 
+      // something went wrong - redirect to login or stop loading
+      console.warn('Auth/profile loading complete but missing user or profile:', { user: !!user, profile: !!profile })
+      if (!user) {
+        router.push('/login')
+      } else {
+        // User exists but no profile - this shouldn't happen but let's handle it
+        console.error('User exists but no profile found')
+        setLoading(false) // Stop infinite loading
+      }
     }
-  }, [user, profile])
+  }, [user, profile, authLoading, profileLoading, router])
+
+  // Safety timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.error('Dashboard loading timeout reached - stopping loading state')
+        setLoading(false)
+      }
+    }, 15000) // 15 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [loading])
 
   // Only reload member data when weekMode changes (for group status display)
   useEffect(() => {
@@ -2226,7 +2249,15 @@ export default function RectangularDashboard() {
   }
 
   const loadDashboardData = async () => {
-    if (!user || !profile) return
+    if (!user || !profile) {
+      console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
+      return
+    }
+
+    console.log('loadDashboardData: Starting for user', user.email, 'profile:', {
+      group_id: profile.group_id,
+      onboarding_completed: profile.onboarding_completed
+    })
 
     let currentGroupData: any = null
 
@@ -2401,7 +2432,15 @@ export default function RectangularDashboard() {
     )
   }
 
-  if (!user || !profile) {
+  if (!user) {
+    console.log('No user found, redirecting to login')
+    router.push('/login')
+    return null
+  }
+  
+  if (!profile) {
+    console.log('No profile found, redirecting to onboarding')
+    router.push('/onboarding')
     return null
   }
 
