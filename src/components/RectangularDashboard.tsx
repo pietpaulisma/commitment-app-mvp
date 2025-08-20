@@ -1610,26 +1610,26 @@ export default function RectangularDashboard() {
         }
       })
       
-      // Try to load online status if columns exist
+      // Try to load presence data if columns exist
       try {
-        const { data: onlineStatus, error: onlineError } = await supabase
+        const { data: presenceData, error: presenceError } = await supabase
           .from('profiles')
-          .select('id, is_online, last_seen')
+          .select('id, last_seen')
           .eq('group_id', profile.group_id)
         
-        if (!onlineError && onlineStatus) {
-          // Add online status to members
+        if (!presenceError && presenceData) {
+          // Add presence data to members
           membersWithProgress.forEach(member => {
-            const status = onlineStatus.find(s => s.id === member.id)
-            if (status) {
-              member.is_online = status.is_online
-              member.last_seen = status.last_seen
+            const presence = presenceData.find(p => p.id === member.id)
+            if (presence) {
+              member.last_seen = presence.last_seen
+              // Online status will be calculated client-side based on last_seen
             }
           })
         }
-      } catch (onlineError) {
-        console.log('Online status columns not available yet, skipping:', onlineError)
-        // Continue without online status - this is expected if columns don't exist
+      } catch (presenceError) {
+        console.log('Presence columns not available yet, skipping:', presenceError)
+        // Continue without presence data - this is expected if columns don't exist
       }
 
       // Sort by points descending

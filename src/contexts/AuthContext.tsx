@@ -105,83 +105,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Site-wide online tracking
+  // Site-wide presence tracking
   useEffect(() => {
     if (!user) return
 
-    // Update online status when user is authenticated
-    const updateOnlineStatus = async (isOnline: boolean) => {
+    // Update presence with last_seen timestamp only
+    const updatePresence = async () => {
       try {
         await supabase
           .from('profiles')
           .update({ 
-            last_seen: new Date().toISOString(),
-            is_online: isOnline 
+            last_seen: new Date().toISOString()
           })
           .eq('id', user.id)
       } catch (error) {
         // Silently handle missing columns - they may not exist yet
         if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-          console.log('Online status columns not available yet')
+          console.log('Presence columns not available yet')
         } else {
-          console.error('Error updating online status:', error)
+          console.error('Error updating presence:', error)
         }
       }
     }
 
-    // Set user online when they're on the site
-    updateOnlineStatus(true)
+    // Set initial presence
+    updatePresence()
 
-    // Handle browser events to track online status
-    const handleBeforeUnload = () => {
-      // Use sendBeacon for more reliable offline tracking
-      const data = JSON.stringify({
-        user_id: user.id,
-        is_online: false,
-        last_seen: new Date().toISOString()
-      })
-      
-      if (navigator.sendBeacon) {
-        // Note: This would need a proper endpoint, for now just update directly
-        updateOnlineStatus(false)
-      } else {
-        updateOnlineStatus(false)
+    // Handle visibility changes (more reliable than focus/blur)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        updatePresence()
       }
     }
 
-    const handleVisibilityChange = () => {
-      updateOnlineStatus(!document.hidden)
-    }
-
-    const handleFocus = () => {
-      updateOnlineStatus(true)
-    }
-
-    const handleBlur = () => {
-      updateOnlineStatus(false)
+    // Handle page unload (best effort)
+    const handleBeforeUnload = () => {
+      // Use sync request as last resort - not ideal but more reliable than async
+      navigator.sendBeacon && updatePresence()
     }
 
     // Add event listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('beforeunload', handleBeforeUnload)
     window.addEventListener('pagehide', handleBeforeUnload)
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('blur', handleBlur)
 
-    // Heartbeat to keep online status updated
+    // Heartbeat only when page is visible
     const heartbeat = setInterval(() => {
       if (!document.hidden) {
-        updateOnlineStatus(true)
+        updatePresence()
       }
-    }, 30000) // Every 30 seconds
+    }, 60000) // Every 60 seconds (reduced frequency)
 
     return () => {
-      updateOnlineStatus(false)
+      // Clean up event listeners
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('beforeunload', handleBeforeUnload)
       window.removeEventListener('pagehide', handleBeforeUnload)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('blur', handleBlur)
       clearInterval(heartbeat)
     }
   }, [user])

@@ -859,20 +859,19 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     return analyzeMessageGrouping();
   };
 
-  // Online user tracking
-  const updateOnlineStatus = async (isOnline: boolean) => {
+  // Presence tracking (using last_seen only)
+  const updatePresence = async () => {
     if (!user || !profile?.group_id) return;
 
     try {
       await supabase
         .from('profiles')
         .update({ 
-          last_seen: new Date().toISOString(),
-          is_online: isOnline 
+          last_seen: new Date().toISOString()
         })
         .eq('id', user.id);
     } catch (error) {
-      console.error('Error updating online status:', error);
+      console.error('Error updating presence:', error);
     }
   };
 
@@ -880,11 +879,14 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     if (!profile?.group_id) return;
 
     try {
+      // Calculate cutoff time for "online" users (5 minutes ago)
+      const cutoffTime = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      
       const { count } = await supabase
         .from('profiles')
         .select('id', { count: 'exact' })
         .eq('group_id', profile.group_id)
-        .eq('is_online', true);
+        .gte('last_seen', cutoffTime);
       
       setOnlineCount(count || 0);
     } catch (error) {
@@ -892,27 +894,22 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     }
   };
 
-  // Track online status when component mounts/unmounts
+  // Track presence when chat is open
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
-      updateOnlineStatus(true);
+      updatePresence();
       loadOnlineCount();
       
-      // Set user offline when they close the tab/browser
-      const handleBeforeUnload = () => {
-        updateOnlineStatus(false);
-      };
-      
+      // Update presence when visibility changes
       const handleVisibilityChange = () => {
-        updateOnlineStatus(!document.hidden);
+        if (!document.hidden) {
+          updatePresence();
+        }
       };
 
-      window.addEventListener('beforeunload', handleBeforeUnload);
       document.addEventListener('visibilitychange', handleVisibilityChange);
       
       return () => {
-        updateOnlineStatus(false);
-        window.removeEventListener('beforeunload', handleBeforeUnload);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
