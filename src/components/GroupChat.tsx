@@ -367,10 +367,12 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
   useEffect(() => {
     if (messages.length > 0) {
-      // Add small delay to ensure DOM is fully rendered, especially important in PWA mode
-      setTimeout(() => {
-        scrollToBottom(isInitialLoad)
-      }, isInitialLoad ? 100 : 0)
+      // Use requestAnimationFrame for better scroll performance in PWA
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          scrollToBottom(isInitialLoad)
+        }, isInitialLoad ? 150 : 50)
+      })
       
       if (isInitialLoad) {
         setIsInitialLoad(false)
@@ -379,9 +381,20 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   }, [messages, isInitialLoad])
 
   const scrollToBottom = (instant = false) => {
-    messagesEndRef.current?.scrollIntoView({ 
-      behavior: instant ? 'instant' : 'smooth' 
-    })
+    if (messagesEndRef.current) {
+      try {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: instant ? 'instant' : 'smooth',
+          block: 'end'
+        })
+      } catch (e) {
+        // Fallback for older iOS versions
+        const container = messagesEndRef.current.parentElement
+        if (container) {
+          container.scrollTop = container.scrollHeight
+        }
+      }
+    }
   }
 
   const loadGroupName = async () => {
@@ -968,11 +981,9 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
       style={{ 
         paddingTop: 'env(safe-area-inset-top)',
         transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
-        willChange: 'transform',
+        willChange: isAnimatedIn ? 'auto' : 'transform',
         backfaceVisibility: 'hidden',
-        touchAction: 'pan-y',
-        zIndex: isClosing ? 40 : 9999,
-        WebkitOverflowScrolling: 'touch'
+        zIndex: 9999
       }}
     >
         {/* Header */}
@@ -997,7 +1008,17 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        <div 
+          className="flex-1 overflow-y-auto px-4 py-3"
+          style={{ 
+            WebkitOverflowScrolling: 'touch', 
+            touchAction: 'pan-y',
+            overscrollBehavior: 'contain',
+            scrollBehavior: 'smooth',
+            position: 'relative',
+            zIndex: 1
+          }}
+        >
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin h-8 w-8 border-2 border-gray-700 border-t-blue-400 rounded-full mx-auto"></div>
