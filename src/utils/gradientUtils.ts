@@ -52,9 +52,9 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
       return `linear-gradient(to right, #000000 0%, #000000 100%)`
     }
     
-    const totalProgress = Math.min(100, (total / dailyTarget) * 100)
+    const totalProgress = (total / dailyTarget) * 100
     const fadeOutStart = totalProgress
-    const fadeOutEnd = Math.min(100, totalProgress + 20)
+    const fadeOutEnd = totalProgress + 20
     
     // Create flaming red gradient
     const gradientStops = [
@@ -63,9 +63,13 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
       `#f87171 ${totalProgress * 0.6}%`,  // Red-400
       `#dc262666 ${totalProgress}%`,      // Fade start
       `#00000033 ${fadeOutStart + 5}%`,   // Light fade
-      `#000000 ${fadeOutEnd}%`,           // Full black
-      `#000000 100%`
+      `#000000 ${fadeOutEnd}%`           // Full black
     ]
+    
+    // Only add 100% black stop if gradient doesn't extend beyond 100%
+    if (fadeOutEnd <= 100) {
+      gradientStops.push(`#000000 100%`)
+    }
     
     return `linear-gradient(to right, ${gradientStops.join(', ')})`
   }
@@ -91,8 +95,9 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     return `linear-gradient(to right, #000000 0%, #000000 100%)`
   }
 
-  // Calculate the total progress percentage
-  const totalProgress = Math.min(100, (total / dailyTarget) * 100)
+  // Calculate the total progress percentage (allow beyond 100% for visual representation)
+  const totalProgress = (total / dailyTarget) * 100
+  const cappedProgress = Math.min(100, totalProgress) // For logic that needs capping
   
   // Calculate actual exercise type percentages within the completed portion using effective points
   // Regular = everything that's NOT recovery or sports
@@ -172,9 +177,9 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     console.log('- Purple section width:', purpleWidth + '%')
   }
   
-  // Add smooth fade out extending 20% beyond progress end
+  // Add smooth fade out extending 20% beyond progress end (allow beyond 100%)
   const fadeOutStart = totalProgress
-  const fadeOutEnd = Math.min(100, totalProgress + 20)
+  const fadeOutEnd = totalProgress + 20
   
   // Create seamless transition from last color to black
   if (fadeOutEnd > fadeOutStart) {
@@ -184,7 +189,11 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
   } else {
     gradientStops.push(`#000000 ${fadeOutStart}%`)
   }
-  gradientStops.push(`#000000 100%`)
+  
+  // Only add 100% black stop if gradient doesn't extend beyond 100%
+  if (fadeOutEnd <= 100) {
+    gradientStops.push(`#000000 100%`)
+  }
   
   const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
   console.log('Final gradient:', gradient)

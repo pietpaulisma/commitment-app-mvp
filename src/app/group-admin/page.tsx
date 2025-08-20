@@ -8,6 +8,7 @@ import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
 import { getDaysSinceStart } from '@/utils/targetCalculation'
 import { SystemMessageService } from '@/services/systemMessages'
+import { SystemMessageConfigAdmin } from '@/components/SystemMessageConfigAdmin'
 
 type Member = {
   id: string
@@ -75,6 +76,9 @@ export default function GroupAdminDashboard() {
   const [systemSenderName, setSystemSenderName] = useState('Barry')
   const [originalSenderName, setOriginalSenderName] = useState('Barry')
   const [chatLoading, setChatLoading] = useState(false)
+  
+  // System message config state
+  const [showSystemMessageConfig, setShowSystemMessageConfig] = useState(false)
   
 
   useEffect(() => {
@@ -1029,6 +1033,22 @@ export default function GroupAdminDashboard() {
                         )}
                       </div>
                     )}
+
+                    {/* System Message Configuration */}
+                    <div className="bg-gray-800/50 border border-gray-700 p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-md font-medium text-white">Bot Message Settings</h4>
+                        <button
+                          onClick={() => setShowSystemMessageConfig(true)}
+                          className="bg-purple-600 text-white px-4 py-2 hover:bg-purple-700 transition-colors"
+                        >
+                          Configure Messages
+                        </button>
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        Configure automated bot messages for daily summaries, weekly challenges, milestones, and workout completion notifications.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1330,6 +1350,12 @@ export default function GroupAdminDashboard() {
           </div>
         )}
       </div>
+      
+      {/* System Message Configuration Modal */}
+      <SystemMessageConfigAdmin 
+        isOpen={showSystemMessageConfig}
+        onClose={() => setShowSystemMessageConfig(false)}
+      />
     </div>
   )
 }
