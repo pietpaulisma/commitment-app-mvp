@@ -9,14 +9,5 @@
       "main": true
     }
   },
-  "crons": [
-    {
-      "path": "/api/cron/daily-penalty-check",
-      "schedule": "1 0 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup-presence",
-      "schedule": "0 2 * * *"
-    }
-  ]
+  "crons": []
 }
