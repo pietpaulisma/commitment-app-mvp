@@ -881,14 +881,14 @@ export default function MobileWorkoutLogger() {
                     {/* Submit Button */}
                     <button 
                       type="submit"
-                      className="w-full text-black px-4 rounded-3xl transition-all duration-300 font-black text-lg shadow-2xl hover:scale-105 btn-hover relative overflow-hidden -mx-1 -my-3"
+                      className="w-full text-black px-4 py-3 rounded-3xl transition-all duration-300 font-black text-lg shadow-2xl hover:scale-105 btn-hover relative overflow-hidden -mx-1"
                       style={{ 
                         backgroundColor: userColor,
                         background: `linear-gradient(135deg, ${userColor}ff 0%, ${userColor}cc 50%, ${userColor}ff 100%)`,
-                        minHeight: '60px'
+                        minHeight: '48px'
                       }}
                     >
-                      <span className="relative z-10 flex items-center justify-center h-full py-6">LOG WORKOUT</span>
+                      <span className="relative z-10 flex items-center justify-center h-full">LOG WORKOUT</span>
                     </button>
                   </>
                 )}

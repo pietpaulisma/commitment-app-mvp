@@ -960,8 +960,9 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
         willChange: 'transform',
         backfaceVisibility: 'hidden',
-        touchAction: 'manipulation',
-        zIndex: isClosing ? 40 : 9999
+        touchAction: 'pan-y',
+        zIndex: isClosing ? 40 : 9999,
+        WebkitOverflowScrolling: 'touch'
       }}
     >
         {/* Header */}
@@ -986,7 +987,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="flex-1 overflow-y-auto px-4 py-3" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin h-8 w-8 border-2 border-gray-700 border-t-blue-400 rounded-full mx-auto"></div>
