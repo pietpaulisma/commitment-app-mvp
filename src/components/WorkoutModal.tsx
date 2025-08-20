@@ -1081,7 +1081,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         target_points: dailyTarget,
         exercises: exercisesSummary,
         workout_date: new Date().toISOString().split('T')[0],
-        completed_at: new Date().toISOString()
+        completed_at: new Date().toISOString(),
+        week_mode: weekMode // Include actual week mode when workout was completed
       }
       
       // Insert into chat as a special workout completion message

@@ -22,6 +22,7 @@ interface WorkoutData {
   completedAt?: string;
   completed_at?: string;
   username?: string;
+  week_mode?: 'sane' | 'insane';
 }
 
 interface WorkoutSummaryPostProps {
@@ -95,13 +96,19 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
   };
 
   // Determine if workout was "sane" or "insane"
-  const getIntensityLabel = (percentage: number, points: number): string => {
+  const getIntensityLabel = (percentage: number, points: number, weekMode?: 'sane' | 'insane'): string => {
+    // Use actual week mode if available (new workout summaries)
+    if (weekMode) {
+      return weekMode === 'insane' ? "INSANE" : "sane";
+    }
+    
+    // Fallback to old guessing logic for backward compatibility (old workout summaries)
     if (percentage >= 150 || points > 750) return "INSANE";
     return "sane";
   };
 
   const workoutType = getWorkoutType(data.exercises);
-  const intensity = getIntensityLabel(data.percentage, data.points);
+  const intensity = getIntensityLabel(data.percentage, data.points, workoutData.week_mode);
   const isInsane = intensity === "INSANE";
 
   return (
