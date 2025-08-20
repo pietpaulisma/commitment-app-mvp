@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from './ui/button'
 import { Switch } from './ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
@@ -421,8 +422,8 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   if (!isOpen) return null
 
   if (!isSupremeAdmin) {
-    return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    return createPortal(
+      <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
         <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full">
           <h3 className="text-xl font-bold text-white mb-4">Access Denied</h3>
           <p className="text-gray-400 mb-6">You need supreme admin privileges to access system message configuration.</p>
@@ -430,12 +431,13 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
             Close
           </Button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
-  return (
-    <div className="fixed inset-0 bg-slate-950 z-50 overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 bg-slate-950 z-[9999] overflow-y-auto" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       <div className="min-h-screen">
         <div className="p-6 max-w-4xl mx-auto">
         
@@ -817,6 +819,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
