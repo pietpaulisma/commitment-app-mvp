@@ -423,7 +423,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         `)
         .eq('group_id', profile.group_id)
         .order('created_at', { ascending: true })
-        .limit(100)
+        .limit(500)
 
       if (error) throw error
 
