@@ -1031,7 +1031,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
 
   const handleSubmitToGroup = async () => {
-    if (!user || !profile?.group_id || dailyProgress <= 0) return
+    console.log('Workout submission debug:', {
+      user_id: user?.id,
+      user_email: user?.email,
+      profile_group_id: profile?.group_id,
+      dailyProgress,
+      todayLogs: todayLogs?.length
+    })
+    
+    if (!user || !profile?.group_id || dailyProgress <= 0) {
+      console.error('Workout submission blocked:', {
+        hasUser: !!user,
+        hasGroupId: !!profile?.group_id,
+        dailyProgress,
+        groupId: profile?.group_id
+      })
+      alert('Unable to submit workout. Please check your group membership and that you have logged exercises.')
+      return
+    }
 
     try {
       setLoading(true)
@@ -1074,7 +1091,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         workout_data: workoutData
       })
       
-      const { error } = await supabase
+      console.log('Inserting workout message:', {
+        user_id: user.id,
+        group_id: profile.group_id,
+        message_length: messageWithData.length,
+        message_type: 'workout_completion',
+        workoutData: JSON.stringify(workoutData, null, 2)
+      })
+
+      const { data, error } = await supabase
         .from('chat_messages')
         .insert({
           user_id: user.id,
@@ -1082,11 +1107,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           message: messageWithData,
           message_type: 'workout_completion'
         })
+        .select()
+
+      console.log('Database insert result:', { data, error })
 
       if (error) {
         console.error('Error submitting to group:', error)
         alert('Error submitting workout to group chat')
       } else {
+        console.log('Workout successfully submitted to group chat:', data)
         // Check for automatic mode switching to insane
         if (weekMode === 'sane' && isWeekModeAvailable(groupDaysSinceStart) && totalPoints >= dailyTarget) {
           try {

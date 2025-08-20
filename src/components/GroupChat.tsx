@@ -443,6 +443,16 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         reactions: []
       })) || []
 
+      // Debug: Check for workout completion messages
+      const workoutMessages = formattedMessages.filter(m => m.message_type === 'workout_completion')
+      console.log('Loaded workout completion messages:', workoutMessages.map(m => ({
+        id: m.id,
+        user_email: m.user_email,
+        message_type: m.message_type,
+        created_at: m.created_at,
+        message_preview: m.message?.substring(0, 100)
+      })))
+
       // Load system message data for system messages
       await loadSystemMessages(formattedMessages.filter(m => m.is_system_message && m.system_message_id).map(m => m.system_message_id!))
 
