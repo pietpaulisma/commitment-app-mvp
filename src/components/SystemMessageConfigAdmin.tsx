@@ -165,6 +165,39 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         })
       }
       
+      // Update checkbox states based on loaded configs
+      if (dailyData) {
+        setDailySummaryOptions(prev => prev.map(option => ({
+          ...option,
+          enabled: {
+            'workout_completion': dailyData.include_commitment_rate,
+            'top_performer': dailyData.include_top_performer,
+            'streak_info': dailyData.include_streak_info,
+            'motivation': dailyData.include_motivational_message
+          }[option.id] ?? option.enabled
+        })))
+      }
+      
+      if (weeklyData) {
+        setWeeklySummaryOptions(prev => prev.map(option => ({
+          ...option,
+          enabled: {
+            'weekly_stats': weeklyData.include_weekly_stats,
+            'member_spotlight': weeklyData.include_member_spotlight
+          }[option.id] ?? option.enabled
+        })))
+      }
+      
+      if (personalData) {
+        setPersonalSummaryOptions(prev => prev.map(option => ({
+          ...option,
+          enabled: {
+            'personal_streak': personalData.include_personal_streak,
+            'goal_progress': personalData.include_goal_progress
+          }[option.id] ?? option.enabled
+        })))
+      }
+      
     } catch (error) {
       console.error('Error loading configurations:', error)
     } finally {
@@ -223,8 +256,13 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         option.id === id ? { ...option, enabled: !option.enabled } : option
       )
       
-      // Save the configuration to the database
-      if (dailySummaryConfig) {
+      // Determine which config type this is based on the option IDs
+      const isDailyOption = updatedOptions.some(opt => ['workout_completion', 'top_performer', 'streak_info', 'motivation'].includes(opt.id))
+      const isWeeklyOption = updatedOptions.some(opt => ['weekly_stats', 'member_spotlight'].includes(opt.id))
+      const isPersonalOption = updatedOptions.some(opt => ['personal_streak', 'goal_progress'].includes(opt.id))
+
+      if (isDailyOption && dailySummaryConfig) {
+        // Save daily summary configuration
         const newConfig = {
           ...dailySummaryConfig,
           include_commitment_rate: updatedOptions.find(opt => opt.id === 'workout_completion')?.enabled || false,
@@ -234,6 +272,24 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         }
         
         await SystemMessageConfigService.updateDailySummaryConfig(newConfig)
+      } else if (isWeeklyOption && weeklySummaryConfig) {
+        // Save weekly summary configuration
+        const newConfig = {
+          ...weeklySummaryConfig,
+          include_weekly_stats: updatedOptions.find(opt => opt.id === 'weekly_stats')?.enabled || false,
+          include_member_spotlight: updatedOptions.find(opt => opt.id === 'member_spotlight')?.enabled || false,
+        }
+        
+        await SystemMessageConfigService.updateWeeklySummaryConfig(newConfig)
+      } else if (isPersonalOption && personalSummaryConfig) {
+        // Save personal summary configuration
+        const newConfig = {
+          ...personalSummaryConfig,
+          include_personal_streak: updatedOptions.find(opt => opt.id === 'personal_streak')?.enabled || false,
+          include_goal_progress: updatedOptions.find(opt => opt.id === 'goal_progress')?.enabled || false,
+        }
+        
+        await SystemMessageConfigService.updatePersonalSummaryConfig(newConfig)
       }
     } catch (error) {
       console.error('Error auto-saving summary option:', error)
