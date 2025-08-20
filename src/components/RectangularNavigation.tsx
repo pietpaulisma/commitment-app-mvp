@@ -292,7 +292,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
           {/* Progress Bar Button (80% width) */}
           <button
             onClick={handleWorkoutButtonClick}
-            className="flex-1 relative h-12 sm:h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-all duration-500 ease-out"
+            className="flex-1 relative h-16 bg-gray-900 border-r border-gray-700 overflow-hidden group hover:opacity-90 transition-all duration-500 ease-out"
             style={{
               transform: isAnimating ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
               willChange: 'transform',
@@ -339,7 +339,7 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
           <button
             onClick={handleChatButtonClick}
             disabled={!profile.group_id}
-            className={`w-12 sm:w-16 h-12 sm:h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none relative overflow-hidden ${
+            className={`w-16 h-16 flex items-center justify-center transition-all duration-500 ease-out rounded-none relative overflow-hidden ${
               profile.group_id 
                 ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white' 
                 : 'bg-gray-950 text-gray-500 cursor-not-allowed'
