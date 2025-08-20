@@ -306,7 +306,10 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   }
 
   const sendDailySummaryNow = async () => {
-    if (!profile?.group_id) return
+    if (!profile?.group_id) {
+      alert('No group found. Please make sure you are part of a group.')
+      return
+    }
 
     setSendingMessage(true)
     try {
@@ -314,12 +317,16 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         p_group_id: profile.group_id
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('Database error:', error)
+        throw error
+      }
 
-      alert('Daily summary sent successfully!')
+      console.log('Daily summary generated with ID:', data)
+      alert('Daily summary sent successfully! Check your group chat.')
     } catch (error) {
       console.error('Error sending daily summary:', error)
-      alert('Failed to send daily summary')
+      alert(`Failed to send daily summary: ${error.message || error}`)
     }
     setSendingMessage(false)
   }
@@ -732,7 +739,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                     }
                                   >
                                     <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                                      <SelectValue />
+                                      <SelectValue placeholder="Select send time" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-slate-800 border-slate-600">
                                       <SelectItem value="end_of_day">End of Day</SelectItem>
@@ -753,18 +760,11 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                   <Button
                                     onClick={sendDailySummaryNow}
                                     disabled={sendingMessage}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
                                   >
-                                    {sendingMessage ? 'Sending...' : 'Send Daily Summary Now'}
+                                    {sendingMessage ? 'Sending...' : 'Send Now'}
                                   </Button>
                                 </div>
-                              </div>
-                              
-                              <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-                                <p className="text-yellow-400 text-xs">
-                                  ⚠️ <strong>Note:</strong> Automated daily summaries are not currently scheduled. 
-                                  Use "Send Daily Summary Now" to manually trigger a summary, or contact the developer to set up automated scheduling.
-                                </p>
                               </div>
                             </div>
                           </>
