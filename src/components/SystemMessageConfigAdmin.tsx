@@ -211,10 +211,34 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   ]
 
   // Helper functions
-  const toggleSummaryOption = (options: SummaryOption[], setOptions: React.Dispatch<React.SetStateAction<SummaryOption[]>>, id: string) => {
+  const toggleSummaryOption = async (options: SummaryOption[], setOptions: React.Dispatch<React.SetStateAction<SummaryOption[]>>, id: string) => {
+    // Update local state immediately for responsive UI
     setOptions(options.map(option => 
       option.id === id ? { ...option, enabled: !option.enabled } : option
     ))
+
+    // Auto-save to database in the background
+    try {
+      const updatedOptions = options.map(option => 
+        option.id === id ? { ...option, enabled: !option.enabled } : option
+      )
+      
+      // Save the configuration to the database
+      if (dailySummaryConfig) {
+        const newConfig = {
+          ...dailySummaryConfig,
+          include_commitment_rate: updatedOptions.find(opt => opt.id === 'workout_completion')?.enabled || false,
+          include_top_performer: updatedOptions.find(opt => opt.id === 'top_performer')?.enabled || false,
+          include_streak_info: updatedOptions.find(opt => opt.id === 'streak_info')?.enabled || false,
+          include_motivational_message: updatedOptions.find(opt => opt.id === 'motivation')?.enabled || false,
+        }
+        
+        await SystemMessageConfigService.updateDailySummaryConfig(newConfig)
+      }
+    } catch (error) {
+      console.error('Error auto-saving summary option:', error)
+      // Optionally show a toast notification for failed saves
+    }
   }
 
   const toggleMilestoneOption = async (milestoneId: string) => {
