@@ -9,6 +9,7 @@ import { Badge } from './ui/badge'
 import { Textarea } from './ui/textarea'
 import { Checkbox } from './ui/checkbox'
 import { SystemMessageConfigService } from '@/services/systemMessageConfig'
+import { supabase } from '@/lib/supabase'
 import { 
   SystemMessageTypeConfig, 
   SystemMessageRarity, 
@@ -300,6 +301,25 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       alert('Admin message sent successfully!')
     } else {
       alert('Failed to send admin message')
+    }
+    setSendingMessage(false)
+  }
+
+  const sendDailySummaryNow = async () => {
+    if (!profile?.group_id) return
+
+    setSendingMessage(true)
+    try {
+      const { data, error } = await supabase.rpc('generate_daily_summary', {
+        p_group_id: profile.group_id
+      })
+
+      if (error) throw error
+
+      alert('Daily summary sent successfully!')
+    } catch (error) {
+      console.error('Error sending daily summary:', error)
+      alert('Failed to send daily summary')
     }
     setSendingMessage(false)
   }
@@ -728,6 +748,23 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                     />
                                   )}
                                 </div>
+                                
+                                <div className="flex items-end">
+                                  <Button
+                                    onClick={sendDailySummaryNow}
+                                    disabled={sendingMessage}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                                  >
+                                    {sendingMessage ? 'Sending...' : 'Send Daily Summary Now'}
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+                                <p className="text-yellow-400 text-xs">
+                                  ⚠️ <strong>Note:</strong> Automated daily summaries are not currently scheduled. 
+                                  Use "Send Daily Summary Now" to manually trigger a summary, or contact the developer to set up automated scheduling.
+                                </p>
                               </div>
                             </div>
                           </>
