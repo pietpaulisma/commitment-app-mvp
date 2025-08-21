@@ -29,6 +29,14 @@ export default function NewMobileProfile() {
     }
   }, [user, authLoading, router])
 
+  // Cleanup effect to prevent state corruption when navigating away
+  useEffect(() => {
+    return () => {
+      // Reset any local state that might interfere with other pages
+      setShowSystemMessageConfig(false)
+    }
+  }, [])
+
 
   if (authLoading || profileLoading) {
     return (
@@ -63,8 +71,8 @@ export default function NewMobileProfile() {
           {/* Close button - matches workout page X button */}
           <button
             onClick={() => {
-              console.log('PWA-DEBUG: Using history.back() instead of router.push')
-              window.history.back()
+              console.log('PWA-DEBUG: Using router.push for proper React navigation')
+              router.push('/dashboard')
             }}
             className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
             aria-label="Back to dashboard"
