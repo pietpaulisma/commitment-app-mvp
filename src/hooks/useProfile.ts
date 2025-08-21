@@ -46,6 +46,7 @@ export function useProfile() {
 
   const loadProfile = useCallback(async (showLoading = true) => {
     if (!user) {
+      console.log('PWA-DEBUG: loadProfile called without user')
       setProfile(null)
       setLoading(false)
       loadingRef.current = false
@@ -71,12 +72,14 @@ export function useProfile() {
         const isValidCache = Date.now() - timestamp < CACHE_DURATION
         
         if (isValidCache) {
-          console.log('📦 Using cached profile for:', user.email)
+          console.log('PWA-DEBUG: Using cached profile for:', user.email, 'cache age:', Date.now() - timestamp, 'ms')
           const parsed = JSON.parse(cachedProfile)
           setProfile(parsed)
           setLoading(false)
           loadingRef.current = false
           return parsed
+        } else {
+          console.log('PWA-DEBUG: Cache expired for:', user.email, 'age:', Date.now() - timestamp, 'ms')
         }
       }
     }

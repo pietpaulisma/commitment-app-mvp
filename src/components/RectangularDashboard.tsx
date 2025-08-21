@@ -2284,7 +2284,16 @@ export default function RectangularDashboard() {
 
   const loadDashboardData = async () => {
     if (!user || !profile) {
-      console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
+      console.log('PWA-DEBUG: loadDashboardData blocked - Missing user or profile', { 
+        user: !!user, 
+        profile: !!profile,
+        userEmail: user?.email,
+        profileId: profile?.id,
+        sessionStorage: typeof window !== 'undefined' ? {
+          auth_user: !!sessionStorage.getItem('auth_user'),
+          profile_cache: !!sessionStorage.getItem(`profile_cache_${user?.id}`)
+        } : 'server'
+      })
       return
     }
 

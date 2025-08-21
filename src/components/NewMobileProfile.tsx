@@ -62,7 +62,10 @@ export default function NewMobileProfile() {
 
           {/* Close button - matches workout page X button */}
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => {
+              console.log('PWA-DEBUG: Using history.back() instead of router.push')
+              window.history.back()
+            }}
             className="w-16 h-16 bg-gray-900 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
             aria-label="Back to dashboard"
           >
