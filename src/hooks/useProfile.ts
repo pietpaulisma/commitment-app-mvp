@@ -44,7 +44,7 @@ export function useProfile() {
   // Cache duration: 5 minutes
   const CACHE_DURATION = 5 * 60 * 1000
 
-  const loadProfile = useCallback(async (showLoading = true, forceRefresh = false) => {
+  const loadProfile = useCallback(async (showLoading = true) => {
     if (!user) {
       setProfile(null)
       setLoading(false)
@@ -58,11 +58,11 @@ export function useProfile() {
       return profile
     }
 
-    // Check cache first (unless force refresh)
+    // Check cache first
     const cacheKey = getCacheKey(user.id)
     const timestampKey = getCacheTimestampKey(user.id)
     
-    if (!forceRefresh && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       const cachedProfile = sessionStorage.getItem(cacheKey)
       const cachedTimestamp = sessionStorage.getItem(timestampKey)
       
@@ -91,17 +91,6 @@ export function useProfile() {
 
     try {
       console.log('🔄 Loading profile for user:', user.email, 'ID:', user.id)
-      
-      // Debug: Try a direct query for just birth_date
-      const { data: birthDateCheck, error: birthError } = await supabase
-        .from('profiles')
-        .select('id, email, birth_date')
-        .eq('id', user.id)
-        .single()
-        
-      console.log('🎂 Direct birth_date query result:', birthDateCheck)
-      if (birthError) console.log('🎂 Birth date query error:', birthError)
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -115,12 +104,8 @@ export function useProfile() {
       console.log('✅ Profile loaded:', { 
         email: data.email, 
         onboarding_completed: data.onboarding_completed,
-        role: data.role,
-        birth_date: data.birth_date
+        role: data.role 
       })
-      
-      // Debug: Show ALL data to see if birth_date exists under different name
-      console.log('🔍 Full profile data:', data)
       
       // Cache the profile data
       if (typeof window !== 'undefined') {
@@ -150,19 +135,13 @@ export function useProfile() {
       sessionStorage.removeItem(getCacheTimestampKey(user.id))
     }
     loadingRef.current = false // Reset loading state to allow refresh
-    return loadProfile(false, true) // Force refresh
+    return loadProfile(false)
   }, [user, loadProfile])
 
   useEffect(() => {
     // Only load profile if user changed
     if (user?.id !== currentUserRef.current) {
-      // Temporarily force refresh to get fresh birth_date data
-      console.log('🔄 Force refreshing profile to check birth_date...')
-      if (typeof window !== 'undefined' && user) {
-        sessionStorage.removeItem(getCacheKey(user.id))
-        sessionStorage.removeItem(getCacheTimestampKey(user.id))
-      }
-      loadProfile(true, true)
+      loadProfile()
     }
   }, [user?.id, loadProfile])
 
