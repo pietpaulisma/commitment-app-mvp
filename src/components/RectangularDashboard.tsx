@@ -1269,7 +1269,7 @@ export default function RectangularDashboard() {
       loadGroupMembers()
       // Note: Don't reload personal stats here - let workout modal handle its own target calculation
     }
-  }, [weekMode, loadGroupMembers])
+  }, [weekMode])
 
   // Add periodic refresh for group members to keep data current
   useEffect(() => {
@@ -1990,7 +1990,7 @@ export default function RectangularDashboard() {
       console.error('Error loading group stats:', error)
       setGroupStats({ interestingStats: [] })
     }
-  }, [profile?.group_id, calculateEssentialStats])
+  }, [profile?.group_id])
 
   const loadPersonalStats = useCallback(async () => {
     if (!user) return
@@ -2421,7 +2421,7 @@ export default function RectangularDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [user, profile, weekMode, loadGroupMembers, loadGroupStats, loadPersonalStats])
+  }, [user, profile, weekMode])
 
   const formatTimeAgo = (timestamp: string) => {
     const date = new Date(timestamp)
