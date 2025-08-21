@@ -44,7 +44,7 @@ export function useProfile() {
   // Cache duration: 5 minutes
   const CACHE_DURATION = 5 * 60 * 1000
 
-  const loadProfile = useCallback(async (showLoading = true) => {
+  const loadProfile = useCallback(async (showLoading = true, forceRefresh = false) => {
     if (!user) {
       setProfile(null)
       setLoading(false)
@@ -58,11 +58,11 @@ export function useProfile() {
       return profile
     }
 
-    // Check cache first
+    // Check cache first (unless force refresh)
     const cacheKey = getCacheKey(user.id)
     const timestampKey = getCacheTimestampKey(user.id)
     
-    if (typeof window !== 'undefined') {
+    if (!forceRefresh && typeof window !== 'undefined') {
       const cachedProfile = sessionStorage.getItem(cacheKey)
       const cachedTimestamp = sessionStorage.getItem(timestampKey)
       
@@ -136,13 +136,19 @@ export function useProfile() {
       sessionStorage.removeItem(getCacheTimestampKey(user.id))
     }
     loadingRef.current = false // Reset loading state to allow refresh
-    return loadProfile(false)
+    return loadProfile(false, true) // Force refresh
   }, [user, loadProfile])
 
   useEffect(() => {
     // Only load profile if user changed
     if (user?.id !== currentUserRef.current) {
-      loadProfile()
+      // Temporarily force refresh to get fresh birth_date data
+      console.log('🔄 Force refreshing profile to check birth_date...')
+      if (typeof window !== 'undefined' && user) {
+        sessionStorage.removeItem(getCacheKey(user.id))
+        sessionStorage.removeItem(getCacheTimestampKey(user.id))
+      }
+      loadProfile(true, true)
     }
   }, [user?.id, loadProfile])
 
