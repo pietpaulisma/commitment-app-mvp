@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, memo, useRef, useCallback } from 'react'
+import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
@@ -1248,7 +1248,7 @@ export default function RectangularDashboard() {
         setLoading(false) // Stop infinite loading
       }
     }
-  }, [user, profile, authLoading, profileLoading, router, loadDashboardData])
+  }, [user, profile, authLoading, profileLoading, router])
 
   // Safety timeout to prevent infinite loading
   useEffect(() => {
@@ -1525,7 +1525,7 @@ export default function RectangularDashboard() {
     }
   }
 
-  const loadGroupMembers = useCallback(async () => {
+  const loadGroupMembers = async () => {
     if (!profile?.group_id) return
 
     try {
@@ -1664,9 +1664,9 @@ export default function RectangularDashboard() {
     } catch (error) {
       console.error('Error loading group members:', error)
     }
-  }, [profile?.group_id, weekMode])
+  }
 
-  const calculateEssentialStats = useCallback(async () => {
+  const calculateEssentialStats = async () => {
     if (!profile?.group_id) return null
 
     try {
@@ -1967,9 +1967,9 @@ export default function RectangularDashboard() {
       console.error('Error calculating essential stats:', error)
       return null
     }
-  }, [profile?.group_id, weekMode])
+  }
 
-  const loadGroupStats = useCallback(async () => {
+  const loadGroupStats = async () => {
     if (!profile?.group_id) return
 
 
@@ -1990,9 +1990,9 @@ export default function RectangularDashboard() {
       console.error('Error loading group stats:', error)
       setGroupStats({ interestingStats: [] })
     }
-  }, [profile?.group_id])
+  }
 
-  const loadPersonalStats = useCallback(async () => {
+  const loadPersonalStats = async () => {
     if (!user) return
 
     try {
@@ -2144,7 +2144,7 @@ export default function RectangularDashboard() {
       console.error('Error loading personal stats:', error)
       setPersonalStats({ interestingStats: [] })
     }
-  }, [user])
+  }
 
   // Predefined 2×4 grid layouts with 8 cells each
   // A = 1×1 (square), B = 1×2 (tall), C = 2×1 (wide)
@@ -2274,7 +2274,7 @@ export default function RectangularDashboard() {
     }))
   }
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = async () => {
     if (!user || !profile) {
       console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
       return
@@ -2421,7 +2421,7 @@ export default function RectangularDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, profile?.group_id, weekMode]) // Only include primitive values, not functions
+  }
 
   const formatTimeAgo = (timestamp: string) => {
     const date = new Date(timestamp)
