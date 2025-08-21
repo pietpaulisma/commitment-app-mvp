@@ -1248,7 +1248,7 @@ export default function RectangularDashboard() {
         setLoading(false) // Stop infinite loading
       }
     }
-  }, [user, profile, authLoading, profileLoading, router])
+  }, [user?.id, profile?.id, authLoading, profileLoading, router, loadDashboardData])
 
   // Safety timeout to prevent infinite loading
   useEffect(() => {
@@ -1264,12 +1264,12 @@ export default function RectangularDashboard() {
 
   // Only reload member data when weekMode changes (for group status display)
   useEffect(() => {
-    if (user && profile && weekMode) {
+    if (user?.id && profile?.id && weekMode) {
       // Only reload member data to show individual modes in group status
       loadGroupMembers()
       // Note: Don't reload personal stats here - let workout modal handle its own target calculation
     }
-  }, [weekMode])
+  }, [weekMode, user?.id, profile?.id, loadGroupMembers])
 
   // Add periodic refresh for group members to keep data current
   useEffect(() => {
