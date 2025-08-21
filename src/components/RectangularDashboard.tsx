@@ -1666,7 +1666,7 @@ export default function RectangularDashboard() {
     }
   }, [profile?.group_id, weekMode])
 
-  const calculateEssentialStats = async () => {
+  const calculateEssentialStats = useCallback(async () => {
     if (!profile?.group_id) return null
 
     try {
@@ -1967,9 +1967,9 @@ export default function RectangularDashboard() {
       console.error('Error calculating essential stats:', error)
       return null
     }
-  }
+  }, [profile?.group_id, weekMode])
 
-  const loadGroupStats = async () => {
+  const loadGroupStats = useCallback(async () => {
     if (!profile?.group_id) return
 
 
@@ -1990,9 +1990,9 @@ export default function RectangularDashboard() {
       console.error('Error loading group stats:', error)
       setGroupStats({ interestingStats: [] })
     }
-  }
+  }, [profile?.group_id, calculateEssentialStats])
 
-  const loadPersonalStats = async () => {
+  const loadPersonalStats = useCallback(async () => {
     if (!user) return
 
     try {
@@ -2144,7 +2144,7 @@ export default function RectangularDashboard() {
       console.error('Error loading personal stats:', error)
       setPersonalStats({ interestingStats: [] })
     }
-  }
+  }, [user])
 
   // Predefined 2×4 grid layouts with 8 cells each
   // A = 1×1 (square), B = 1×2 (tall), C = 2×1 (wide)
@@ -2421,7 +2421,7 @@ export default function RectangularDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [user, profile, weekMode])
+  }, [user, profile, weekMode, loadGroupMembers, loadGroupStats, loadPersonalStats])
 
   const formatTimeAgo = (timestamp: string) => {
     const date = new Date(timestamp)
