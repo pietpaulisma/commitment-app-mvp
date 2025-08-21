@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
@@ -125,7 +125,7 @@ export function useProfile() {
         setLoading(false)
       }
     }
-  }, [user, profile])
+  }, [user?.id])
 
   const refreshProfile = useCallback(() => {
     console.log('🔄 Refreshing profile data...')
@@ -165,8 +165,10 @@ export function useProfile() {
   const isUser = effectiveRole === 'user'
   const hasAdminPrivileges = isSupremeAdmin || isGroupAdmin
 
-  // Create an effective profile with the override role if applicable
-  const effectiveProfile = profile && mounted && roleOverride ? { ...profile, role: roleOverride } : profile
+  // Create an effective profile with the override role if applicable - memoized to prevent recreation
+  const effectiveProfile = useMemo(() => {
+    return profile && mounted && roleOverride ? { ...profile, role: roleOverride } : profile
+  }, [profile, mounted, roleOverride])
 
   return {
     profile: effectiveProfile,
