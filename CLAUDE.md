@@ -41,7 +41,6 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
 
 ## Testing
 ```bash
-npm run test        # Playwright E2E tests
 npm run build       # Required before deployment
 npm run lint        # Code quality check
 ```

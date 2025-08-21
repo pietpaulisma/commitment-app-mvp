@@ -2040,7 +2040,6 @@ export default function RectangularDashboard() {
       let dayNum = ''
       
       if (profile?.birth_date) {
-        console.log('🎂 Birthday calculation - birth_date:', profile.birth_date)
         const birthDate = new Date(profile.birth_date)
         const today = new Date()
         
@@ -2058,13 +2057,6 @@ export default function RectangularDashboard() {
         
         monthName = nextBirthday.toLocaleString('default', { month: 'long' })
         dayNum = nextBirthday.getDate().toString()
-        
-        console.log('🎂 Birthday calculation result:', {
-          nextBirthdayDays,
-          monthName,
-          dayNum,
-          nextBirthday: nextBirthday.toISOString()
-        })
       } else {
         // No birthday set - show placeholder
         nextBirthdayDays = 0
@@ -2288,11 +2280,7 @@ export default function RectangularDashboard() {
       return
     }
 
-    console.log('loadDashboardData: Starting for user', user.email, 'profile:', {
-      group_id: profile.group_id,
-      onboarding_completed: profile.onboarding_completed,
-      birth_date: profile.birth_date
-    })
+    // Debug: loadDashboardData starting
 
     let currentGroupData: any = null
 

@@ -111,9 +111,7 @@ export default function TimeGradient({ className = '', intensity = 1.0 }: TimeGr
 
   const colors = getTimeBasedColors()
   
-  // Debug log current colors
-  console.log('Current time:', currentTime.getHours() + ':' + currentTime.getMinutes())
-  console.log('Selected colors:', colors)
+  // Time-based gradient colors selected
   
   // Calculate day progress (0 = start of day, 1 = end of day)
   const hour = currentTime.getHours()
