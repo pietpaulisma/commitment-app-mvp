@@ -2297,38 +2297,6 @@ export default function RectangularDashboard() {
       return
     }
 
-    // OPTIMIZATION 4: Session-based dashboard caching
-    const cacheKey = `dashboard_cache_${user.id}_${profile.group_id}`
-    const cacheTimestampKey = `dashboard_cache_timestamp_${user.id}_${profile.group_id}`
-    const CACHE_DURATION = 3 * 60 * 1000 // 3 minutes for mobile performance
-
-    // Check cache first (unless force reload)
-    if (!forceReload && typeof window !== 'undefined') {
-      const cachedData = sessionStorage.getItem(cacheKey)
-      const cachedTimestamp = sessionStorage.getItem(cacheTimestampKey)
-      
-      if (cachedData && cachedTimestamp) {
-        const timestamp = parseInt(cachedTimestamp)
-        const isValidCache = Date.now() - timestamp < CACHE_DURATION
-        
-        if (isValidCache) {
-          console.log('📦 Using cached dashboard data')
-          const parsed = JSON.parse(cachedData)
-          
-          // Restore cached state
-          if (parsed.groupMembers) setGroupMembers(parsed.groupMembers)
-          if (parsed.groupName) setGroupName(parsed.groupName)
-          if (parsed.recentChats) setRecentChats(parsed.recentChats)
-          if (parsed.groupStats) setGroupStats(parsed.groupStats)
-          
-          setLoading(false)
-          dataLoadedRef.current = true
-          setDataLoaded(true)
-          return
-        }
-      }
-    }
-
     // Check if data is already loaded and we don't need to force reload
     if (dataLoadedRef.current && !forceReload) {
       console.log('📦 Dashboard data already loaded, skipping reload')
@@ -2336,47 +2304,52 @@ export default function RectangularDashboard() {
       return
     }
 
-    console.log('🚀 Starting optimized dashboard loading for user', user.email)
+    console.log('loadDashboardData: Starting for user', user.email, 'profile:', {
+      group_id: profile.group_id,
+      onboarding_completed: profile.onboarding_completed,
+      forceReload
+    })
 
     let currentGroupData: any = null
 
     try {
-      // OPTIMIZATION 1: Load essential data in parallel immediately
-      const essentialDataPromises = []
-      
+      // Get group name and start date
       if (profile.group_id) {
-        // Load group info, members, stats, settings, and chats all in parallel
-        essentialDataPromises.push(
-          // Group basic info
-          supabase
-            .from('groups')
-            .select('name, start_date')
-            .eq('id', profile.group_id)
-            .single()
-            .then(({ data: group }) => {
-              currentGroupData = group
-              setGroupName(group?.name || 'Your Group')
-              setGroupStartDate(group?.start_date || null)
-              return group
-            }),
-          
-          // Group settings
-          supabase
+        const { data: group } = await supabase
+          .from('groups')
+          .select('name, start_date')
+          .eq('id', profile.group_id)
+          .single()
+        
+        currentGroupData = group // Store for use in streak calculation
+        setGroupName(group?.name || 'Your Group')
+        setGroupStartDate(group?.start_date || null)
+
+        // Load group members and stats
+        await Promise.all([loadGroupMembers(), loadGroupStats(), loadPersonalStats()])
+
+        // Try to load group settings for rest/recovery days and UI configuration
+        try {
+          const { data: groupSettings, error: settingsError } = await supabase
             .from('group_settings')
             .select('rest_days, recovery_days, accent_color')
             .eq('group_id', profile.group_id)
             .maybeSingle()
-            .then(({ data: groupSettings }) => {
-              if (groupSettings) {
-                setRestDays(groupSettings.rest_days || [1])
-                setRecoveryDays(groupSettings.recovery_days || [5])
-                setAccentColor(groupSettings.accent_color || 'gray')
-              }
-              return groupSettings
-            }),
-          
-          // Recent chats
-          supabase
+
+          if (!settingsError && groupSettings) {
+            setRestDays(groupSettings.rest_days || [1]) // Default Monday
+            setRecoveryDays(groupSettings.recovery_days || [5]) // Default Friday
+            setAccentColor(groupSettings.accent_color || 'gray') // Default gray
+          }
+        } catch (error) {
+          console.log('Group settings not available, using defaults')
+        }
+      }
+
+      // Load recent chats
+      if (profile.group_id) {
+        try {
+          const { data: chats } = await supabase
             .from('chat_messages')
             .select(`
               id, 
@@ -2388,30 +2361,19 @@ export default function RectangularDashboard() {
             .eq('group_id', profile.group_id)
             .order('created_at', { ascending: false })
             .limit(10)
-            .then(({ data: chats }) => {
-              const chatsWithOwnership = chats?.map(chat => ({
-                ...chat,
-                user_email: chat.profiles.email,
-                user_role: chat.profiles.role,
-                username: chat.profiles.username,
-                is_own_message: chat.user_id === user.id
-              })) || []
-              setRecentChats(chatsWithOwnership)
-              return chatsWithOwnership
-            })
-        )
-      }
 
-      // OPTIMIZATION 2: Execute all essential data loading in parallel
-      const [groupData] = await Promise.all(essentialDataPromises)
-      
-      // OPTIMIZATION 3: Load member stats and personal data in parallel after group data
-      if (profile.group_id) {
-        await Promise.all([
-          loadGroupMembers(), 
-          loadGroupStats(), 
-          loadPersonalStats()
-        ])
+          const chatsWithOwnership = chats?.map(chat => ({
+            ...chat,
+            user_email: chat.profiles.email,
+            user_role: chat.profiles.role,
+            username: chat.profiles.username,
+            is_own_message: chat.user_id === user.id
+          })) || []
+
+          setRecentChats(chatsWithOwnership)
+        } catch (error) {
+          console.log('Could not load chats:', error)
+        }
       }
 
       // Load donation tracking and insane streak data (only once per session)
@@ -2482,24 +2444,6 @@ export default function RectangularDashboard() {
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
-      // OPTIMIZATION 5: Cache dashboard data for mobile performance
-      if (typeof window !== 'undefined') {
-        try {
-          const dataToCache = {
-            groupMembers,
-            groupName,
-            recentChats,
-            groupStats,
-            timestamp: Date.now()
-          }
-          sessionStorage.setItem(cacheKey, JSON.stringify(dataToCache))
-          sessionStorage.setItem(cacheTimestampKey, Date.now().toString())
-          console.log('💾 Dashboard data cached for mobile performance')
-        } catch (error) {
-          console.log('Could not cache dashboard data:', error)
-        }
-      }
-      
       setLoading(false)
       dataLoadedRef.current = true
       setDataLoaded(true)

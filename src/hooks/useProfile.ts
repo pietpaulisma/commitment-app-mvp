@@ -139,8 +139,8 @@ export function useProfile() {
   }, [user, loadProfile])
 
   useEffect(() => {
-    // Only load profile if user changed and we're not already loading
-    if (user?.id !== currentUserRef.current && !loadingRef.current) {
+    // Only load profile if user changed
+    if (user?.id !== currentUserRef.current) {
       loadProfile()
     }
   }, [user?.id, loadProfile])

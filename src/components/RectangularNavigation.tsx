@@ -167,34 +167,6 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
   const loadDailyProgress = async () => {
     if (!user || !profile) return
 
-    // MOBILE OPTIMIZATION: Check cache first for instant loading
-    const cacheKey = `nav_progress_${user.id}_${profile.group_id}_${new Date().toISOString().split('T')[0]}`
-    const cacheTimestampKey = `nav_progress_timestamp_${user.id}_${profile.group_id}`
-    const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes for mobile
-
-    if (typeof window !== 'undefined') {
-      const cachedData = sessionStorage.getItem(cacheKey)
-      const cachedTimestamp = sessionStorage.getItem(cacheTimestampKey)
-      
-      if (cachedData && cachedTimestamp) {
-        const timestamp = parseInt(cachedTimestamp)
-        const isValidCache = Date.now() - timestamp < CACHE_DURATION
-        
-        if (isValidCache) {
-          console.log('📦 Using cached navigation progress data')
-          const parsed = JSON.parse(cachedData)
-          setDailyProgress(parsed.dailyProgress || 0)
-          setDailyTarget(parsed.dailyTarget || 100)
-          setRecoveryProgress(parsed.recoveryProgress || 0)
-          setTodayLogs(parsed.todayLogs || [])
-          setGroupName(parsed.groupName || '')
-          setAccentColor(parsed.accentColor || 'blue')
-          setTimeout(() => setProgressAnimated(true), 100)
-          return
-        }
-      }
-    }
-
     try {
       const today = new Date().toISOString().split('T')[0]
       
@@ -282,25 +254,6 @@ export default function RectangularNavigation({ isScrolled = false, onWorkoutMod
       setDailyTarget(target)
       setRecoveryProgress(recoveryPoints)
       setTodayLogs(todayLogs || [])
-      
-      // MOBILE OPTIMIZATION: Cache the navigation data
-      if (typeof window !== 'undefined') {
-        try {
-          const dataToCache = {
-            dailyProgress: cappedTotalPoints,
-            dailyTarget: target,
-            recoveryProgress: recoveryPoints,
-            todayLogs: todayLogs || [],
-            groupName: groupName,
-            accentColor: accentColor
-          }
-          sessionStorage.setItem(cacheKey, JSON.stringify(dataToCache))
-          sessionStorage.setItem(cacheTimestampKey, Date.now().toString())
-          console.log('💾 Navigation progress data cached for mobile performance')
-        } catch (error) {
-          console.log('Could not cache navigation data:', error)
-        }
-      }
       
       // Trigger subtle animation after data loads
       setTimeout(() => setProgressAnimated(true), 200)
