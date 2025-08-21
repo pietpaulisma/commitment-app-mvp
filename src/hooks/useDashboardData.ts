@@ -111,7 +111,7 @@ export function useDashboardData() {
         // Group members
         supabase
           .from('profiles')
-          .select('id, username, custom_icon, personal_color, is_weekly_mode')
+          .select('id, username, custom_icon, personal_color, is_weekly_mode, last_seen')
           .eq('group_id', profile.group_id)
           .order('username'),
           
@@ -154,7 +154,20 @@ export function useDashboardData() {
 
       // Group members
       if (!groupMembersResponse.error && groupMembersResponse.data) {
-        dashboardData.groupMembers = groupMembersResponse.data
+        // Calculate online status for each member
+        const membersWithOnlineStatus = groupMembersResponse.data.map(member => {
+          // Consider a user online if they were active within the last 5 minutes
+          const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+          const lastSeen = member.last_seen ? new Date(member.last_seen) : null
+          const is_online = lastSeen && lastSeen > fiveMinutesAgo
+          
+          return {
+            ...member,
+            is_online
+          }
+        })
+        
+        dashboardData.groupMembers = membersWithOnlineStatus
       }
 
       // Group settings
