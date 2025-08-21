@@ -125,7 +125,7 @@ export function useProfile() {
         setLoading(false)
       }
     }
-  }, [user?.id])
+  }, [user])
 
   const refreshProfile = useCallback(() => {
     console.log('🔄 Refreshing profile data...')

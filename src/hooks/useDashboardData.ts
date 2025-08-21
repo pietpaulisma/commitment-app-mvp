@@ -183,7 +183,7 @@ export function useDashboardData() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, profile?.group_id, getCachedData, setCachedData, setStage, complete])
+  }, [user, profile?.group_id, getCachedData, setCachedData, setStage, complete])
 
   // Refresh data (clears cache)
   const refreshData = useCallback(() => {
