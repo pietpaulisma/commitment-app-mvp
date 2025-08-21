@@ -1222,6 +1222,8 @@ export default function RectangularDashboard() {
   const [daysSinceDonation, setDaysSinceDonation] = useState<number>(0)
   const [insaneStreak, setInsaneStreak] = useState<number>(0)
   const [personalLongestInsaneStreak, setPersonalLongestInsaneStreak] = useState<number>(0)
+  const [dataLoaded, setDataLoaded] = useState(false)
+  const dataLoadedRef = useRef(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -1229,12 +1231,26 @@ export default function RectangularDashboard() {
     }
   }, [user, authLoading, router])
 
-  // Main data loading - don't reload everything when weekMode changes
+  // Main data loading - only load when truly needed
   useEffect(() => {
-    if (user && profile) {
-      loadDashboardData()
-      // Set up real-time updates
-      const interval = setInterval(loadDashboardData, 30000) // Refresh every 30 seconds
+    if (user && profile && user.id && profile.group_id) {
+      // Only load if we haven't loaded for this user/profile combination
+      const currentUserKey = `${user.id}_${profile.group_id}`
+      const lastLoadedKey = sessionStorage.getItem('dashboard_last_user')
+      
+      if (lastLoadedKey !== currentUserKey || !dataLoadedRef.current) {
+        console.log('🔄 Loading dashboard data for new user/profile:', currentUserKey)
+        sessionStorage.setItem('dashboard_last_user', currentUserKey)
+        loadDashboardData()
+      } else {
+        console.log('📦 Dashboard data already loaded for current user, skipping')
+        setLoading(false)
+      }
+      
+      // Set up real-time updates with force reload
+      const interval = setInterval(() => {
+        loadDashboardData(true) // Force reload for periodic updates
+      }, 60000) // Refresh every 60 seconds (reduced frequency)
       return () => clearInterval(interval)
     } else if (!authLoading && !profileLoading) {
       // If auth and profile loading are done but we don't have user or profile, 
@@ -1248,7 +1264,7 @@ export default function RectangularDashboard() {
         setLoading(false) // Stop infinite loading
       }
     }
-  }, [user, profile, authLoading, profileLoading, router])
+  }, [user?.id, profile?.group_id, authLoading, profileLoading, router])
 
   // Safety timeout to prevent infinite loading
   useEffect(() => {
@@ -1264,8 +1280,9 @@ export default function RectangularDashboard() {
 
   // Only reload member data when weekMode changes (for group status display)
   useEffect(() => {
-    if (user && profile && weekMode) {
+    if (user && profile && weekMode && dataLoadedRef.current) {
       // Only reload member data to show individual modes in group status
+      console.log('🔄 Refreshing group members for weekMode change')
       loadGroupMembers()
       // Note: Don't reload personal stats here - let workout modal handle its own target calculation
     }
@@ -2274,15 +2291,23 @@ export default function RectangularDashboard() {
     }))
   }
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (forceReload = false) => {
     if (!user || !profile) {
       console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
       return
     }
 
+    // Check if data is already loaded and we don't need to force reload
+    if (dataLoadedRef.current && !forceReload) {
+      console.log('📦 Dashboard data already loaded, skipping reload')
+      setLoading(false)
+      return
+    }
+
     console.log('loadDashboardData: Starting for user', user.email, 'profile:', {
       group_id: profile.group_id,
-      onboarding_completed: profile.onboarding_completed
+      onboarding_completed: profile.onboarding_completed,
+      forceReload
     })
 
     let currentGroupData: any = null
@@ -2420,6 +2445,8 @@ export default function RectangularDashboard() {
       console.error('Error loading dashboard data:', error)
     } finally {
       setLoading(false)
+      dataLoadedRef.current = true
+      setDataLoaded(true)
     }
   }
 
