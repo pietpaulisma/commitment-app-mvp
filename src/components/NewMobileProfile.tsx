@@ -13,55 +13,21 @@ import {
   AdjustmentsHorizontalIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
-  SparklesIcon,
-  CakeIcon
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import { SystemMessageConfigAdmin } from './SystemMessageConfigAdmin'
-import { supabase } from '@/lib/supabase'
 
 export default function NewMobileProfile() {
   const { user, loading: authLoading, signOut } = useAuth()
-  const { profile, loading: profileLoading, refreshProfile } = useProfile()
+  const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
   const [showSystemMessageConfig, setShowSystemMessageConfig] = useState(false)
-  const [birthDate, setBirthDate] = useState('')
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login')
     }
   }, [user, authLoading, router])
-
-  // Set birth date from profile when loaded
-  useEffect(() => {
-    if (profile?.birth_date) {
-      setBirthDate(profile.birth_date)
-    }
-  }, [profile?.birth_date])
-
-  const saveBirthDate = async () => {
-    if (!user || !birthDate) return
-    
-    setSaving(true)
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ birth_date: birthDate })
-        .eq('id', user.id)
-
-      if (error) throw error
-
-      // Refresh profile to update cache
-      await refreshProfile()
-      alert('Birthday saved!')
-    } catch (error) {
-      console.error('Error saving birthday:', error)
-      alert('Failed to save birthday')
-    } finally {
-      setSaving(false)
-    }
-  }
 
 
   if (authLoading || profileLoading) {
@@ -106,38 +72,6 @@ export default function NewMobileProfile() {
       </div>
       
       <div className="px-4 pt-6 space-y-6">
-
-        {/* Personal Settings Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-6">Personal Settings</h2>
-          <div className="space-y-4">
-            {/* Birthday Setting */}
-            <div className="w-full bg-white/5 border border-gray-700 text-white py-5 px-6 rounded-xl">
-              <div className="flex items-center gap-4 mb-3">
-                <CakeIcon className="w-6 h-6 text-pink-400" />
-                <div className="flex-1">
-                  <div className="font-semibold text-white">Birthday</div>
-                  <div className="text-sm text-gray-400">Set your birthday for countdown stats</div>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="flex-1 bg-gray-800 border border-gray-600 text-white py-2 px-3 rounded-lg focus:outline-none focus:border-pink-400"
-                />
-                <button
-                  onClick={saveBirthDate}
-                  disabled={saving || !birthDate}
-                  className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  {saving ? '...' : 'Save'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Admin Tools Section */}
         {(profile.role === 'supreme_admin' || profile.role === 'group_admin') && (
