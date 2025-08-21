@@ -91,6 +91,17 @@ export function useProfile() {
 
     try {
       console.log('🔄 Loading profile for user:', user.email, 'ID:', user.id)
+      
+      // Debug: Check what columns are available in profiles table
+      const { data: tableInfo } = await supabase
+        .from('profiles')
+        .select()
+        .limit(1)
+        
+      if (tableInfo && tableInfo[0]) {
+        console.log('🔍 Available profile columns:', Object.keys(tableInfo[0]))
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -107,6 +118,9 @@ export function useProfile() {
         role: data.role,
         birth_date: data.birth_date
       })
+      
+      // Debug: Show ALL data to see if birth_date exists under different name
+      console.log('🔍 Full profile data:', data)
       
       // Cache the profile data
       if (typeof window !== 'undefined') {
