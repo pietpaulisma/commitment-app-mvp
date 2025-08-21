@@ -104,7 +104,8 @@ export function useProfile() {
       console.log('✅ Profile loaded:', { 
         email: data.email, 
         onboarding_completed: data.onboarding_completed,
-        role: data.role 
+        role: data.role,
+        birth_date: data.birth_date
       })
       
       // Cache the profile data
