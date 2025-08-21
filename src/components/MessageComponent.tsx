@@ -264,6 +264,12 @@ export function MessageComponent({
                   alt="Shared image" 
                   className="rounded-lg max-w-full h-auto"
                   style={{ maxHeight: '300px' }}
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={(e) => {
+                    // Force a repaint for better mobile performance
+                    e.currentTarget.style.transform = 'translateZ(0)'
+                  }}
                 />
               </div>
             ) : message.message && message.message_type !== 'workout_completion' ? (

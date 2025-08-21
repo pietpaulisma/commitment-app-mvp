@@ -235,7 +235,12 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
   useEffect(() => {
     if (isOpen && profile?.group_id) {
-      setIsInitialLoad(true) // Reset for fresh chat opening
+      // Reset all chat state for fresh loading
+      setIsInitialLoad(true)
+      setMessages([])
+      setSystemMessages({})
+      setLoading(true)
+      
       loadMessages()
       loadGroupName()
       
@@ -359,9 +364,13 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         supabase.removeChannel(channel)
       }
     } else if (!isOpen) {
+      // Reset all states when chat is closed
       setIsAnimatedIn(false)
       setIsClosing(false)
       setShowIconTransition(false)
+      setMessages([])
+      setLoading(true)
+      setSystemMessages({})
     }
   }, [isOpen, profile?.group_id])
 
@@ -383,12 +392,13 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   const scrollToBottom = (instant = false) => {
     if (messagesEndRef.current) {
       try {
+        // Use instant scroll for better PWA performance, especially on initial load
         messagesEndRef.current.scrollIntoView({ 
-          behavior: instant ? 'instant' : 'smooth',
+          behavior: instant || isInitialLoad ? 'instant' : 'smooth',
           block: 'end'
         })
       } catch (e) {
-        // Fallback for older iOS versions
+        // Fallback for older iOS versions and PWA edge cases
         const container = messagesEndRef.current.parentElement
         if (container) {
           container.scrollTop = container.scrollHeight
@@ -420,6 +430,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
     try {
       setLoading(true)
+      // Limit to 100 recent messages for better mobile performance
       const { data: messagesData, error } = await supabase
         .from('chat_messages')
         .select(`
@@ -435,8 +446,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           profiles (email, role, username)
         `)
         .eq('group_id', profile.group_id)
-        .order('created_at', { ascending: true })
-        .limit(500)
+        .order('created_at', { ascending: false })
+        .limit(100)
 
       if (error) throw error
 
@@ -454,7 +465,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         user_role: msg.profiles?.role || 'user',
         username: msg.profiles?.username,
         reactions: []
-      })) || []
+      })).reverse() || [] // Reverse to get chronological order after descending query
 
       // Debug: Check for workout completion messages
       const workoutMessages = formattedMessages.filter(m => m.message_type === 'workout_completion')
@@ -886,20 +897,29 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     return analyzeMessageGrouping();
   };
 
-  // Presence tracking (using last_seen only)
-  const updatePresence = async () => {
+  // Debounced presence tracking for better PWA performance
+  const updatePresence = useRef<NodeJS.Timeout | null>(null)
+  const updatePresenceDebounced = () => {
     if (!user || !profile?.group_id) return;
 
-    try {
-      await supabase
-        .from('profiles')
-        .update({ 
-          last_seen: new Date().toISOString()
-        })
-        .eq('id', user.id);
-    } catch (error) {
-      console.error('Error updating presence:', error);
+    // Clear existing timeout
+    if (updatePresence.current) {
+      clearTimeout(updatePresence.current)
     }
+
+    // Set new timeout
+    updatePresence.current = setTimeout(async () => {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ 
+            last_seen: new Date().toISOString()
+          })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error('Error updating presence:', error);
+      }
+    }, 1000) // Debounce by 1 second
   };
 
   const loadOnlineCount = async () => {
@@ -924,13 +944,13 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   // Track presence when chat is open
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
-      updatePresence();
+      updatePresenceDebounced();
       loadOnlineCount();
       
       // Update presence when visibility changes
       const handleVisibilityChange = () => {
         if (!document.hidden) {
-          updatePresence();
+          updatePresenceDebounced();
         }
       };
 
@@ -938,6 +958,10 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
       
       return () => {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
+        // Clean up debounced presence update
+        if (updatePresence.current) {
+          clearTimeout(updatePresence.current)
+        }
       };
     }
   }, [isOpen, user, profile?.group_id]);
@@ -1016,7 +1040,11 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             overscrollBehavior: 'contain',
             scrollBehavior: 'smooth',
             position: 'relative',
-            zIndex: 1
+            zIndex: 1,
+            // PWA performance optimizations
+            willChange: 'scroll-position',
+            transform: 'translateZ(0)', // Force GPU acceleration
+            backfaceVisibility: 'hidden'
           }}
         >
           {loading ? (
@@ -1078,6 +1106,9 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                 src={imagePreview} 
                 alt="Preview" 
                 className="max-h-32 rounded-lg"
+                loading="lazy"
+                decoding="async"
+                style={{ transform: 'translateZ(0)' }}
               />
               <button
                 onClick={() => {
