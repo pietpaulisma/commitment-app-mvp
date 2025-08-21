@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
-import { useDashboardData } from '@/hooks/useDashboardData'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -1200,27 +1199,23 @@ export default function RectangularDashboard() {
   `
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
-  const { data: dashboardData, loading: dashboardLoading, refreshData } = useDashboardData()
   const router = useRouter()
   const [recentChats, setRecentChats] = useState<RecentChat[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
+  const [loading, setLoading] = useState(true)
+  const [groupName, setGroupName] = useState('')
+  const [groupStartDate, setGroupStartDate] = useState<string | null>(null)
   const [challengeDay, setChallengeDay] = useState(1)
   const [dayType, setDayType] = useState<'rest' | 'recovery' | 'normal'>('normal')
   const [timeLeft, setTimeLeft] = useState('')
   const [timeRemainingPercentage, setTimeRemainingPercentage] = useState(0)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [additionalDataLoaded, setAdditionalDataLoaded] = useState(false)
-  
-  // Extract data from dashboardData hook instead of local state
-  const groupName = dashboardData.groupName || ''
-  const groupStartDate = dashboardData.groupStartDate || null
-  const restDays = dashboardData.restDays || [1]
-  const recoveryDays = dashboardData.recoveryDays || []
-  const accentColor = dashboardData.accentColor || 'gray'
-  const groupMembers = dashboardData.groupMembers || []
-  const groupStats = dashboardData.groupStats || null
-  const personalStats = dashboardData.personalStats || null
-  const loading = dashboardLoading
+  const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday (1)
+  const [recoveryDays, setRecoveryDays] = useState<number[]>([5]) // Default Friday (5)
+  const [accentColor, setAccentColor] = useState('gray') // Default gray
+  const [groupMembers, setGroupMembers] = useState<any[]>([])
+  const [groupStats, setGroupStats] = useState<any>(null)
+  const [personalStats, setPersonalStats] = useState<any>(null)
   const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false, 4: false})
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
@@ -1234,23 +1229,26 @@ export default function RectangularDashboard() {
     }
   }, [user, authLoading, router])
 
-  // Load additional data when dashboard data is ready
+  // Main data loading - don't reload everything when weekMode changes
   useEffect(() => {
-    if (user && profile && !dashboardLoading && groupStartDate && !additionalDataLoaded) {
-      loadAdditionalData()
-    }
-  }, [user, profile, dashboardLoading, groupStartDate, additionalDataLoaded])
-  
-  // Set up real-time updates using the cached dashboard data
-  useEffect(() => {
-    if (user && profile && !dashboardLoading) {
-      const interval = setInterval(() => {
-        refreshData() // Use the cached hook's refresh function
-        setAdditionalDataLoaded(false) // Reset to reload additional data
-      }, 60000) // Refresh every 60 seconds (reduced frequency)
+    if (user && profile) {
+      loadDashboardData()
+      // Set up real-time updates
+      const interval = setInterval(loadDashboardData, 30000) // Refresh every 30 seconds
       return () => clearInterval(interval)
+    } else if (!authLoading && !profileLoading) {
+      // If auth and profile loading are done but we don't have user or profile, 
+      // something went wrong - redirect to login or stop loading
+      console.warn('Auth/profile loading complete but missing user or profile:', { user: !!user, profile: !!profile })
+      if (!user) {
+        router.push('/login')
+      } else {
+        // User exists but no profile - this shouldn't happen but let's handle it
+        console.error('User exists but no profile found')
+        setLoading(false) // Stop infinite loading
+      }
     }
-  }, [user, profile, dashboardLoading, refreshData])
+  }, [user, profile, authLoading, profileLoading, router])
 
   // Safety timeout to prevent infinite loading
   useEffect(() => {
@@ -1266,12 +1264,12 @@ export default function RectangularDashboard() {
 
   // Only reload member data when weekMode changes (for group status display)
   useEffect(() => {
-    if (user && profile && weekMode && !dashboardLoading) {
+    if (user && profile && weekMode) {
       // Only reload member data to show individual modes in group status
       loadGroupMembers()
       // Note: Don't reload personal stats here - let workout modal handle its own target calculation
     }
-  }, [weekMode, dashboardLoading])
+  }, [weekMode])
 
   // Add periodic refresh for group members to keep data current
   useEffect(() => {
@@ -2276,15 +2274,52 @@ export default function RectangularDashboard() {
     }))
   }
 
-  // Load additional data not covered by useDashboardData hook (chats, personal stats)
-  const loadAdditionalData = async () => {
-    if (!user || !profile?.group_id || additionalDataLoaded) {
+  const loadDashboardData = async () => {
+    if (!user || !profile) {
+      console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
       return
     }
 
-    console.log('Loading additional dashboard data (chats, personal stats)')
-    
+    console.log('loadDashboardData: Starting for user', user.email, 'profile:', {
+      group_id: profile.group_id,
+      onboarding_completed: profile.onboarding_completed
+    })
+
+    let currentGroupData: any = null
+
     try {
+      // Get group name and start date
+      if (profile.group_id) {
+        const { data: group } = await supabase
+          .from('groups')
+          .select('name, start_date')
+          .eq('id', profile.group_id)
+          .single()
+        
+        currentGroupData = group // Store for use in streak calculation
+        setGroupName(group?.name || 'Your Group')
+        setGroupStartDate(group?.start_date || null)
+
+        // Load group members and stats
+        await Promise.all([loadGroupMembers(), loadGroupStats(), loadPersonalStats()])
+
+        // Try to load group settings for rest/recovery days and UI configuration
+        try {
+          const { data: groupSettings, error: settingsError } = await supabase
+            .from('group_settings')
+            .select('rest_days, recovery_days, accent_color')
+            .eq('group_id', profile.group_id)
+            .maybeSingle()
+
+          if (!settingsError && groupSettings) {
+            setRestDays(groupSettings.rest_days || [1]) // Default Monday
+            setRecoveryDays(groupSettings.recovery_days || [5]) // Default Friday
+            setAccentColor(groupSettings.accent_color || 'gray') // Default gray
+          }
+        } catch (error) {
+          console.log('Group settings not available, using defaults')
+        }
+      }
 
       // Load recent chats
       if (profile.group_id) {
@@ -2343,11 +2378,11 @@ export default function RectangularDashboard() {
           .eq('user_id', user.id)
           .in('date', past30Days)
 
-        // Calculate insane streak using dashboard data
-        if (groupStartDate) {
+        // Calculate insane streak using proper group data
+        if (currentGroupData?.start_date) {
           const streak = calculateInsaneStreak(
             userLogs || [], 
-            groupStartDate, 
+            currentGroupData.start_date, 
             restDays, 
             recoveryDays
           )
@@ -2362,7 +2397,7 @@ export default function RectangularDashboard() {
           
           const personalLongestStreak = calculateLongestStreak(
             allPersonalLogs || [],
-            groupStartDate,
+            currentGroupData.start_date,
             restDays,
             recoveryDays
           )
@@ -2380,10 +2415,11 @@ export default function RectangularDashboard() {
           console.log('Could not load donation/streak data:', error)
         }
       }
-      
-      setAdditionalDataLoaded(true)
+
     } catch (error) {
-      console.error('Error loading additional dashboard data:', error)
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
