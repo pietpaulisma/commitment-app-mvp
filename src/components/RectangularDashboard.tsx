@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, memo, useRef } from 'react'
+import { useEffect, useState, memo, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
@@ -2274,7 +2274,7 @@ export default function RectangularDashboard() {
     }))
   }
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     if (!user || !profile) {
       console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
       return
@@ -2421,7 +2421,7 @@ export default function RectangularDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, profile])
 
   const formatTimeAgo = (timestamp: string) => {
     const date = new Date(timestamp)
