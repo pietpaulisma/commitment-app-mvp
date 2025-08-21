@@ -1248,7 +1248,7 @@ export default function RectangularDashboard() {
         setLoading(false) // Stop infinite loading
       }
     }
-  }, [user, profile, authLoading, profileLoading, router])
+  }, [user, profile, authLoading, profileLoading, router, loadDashboardData])
 
   // Safety timeout to prevent infinite loading
   useEffect(() => {
@@ -2274,7 +2274,7 @@ export default function RectangularDashboard() {
     }))
   }
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     if (!user || !profile) {
       console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
       return
@@ -2421,7 +2421,7 @@ export default function RectangularDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id, profile?.group_id, weekMode]) // Only include primitive values, not functions
 
   const formatTimeAgo = (timestamp: string) => {
     const date = new Date(timestamp)

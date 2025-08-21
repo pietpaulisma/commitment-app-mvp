@@ -8,12 +8,16 @@ async function testLiveSite() {
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
     
-    // Monitor console and errors
+    // Monitor console and errors - limit to prevent memory issues
     const consoleMessages = [];
     const errors = [];
+    let messageCount = 0;
     
     page.on('console', msg => {
-      consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
+      messageCount++;
+      if (consoleMessages.length < 20) { // Only capture first 20 to avoid memory issues
+        consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
+      }
     });
     
     page.on('pageerror', error => {
@@ -24,10 +28,10 @@ async function testLiveSite() {
       }
     });
     
-    console.log('📍 Loading commitment-app-dev.vercel.app...');
+    console.log('📍 Loading commitment-app-c1b8um7er-pietpaulismas-projects.vercel.app...');
     
     const startTime = Date.now();
-    await page.goto('https://commitment-app-dev.vercel.app/', {
+    await page.goto('https://commitment-app-c1b8um7er-pietpaulismas-projects.vercel.app/', {
       waitUntil: 'domcontentloaded',
       timeout: 15000
     });
@@ -35,8 +39,8 @@ async function testLiveSite() {
     const loadTime = Date.now() - startTime;
     console.log(`⚡ Initial load: ${loadTime}ms`);
     
-    // Wait for JavaScript execution and hydration
-    await page.waitForTimeout(8000);
+    // Wait for JavaScript execution and hydration - but not too long due to infinite loops
+    await page.waitForTimeout(3000);
     
     const totalTime = Date.now() - startTime;
     console.log(`⏱️ Total time: ${totalTime}ms`);
@@ -91,7 +95,8 @@ async function testLiveSite() {
     const eFErrors = errors.filter(e => e.includes("Cannot access 'eF' before initialization")).length;
     
     console.log(`\n📊 Console Analysis:`);
-    console.log(`  - Total messages: ${consoleMessages.length}`);
+    console.log(`  - TOTAL MESSAGES: ${messageCount} (!!!)`);
+    console.log(`  - Messages captured: ${consoleMessages.length}`);
     console.log(`  - JavaScript errors: ${jsErrors}`);
     console.log(`  - ReferenceErrors: ${referenceErrors}`);
     console.log(`  - "before initialization" errors: ${beforeInitErrors}`);
