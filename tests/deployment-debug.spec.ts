@@ -19,7 +19,7 @@ test.describe('Deployment Loading Issues', () => {
     });
 
     // Navigate to the deployed site
-    await page.goto('https://commitment-app-dev-git-main-pietpaulismas-projects.vercel.app/');
+    await page.goto('https://commitment-nh5yx9azq-pietpaulismas-projects.vercel.app/');
     
     // Wait for the page to fully load
     await page.waitForLoadState('networkidle');
@@ -39,10 +39,10 @@ test.describe('Deployment Loading Issues', () => {
     await expect(page.locator('body')).toBeVisible();
     
     // Try navigating to different pages to see if chunks load
-    await page.goto('https://commitment-app-dev-git-main-pietpaulismas-projects.vercel.app/dashboard');
+    await page.goto('https://commitment-nh5yx9azq-pietpaulismas-projects.vercel.app/dashboard');
     await page.waitForLoadState('networkidle');
     
-    await page.goto('https://commitment-app-dev-git-main-pietpaulismas-projects.vercel.app/workout');
+    await page.goto('https://commitment-nh5yx9azq-pietpaulismas-projects.vercel.app/workout');
     await page.waitForLoadState('networkidle');
 
     // Report findings
@@ -53,13 +53,15 @@ test.describe('Deployment Loading Issues', () => {
     }
   });
 
-  test('should check specific chunk that failed', async ({ page }) => {
-    // Test the specific chunk that was failing
-    const response = await page.request.get('https://commitment-app-dev-git-main-pietpaulismas-projects.vercel.app/_next/static/chunks/535-51a57126d3f76271.js');
-    console.log(`Chunk 535 status: ${response.status()}`);
+  test('should check if chunks load properly on new deployment', async ({ page }) => {
+    // Test general static chunk loading from new deployment
+    const response = await page.request.get('https://commitment-nh5yx9azq-pietpaulismas-projects.vercel.app/_next/static/chunks/964-eda38e26c0391a47.js');
+    console.log(`Main chunk status: ${response.status()}`);
     
     if (!response.ok()) {
-      console.log('Chunk 535 failed to load - this confirms the deployment issue');
+      console.log('Main chunk failed to load');
+    } else {
+      console.log('Chunks are loading properly now');
     }
   });
 });

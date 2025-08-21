@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, memo, useRef } from 'react'
+import { useEffect, useState, memo, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ClockIcon, CalendarDaysIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChartPieIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
@@ -1248,7 +1248,7 @@ export default function RectangularDashboard() {
         setLoading(false) // Stop infinite loading
       }
     }
-  }, [user, profile, authLoading, profileLoading, router])
+  }, [user, profile, authLoading, profileLoading, router, loadDashboardData])
 
   // Safety timeout to prevent infinite loading
   useEffect(() => {
@@ -1269,7 +1269,7 @@ export default function RectangularDashboard() {
       loadGroupMembers()
       // Note: Don't reload personal stats here - let workout modal handle its own target calculation
     }
-  }, [weekMode])
+  }, [weekMode, loadGroupMembers])
 
   // Add periodic refresh for group members to keep data current
   useEffect(() => {
@@ -1525,7 +1525,7 @@ export default function RectangularDashboard() {
     }
   }
 
-  const loadGroupMembers = async () => {
+  const loadGroupMembers = useCallback(async () => {
     if (!profile?.group_id) return
 
     try {
@@ -1664,7 +1664,7 @@ export default function RectangularDashboard() {
     } catch (error) {
       console.error('Error loading group members:', error)
     }
-  }
+  }, [profile?.group_id, weekMode])
 
   const calculateEssentialStats = async () => {
     if (!profile?.group_id) return null
@@ -2274,7 +2274,7 @@ export default function RectangularDashboard() {
     }))
   }
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     if (!user || !profile) {
       console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
       return
@@ -2421,7 +2421,7 @@ export default function RectangularDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, profile, weekMode])
 
   const formatTimeAgo = (timestamp: string) => {
     const date = new Date(timestamp)
