@@ -92,15 +92,15 @@ export function useProfile() {
     try {
       console.log('🔄 Loading profile for user:', user.email, 'ID:', user.id)
       
-      // Debug: Check what columns are available in profiles table
-      const { data: tableInfo } = await supabase
+      // Debug: Try a direct query for just birth_date
+      const { data: birthDateCheck, error: birthError } = await supabase
         .from('profiles')
-        .select()
-        .limit(1)
+        .select('id, email, birth_date')
+        .eq('id', user.id)
+        .single()
         
-      if (tableInfo && tableInfo[0]) {
-        console.log('🔍 Available profile columns:', Object.keys(tableInfo[0]))
-      }
+      console.log('🎂 Direct birth_date query result:', birthDateCheck)
+      if (birthError) console.log('🎂 Birth date query error:', birthError)
       
       const { data, error } = await supabase
         .from('profiles')
