@@ -664,7 +664,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           message_id,
           user_id,
           emoji,
-          profiles (email)
+          profiles!user_id (email)
         `)
         .in('message_id', messageIds)
 
