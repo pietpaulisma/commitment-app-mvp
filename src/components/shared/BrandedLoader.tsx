@@ -42,19 +42,9 @@ export default function BrandedLoader({
         setDisplayStage(stages[stageIndex].label)
       }
     } else {
-      // Auto-progress through stages for demo purposes
-      let currentIndex = 0
-      const interval = setInterval(() => {
-        if (currentIndex < stages.length) {
-          setProgress(((currentIndex + 1) / stages.length) * 100)
-          setDisplayStage(stages[currentIndex].label)
-          currentIndex++
-        } else {
-          clearInterval(interval)
-        }
-      }, 800)
-
-      return () => clearInterval(interval)
+      // If no currentStage provided, show initial state
+      setProgress(0)
+      setDisplayStage(stages[0]?.label || 'Loading...')
     }
   }, [currentStage, stages])
 

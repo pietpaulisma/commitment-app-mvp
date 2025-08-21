@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
@@ -24,11 +24,16 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const lastPathnameRef = useRef(pathname)
   
   // Loading stages management
-  const { currentStage, setStage, complete } = useLoadingStages(AUTH_STAGES)
+  const { currentStage, setStage, complete, isComplete } = useLoadingStages(AUTH_STAGES)
 
+  // Memoize derived values to prevent unnecessary re-renders
+  const isAuthPage = useMemo(() => ['/login', '/signup', '/'].includes(pathname), [pathname])
+  const isOnboardingPage = useMemo(() => pathname?.startsWith('/onboarding'), [pathname])
+  const isSupremeAdmin = useMemo(() => user?.email === 'klipperdeklip@gmail.com', [user?.email])
+  const isLoading = useMemo(() => authLoading || profileLoading || isCreatingSupremeAdmin || shouldRefreshProfile, [authLoading, profileLoading, isCreatingSupremeAdmin, shouldRefreshProfile])
+  
   // Re-enabled with better supreme admin handling
-
-  const createSupremeAdminProfile = async () => {
+  const createSupremeAdminProfile = useCallback(async () => {
     if (isCreatingSupremeAdmin) {
       console.log('⏳ Supreme admin profile creation already in progress...')
       return
@@ -79,7 +84,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     } finally {
       setIsCreatingSupremeAdmin(false)
     }
-  }
+  }, [isCreatingSupremeAdmin, user?.email, user?.id, refreshProfile])
 
   useEffect(() => {
     mountedRef.current = true
@@ -134,15 +139,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     })
 
     // Wait for both auth and profile to fully load, and don't process during supreme admin creation or profile refresh
-    if (authLoading || profileLoading || isCreatingSupremeAdmin || shouldRefreshProfile) {
+    if (isLoading) {
       console.log('⏳ Still loading or processing, will check again when ready')
       return
     }
 
     // Don't check on auth/onboarding pages
-    const isAuthPage = ['/login', '/signup', '/'].includes(pathname)
-    const isOnboardingPage = pathname?.startsWith('/onboarding')
-    
     if (isAuthPage || isOnboardingPage) {
       console.log('📄 On auth/onboarding page, skipping redirect check')
       setHasChecked(true)
@@ -157,7 +159,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     }
 
     // Special case for supreme admin - handle missing profile or incomplete onboarding
-    if (user.email === 'klipperdeklip@gmail.com') {
+    if (isSupremeAdmin) {
       if (!profile || !profile.onboarding_completed) {
         console.log('🔥 Supreme admin detected - creating/updating profile automatically')
         if (!isCreatingSupremeAdmin) {
@@ -201,7 +203,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     } else {
       console.log('⚠️ Already checked once, not redirecting again to avoid loops')
     }
-  }, [user, profile, authLoading, profileLoading, pathname, router, isCreatingSupremeAdmin, hasChecked, shouldRefreshProfile])
+  }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile])
 
 
   // Update loading stages based on current state
@@ -216,7 +218,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   }, [authLoading, profileLoading, shouldRefreshProfile, setStage, complete])
 
   // Show loading state while checking onboarding status
-  if (authLoading || profileLoading) {
+  if ((authLoading || profileLoading) && !isComplete) {
     return <BrandedLoader currentStage={currentStage} />
   }
 

@@ -36,8 +36,12 @@ export function useLoadingStages(stages: LoadingStage[]) {
   }
 
   const complete = () => {
+    // Ensure we show the final stage at 100% before marking complete
     setCurrentStageIndex(stages.length - 1)
-    setIsComplete(true)
+    // Small delay to show 100% before marking complete
+    setTimeout(() => {
+      setIsComplete(true)
+    }, 300)
   }
 
   return {

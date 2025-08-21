@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
@@ -34,6 +34,8 @@ export function useProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const loadingRef = useRef(false)
+  const currentUserRef = useRef<string | null>(null)
 
   // Cache key for sessionStorage
   const getCacheKey = (userId: string) => `profile_cache_${userId}`
@@ -42,11 +44,18 @@ export function useProfile() {
   // Cache duration: 5 minutes
   const CACHE_DURATION = 5 * 60 * 1000
 
-  const loadProfile = async (showLoading = true) => {
+  const loadProfile = useCallback(async (showLoading = true) => {
     if (!user) {
       setProfile(null)
       setLoading(false)
+      loadingRef.current = false
       return null
+    }
+
+    // Prevent duplicate loading calls for the same user
+    if (loadingRef.current && currentUserRef.current === user.id) {
+      console.log('⏳ Profile loading already in progress for this user, skipping')
+      return profile
     }
 
     // Check cache first
@@ -66,11 +75,15 @@ export function useProfile() {
           const parsed = JSON.parse(cachedProfile)
           setProfile(parsed)
           setLoading(false)
+          loadingRef.current = false
           return parsed
         }
       }
     }
 
+    loadingRef.current = true
+    currentUserRef.current = user.id
+    
     if (showLoading) {
       setLoading(true)
     }
@@ -107,25 +120,30 @@ export function useProfile() {
       setError(error instanceof Error ? error.message : 'Failed to load profile')
       return null
     } finally {
+      loadingRef.current = false
       if (showLoading) {
         setLoading(false)
       }
     }
-  }
+  }, [user, profile])
 
-  const refreshProfile = () => {
+  const refreshProfile = useCallback(() => {
     console.log('🔄 Refreshing profile data...')
     // Clear cache on manual refresh
     if (typeof window !== 'undefined' && user) {
       sessionStorage.removeItem(getCacheKey(user.id))
       sessionStorage.removeItem(getCacheTimestampKey(user.id))
     }
+    loadingRef.current = false // Reset loading state to allow refresh
     return loadProfile(false)
-  }
+  }, [user, loadProfile])
 
   useEffect(() => {
-    loadProfile()
-  }, [user])
+    // Only load profile if user changed
+    if (user?.id !== currentUserRef.current) {
+      loadProfile()
+    }
+  }, [user?.id, loadProfile])
 
   // Check for role preview override (for testing purposes) - only client-side
   const [roleOverride, setRoleOverride] = useState<UserRole | null>(null)
