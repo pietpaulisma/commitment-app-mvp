@@ -90,14 +90,14 @@ export function useDashboardData() {
       console.warn('Could not update presence:', error)
     }
 
-    // Check cache first
-    const cachedData = getCachedData()
-    if (cachedData) {
-      setData(cachedData)
-      setLoading(false)
-      complete()
-      return
-    }
+    // Temporarily disable cache for debugging online status
+    // const cachedData = getCachedData()
+    // if (cachedData) {
+    //   setData(cachedData)
+    //   setLoading(false)
+    //   complete()
+    //   return
+    // }
 
     try {
       setLoading(true)
