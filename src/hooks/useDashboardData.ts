@@ -74,20 +74,24 @@ export function useDashboardData() {
 
   // Load all dashboard data in parallel
   const loadDashboardData = useCallback(async () => {
+    console.log('🔍 DEBUG: loadDashboardData called', { hasUser: !!user, hasProfile: !!profile, groupId: profile?.group_id })
+    
     if (!user || !profile?.group_id) {
+      console.log('🔍 DEBUG: Early return - missing user or group_id')
       setLoading(false)
       return
     }
 
     // Update current user's presence when loading dashboard
     try {
+      console.log('🔍 DEBUG: Updating presence for user:', user.id)
       await supabase
         .from('profiles')
         .update({ last_seen: new Date().toISOString() })
         .eq('id', user.id)
-      console.log('Updated current user presence for dashboard')
+      console.log('✅ Updated current user presence for dashboard')
     } catch (error) {
-      console.warn('Could not update presence:', error)
+      console.warn('❌ Could not update presence:', error)
     }
 
     // Temporarily disable cache for debugging online status
@@ -104,6 +108,8 @@ export function useDashboardData() {
       setError(null)
       setStage('group')
 
+      console.log('🔍 DEBUG: Starting parallel queries...')
+      
       // Load all data in parallel for better performance
       const [
         groupResponse,
@@ -151,6 +157,9 @@ export function useDashboardData() {
           .eq('group_id', profile.group_id)
           .maybeSingle()
       ])
+
+      console.log('🔍 DEBUG: Queries completed, processing data...')
+      console.log('🔍 DEBUG: Group members response:', { error: groupMembersResponse.error, dataLength: groupMembersResponse.data?.length })
 
       setStage('stats')
 
