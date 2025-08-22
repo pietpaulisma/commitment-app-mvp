@@ -1529,12 +1529,21 @@ export default function RectangularDashboard() {
     if (!profile?.group_id) return
 
     try {
+      // Update current user's presence when loading dashboard
+      if (user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('id', user.id)
+        console.log('✅ Updated current user presence for dashboard')
+      }
+
       const today = new Date().toISOString().split('T')[0]
       
-      // Get all group members including their individual week_mode
+      // Get all group members including their individual week_mode and last_seen for online status
       const { data: allMembers, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color, created_at, week_mode')
+        .select('id, email, username, personal_color, created_at, week_mode, last_seen')
         .eq('group_id', profile.group_id)
 
       if (membersError) {
@@ -1617,7 +1626,7 @@ export default function RectangularDashboard() {
         }
       })
 
-      // Create final member objects with their points and individual targets
+      // Create final member objects with their points, individual targets, and online status
       const membersWithProgress = allMembers.map(member => {
         // Calculate individual daily target based on member's week_mode
         const memberWeekMode = member.week_mode as 'sane' | 'insane' | null
@@ -1628,35 +1637,27 @@ export default function RectangularDashboard() {
           recoveryDays: groupSettings?.recovery_days || [5]
         })
         
+        // Calculate online status - consider user online if active within last 5 minutes
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+        const lastSeen = member.last_seen ? new Date(member.last_seen) : null
+        const is_online = lastSeen && lastSeen > fiveMinutesAgo
+        
+        console.log(`Online status debug - ${member.username}:`, {
+          last_seen: member.last_seen,
+          lastSeenDate: lastSeen,
+          fiveMinutesAgo,
+          is_online,
+          timeDiff: lastSeen ? Date.now() - lastSeen.getTime() : 'never'
+        })
+        
         return {
           ...member,
           todayPoints: memberPointsMap.get(member.id) || 0,
           dailyTarget: memberDailyTarget,
-          isCurrentUser: member.id === user?.id
+          isCurrentUser: member.id === user?.id,
+          is_online
         }
       })
-      
-      // Try to load presence data if columns exist
-      try {
-        const { data: presenceData, error: presenceError } = await supabase
-          .from('profiles')
-          .select('id, last_seen')
-          .eq('group_id', profile.group_id)
-        
-        if (!presenceError && presenceData) {
-          // Add presence data to members
-          membersWithProgress.forEach(member => {
-            const presence = presenceData.find(p => p.id === member.id)
-            if (presence) {
-              member.last_seen = presence.last_seen
-              // Online status will be calculated client-side based on last_seen
-            }
-          })
-        }
-      } catch (presenceError) {
-        console.log('Presence columns not available yet, skipping:', presenceError)
-        // Continue without presence data - this is expected if columns don't exist
-      }
 
       // Sort by points descending
       membersWithProgress.sort((a, b) => b.todayPoints - a.todayPoints)
