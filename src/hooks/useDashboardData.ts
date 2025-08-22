@@ -23,7 +23,7 @@ interface CachedData {
   timestamp: number
 }
 
-const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes
+const CACHE_DURATION = 30 * 1000 // 30 seconds for debugging - reduced cache time
 const CACHE_KEY = 'dashboard_cache'
 
 export function useDashboardData() {
@@ -77,6 +77,17 @@ export function useDashboardData() {
     if (!user || !profile?.group_id) {
       setLoading(false)
       return
+    }
+
+    // Update current user's presence when loading dashboard
+    try {
+      await supabase
+        .from('profiles')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', user.id)
+      console.log('Updated current user presence for dashboard')
+    } catch (error) {
+      console.warn('Could not update presence:', error)
     }
 
     // Check cache first
@@ -161,6 +172,15 @@ export function useDashboardData() {
           const lastSeen = member.last_seen ? new Date(member.last_seen) : null
           const is_online = lastSeen && lastSeen > fiveMinutesAgo
           
+          // Debug logging for online status
+          console.log(`Online status debug - ${member.username}:`, {
+            last_seen: member.last_seen,
+            lastSeenDate: lastSeen,
+            fiveMinutesAgo,
+            is_online,
+            timeDiff: lastSeen ? Date.now() - lastSeen.getTime() : 'never'
+          })
+          
           return {
             ...member,
             is_online
@@ -168,6 +188,7 @@ export function useDashboardData() {
         })
         
         dashboardData.groupMembers = membersWithOnlineStatus
+        console.log('Dashboard members with online status:', membersWithOnlineStatus)
       }
 
       // Group settings
