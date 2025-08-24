@@ -34,6 +34,12 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
 - Proper error handling and loading states
 - Mobile-first responsive design
 
+## Function Organization
+- **Shared utilities**: Use existing `src/utils/` directory (targetCalculation, colorUtils, supabaseQueries, etc.)
+- **UI utilities**: Use `src/components/ui/utils.ts` 
+- **Component-specific helpers**: Keep in component file only if truly component-specific
+- **Always prefer**: Modifying existing utility files over creating new ones or duplicating functions
+
 ## Database
 - Supabase with Row Level Security (RLS)
 - Handle real-time subscriptions properly

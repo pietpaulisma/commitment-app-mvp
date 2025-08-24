@@ -149,7 +149,7 @@ export default function ExerciseForm({ exercise, isOpen, onClose, onSuccess }: E
               placeholder="e.g., pushup, squat, recovery"
               required
             />
-            <p className="text-xs text-gray-400 mt-1">Use 'recovery' for recovery exercises</p>
+            <p className="text-xs text-gray-400 mt-1">Use &apos;recovery&apos; for recovery exercises</p>
           </div>
 
           {/* Unit */}

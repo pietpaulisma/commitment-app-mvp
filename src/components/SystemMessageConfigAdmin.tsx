@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from './ui/button'
 import { Switch } from './ui/switch'
@@ -43,6 +43,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   const [isLoading, setIsLoading] = useState(false)
   const [expandedSection, setExpandedSection] = useState<string | null>('summary')
   const [previewMode, setPreviewMode] = useState<string | null>(null)
+  const isMountedRef = useRef(true)
   
   // Configuration states
   const [challengeConfig, setChallengeConfig] = useState<WeeklyChallengeConfig | null>(null)
@@ -128,13 +129,25 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   ])
 
   useEffect(() => {
+    isMountedRef.current = true
+    
     if (isOpen && isSupremeAdmin) {
       loadConfigurations()
+    }
+    
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMountedRef.current = false
+      setIsLoading(false)
+      setExpandedSection(null)
+      setPreviewMode(null)
     }
   }, [isOpen, isSupremeAdmin])
 
   const loadConfigurations = async () => {
+    if (!isMountedRef.current) return
     setIsLoading(true)
+    
     try {
       const [
         challengeData,
@@ -149,6 +162,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
         SystemMessageConfigService.getPersonalSummaryConfig(),
         SystemMessageConfigService.getEnhancedMilestoneConfigs()
       ])
+      
+      // Only update state if component is still mounted
+      if (!isMountedRef.current) return
       
       setChallengeConfig(challengeData)
       setDailySummaryConfig(dailyData)
@@ -201,7 +217,10 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
     } catch (error) {
       console.error('Error loading configurations:', error)
     } finally {
-      setIsLoading(false)
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -369,20 +388,25 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   const sendDeveloperNote = async () => {
     if (!developerMessage.trim() || !profile?.group_id) return
 
-    setSendingMessage(true)
+    if (isMountedRef.current) {
+      setSendingMessage(true)
+    }
+    
     const success = await SystemMessageConfigService.createDeveloperNote(
       profile.group_id,
       developerMessage.trim(),
       'common'
     )
     
-    if (success) {
-      setDeveloperMessage('')
-      alert('Admin message sent successfully!')
-    } else {
-      alert('Failed to send admin message')
+    if (isMountedRef.current) {
+      if (success) {
+        setDeveloperMessage('')
+        alert('Admin message sent successfully!')
+      } else {
+        alert('Failed to send admin message')
+      }
+      setSendingMessage(false)
     }
-    setSendingMessage(false)
   }
 
   const sendDailySummaryNow = async () => {
@@ -391,7 +415,10 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       return
     }
 
-    setSendingMessage(true)
+    if (isMountedRef.current) {
+      setSendingMessage(true)
+    }
+    
     try {
       const { data, error } = await supabase.rpc('generate_daily_summary', {
         p_group_id: profile.group_id
@@ -408,7 +435,10 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       console.error('Error sending daily summary:', error)
       alert(`Failed to send daily summary: ${error.message || error}`)
     }
-    setSendingMessage(false)
+    
+    if (isMountedRef.current) {
+      setSendingMessage(false)
+    }
   }
 
   const renderMilestoneRaritySelector = (milestone: EnhancedMilestoneConfig) => (
@@ -434,16 +464,24 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
     options: SummaryOption[], 
     setOptions: React.Dispatch<React.SetStateAction<SummaryOption[]>>
   ) => (
-    <div key={option.id} className="flex items-start justify-between py-3">
-      <div className="flex-1 min-w-0 pr-3">
+    <div key={option.id} className="flex items-start justify-between py-4">
+      <div className="flex-1 min-w-0 pr-4">
         <h5 className="text-white text-sm">{option.title}</h5>
         <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{option.description}</p>
       </div>
-      <Checkbox
-        checked={option.enabled}
-        onCheckedChange={() => toggleSummaryOption(options, setOptions, option.id)}
-        className="mt-1 shrink-0"
-      />
+      <div 
+        className="shrink-0 touch-manipulation" 
+        style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
+        <Checkbox
+          checked={option.enabled}
+          onCheckedChange={() => toggleSummaryOption(options, setOptions, option.id)}
+          className="w-5 h-5"
+        />
+      </div>
     </div>
   )
 
@@ -491,9 +529,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                 variant="ghost" 
                 size="sm"
                 onClick={() => setPreviewMode(isPreviewVisible ? null : `milestone-${milestone.id}`)}
-                className="text-slate-400 hover:text-slate-300 h-6 px-2 text-xs"
+                className="text-slate-400 hover:text-slate-300 min-h-[44px] px-4 text-sm touch-manipulation"
               >
-                <Eye className="h-3 w-3 mr-1" />
+                <Eye className="h-4 w-4 mr-2" />
                 {isPreviewVisible ? 'Hide' : 'Preview'}
               </Button>
             </div>
@@ -516,11 +554,19 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
               </div>
             )}
           </div>
-          <Checkbox
-            checked={milestone.enabled}
-            onCheckedChange={() => toggleMilestoneOption(milestone.id)}
-            className="mt-1 shrink-0"
-          />
+          <div 
+            className="shrink-0 touch-manipulation" 
+            style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
+            <Checkbox
+              checked={milestone.enabled}
+              onCheckedChange={() => toggleMilestoneOption(milestone.id)}
+              className="w-5 h-5"
+            />
+          </div>
         </div>
       </div>
     )
@@ -614,14 +660,24 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                             <h4 className="text-white text-sm">Enable Weekly Challenges</h4>
                             <p className="text-slate-400 text-xs mt-1">Send motivational challenges to keep the group engaged</p>
                           </div>
-                          <Switch
-                            checked={challengeConfig?.enabled || false}
-                            onCheckedChange={async (enabled) => {
-                              await SystemMessageConfigService.updateWeeklyChallengeConfig({ enabled })
-                              setChallengeConfig(prev => prev ? { ...prev, enabled } : null)
-                            }}
-                            className="data-[state=checked]:bg-green-600"
-                          />
+                          <div 
+                            className="touch-manipulation" 
+                            style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            onClick={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchEnd={(e) => e.stopPropagation()}
+                          >
+                            <Switch
+                              checked={challengeConfig?.enabled || false}
+                              onCheckedChange={async (enabled) => {
+                                await SystemMessageConfigService.updateWeeklyChallengeConfig({ enabled })
+                                if (isMountedRef.current) {
+                                  setChallengeConfig(prev => prev ? { ...prev, enabled } : null)
+                                }
+                              }}
+                              className="data-[state=checked]:bg-green-600"
+                            />
+                          </div>
                         </div>
 
                         {challengeConfig?.enabled && (
@@ -687,16 +743,26 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                             <h4 className="text-white text-sm">Enable Workout Summaries</h4>
                             <p className="text-slate-400 text-xs mt-1">Send daily, weekly, and personal workout progress updates</p>
                           </div>
-                          <Switch
-                            checked={dailySummaryConfig?.enabled || false}
-                            onCheckedChange={async (enabled) => {
-                              if (dailySummaryConfig) {
-                                await SystemMessageConfigService.updateDailySummaryConfig({ ...dailySummaryConfig, enabled })
-                                setDailySummaryConfig(prev => prev ? { ...prev, enabled } : null)
-                              }
-                            }}
-                            className="data-[state=checked]:bg-green-600"
-                          />
+                          <div 
+                            className="touch-manipulation" 
+                            style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            onClick={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchEnd={(e) => e.stopPropagation()}
+                          >
+                            <Switch
+                              checked={dailySummaryConfig?.enabled || false}
+                              onCheckedChange={async (enabled) => {
+                                if (dailySummaryConfig) {
+                                  await SystemMessageConfigService.updateDailySummaryConfig({ ...dailySummaryConfig, enabled })
+                                  if (isMountedRef.current) {
+                                    setDailySummaryConfig(prev => prev ? { ...prev, enabled } : null)
+                                  }
+                                }
+                              }}
+                              className="data-[state=checked]:bg-green-600"
+                            />
+                          </div>
                         </div>
 
                         {dailySummaryConfig?.enabled && (
@@ -716,9 +782,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                   variant="ghost" 
                                   size="sm"
                                   onClick={() => setPreviewMode(previewMode === 'daily' ? null : 'daily')}
-                                  className="text-slate-400 hover:text-slate-300 h-7 px-2"
+                                  className="text-slate-400 hover:text-slate-300 min-h-[44px] px-4 touch-manipulation"
                                 >
-                                  <Eye className="h-3 w-3 mr-1" />
+                                  <Eye className="h-4 w-4 mr-2" />
                                   {previewMode === 'daily' ? 'Hide Preview' : 'Show Preview'}
                                 </Button>
                               </div>
@@ -751,9 +817,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                   variant="ghost" 
                                   size="sm"
                                   onClick={() => setPreviewMode(previewMode === 'weekly' ? null : 'weekly')}
-                                  className="text-slate-400 hover:text-slate-300 h-7 px-2"
+                                  className="text-slate-400 hover:text-slate-300 min-h-[44px] px-4 touch-manipulation"
                                 >
-                                  <Eye className="h-3 w-3 mr-1" />
+                                  <Eye className="h-4 w-4 mr-2" />
                                   {previewMode === 'weekly' ? 'Hide Preview' : 'Show Preview'}
                                 </Button>
                               </div>
@@ -786,9 +852,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                   variant="ghost" 
                                   size="sm"
                                   onClick={() => setPreviewMode(previewMode === 'personal' ? null : 'personal')}
-                                  className="text-slate-400 hover:text-slate-300 h-7 px-2"
+                                  className="text-slate-400 hover:text-slate-300 min-h-[44px] px-4 touch-manipulation"
                                 >
-                                  <Eye className="h-3 w-3 mr-1" />
+                                  <Eye className="h-4 w-4 mr-2" />
                                   {previewMode === 'personal' ? 'Hide Preview' : 'Show Preview'}
                                 </Button>
                               </div>

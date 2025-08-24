@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
 import { getDaysSinceStart } from '@/utils/targetCalculation'
@@ -100,7 +100,7 @@ export default function GroupAdminDashboard() {
       loadPotData()
       loadChatSettings()
     }
-  }, [isGroupAdmin, isSupremeAdmin, profile])
+  }, [isGroupAdmin, isSupremeAdmin, profile, loadChatSettings, loadGroupData, loadGroupSettings, loadPotData])
 
   const loadGroupData = async () => {
     if (!profile) return
@@ -215,59 +215,43 @@ export default function GroupAdminDashboard() {
   }
 
   const loadPotData = async () => {
-    console.log('🍯 [POT DEBUG] Starting loadPotData...')
-    console.log('🍯 [POT DEBUG] Profile:', profile)
-    
     if (!profile) {
-      console.log('🍯 [POT DEBUG] No profile, returning early')
       return
     }
 
     try {
       setPotLoading(true)
       setPotError(null)
-      console.log('🍯 [POT DEBUG] Set loading to true')
 
       // Step 1: Get group data
-      console.log('🍯 [POT DEBUG] Fetching group data for admin_id:', profile.id)
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
         .select('*')
         .eq('admin_id', profile.id)
         .single()
 
-      console.log('🍯 [POT DEBUG] Group query result:', { groupData, groupError })
       if (groupError) throw groupError
 
       // Step 2: Get members data (without total_penalty_owed for now)
-      console.log('🍯 [POT DEBUG] Fetching members for group_id:', groupData.id)
       const { data: membersData, error: membersError } = await supabase
         .from('profiles')
         .select('id, email, username')
         .eq('group_id', groupData.id)
         .order('email')
 
-      console.log('🍯 [POT DEBUG] Members query result:', { membersData, membersError })
       if (membersError) throw membersError
 
       // Step 3: Check payment_transactions table access
-      console.log('🍯 [POT DEBUG] Testing payment_transactions table access...')
-      const { data: testTransactions, error: testError } = await supabase
+      const { } = await supabase
         .from('payment_transactions')
         .select('*')
         .limit(1)
 
-      console.log('🍯 [POT DEBUG] Payment transactions test:', { testTransactions, testError })
-
       // Step 4: Get transactions for each member (with fallback)
-      console.log('🍯 [POT DEBUG] Processing', membersData?.length || 0, 'members...')
       const membersWithTransactions = await Promise.all(
-        (membersData || []).map(async (member, index) => {
-          console.log(`🍯 [POT DEBUG] Processing member ${index + 1}:`, member.email, 'ID:', member.id)
-          
+        (membersData || []).map(async (member) => {
           // Try payment_transactions first
           let transactions = null
-          let transactionError = null
           
           try {
             const result = await supabase
@@ -277,13 +261,10 @@ export default function GroupAdminDashboard() {
               .order('created_at', { ascending: false })
             
             transactions = result.data
-            transactionError = result.error
           } catch (error) {
-            console.log(`🍯 [POT DEBUG] Error accessing payment_transactions for ${member.email}:`, error)
-            transactionError = error
+            // Error handling could be added here if needed
           }
 
-          console.log(`🍯 [POT DEBUG] Transactions for ${member.email}:`, { transactions, transactionError })
 
           // Calculate current debt and find last penalty date
           const totalPaid = transactions
@@ -303,8 +284,6 @@ export default function GroupAdminDashboard() {
 
           const lastPenaltyDate = lastPenalty ? new Date(lastPenalty.created_at).toLocaleDateString() : null
 
-          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: debt=${currentDebt}, lastPenalty=${lastPenaltyDate}`)
-
           return {
             ...member,
             total_penalty_owed: currentDebt,
@@ -314,19 +293,13 @@ export default function GroupAdminDashboard() {
         })
       )
 
-      console.log('🍯 [POT DEBUG] Final membersWithTransactions:', membersWithTransactions)
       setPotData(membersWithTransactions)
     } catch (error) {
-      console.error('🍯 [POT DEBUG] Error loading pot data:', error)
-      console.error('🍯 [POT DEBUG] Error details:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      })
+      console.error('Error loading pot data:', error)
       
       const errorMessage = error instanceof Error ? error.message : String(error)
       setPotError(`Failed to load pot data: ${errorMessage}`)
     } finally {
-      console.log('🍯 [POT DEBUG] Setting loading to false')
       setPotLoading(false)
     }
   }
@@ -458,10 +431,6 @@ export default function GroupAdminDashboard() {
   }
 
   const adjustPenaltyAmount = async (userId: string) => {
-    console.log('🍯 [POT DEBUG] Starting penalty adjustment...')
-    console.log('🍯 [POT DEBUG] User ID:', userId)
-    console.log('🍯 [POT DEBUG] Admin profile:', profile)
-    console.log('🍯 [POT DEBUG] Group:', group)
     
     if (!adjustmentAmount || !adjustmentReason) {
       alert('Please enter both amount and reason for the adjustment')
@@ -488,20 +457,15 @@ export default function GroupAdminDashboard() {
         description: `Admin adjustment: ${adjustmentReason}`
       }
 
-      console.log('🍯 [POT DEBUG] Inserting transaction:', transactionData)
-
-      const { data, error: transactionError } = await supabase
+      const { error: transactionError } = await supabase
         .from('payment_transactions')
         .insert(transactionData)
         .select()
-
-      console.log('🍯 [POT DEBUG] Insert result:', { data, transactionError })
 
       if (transactionError) throw transactionError
 
       // Note: We don't update profiles.total_penalty_owed since the column doesn't exist
       // The debt will be calculated from payment_transactions on next load
-      console.log('🍯 [POT DEBUG] Transaction recorded, debt will be recalculated from transactions')
 
       await Promise.all([loadPotData(), loadGroupData()])
       setEditingPot(null)
@@ -1083,7 +1047,7 @@ export default function GroupAdminDashboard() {
                             <div>User ID: {profile?.id}</div>
                             <div>User Role: {profile?.role}</div>
                             <div>Group ID: {profile?.group_id}</div>
-                            <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                            <div>Check browser console for detailed logs</div>
                           </div>
                         </details>
                       </div>
@@ -1233,7 +1197,7 @@ export default function GroupAdminDashboard() {
                                 <div>User ID: {profile?.id}</div>
                                 <div>User Role: {profile?.role}</div>
                                 <div>Group ID: {profile?.group_id}</div>
-                                <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                                <div>Check browser console for detailed logs</div>
                               </div>
                             </details>
                           </div>

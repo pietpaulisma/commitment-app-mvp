@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
 
@@ -56,9 +56,9 @@ export default function GroupMembersPage() {
     if (isSupremeAdmin && groupId) {
       loadData()
     }
-  }, [isSupremeAdmin, groupId])
+  }, [isSupremeAdmin, groupId, loadData])
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       // Load group details
       const { data: groupData, error: groupError } = await supabase
@@ -119,7 +119,7 @@ export default function GroupMembersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [groupId])
 
   const addMemberToGroup = async (userId: string) => {
     try {

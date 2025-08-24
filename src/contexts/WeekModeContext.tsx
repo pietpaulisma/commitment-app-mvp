@@ -46,7 +46,7 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
     if (user) {
       loadUserWeekMode(user.id)
     }
-  }, [user])
+  }, [user, loadUserWeekMode])
 
   const loadUserWeekMode = async (userId: string) => {
     try {
@@ -63,10 +63,8 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('weekMode', dbMode)
         }
-        console.log('Loaded user week mode from profile:', dbMode)
       } else if (!error && profile) {
         // If week_mode is null/undefined, set default to 'insane' in database
-        console.log('No week_mode found, setting default to insane')
         await setWeekModeWithSync('insane', userId)
       }
     } catch (error) {
@@ -79,7 +77,6 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('weekMode', mode)
     }
-    console.log('Week mode set to:', mode, '(session storage)')
   }
 
   const setWeekModeWithSync = async (mode: WeekMode, userId?: string) => {
@@ -96,8 +93,6 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
 
         if (error) {
           console.error('Error updating week_mode in user profile:', error)
-        } else {
-          console.log('Week mode synced to user profile:', mode, 'for user:', userId)
         }
       } catch (error) {
         console.error('Error syncing week mode to user profile:', error)

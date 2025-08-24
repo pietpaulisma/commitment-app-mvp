@@ -11,7 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
+  const isSignUp = false
   const router = useRouter()
 
 
@@ -148,7 +148,7 @@ export default function Login() {
         {/* Sign up link */}
         <div className="text-center">
           <p className="text-gray-500 font-medium">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <motion.button
               onClick={handleSignUp}
               className="text-gray-400 hover:text-red-400 underline font-medium transition-colors"

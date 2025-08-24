@@ -28,7 +28,7 @@ export default function GroupSelectionPage() {
       // Try to auto-join with invite code
       handleInviteCodeJoin(inviteParam)
     }
-  }, [user, router, searchParams])
+  }, [user, router, searchParams, handleInviteCodeJoin])
 
 
   const handleInviteCodeJoin = async (code: string) => {

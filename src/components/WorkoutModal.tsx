@@ -143,8 +143,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
-      console.log('Loading exercises for group:', profile.group_id)
-      console.log('isAnimatedIn before:', isAnimatedIn)
       
       // Mark workout as in progress for state preservation
       markWorkoutInProgress()
@@ -164,12 +162,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       
       // Wait for modal to be fully mounted before starting animation
       setTimeout(() => {
-        console.log('Setting isAnimatedIn to true')
         setIsAnimatedIn(true)
         
         // Delay icon transition until modal reaches the top (cherry on the cake!)
         setTimeout(() => {
-          console.log('Starting icon transition - chat pushed out by X')
           setShowIconTransition(true)
         }, 400) // Start icon transition near end of modal slide-up
       }, 50) // Small delay to ensure DOM is ready
@@ -177,7 +173,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Trigger subtle progress animation after modal loads
       setTimeout(() => setProgressAnimated(true), 300)
     } else if (!isOpen) {
-      console.log('Setting isAnimatedIn to false')
       setIsAnimatedIn(false)
       setIsClosing(false)
       setShowIconTransition(false)
@@ -241,7 +236,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   const handleClose = () => {
-    console.log('Starting close animation')
     setIsClosing(true)
     
     // Clear workout in progress state
@@ -260,7 +254,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     
     // Wait for animation to complete, then actually close
     setTimeout(() => {
-      console.log('Animation complete, closing modal')
       onClose()
     }, 500) // Match the CSS transition duration
   }
@@ -318,7 +311,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         recoveryDays: [5] // Default recovery days  
       })
       setDailyTarget(newTarget)
-      console.log(`Target recalculated for ${newMode} mode:`, newTarget)
     }
   }
 
@@ -343,7 +335,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // If user met/exceeded insane target while in sane mode, switch to insane
       if (currentTotalPoints >= insaneTargetForToday) {
         await setWeekModeWithSync('insane', user?.id)
-        console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
         
         // Recalculate target with new mode
         await recalculateTargetWithMode('insane')
@@ -504,7 +495,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         .eq('user_id', user.id)
 
       if (error) {
-        console.log('Favorites table not available:', error.message)
+        // Favorites table not available - silently ignore
         return
       }
 
@@ -531,7 +522,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .eq('exercise_id', exerciseId)
 
         if (error) {
-          console.log('Cannot remove favorite - table not available:', error.message)
+          // Cannot remove favorite - table not available
           return
         }
 
@@ -543,7 +534,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .insert({ user_id: user.id, exercise_id: exerciseId })
 
         if (error) {
-          console.log('Cannot add favorite - table not available:', error.message)
+          // Cannot add favorite - table not available
           return
         }
 
@@ -942,13 +933,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const loadExercises = async () => {
     if (!profile?.group_id || !user) {
-      console.log('Cannot load exercises - missing profile or user:', { profile: !!profile, user: !!user })
       return
     }
 
     try {
       setExercisesLoading(true)
-      console.log('Loading exercises for group:', profile.group_id)
       const today = new Date().toISOString().split('T')[0]
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
@@ -966,21 +955,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         return
       }
 
-      console.log('Raw group exercises:', groupExercises)
-      console.log('Group exercises count:', groupExercises?.length || 0)
       
       // Also get ALL exercises to compare
       const { data: allExercises } = await supabase
         .from('exercises')
         .select('*')
       
-      console.log('Total exercises in database:', allExercises?.length || 0)
-      console.log('All exercise names:', allExercises?.map(ex => ex.name) || [])
 
       const exerciseList = (groupExercises?.map(ge => ge.exercises).filter(Boolean) || [])
         .sort((a, b) => a.name.localeCompare(b.name))
-      console.log('Exercises available for workout logging:', exerciseList.length)
-      console.log('Available exercise names:', exerciseList.map(ex => ex.name))
       
       // Try to get today's workout counts (may fail if logs table doesn't exist)
       let todayLogs = []
@@ -992,7 +975,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .eq('date', today)
         todayLogs = data || []
       } catch (error) {
-        console.log('Logs table not accessible, skipping progress tracking')
+        // Logs table not accessible, skipping progress tracking
       }
       
       // Try to get yesterday's workouts (may fail if logs table doesn't exist)
@@ -1005,7 +988,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .eq('date', yesterday)
         yesterdayLogs = data || []
       } catch (error) {
-        console.log('Cannot load yesterday logs for recommendations')
+        // Cannot load yesterday logs for recommendations
       }
       
       // Process exercises with progress
@@ -1020,7 +1003,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       })
       
       setExercises(exercisesWithProgress)
-      console.log('Exercises loaded successfully:', exercisesWithProgress.length)
     } catch (error) {
       console.error('Error loading exercises:', error)
     } finally {
@@ -1031,13 +1013,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
 
   const handleSubmitToGroup = async () => {
-    console.log('Workout submission debug:', {
+    // Submitting workout to group
+    console.log('Submitting workout to group:', {
       user_id: user?.id,
       user_email: user?.email,
       profile_group_id: profile?.group_id,
       dailyProgress,
       todayLogs: todayLogs?.length
-    })
+    });
     
     if (!user || !profile?.group_id || dailyProgress <= 0) {
       console.error('Workout submission blocked:', {
@@ -1092,13 +1075,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         workout_data: workoutData
       })
       
+      // Inserting workout message
       console.log('Inserting workout message:', {
         user_id: user.id,
         group_id: profile.group_id,
         message_length: messageWithData.length,
         message_type: 'workout_completion',
         workoutData: JSON.stringify(workoutData, null, 2)
-      })
+      });
 
       const { data, error } = await supabase
         .from('chat_messages')
@@ -1110,13 +1094,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         })
         .select()
 
-      console.log('Database insert result:', { data, error })
 
       if (error) {
         console.error('Error submitting to group:', error)
         alert('Error submitting workout to group chat')
       } else {
-        console.log('Workout successfully submitted to group chat:', data)
         // Check for automatic mode switching to insane
         if (weekMode === 'sane' && isWeekModeAvailable(groupDaysSinceStart) && totalPoints >= dailyTarget) {
           try {
@@ -1394,7 +1376,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   if (!isOpen) return null
 
-  console.log('Rendering modal with isAnimatedIn:', isAnimatedIn)
 
   return (
     <>

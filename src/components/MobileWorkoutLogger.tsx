@@ -344,7 +344,6 @@ export default function MobileWorkoutLogger() {
   async function loadTodaysLogs(userId: string) {
     try {
       const today = new Date().toISOString().split('T')[0]
-      console.log('Loading logs for date:', today, 'user:', userId)
       const { data } = await supabase
         .from('logs')
         .select(`
@@ -355,7 +354,6 @@ export default function MobileWorkoutLogger() {
         .eq('date', today)
         .order('timestamp', { ascending: false })
 
-      console.log('Loaded logs:', data)
       setTodaysLogs(data || [])
       
       // Trigger subtle animation after data loads
@@ -468,7 +466,6 @@ export default function MobileWorkoutLogger() {
       // If user met/exceeded insane target while in sane mode, switch to insane
       if (currentTotalPoints >= insaneTargetForToday) {
         await setWeekModeWithSync('insane', user.id)
-        console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
         
         // Recalculate daily target with new mode
         await loadDailyTarget(user.id, userProfile)
@@ -544,14 +541,6 @@ export default function MobileWorkoutLogger() {
     
     const recoveryPoints = getRecoveryPoints()
     
-    console.log('getCappedTotalPoints:', { 
-      todaysLogsLength: todaysLogs.length, 
-      regularPoints, 
-      recoveryPoints, 
-      dailyTarget, 
-      isRecoveryDay 
-    })
-    
     // On recovery days, no cap applies
     if (isRecoveryDay) {
       return regularPoints + recoveryPoints
@@ -564,7 +553,6 @@ export default function MobileWorkoutLogger() {
     const effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
     
     const total = regularPoints + effectiveRecoveryPoints
-    console.log('getCappedTotalPoints result:', total)
     return total
   }
 

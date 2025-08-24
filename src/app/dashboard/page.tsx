@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
 import RectangularNavigation from '@/components/RectangularNavigation'
 import RectangularDashboard from '@/components/RectangularDashboard'
 import TimeGradient from '@/components/TimeGradient'
@@ -9,9 +8,6 @@ import TimeGradient from '@/components/TimeGradient'
 // DEV TEST: SSO protection disabled - testing dev deployment workflow
 export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
-  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
-  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {

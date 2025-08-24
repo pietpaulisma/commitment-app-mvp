@@ -54,7 +54,6 @@ export function useProfile() {
 
     // Prevent duplicate loading calls for the same user
     if (loadingRef.current && currentUserRef.current === user.id) {
-      console.log('⏳ Profile loading already in progress for this user, skipping')
       return profile
     }
 
@@ -71,7 +70,6 @@ export function useProfile() {
         const isValidCache = Date.now() - timestamp < CACHE_DURATION
         
         if (isValidCache) {
-          console.log('📦 Using cached profile for:', user.email)
           const parsed = JSON.parse(cachedProfile)
           setProfile(parsed)
           setLoading(false)
@@ -90,7 +88,6 @@ export function useProfile() {
     setError(null)
 
     try {
-      console.log('🔄 Loading profile for user:', user.email, 'ID:', user.id)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -101,11 +98,6 @@ export function useProfile() {
         throw error
       }
 
-      console.log('✅ Profile loaded:', { 
-        email: data.email, 
-        onboarding_completed: data.onboarding_completed,
-        role: data.role 
-      })
       
       // Cache the profile data
       if (typeof window !== 'undefined') {
@@ -125,10 +117,9 @@ export function useProfile() {
         setLoading(false)
       }
     }
-  }, [user?.id])
+  }, [user, user?.id, CACHE_DURATION, profile])
 
   const refreshProfile = useCallback(() => {
-    console.log('🔄 Refreshing profile data...')
     // Clear cache on manual refresh
     if (typeof window !== 'undefined' && user) {
       sessionStorage.removeItem(getCacheKey(user.id))

@@ -1277,14 +1277,12 @@ export default function RectangularDashboard() {
 
     // Refresh group members every 2 minutes
     const interval = setInterval(() => {
-      console.log('Periodic refresh of group members')
       loadGroupMembers()
     }, 2 * 60 * 1000) // 2 minutes
 
     // Also refresh when user comes back to the page
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('User returned to page, refreshing group members')
         loadGroupMembers()
       }
     }
@@ -1349,6 +1347,11 @@ export default function RectangularDashboard() {
 
   // Prevent multiple personal data loads with session-based flag
   const personalDataLoadedRef = useRef(false)
+
+  // Reset personal data loading flag when component mounts or user changes
+  useEffect(() => {
+    personalDataLoadedRef.current = false
+  }, [user?.id])
 
   const calculateChallengeInfo = () => {
     if (!groupStartDate) return
@@ -1535,7 +1538,6 @@ export default function RectangularDashboard() {
           .from('profiles')
           .update({ last_seen: new Date().toISOString() })
           .eq('id', user.id)
-        console.log('✅ Updated current user presence for dashboard')
       }
 
       const today = new Date().toISOString().split('T')[0]
@@ -1642,13 +1644,7 @@ export default function RectangularDashboard() {
         const lastSeen = member.last_seen ? new Date(member.last_seen) : null
         const is_online = lastSeen && lastSeen > fiveMinutesAgo
         
-        console.log(`Online status debug - ${member.username}:`, {
-          last_seen: member.last_seen,
-          lastSeenDate: lastSeen,
-          fiveMinutesAgo,
-          is_online,
-          timeDiff: lastSeen ? Date.now() - lastSeen.getTime() : 'never'
-        })
+        // Online status debug removed
         
         return {
           ...member,
@@ -2041,7 +2037,6 @@ export default function RectangularDashboard() {
       let dayNum = ''
       
       if (profile?.birth_date) {
-        console.log('🎂 Birthday calculation - birth_date:', profile.birth_date)
         const birthDate = new Date(profile.birth_date)
         const today = new Date()
         
@@ -2060,12 +2055,7 @@ export default function RectangularDashboard() {
         monthName = nextBirthday.toLocaleString('default', { month: 'long' })
         dayNum = nextBirthday.getDate().toString()
         
-        console.log('🎂 Birthday calculation result:', {
-          nextBirthdayDays,
-          monthName,
-          dayNum,
-          nextBirthday: nextBirthday.toISOString()
-        })
+        // Birthday calculation debug removed
       } else {
         // No birthday set - show placeholder
         nextBirthdayDays = 0
@@ -2285,15 +2275,10 @@ export default function RectangularDashboard() {
 
   const loadDashboardData = async () => {
     if (!user || !profile) {
-      console.log('loadDashboardData: Missing user or profile', { user: !!user, profile: !!profile })
       return
     }
 
-    console.log('loadDashboardData: Starting for user', user.email, 'profile:', {
-      group_id: profile.group_id,
-      onboarding_completed: profile.onboarding_completed,
-      birth_date: profile.birth_date
-    })
+    // Loading dashboard data for user
 
     let currentGroupData: any = null
 
@@ -2327,7 +2312,7 @@ export default function RectangularDashboard() {
             setAccentColor(groupSettings.accent_color || 'gray') // Default gray
           }
         } catch (error) {
-          console.log('Group settings not available, using defaults')
+          // Group settings not available, using defaults
         }
       }
 
@@ -2357,7 +2342,7 @@ export default function RectangularDashboard() {
 
           setRecentChats(chatsWithOwnership)
         } catch (error) {
-          console.log('Could not load chats:', error)
+          // Could not load chats - non-critical
         }
       }
 
@@ -2422,7 +2407,7 @@ export default function RectangularDashboard() {
           personalDataLoadedRef.current = true
         }
         } catch (error) {
-          console.log('Could not load donation/streak data:', error)
+          // Could not load donation/streak data - non-critical
         }
       }
 
@@ -2469,13 +2454,11 @@ export default function RectangularDashboard() {
   }
 
   if (!user) {
-    console.log('No user found, redirecting to login')
     router.push('/login')
     return null
   }
   
   if (!profile) {
-    console.log('No profile found, redirecting to onboarding')
     router.push('/onboarding')
     return null
   }

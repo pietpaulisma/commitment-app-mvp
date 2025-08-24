@@ -110,7 +110,7 @@ export default function CreateGroupPage() {
             LEADERSHIP PROTOCOL
           </h1>
           <p className="text-gray-400 text-sm">
-            Take responsibility for others' commitment.
+            Take responsibility for others&apos; commitment.
           </p>
         </div>
 
@@ -163,7 +163,7 @@ export default function CreateGroupPage() {
               required
             />
             <div className="text-xs text-gray-500 mt-1">
-              When your group's commitment journey begins
+              When your group&apos;s commitment journey begins
             </div>
           </div>
 

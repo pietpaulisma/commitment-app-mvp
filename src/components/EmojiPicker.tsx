@@ -261,7 +261,7 @@ export default function EmojiPicker({ selectedEmoji, onEmojiSelect, disabled }: 
               </div>
             ) : (
               <div className="text-center py-8 text-gray-400 text-sm">
-                No emojis found matching "{searchTerm}"
+                No emojis found matching &quot;{searchTerm}&quot;
               </div>
             )}
           </div>
