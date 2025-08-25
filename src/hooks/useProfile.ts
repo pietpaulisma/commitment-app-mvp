@@ -54,7 +54,7 @@ export function useProfile() {
 
     // Prevent duplicate loading calls for the same user
     if (loadingRef.current && currentUserRef.current === user.id) {
-      return profile
+      return null // Return null instead of stale profile to avoid closure issues
     }
 
     // Check cache first
@@ -117,7 +117,7 @@ export function useProfile() {
         setLoading(false)
       }
     }
-  }, [user, user?.id, CACHE_DURATION, profile])
+  }, [user, CACHE_DURATION])
 
   const refreshProfile = useCallback(() => {
     // Clear cache on manual refresh

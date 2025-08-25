@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -35,14 +35,7 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
     return 'insane' 
   })
 
-  // Load user's week mode from profile when user is available
-  useEffect(() => {
-    if (user) {
-      loadUserWeekMode(user.id)
-    }
-  }, [user, loadUserWeekMode])
-
-  const loadUserWeekMode = async (userId: string) => {
+  const loadUserWeekMode = useCallback(async (userId: string) => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -64,7 +57,14 @@ export function WeekModeProvider({ children }: WeekModeProviderProps) {
     } catch (error) {
       console.error('Error loading user week mode:', error)
     }
-  }
+  }, [])
+
+  // Load user's week mode from profile when user is available
+  useEffect(() => {
+    if (user) {
+      loadUserWeekMode(user.id)
+    }
+  }, [user, loadUserWeekMode])
 
   const setWeekMode = (mode: WeekMode) => {
     setWeekModeState(mode)
