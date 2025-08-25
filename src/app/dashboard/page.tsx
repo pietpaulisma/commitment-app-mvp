@@ -8,6 +8,8 @@ import TimeGradient from '@/components/TimeGradient'
 // DEV TEST: SSO protection disabled - testing dev deployment workflow
 export default function Dashboard() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
