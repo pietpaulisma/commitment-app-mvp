@@ -100,7 +100,7 @@ export default function GroupAdminDashboard() {
       loadPotData()
       loadChatSettings()
     }
-  }, [isGroupAdmin, isSupremeAdmin, profile, loadChatSettings, loadGroupData, loadGroupSettings, loadPotData])
+  }, [isGroupAdmin, isSupremeAdmin, profile])
 
   const loadGroupData = async () => {
     if (!profile) return
