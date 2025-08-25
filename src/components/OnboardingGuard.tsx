@@ -125,13 +125,17 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
     // Don't check on auth/onboarding pages
     if (isAuthPage || isOnboardingPage) {
-      setHasChecked(true)
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
       return
     }
 
     // No user = redirect handled by other guards
     if (!user) {
-      setHasChecked(true)
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
       return
     }
 
@@ -143,14 +147,18 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         }
         return
       } else {
-        setHasChecked(true)
+        if (!hasChecked) {
+          setHasChecked(true)
+        }
         return
       }
     }
 
     // Has profile and completed onboarding = allow access
     if (profile && profile.onboarding_completed) {
-      setHasChecked(true)
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
       return
     }
 
