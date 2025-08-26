@@ -232,68 +232,51 @@ export default function GroupAdminDashboard() {
 
       if (groupError) throw groupError
 
-      // Step 2: Get members data (without total_penalty_owed for now)
+      // Step 2: Get members data with penalty tracking
       const { data: membersData, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username')
+        .select('id, email, username, total_penalty_owed, last_penalty_check')
         .eq('group_id', groupData.id)
         .order('email')
 
       if (membersError) throw membersError
 
-      // Step 3: Check payment_transactions table access
-      const { } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .limit(1)
-
-      // Step 4: Get transactions for each member (with fallback)
-      const membersWithTransactions = await Promise.all(
+      // Get recent transactions for each member for activity display
+      const membersWithPenalties = await Promise.all(
         (membersData || []).map(async (member) => {
-          // Try payment_transactions first
-          let transactions = null
-          
+          // Get recent transactions for activity display
+          let transactions = []
           try {
             const result = await supabase
               .from('payment_transactions')
               .select('amount, transaction_type, description, created_at')
               .eq('user_id', member.id)
               .order('created_at', { ascending: false })
+              .limit(5)
             
-            transactions = result.data
+            transactions = result.data || []
           } catch (error) {
-            // Error handling could be added here if needed
+            // Handle error silently
           }
 
-
-          // Calculate current debt and find last penalty date
-          const totalPaid = transactions
-            ?.filter(t => t.transaction_type === 'payment')
-            .reduce((sum, t) => sum + t.amount, 0) || 0
-
-          const totalPenalties = transactions
-            ?.filter(t => t.transaction_type === 'penalty')
-            .reduce((sum, t) => sum + t.amount, 0) || 0
-
-          const currentDebt = Math.max(0, totalPenalties - totalPaid)
-
-          // Find last penalty date
+          // Find last penalty date from transactions
           const lastPenalty = transactions
-            ?.filter(t => t.transaction_type === 'penalty')
+            .filter(t => t.transaction_type === 'penalty')
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
           const lastPenaltyDate = lastPenalty ? new Date(lastPenalty.created_at).toLocaleDateString() : null
 
           return {
             ...member,
-            total_penalty_owed: currentDebt,
+            // Use database values directly
+            penalty_balance: member.total_penalty_owed || 0,
             last_penalty_date: lastPenaltyDate,
-            recent_transactions: transactions?.slice(0, 3) || [] // Keep fewer for reference
+            recent_transactions: transactions.slice(0, 3)
           }
         })
       )
 
-      setPotData(membersWithTransactions)
+      setPotData(membersWithPenalties)
     } catch (error) {
       console.error('Error loading pot data:', error)
       
@@ -431,7 +414,6 @@ export default function GroupAdminDashboard() {
   }
 
   const adjustPenaltyAmount = async (userId: string) => {
-    
     if (!adjustmentAmount || !adjustmentReason) {
       alert('Please enter both amount and reason for the adjustment')
       return
@@ -464,8 +446,24 @@ export default function GroupAdminDashboard() {
 
       if (transactionError) throw transactionError
 
-      // Note: We don't update profiles.total_penalty_owed since the column doesn't exist
-      // The debt will be calculated from payment_transactions on next load
+      // Update user's total penalty owed in profiles table
+      const { data: currentProfile, error: profileFetchError } = await supabase
+        .from('profiles')
+        .select('total_penalty_owed')
+        .eq('id', userId)
+        .single()
+
+      if (!profileFetchError && currentProfile) {
+        const currentTotal = currentProfile.total_penalty_owed || 0
+        const newTotal = transactionType === 'penalty' 
+          ? currentTotal + absoluteAmount
+          : Math.max(0, currentTotal - absoluteAmount)
+
+        await supabase
+          .from('profiles')
+          .update({ total_penalty_owed: newTotal })
+          .eq('id', userId)
+      }
 
       await Promise.all([loadPotData(), loadGroupData()])
       setEditingPot(null)
@@ -473,8 +471,8 @@ export default function GroupAdminDashboard() {
       setAdjustmentReason('')
       alert('Adjustment recorded successfully!')
     } catch (error) {
-      console.error('Error adjusting penalty:', error)
-      alert('Failed to adjust penalty: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      console.error('Error adjusting penalty amount:', error)
+      alert('Failed to record adjustment: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -1063,33 +1061,33 @@ export default function GroupAdminDashboard() {
                             <div className="flex items-center gap-4 mb-3">
                               <h4 className="text-lg font-medium text-white">{member.email}</h4>
                               <span className={`px-2 py-1 text-xs rounded ${
-                                (member.total_penalty_owed || 0) > 0 
-                                  ? 'bg-red-900/50 text-red-400 border border-red-700'
+                                (member.penalty_balance || 0) > 0 
+                                  ? 'bg-orange-900/50 text-orange-400 border border-orange-700'
                                   : 'bg-green-900/50 text-green-400 border border-green-700'
                               }`}>
-                                {(member.total_penalty_owed || 0) > 0 ? 'Owes Money' : 'Paid Up'}
+                                {(member.penalty_balance || 0) > 0 ? 'Has Penalties' : 'Current'}
                               </span>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <div className="text-gray-400 uppercase tracking-wide text-xs">Current Debt</div>
-                                <div className="text-red-400 font-bold text-2xl">€{(member.total_penalty_owed || 0).toFixed(2)}</div>
+                                <div className="text-gray-400 uppercase tracking-wide text-xs">Penalty Balance</div>
+                                <div className="text-orange-400 font-bold text-2xl">€{(member.penalty_balance || 0).toFixed(2)}</div>
                               </div>
                               <div>
-                                <div className="text-gray-400 uppercase tracking-wide text-xs">Last Penalty</div>
-                                <div className="text-orange-400 font-medium">
-                                  {member.last_penalty_date || 'No penalties yet'}
+                                <div className="text-gray-400 uppercase tracking-wide text-xs">Last Adjustment</div>
+                                <div className="text-gray-300 font-medium">
+                                  {member.last_penalty_date || 'No adjustments yet'}
                                 </div>
                               </div>
                             </div>
                           </div>
                           
-                          {/* Action Button */}
+                          {/* Manual Adjustment Controls */}
                           <div className="flex-shrink-0">
                             {editingPot === member.id ? (
                               <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg min-w-80">
-                                <h5 className="text-white font-medium mb-3">Adjust Amount</h5>
+                                <h5 className="text-white font-medium mb-3">Manual Adjustment</h5>
                                 <div className="space-y-3">
                                   <div>
                                     <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
@@ -1141,7 +1139,7 @@ export default function GroupAdminDashboard() {
                                 onClick={() => setEditingPot(member.id)}
                                 className="bg-orange-600 text-white px-4 py-2 text-sm hover:bg-orange-700 transition-colors"
                               >
-                                Adjust Amount
+                                Manual Adjustment
                               </button>
                             )}
                           </div>
@@ -1150,13 +1148,13 @@ export default function GroupAdminDashboard() {
                         {/* Recent Activity (only if there are transactions) */}
                         {member.recent_transactions && member.recent_transactions.length > 0 && (
                           <div className="mt-4 pt-4 border-t border-gray-800">
-                            <h5 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Recent Activity</h5>
+                            <h5 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Recent Adjustments</h5>
                             <div className="space-y-1">
                               {member.recent_transactions.slice(0, 2).map((transaction: any, index: number) => (
                                 <div key={index} className="flex justify-between items-center text-xs">
                                   <span className="text-gray-300">{transaction.description}</span>
                                   <div className="flex items-center gap-2">
-                                    <span className={transaction.transaction_type === 'penalty' ? 'text-red-400' : 'text-green-400'}>
+                                    <span className={transaction.transaction_type === 'penalty' ? 'text-orange-400' : 'text-green-400'}>
                                       {transaction.transaction_type === 'penalty' ? '+' : '-'}€{transaction.amount.toFixed(2)}
                                     </span>
                                     <span className="text-gray-500">

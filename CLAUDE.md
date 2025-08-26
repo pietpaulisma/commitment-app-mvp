@@ -8,8 +8,13 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
 **Tech Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS, Supabase, Radix UI
 
 ## Critical Deployment Rules
-- **ALWAYS PUSH TO DEV BRANCH ONLY** (never live unless instructed)
-- **ALWAYS DEPLOY TO**: commitment-app-dev.vercel.app
+- **NEVER DEPLOY TO PRODUCTION** without explicit user permission
+- **ALWAYS DEPLOY TO DEV ONLY**: commitment-app-dev.vercel.app
+- **PRODUCTION IS**: commitment-app-mvp.vercel.app (HANDS OFF!)
+- **DEV PROJECT NAME**: commitment-app-dev
+- **PRODUCTION PROJECT NAME**: commitment-app-mvp
+- Use `vercel link --project=commitment-app-dev --scope=pietpaulismas-projects` to link to dev
+- Before any deployment, ALWAYS confirm the target URL with the user first
 - Local development disabled - all changes must be deployed to test
 
 ## Key File Locations

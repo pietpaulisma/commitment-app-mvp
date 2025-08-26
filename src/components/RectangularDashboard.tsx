@@ -11,6 +11,8 @@ import TimeDisplay from './TimeDisplay'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import PenaltyNotificationModal, { usePenaltyNotification } from './PenaltyNotificationModal'
+import WeeklyOverperformers from './WeeklyOverperformers'
 
 // Helper function to get motivational messages - 4 quotes per hour that cycle
 const getHourlyMessage = (hour: number): { quote: string, author: string } => {
@@ -569,22 +571,26 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
                 return (
                   <div
                     key={i}
-                    className="aspect-square rounded transition-all duration-500"
+                    className="aspect-square rounded transition-all duration-500 relative flex items-center justify-center"
                     style={{
                       background: isHigh ? getGradientStyle('bg-purple-400') : 
                                  intensity > 30 ? getGradientStyle('bg-gray-500') : getGradientStyle('bg-gray-700'),
                       animationDelay: `${i * 30}ms`,
                       animation: 'fadeInScale 0.6s ease-out forwards'
                     }}
-                    title={`${hour.hour}:00 - ${hour.activity} logs`}
-                  />
+                    title={`${hour.hour} - ${hour.activity} logs`}
+                  >
+                    <span className="text-white text-xs font-medium">
+                      {hour.hour}
+                    </span>
+                  </div>
                 )
               })}
             </div>
           </div>
           
-          <div className="text-xs text-gray-500 text-center">
-            Peak: {data.find((h: any) => h.activity === maxActivity)?.hour || '0:00'}
+          <div className="text-xs text-gray-400 text-center">
+            Peak: {data.find((h: any) => h.activity === maxActivity)?.hour || '0'}
           </div>
         </div>
       </div>
@@ -1088,6 +1094,7 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
 
 export default function RectangularDashboard() {
   const { weekMode } = useWeekMode()
+  const { showPenalty, penaltyData, closePenaltyModal } = usePenaltyNotification()
   
   // Get time-of-day gradient - same as dashboard background
   const getTimeOfDayGradient = () => {
@@ -1756,33 +1763,39 @@ export default function RectangularDashboard() {
           })
         }
 
-        // Aggregate by user and find most recent transaction for each
+        // Initialize all group members first
         const userContributions = new Map()
+        members.forEach(member => {
+          userContributions.set(member.id, {
+            name: member.username || member.email || 'User',
+            netAmount: 0,
+            latestDate: new Date(0), // Default to epoch for users with no transactions
+            userId: member.id,
+            userColor: member.personal_color || 'gray'
+          })
+        })
+        
+        // Process transactions to update amounts and dates
         groupTransactions.forEach(transaction => {
           const userId = transaction.user_id
-          const username = transaction.profiles?.username || 'User'
-          const userColor = userColorsMap.get(userId) || 'gray'
-          if (!userContributions.has(userId)) {
-            userContributions.set(userId, {
-              name: username,
-              netAmount: 0,
-              latestDate: new Date(transaction.created_at),
-              userId: userId,
-              userColor: userColor
-            })
-          }
-          const existing = userContributions.get(userId)
-          const amount = transaction.transaction_type === 'penalty' ? transaction.amount : -transaction.amount
-          existing.netAmount += amount
-          if (new Date(transaction.created_at) > existing.latestDate) {
-            existing.latestDate = new Date(transaction.created_at)
+          if (userContributions.has(userId)) {
+            const existing = userContributions.get(userId)
+            const amount = transaction.transaction_type === 'penalty' ? transaction.amount : -transaction.amount
+            existing.netAmount += amount
+            if (new Date(transaction.created_at) > existing.latestDate) {
+              existing.latestDate = new Date(transaction.created_at)
+            }
           }
         })
 
-        // Convert to array, filter positive amounts, and sort by amount (highest first)
+        // Convert to array and sort by amount (highest first) - show all users
         const positiveContributors = Array.from(userContributions.values())
-          .filter(contributor => contributor.netAmount > 0) // Only show users who owe money
           .sort((a, b) => b.netAmount - a.netAmount)
+          
+        // Debug logging
+        console.log('All group members:', members.map(m => ({ id: m.id, username: m.username })))
+        console.log('Group transactions:', groupTransactions?.length || 0)
+        console.log('User contributions:', Array.from(userContributions.values()).map(c => ({ name: c.name, amount: c.netAmount })))
 
         // Find the most recent transaction date among all contributors
         const mostRecentDate = positiveContributors.length > 0 
@@ -1791,17 +1804,23 @@ export default function RectangularDashboard() {
 
         contributors = positiveContributors.map((contributor, index) => {
           const now = new Date()
-          const diffTime = now.getTime() - contributor.latestDate.getTime()
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-          const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
-          
           let timeAgo = ''
-          if (diffDays > 0) {
-            timeAgo = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
-          } else if (diffHours > 0) {
-            timeAgo = `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+          
+          // Handle users with no transactions
+          if (contributor.latestDate.getTime() === 0) {
+            timeAgo = contributor.netAmount > 0 ? 'No payments yet' : 'No penalties'
           } else {
-            timeAgo = 'Just now'
+            const diffTime = now.getTime() - contributor.latestDate.getTime()
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+            const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+            
+            if (diffDays > 0) {
+              timeAgo = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+            } else if (diffHours > 0) {
+              timeAgo = `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
+            } else {
+              timeAgo = 'Just now'
+            }
           }
 
           // Mark as most recent (newest contributor)
@@ -1945,7 +1964,7 @@ export default function RectangularDashboard() {
           subtitle: 'most active hour',
           value: peakTime,
           data: hourCounts.map((count, hour) => ({
-            hour: `${hour}:00`,
+            hour: `${hour}`,
             count,
             activity: count
           })),
@@ -2130,7 +2149,7 @@ export default function RectangularDashboard() {
             subtitle: 'most active hour',
             value: peakTime,
             data: hourCounts.map((count, hour) => ({
-              hour: `${hour}:00`,
+              hour: `${hour}`,
               count,
               activity: count
             })),
@@ -2468,33 +2487,33 @@ export default function RectangularDashboard() {
 
   return (
     <>
+      {/* Penalty Notification Modal */}
+      <PenaltyNotificationModal
+        isOpen={showPenalty}
+        onClose={closePenaltyModal}
+        penaltyData={penaltyData}
+      />
+      
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
       <div className="pb-20" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
-      {/* Logo and Quote Box */}
-      <div className="mx-1 mb-0">
-        <div 
-          className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl py-2 px-6"
-          style={{
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-          }}
-        >
-          <div className="flex items-center justify-between">
-              <img 
-                src="/logo.png" 
-                alt="The Commitment" 
-                className="h-8 w-auto drop-shadow-lg"
-              />
-              <Link 
-                href="/profile" 
-                className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2"
-              >
-                <Cog6ToothIcon className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
-              </Link>
-            </div>
-          </div>
+      {/* Logo and Settings */}
+      <div className="mx-1 mb-0 mt-5">
+        <div className="flex items-center justify-between px-2">
+          <img 
+            src="/logo.png" 
+            alt="The Commitment" 
+            className="h-10 w-auto drop-shadow-lg"
+          />
+          <Link 
+            href="/profile" 
+            className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2 bg-black/20 backdrop-blur-sm rounded-full"
+          >
+            <Cog6ToothIcon className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+          </Link>
         </div>
+      </div>
       </div>
       
       {/* Dashboard Content */}
@@ -2542,7 +2561,7 @@ export default function RectangularDashboard() {
                     return (
                       <div>
                         <p className="text-sm text-white/90 font-medium drop-shadow leading-relaxed mb-2">
-                          "{message.quote}"
+                          {message.quote}
                         </p>
                         <p className="text-xs text-white/60 font-normal">
                           — {message.author}
@@ -2896,6 +2915,11 @@ export default function RectangularDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Weekly Overperformers */}
+            <div className="mx-1 mb-1">
+              <WeeklyOverperformers />
             </div>
 
             {/* Workout Times - Full width block */}

@@ -54,7 +54,9 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
   
   // UI state
   const [challengeTiming, setChallengeTiming] = useState<TimingConfig>({ type: 'end_of_day' })
-  const [summaryTiming, setSummaryTiming] = useState<TimingConfig>({ type: 'end_of_day' })
+  const [dailySummaryTiming, setDailySummaryTiming] = useState<TimingConfig>({ type: 'end_of_day' })
+  const [weeklySummaryTiming, setWeeklySummaryTiming] = useState<TimingConfig>({ type: 'end_of_day' })
+  const [personalSummaryTiming, setPersonalSummaryTiming] = useState<TimingConfig>({ type: 'end_of_day' })
   const [developerTiming, setDeveloperTiming] = useState<TimingConfig>({ type: 'custom', customTime: '09:00' })
   const [challengeMessage, setChallengeMessage] = useState('')
   const [developerMessage, setDeveloperMessage] = useState('')
@@ -441,6 +443,76 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
     }
   }
 
+  const sendWeeklySummaryNow = async () => {
+    if (!profile?.group_id) {
+      alert('No group found. Please make sure you are part of a group.')
+      return
+    }
+
+    if (isMountedRef.current) {
+      setSendingMessage(true)
+    }
+    
+    try {
+      // For now, we'll create a generic weekly summary message
+      // TODO: Implement generate_weekly_summary database function
+      const message = await SystemMessageConfigService.createDeveloperNote(
+        profile.group_id,
+        '📊 Weekly Summary: This is a placeholder for the weekly summary feature. Full implementation coming soon!',
+        'common'
+      )
+
+      if (!message) {
+        throw new Error('Failed to create weekly summary message')
+      }
+
+      console.log('Weekly summary sent successfully')
+      alert('Weekly summary sent successfully! Check your group chat.')
+    } catch (error) {
+      console.error('Error sending weekly summary:', error)
+      alert(`Failed to send weekly summary: ${error.message || error}`)
+    }
+    
+    if (isMountedRef.current) {
+      setSendingMessage(false)
+    }
+  }
+
+  const sendPersonalSummaryNow = async () => {
+    if (!profile?.group_id) {
+      alert('No group found. Please make sure you are part of a group.')
+      return
+    }
+
+    if (isMountedRef.current) {
+      setSendingMessage(true)
+    }
+    
+    try {
+      // For now, we'll create a generic personal summary message
+      // TODO: Implement generate_personal_summary database function
+      const message = await SystemMessageConfigService.createDeveloperNote(
+        profile.group_id,
+        '🏆 Personal Summary: This is a placeholder for the personal summary feature. Full implementation coming soon!',
+        'common'
+      )
+
+      if (!message) {
+        throw new Error('Failed to create personal summary message')
+      }
+
+      console.log('Personal summary sent successfully')
+      alert('Personal summary sent successfully! Check your group chat.')
+    } catch (error) {
+      console.error('Error sending personal summary:', error)
+      alert(`Failed to send personal summary: ${error.message || error}`)
+    }
+    
+    if (isMountedRef.current) {
+      setSendingMessage(false)
+    }
+  }
+
   const renderMilestoneRaritySelector = (milestone: EnhancedMilestoneConfig) => (
     <Select 
       value={milestone.rarity} 
@@ -799,6 +871,48 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                   </div>
                                 </div>
                               )}
+
+                              {/* Daily Summary Timing */}
+                              <div className="space-y-4 pt-2">
+                                <div className="w-full h-px bg-slate-700/50"></div>
+                                <h4 className="text-white text-sm">Daily Summary Timing</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-white text-sm">Send Time</Label>
+                                    <select
+                                      value={dailySummaryTiming.type}
+                                      onChange={(e) => 
+                                        setDailySummaryTiming({ 
+                                          type: e.target.value as 'end_of_day' | 'custom', 
+                                          customTime: e.target.value === 'custom' ? '23:59' : undefined 
+                                        })
+                                      }
+                                      className="bg-slate-800 border-slate-600 text-white rounded-md px-3 py-2 text-sm w-full border focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                      <option value="end_of_day">End of Day (00:00)</option>
+                                      <option value="custom">Custom Time</option>
+                                    </select>
+                                    {dailySummaryTiming.type === 'custom' && (
+                                      <Input
+                                        type="time"
+                                        value={dailySummaryTiming.customTime || '23:59'}
+                                        onChange={(e) => setDailySummaryTiming({ ...dailySummaryTiming, customTime: e.target.value })}
+                                        className="bg-slate-800 border-slate-600 text-white"
+                                      />
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-end">
+                                    <Button
+                                      onClick={sendDailySummaryNow}
+                                      disabled={sendingMessage}
+                                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
+                                    >
+                                      {sendingMessage ? 'Sending...' : 'Send Daily Now'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
 
                             {/* Weekly Summaries */}
@@ -834,6 +948,48 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                   </div>
                                 </div>
                               )}
+
+                              {/* Weekly Summary Timing */}
+                              <div className="space-y-4 pt-2">
+                                <div className="w-full h-px bg-slate-700/50"></div>
+                                <h4 className="text-white text-sm">Weekly Summary Timing</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-white text-sm">Send Time</Label>
+                                    <select
+                                      value={weeklySummaryTiming.type}
+                                      onChange={(e) => 
+                                        setWeeklySummaryTiming({ 
+                                          type: e.target.value as 'end_of_day' | 'custom', 
+                                          customTime: e.target.value === 'custom' ? '18:00' : undefined 
+                                        })
+                                      }
+                                      className="bg-slate-800 border-slate-600 text-white rounded-md px-3 py-2 text-sm w-full border focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                    >
+                                      <option value="end_of_day">End of Day (00:00)</option>
+                                      <option value="custom">Custom Time</option>
+                                    </select>
+                                    {weeklySummaryTiming.type === 'custom' && (
+                                      <Input
+                                        type="time"
+                                        value={weeklySummaryTiming.customTime || '18:00'}
+                                        onChange={(e) => setWeeklySummaryTiming({ ...weeklySummaryTiming, customTime: e.target.value })}
+                                        className="bg-slate-800 border-slate-600 text-white"
+                                      />
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-end">
+                                    <Button
+                                      onClick={sendWeeklySummaryNow}
+                                      disabled={sendingMessage}
+                                      className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-xs sm:text-sm"
+                                    >
+                                      {sendingMessage ? 'Sending...' : 'Send Weekly Now'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
 
                             {/* Personal Summaries */}
@@ -869,50 +1025,50 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                   </div>
                                 </div>
                               )}
-                            </div>
 
-                            {/* Summary Timing */}
-                            <div className="space-y-4">
-                              <div className="w-full h-px bg-slate-700/50"></div>
-                              <h4 className="text-white text-sm">Summary Timing</h4>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label className="text-white text-sm">Send Time</Label>
-                                  <Select 
-                                    value={summaryTiming.type} 
-                                    onValueChange={(value: 'end_of_day' | 'custom') => 
-                                      setSummaryTiming({ type: value, customTime: value === 'custom' ? '20:00' : undefined })
-                                    }
-                                  >
-                                    <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                                      <SelectValue placeholder="Select send time" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600">
-                                      <SelectItem value="end_of_day">End of Day</SelectItem>
-                                      <SelectItem value="custom">Custom Time</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  {summaryTiming.type === 'custom' && (
-                                    <Input
-                                      type="time"
-                                      value={summaryTiming.customTime || '20:00'}
-                                      onChange={(e) => setSummaryTiming({ ...summaryTiming, customTime: e.target.value })}
-                                      className="bg-slate-800 border-slate-600 text-white"
-                                    />
-                                  )}
-                                </div>
-                                
-                                <div className="flex items-end">
-                                  <Button
-                                    onClick={sendDailySummaryNow}
-                                    disabled={sendingMessage}
-                                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
-                                  >
-                                    {sendingMessage ? 'Sending...' : 'Send Now'}
-                                  </Button>
+                              {/* Personal Summary Timing */}
+                              <div className="space-y-4 pt-2">
+                                <div className="w-full h-px bg-slate-700/50"></div>
+                                <h4 className="text-white text-sm">Personal Summary Timing</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-white text-sm">Send Time</Label>
+                                    <select
+                                      value={personalSummaryTiming.type}
+                                      onChange={(e) => 
+                                        setPersonalSummaryTiming({ 
+                                          type: e.target.value as 'end_of_day' | 'custom', 
+                                          customTime: e.target.value === 'custom' ? '19:00' : undefined 
+                                        })
+                                      }
+                                      className="bg-slate-800 border-slate-600 text-white rounded-md px-3 py-2 text-sm w-full border focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    >
+                                      <option value="end_of_day">End of Day (00:00)</option>
+                                      <option value="custom">Custom Time</option>
+                                    </select>
+                                    {personalSummaryTiming.type === 'custom' && (
+                                      <Input
+                                        type="time"
+                                        value={personalSummaryTiming.customTime || '19:00'}
+                                        onChange={(e) => setPersonalSummaryTiming({ ...personalSummaryTiming, customTime: e.target.value })}
+                                        className="bg-slate-800 border-slate-600 text-white"
+                                      />
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-end">
+                                    <Button
+                                      onClick={sendPersonalSummaryNow}
+                                      disabled={sendingMessage}
+                                      className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
+                                    >
+                                      {sendingMessage ? 'Sending...' : 'Send Personal Now'}
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
+
                           </>
                         )}
                       </div>

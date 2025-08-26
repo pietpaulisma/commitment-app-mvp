@@ -632,8 +632,7 @@ export default function MobileWorkoutLogger() {
       {/* Daily Target Progress Header - Copy exact navigation button structure */}
       {dailyTarget > 0 && (
         <div 
-          className="relative bg-gray-900 overflow-hidden border-t border-gray-700"
-          style={{ height: '56px', minHeight: '56px', maxHeight: '56px' }}
+          className="relative bg-gray-900 overflow-hidden border-t border-gray-700 py-3"
         >
           {/* Stacked gradient progress bar background with subtle animation */}
           <div 

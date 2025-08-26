@@ -41,6 +41,12 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     setIsCreatingSupremeAdmin(true)
     
     try {
+      // First check if profile already exists to preserve existing data like birth_date
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('birth_date')
+        .eq('id', user?.id)
+        .single()
       
       const profileData = {
         id: user?.id,
@@ -56,7 +62,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         use_ip_location: false,
         first_name: 'Matthijs',
         last_name: null,
-        birth_date: null,
+        // Preserve existing birth_date if it exists, otherwise set to null
+        birth_date: existingProfile?.birth_date || null,
         last_donation_date: null,
         total_donated: 0,
         donation_rate: 0.10,
