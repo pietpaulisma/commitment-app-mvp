@@ -191,7 +191,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
             // Calculate the specific daily target for this user's week mode
             const targetForDate = calculateDailyTarget({
               daysSinceStart,
-              weekMode: userWeekMode,
+              weekMode: 'sane',
               restDays,
               recoveryDays,
               currentDayOfWeek: dayOfWeek
