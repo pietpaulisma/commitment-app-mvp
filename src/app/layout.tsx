@@ -4,7 +4,6 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WeekModeProvider } from "@/contexts/WeekModeContext";
 import OnboardingGuard from "@/components/OnboardingGuard";
-import DevTestingPanel from "@/components/DevTestingPanel";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

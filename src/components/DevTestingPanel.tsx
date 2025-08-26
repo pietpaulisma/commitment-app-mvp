@@ -12,11 +12,6 @@ export default function DevTestingPanel() {
   const [previewRole, setPreviewRole] = useState<UserRole | null>(null)
   const [mounted, setMounted] = useState(false)
 
-  // Only show for supreme admins
-  if (!user || profileLoading || profile?.role !== 'supreme_admin') {
-    return null
-  }
-
   const toggleRolePreview = (newRole: UserRole) => {
     if (previewRole === newRole) {
       // If clicking the same role, turn off preview
@@ -45,6 +40,11 @@ export default function DevTestingPanel() {
 
   // Don't render until mounted to avoid SSR issues
   if (!mounted) {
+    return null
+  }
+
+  // Only show for supreme admins
+  if (!user || profileLoading || profile?.role !== 'supreme_admin') {
     return null
   }
 

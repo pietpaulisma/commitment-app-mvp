@@ -76,6 +76,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     const colorIndex = exerciseId.charCodeAt(0) % colorArray.length
     return colorArray[colorIndex]
   }
+
+  // Get colors based on week mode like dashboard  
+  const getModeColor = () => {
+    switch (weekMode) {
+      case 'sane':
+        return '#3b82f6' // Blue for sane mode
+      case 'insane':
+        return '#ef4444' // Red for insane mode
+      default:
+        return '#3b82f6' // Default to blue
+    }
+  }
+  
+  const userColor = getModeColor()
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -110,6 +124,129 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [isStopwatchRunning, setIsStopwatchRunning] = useState(false)
   const [stopwatchStartTime, setStopwatchStartTime] = useState(0) // timestamp when started
   const [stopwatchPausedDuration, setStopwatchPausedDuration] = useState(0) // accumulated paused time
+  const [motivationalMessage, setMotivationalMessage] = useState('')
+  const [showMotivationalMessage, setShowMotivationalMessage] = useState(false)
+  const [lastMinuteCount, setLastMinuteCount] = useState(0) // Track minutes for auto-increment
+  
+  // Motivational messages array
+  const motivationalMessages = [
+    "Your future self is already clapping.",
+    "Sweat = progress in liquid form.",
+    "You're lapping everyone still on the couch.",
+    "Every rep is a deposit in the badass bank.",
+    "Stopwatch says GO, not SCROLL.",
+    "You'll be stronger tomorrow because of this second.",
+    "This burn is proof you're alive.",
+    "Future jeans will thank you.",
+    "The timer isn't slowing down — why should you?",
+    "Imagine your favorite song playing for you only.",
+    "Pretend someone's watching. Move cooler.",
+    "If this was Mario Kart, you just hit a speed boost.",
+    "Rival just pulled ahead. Catch them.",
+    "You just unlocked the 'sweat badge.'",
+    "Beat your shadow-self.",
+    "The timer is your opponent — don't let it win.",
+    "Each second = one XP point. Level up.",
+    "Boss fight incoming. Don't drop your guard.",
+    "The leaderboard is watching.",
+    "Final lap. Sprint!",
+    "Your water bottle is judging you.",
+    "Stopwatch tattles if you quit.",
+    "Resting face detected.",
+    "Your mat wants more drama.",
+    "Somewhere, your ex is hoping you give up.",
+    "Your phone thinks you're scrolling right now.",
+    "Push-ups build character. And better selfies.",
+    "Burpees: nature's revenge.",
+    "Don't let gravity win today.",
+    "If you faint, at least do it dramatically.",
+    "Somewhere, a llama is proud of you.",
+    "This second is sponsored by sore muscles.",
+    "Push harder or the toaster rebels.",
+    "Someone in space just flexed for you.",
+    "Imagine broccoli cheering.",
+    "Hamsters think you're fast.",
+    "Sweat is your aura shining.",
+    "Keep going — pigeons demand it.",
+    "A potato just gave up; don't be that potato.",
+    "If aliens are watching, impress them.",
+    "And here we witness… a hero in action.",
+    "Stopwatch approves this effort.",
+    "Muscles negotiating… denied.",
+    "Behold: cardio royalty.",
+    "The prophecy said you wouldn't quit.",
+    "Legend says you never stop here.",
+    "Your rep is trending worldwide.",
+    "Stopwatch whispers: 'Faster.'",
+    "Training montage music intensifies.",
+    "Scene change: victory incoming.",
+    "Don't pause now, your snack isn't ready yet.",
+    "One more rep, one less excuse.",
+    "Sweat stains > couch cushions.",
+    "Stopwatch eats hesitation for breakfast.",
+    "Tired is a side effect of awesome.",
+    "Your sweatband wants more screen time.",
+    "Rest later. Impress now.",
+    "Stopwatch believes in you (slightly).",
+    "This moment = bragging rights later.",
+    "Stopwatch is neutral. You aren't.",
+    "You're literally saving the universe (probably).",
+    "Faster than a deadline approaching.",
+    "Muscles: assemble!",
+    "Timer says you're basically a sidekick.",
+    "Your cape is invisible but powerful.",
+    "Villains take the day off — not you.",
+    "Training montage unlocked.",
+    "Even Batman does squats.",
+    "Stopwatch = super serum drip.",
+    "Today's power-up: sweat.",
+    "10 more seconds of chaos.",
+    "Wheeee — gravity isn't a toy.",
+    "Hold tight, ride's not over.",
+    "That burn? Front-row ticket vibes.",
+    "Endorphins coming up next.",
+    "Warning: epic finish ahead.",
+    "Think of this as a final boss cutscene.",
+    "Stopwatch buckle-up mode engaged.",
+    "Ride ends when you say it does.",
+    "Push now, laugh later.",
+    "Strike like you mean it.",
+    "Stopwatch = dojo master.",
+    "Don't let your inner ninja nap.",
+    "Kick the laziness out.",
+    "Every rep is a silent strike.",
+    "Sweat = warrior ink.",
+    "The floor fears your push-ups.",
+    "Stopwatch bows to your discipline.",
+    "Warrior mode: active.",
+    "Laziness defeated, achievement unlocked.",
+    "Boom. Another second gone.",
+    "Faster. Louder. Stronger.",
+    "Stopwatch doesn't stutter.",
+    "Pain = spice of victory.",
+    "Don't stop — your playlist hates pauses.",
+    "Stopwatch flexed first.",
+    "Laugh now, sore tomorrow.",
+    "More sweat, fewer regrets.",
+    "Stopwatch won't remember, but you will.",
+    "Rep after rep = legend unlocked.",
+    "TEAR THE FLOOR APART WITH YOUR HANDS.",
+    "CRUSH THIS SET LIKE IT OWES YOU MONEY.",
+    "DESTROY EVERY SECOND OR BE DESTROYED.",
+    "RIP THE LAZINESS OUT OF YOUR BODY.",
+    "BREAK LIMITS. BREAK EXCUSES. BREAK EVERYTHING.",
+    "SHATTER THE TIMER WITH YOUR SWEAT.",
+    "SLAUGHTER THE REPS. NO MERCY.",
+    "ANNIHILATE WEAKNESS NOW.",
+    "SMASH THROUGH THIS LIKE A RAMPAGING BULL.",
+    "OBLITERATE THE NEXT 10 SECONDS.",
+    "UNLEASH HELL ON THESE REPS.",
+    "GRIND YOUR LIMITS INTO DUST.",
+    "TURN FATIGUE INTO ASH.",
+    "KILL THE EXCUSES. FEED THE GRIND.",
+    "DESTROY THE CLOCK WITH EVERY REP.",
+    "MAKE THE TIMER BEG FOR MERCY."
+  ]
 
   // localStorage functions for locked weights
   const saveLockedWeightsToStorage = (weights: Record<string, number>) => {
@@ -143,8 +280,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
-      console.log('Loading exercises for group:', profile.group_id)
-      console.log('isAnimatedIn before:', isAnimatedIn)
       
       // Mark workout as in progress for state preservation
       markWorkoutInProgress()
@@ -164,12 +299,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       
       // Wait for modal to be fully mounted before starting animation
       setTimeout(() => {
-        console.log('Setting isAnimatedIn to true')
         setIsAnimatedIn(true)
         
         // Delay icon transition until modal reaches the top (cherry on the cake!)
         setTimeout(() => {
-          console.log('Starting icon transition - chat pushed out by X')
           setShowIconTransition(true)
         }, 400) // Start icon transition near end of modal slide-up
       }, 50) // Small delay to ensure DOM is ready
@@ -177,7 +310,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Trigger subtle progress animation after modal loads
       setTimeout(() => setProgressAnimated(true), 300)
     } else if (!isOpen) {
-      console.log('Setting isAnimatedIn to false')
       setIsAnimatedIn(false)
       setIsClosing(false)
       setShowIconTransition(false)
@@ -207,12 +339,68 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return () => clearInterval(interval)
   }, [isStopwatchRunning, stopwatchStartTime, stopwatchPausedDuration])
 
-  // Format stopwatch time
+  // Motivational messages effect - show every 5 seconds while running
+  useEffect(() => {
+    let messageInterval: NodeJS.Timeout
+    let initialTimeout: NodeJS.Timeout
+    
+    if (isStopwatchRunning) {
+      const showMessage = () => {
+        const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]
+        setMotivationalMessage(randomMessage)
+        setShowMotivationalMessage(true)
+        
+        // Let CSS animation handle the fade out (4 second duration)
+        // Reset the message state after animation completes
+        setTimeout(() => {
+          setShowMotivationalMessage(false)
+        }, 4000)
+      }
+      
+      // Show first message after 1 second
+      initialTimeout = setTimeout(showMessage, 1000)
+      
+      // Then show every 5 seconds
+      messageInterval = setInterval(showMessage, 5000)
+    } else {
+      setShowMotivationalMessage(false)
+    }
+    
+    return () => {
+      clearInterval(messageInterval)
+      clearTimeout(initialTimeout)
+    }
+  }, [isStopwatchRunning])
+
+  // Auto-increment points when reaching a new minute
+  useEffect(() => {
+    if (isStopwatchRunning && selectedWorkoutExercise && selectedWorkoutExercise.is_time_based) {
+      const currentMinutes = Math.floor(stopwatchTime / 60000)
+      if (currentMinutes > lastMinuteCount && currentMinutes > 0) {
+        // Determine increment amount based on exercise unit
+        const incrementAmount = selectedWorkoutExercise.unit === 'hour' 
+          ? parseFloat((1/60).toFixed(4)) // 1 minute = 1/60 hour, rounded to 4 decimal places
+          : 1 // 1 minute for minute-based exercises
+        
+        setWorkoutCount(prev => parseFloat((prev + incrementAmount).toFixed(4)))
+        setLastMinuteCount(currentMinutes)
+      }
+    }
+  }, [stopwatchTime, isStopwatchRunning, selectedWorkoutExercise, lastMinuteCount])
+
+  // Helper function to get the appropriate step amount for manual increments
+  const getStepAmount = () => {
+    if (selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour') {
+      return parseFloat((1/60).toFixed(4)) // 1 minute = 1/60 hour
+    }
+    return 1 // 1 minute for minute-based exercises, 1 rep for rep-based exercises
+  }
+
+  // Format stopwatch time (mm:ss format)
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000)
     const seconds = Math.floor((ms % 60000) / 1000)
-    const centiseconds = Math.floor((ms % 1000) / 10)
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
 
   // Stopwatch controls
@@ -238,10 +426,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     setStopwatchTime(0)
     setStopwatchStartTime(0)
     setStopwatchPausedDuration(0)
+    setLastMinuteCount(0)
+    setShowMotivationalMessage(false)
   }
 
   const handleClose = () => {
-    console.log('Starting close animation')
     setIsClosing(true)
     
     // Clear workout in progress state
@@ -260,7 +449,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     
     // Wait for animation to complete, then actually close
     setTimeout(() => {
-      console.log('Animation complete, closing modal')
       onClose()
     }, 500) // Match the CSS transition duration
   }
@@ -318,7 +506,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         recoveryDays: [5] // Default recovery days  
       })
       setDailyTarget(newTarget)
-      console.log(`Target recalculated for ${newMode} mode:`, newTarget)
     }
   }
 
@@ -343,7 +530,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // If user met/exceeded insane target while in sane mode, switch to insane
       if (currentTotalPoints >= insaneTargetForToday) {
         await setWeekModeWithSync('insane', user?.id)
-        console.log(`Auto-switched to insane mode! Points: ${currentTotalPoints}, Insane target: ${insaneTargetForToday}`)
         
         // Recalculate target with new mode
         await recalculateTargetWithMode('insane')
@@ -504,7 +690,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         .eq('user_id', user.id)
 
       if (error) {
-        console.log('Favorites table not available:', error.message)
+        // Favorites table not available - silently ignore
         return
       }
 
@@ -531,7 +717,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .eq('exercise_id', exerciseId)
 
         if (error) {
-          console.log('Cannot remove favorite - table not available:', error.message)
+          // Cannot remove favorite - table not available
           return
         }
 
@@ -543,7 +729,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .insert({ user_id: user.id, exercise_id: exerciseId })
 
         if (error) {
-          console.log('Cannot add favorite - table not available:', error.message)
+          // Cannot add favorite - table not available
           return
         }
 
@@ -942,13 +1128,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const loadExercises = async () => {
     if (!profile?.group_id || !user) {
-      console.log('Cannot load exercises - missing profile or user:', { profile: !!profile, user: !!user })
       return
     }
 
     try {
       setExercisesLoading(true)
-      console.log('Loading exercises for group:', profile.group_id)
       const today = new Date().toISOString().split('T')[0]
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       
@@ -966,21 +1150,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         return
       }
 
-      console.log('Raw group exercises:', groupExercises)
-      console.log('Group exercises count:', groupExercises?.length || 0)
       
       // Also get ALL exercises to compare
       const { data: allExercises } = await supabase
         .from('exercises')
         .select('*')
       
-      console.log('Total exercises in database:', allExercises?.length || 0)
-      console.log('All exercise names:', allExercises?.map(ex => ex.name) || [])
 
       const exerciseList = (groupExercises?.map(ge => ge.exercises).filter(Boolean) || [])
         .sort((a, b) => a.name.localeCompare(b.name))
-      console.log('Exercises available for workout logging:', exerciseList.length)
-      console.log('Available exercise names:', exerciseList.map(ex => ex.name))
       
       // Try to get today's workout counts (may fail if logs table doesn't exist)
       let todayLogs = []
@@ -992,7 +1170,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .eq('date', today)
         todayLogs = data || []
       } catch (error) {
-        console.log('Logs table not accessible, skipping progress tracking')
+        // Logs table not accessible, skipping progress tracking
       }
       
       // Try to get yesterday's workouts (may fail if logs table doesn't exist)
@@ -1005,7 +1183,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .eq('date', yesterday)
         yesterdayLogs = data || []
       } catch (error) {
-        console.log('Cannot load yesterday logs for recommendations')
+        // Cannot load yesterday logs for recommendations
       }
       
       // Process exercises with progress
@@ -1020,7 +1198,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       })
       
       setExercises(exercisesWithProgress)
-      console.log('Exercises loaded successfully:', exercisesWithProgress.length)
     } catch (error) {
       console.error('Error loading exercises:', error)
     } finally {
@@ -1031,13 +1208,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
 
   const handleSubmitToGroup = async () => {
-    console.log('Workout submission debug:', {
+    // Submitting workout to group
+    console.log('Submitting workout to group:', {
       user_id: user?.id,
       user_email: user?.email,
       profile_group_id: profile?.group_id,
       dailyProgress,
       todayLogs: todayLogs?.length
-    })
+    });
     
     if (!user || !profile?.group_id || dailyProgress <= 0) {
       console.error('Workout submission blocked:', {
@@ -1092,13 +1270,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         workout_data: workoutData
       })
       
+      // Inserting workout message
       console.log('Inserting workout message:', {
         user_id: user.id,
         group_id: profile.group_id,
         message_length: messageWithData.length,
         message_type: 'workout_completion',
         workoutData: JSON.stringify(workoutData, null, 2)
-      })
+      });
 
       const { data, error } = await supabase
         .from('chat_messages')
@@ -1110,13 +1289,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         })
         .select()
 
-      console.log('Database insert result:', { data, error })
 
       if (error) {
         console.error('Error submitting to group:', error)
         alert('Error submitting workout to group chat')
       } else {
-        console.log('Workout successfully submitted to group chat:', data)
         // Check for automatic mode switching to insane
         if (weekMode === 'sane' && isWeekModeAvailable(groupDaysSinceStart) && totalPoints >= dailyTarget) {
           try {
@@ -1394,7 +1571,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   if (!isOpen) return null
 
-  console.log('Rendering modal with isAnimatedIn:', isAnimatedIn)
 
   return (
     <>
@@ -1409,6 +1585,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         }
         .btn-hover:hover {
           background-color: #ea580c !important;
+        }
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translateY(-10px); }
+          15% { opacity: 1; transform: translateY(0px); }
+          85% { opacity: 1; transform: translateY(0px); }
+          100% { opacity: 0; transform: translateY(10px); }
         }
       `}</style>
       
@@ -1873,42 +2055,79 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <ClockIcon className="w-5 h-5 text-cyan-400" />
+                  <ClockIcon className="w-5 h-5" style={{ color: userColor }} />
                   <span className="font-medium">Stopwatch</span>
-                  <span className="font-sans text-cyan-400">{formatTime(stopwatchTime)}</span>
+                  <span className="font-sans font-bold" style={{ color: userColor }}>{formatTime(stopwatchTime)}</span>
                 </div>
                 {isStopwatchExpanded ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
               </button>
               
               {isStopwatchExpanded && (
-                <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                <div className="px-4 pb-4 space-y-6 animate-in slide-in-from-top-2 duration-200">
+                  {/* Motivational message area - above timer */}
+                  <div className="h-12 flex items-center justify-center relative">
+                    {showMotivationalMessage && (
+                      <div 
+                        className={`text-center transition-opacity duration-1000 ease-out ${
+                          showMotivationalMessage ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        style={{
+                          animation: showMotivationalMessage ? 'fadeInOut 4s ease-in-out' : 'none'
+                        }}
+                      >
+                        <div className="text-sm font-bold text-white whitespace-nowrap" style={{ color: userColor }}>
+                          {motivationalMessage}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
                   {/* Large time display */}
                   <div className="text-center">
-                    <div className="font-sans text-6xl font-bold text-cyan-400 tracking-wider">
+                    <div className="font-sans text-6xl font-bold tracking-wider" style={{ color: userColor }}>
                       {formatTime(stopwatchTime)}
                     </div>
                   </div>
                   
                   {/* Controls */}
-                  <div className="flex justify-center gap-3">
-                    <button
-                      onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
-                      className={`relative overflow-hidden bg-gradient-to-b border shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.4)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_4px_rgba(0,0,0,0.2)] active:scale-[0.98] transition-all duration-150 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/4 before:to-transparent before:pointer-events-none px-6 py-3 rounded-xl flex items-center gap-2 ${
-                        isStopwatchRunning 
-                          ? 'from-orange-600 via-orange-700 to-orange-800 border-orange-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_8px_rgba(234,88,12,0.3)]' 
-                          : 'from-green-600 via-green-700 to-green-800 border-green-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_8px_rgba(34,197,94,0.3)]'
-                      }`}
+                  <div className="flex justify-center gap-6 mt-8">
+                    <div
+                      className="w-20 h-20 rounded-full overflow-hidden backdrop-blur-xl border-2 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.3),0_12px_40px_rgba(0,0,0,0.8)] active:scale-[0.95] transition-all duration-200 relative"
+                      style={{
+                        background: `radial-gradient(circle at 30% 30%, ${userColor}FF 0%, ${userColor}DD 50%, ${userColor}BB 100%)`,
+                        borderColor: userColor + '60',
+                        boxShadow: `inset 0 2px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px ${userColor}40`
+                      }}
                     >
-                      {isStopwatchRunning ? '⏸️' : '▶️'}
-                      {isStopwatchRunning ? 'Pause' : 'Start'}
-                    </button>
+                      {/* Glass effect overlays */}
+                      <div className="absolute inset-[2px] rounded-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none" />
+                      
+                      <button
+                        onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
+                        className="absolute inset-0 w-full h-full bg-transparent border-0 rounded-full font-bold text-white text-sm flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-colors duration-200"
+                      >
+                        {isStopwatchRunning ? 'Pause' : 'Start'}
+                      </button>
+                    </div>
                     
-                    <button
-                      onClick={resetStopwatch}
-                      className="relative overflow-hidden bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 border border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_rgba(0,0,0,0.3)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.4)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_4px_rgba(0,0,0,0.2)] hover:from-zinc-600 hover:via-zinc-700 hover:to-zinc-800 active:from-zinc-800 active:via-zinc-900 active:to-black active:scale-[0.98] transition-all duration-150 touch-manipulation before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/4 before:to-transparent before:pointer-events-none px-6 py-3 rounded-xl flex items-center gap-2"
+                    <div
+                      className="w-20 h-20 rounded-full overflow-hidden backdrop-blur-xl border-2 border-zinc-500/60 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.3),0_12px_40px_rgba(0,0,0,0.8)] active:scale-[0.95] transition-all duration-200 relative bg-gradient-to-br from-zinc-600/80 via-zinc-700/90 to-zinc-800/80 hover:from-zinc-500/80 hover:via-zinc-600/90 hover:to-zinc-700/80"
+                      style={{
+                        boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)'
+                      }}
                     >
-                      🔄 Reset
-                    </button>
+                      {/* Glass effect overlays */}
+                      <div className="absolute inset-[2px] rounded-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none" />
+                      
+                      <button
+                        onClick={resetStopwatch}
+                        className="absolute inset-0 w-full h-full bg-transparent border-0 rounded-full font-bold text-white text-sm flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-colors duration-200"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1924,7 +2143,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 <div className="relative w-full h-full flex items-center justify-center rounded-3xl bg-gradient-to-b from-zinc-800/60 to-zinc-900/60 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] overflow-hidden">
                   {/* Left click zone (decrement) */}
                   <button
-                    onClick={() => setWorkoutCount(Math.max(0, workoutCount - 1))}
+                    onClick={() => {
+                      const stepAmount = getStepAmount()
+                      setWorkoutCount(Math.max(0, parseFloat((workoutCount - stepAmount).toFixed(4))))
+                    }}
                     className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/8 active:bg-white/12 transition-all duration-150 active:scale-95 touch-manipulation"
                   >
                     <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">−</span>
@@ -1932,7 +2154,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   
                   {/* Right click zone (increment) */}
                   <button
-                    onClick={() => setWorkoutCount(workoutCount + 1)}
+                    onClick={() => {
+                      const stepAmount = getStepAmount()
+                      setWorkoutCount(parseFloat((workoutCount + stepAmount).toFixed(4)))
+                    }}
                     className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/8 active:bg-white/12 transition-all duration-150 active:scale-95 touch-manipulation"
                   >
                     <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">+</span>
@@ -1947,7 +2172,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         textShadow: '0 0 40px rgba(255,255,255,0.2)' 
                       }}
                     >
-                      {workoutCount}
+                      {(() => {
+                        // Format display based on exercise unit
+                        if (selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour') {
+                          // Convert hours to minutes for display: 1.0833 hours = 65 minutes
+                          const minutes = Math.round(workoutCount * 60)
+                          return (
+                            <>
+                              {minutes}
+                              <span style={{ fontWeight: '300' }}>m</span>
+                            </>
+                          )
+                        }
+                        // For rep-based or minute-based exercises, show as-is
+                        return workoutCount
+                      })()}
                     </span>
                   </div>
                 </div>
@@ -1955,12 +2194,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
               {/* Action Buttons */}
               <div className="grid grid-cols-4 gap-1">
-                {[
-                  { action: () => setWorkoutCount(Math.max(0, workoutCount - 10)), label: '-10' },
-                  { action: () => setWorkoutCount(Math.max(0, workoutCount - 5)), label: '-5' },
-                  { action: () => setWorkoutCount(workoutCount + 5), label: '+5' },
-                  { action: () => setWorkoutCount(workoutCount + 10), label: '+10' }
-                ].map((button, index) => (
+                {(() => {
+                  const stepAmount = getStepAmount()
+                  const isHourBased = selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour'
+                  
+                  return [
+                    { 
+                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (10 * stepAmount)).toFixed(4)))), 
+                      label: isHourBased ? '-10m' : '-10' 
+                    },
+                    { 
+                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (5 * stepAmount)).toFixed(4)))), 
+                      label: isHourBased ? '-5m' : '-5' 
+                    },
+                    { 
+                      action: () => setWorkoutCount(parseFloat((workoutCount + (5 * stepAmount)).toFixed(4))), 
+                      label: isHourBased ? '+5m' : '+5' 
+                    },
+                    { 
+                      action: () => setWorkoutCount(parseFloat((workoutCount + (10 * stepAmount)).toFixed(4))), 
+                      label: isHourBased ? '+10m' : '+10' 
+                    }
+                  ]
+                })().map((button, index) => (
                   <button
                     key={index}
                     onClick={button.action}
@@ -2236,7 +2492,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       key={exercise.id}
                       onClick={() => {
                         setSelectedWorkoutExercise(exercise)
-                        setWorkoutCount(1)
+                        setWorkoutCount(0)
                         setSelectedWeight(0)
                         setIsDecreasedExercise(false)
                         setShowSportSelection(false)

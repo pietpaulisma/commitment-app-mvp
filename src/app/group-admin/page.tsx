@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
 import { getDaysSinceStart } from '@/utils/targetCalculation'
@@ -215,118 +215,74 @@ export default function GroupAdminDashboard() {
   }
 
   const loadPotData = async () => {
-    console.log('🍯 [POT DEBUG] Starting loadPotData...')
-    console.log('🍯 [POT DEBUG] Profile:', profile)
-    
     if (!profile) {
-      console.log('🍯 [POT DEBUG] No profile, returning early')
       return
     }
 
     try {
       setPotLoading(true)
       setPotError(null)
-      console.log('🍯 [POT DEBUG] Set loading to true')
 
       // Step 1: Get group data
-      console.log('🍯 [POT DEBUG] Fetching group data for admin_id:', profile.id)
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
         .select('*')
         .eq('admin_id', profile.id)
         .single()
 
-      console.log('🍯 [POT DEBUG] Group query result:', { groupData, groupError })
       if (groupError) throw groupError
 
-      // Step 2: Get members data (without total_penalty_owed for now)
-      console.log('🍯 [POT DEBUG] Fetching members for group_id:', groupData.id)
+      // Step 2: Get members data with penalty tracking
       const { data: membersData, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username')
+        .select('id, email, username, total_penalty_owed, last_penalty_check')
         .eq('group_id', groupData.id)
         .order('email')
 
-      console.log('🍯 [POT DEBUG] Members query result:', { membersData, membersError })
       if (membersError) throw membersError
 
-      // Step 3: Check payment_transactions table access
-      console.log('🍯 [POT DEBUG] Testing payment_transactions table access...')
-      const { data: testTransactions, error: testError } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .limit(1)
-
-      console.log('🍯 [POT DEBUG] Payment transactions test:', { testTransactions, testError })
-
-      // Step 4: Get transactions for each member (with fallback)
-      console.log('🍯 [POT DEBUG] Processing', membersData?.length || 0, 'members...')
-      const membersWithTransactions = await Promise.all(
-        (membersData || []).map(async (member, index) => {
-          console.log(`🍯 [POT DEBUG] Processing member ${index + 1}:`, member.email, 'ID:', member.id)
-          
-          // Try payment_transactions first
-          let transactions = null
-          let transactionError = null
-          
+      // Get recent transactions for each member for activity display
+      const membersWithPenalties = await Promise.all(
+        (membersData || []).map(async (member) => {
+          // Get recent transactions for activity display
+          let transactions = []
           try {
             const result = await supabase
               .from('payment_transactions')
               .select('amount, transaction_type, description, created_at')
               .eq('user_id', member.id)
               .order('created_at', { ascending: false })
+              .limit(5)
             
-            transactions = result.data
-            transactionError = result.error
+            transactions = result.data || []
           } catch (error) {
-            console.log(`🍯 [POT DEBUG] Error accessing payment_transactions for ${member.email}:`, error)
-            transactionError = error
+            // Handle error silently
           }
 
-          console.log(`🍯 [POT DEBUG] Transactions for ${member.email}:`, { transactions, transactionError })
-
-          // Calculate current debt and find last penalty date
-          const totalPaid = transactions
-            ?.filter(t => t.transaction_type === 'payment')
-            .reduce((sum, t) => sum + t.amount, 0) || 0
-
-          const totalPenalties = transactions
-            ?.filter(t => t.transaction_type === 'penalty')
-            .reduce((sum, t) => sum + t.amount, 0) || 0
-
-          const currentDebt = Math.max(0, totalPenalties - totalPaid)
-
-          // Find last penalty date
+          // Find last penalty date from transactions
           const lastPenalty = transactions
-            ?.filter(t => t.transaction_type === 'penalty')
+            .filter(t => t.transaction_type === 'penalty')
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
           const lastPenaltyDate = lastPenalty ? new Date(lastPenalty.created_at).toLocaleDateString() : null
 
-          console.log(`🍯 [POT DEBUG] Calculated for ${member.email}: debt=${currentDebt}, lastPenalty=${lastPenaltyDate}`)
-
           return {
             ...member,
-            total_penalty_owed: currentDebt,
+            // Use database values directly
+            penalty_balance: member.total_penalty_owed || 0,
             last_penalty_date: lastPenaltyDate,
-            recent_transactions: transactions?.slice(0, 3) || [] // Keep fewer for reference
+            recent_transactions: transactions.slice(0, 3)
           }
         })
       )
 
-      console.log('🍯 [POT DEBUG] Final membersWithTransactions:', membersWithTransactions)
-      setPotData(membersWithTransactions)
+      setPotData(membersWithPenalties)
     } catch (error) {
-      console.error('🍯 [POT DEBUG] Error loading pot data:', error)
-      console.error('🍯 [POT DEBUG] Error details:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      })
+      console.error('Error loading pot data:', error)
       
       const errorMessage = error instanceof Error ? error.message : String(error)
       setPotError(`Failed to load pot data: ${errorMessage}`)
     } finally {
-      console.log('🍯 [POT DEBUG] Setting loading to false')
       setPotLoading(false)
     }
   }
@@ -458,11 +414,6 @@ export default function GroupAdminDashboard() {
   }
 
   const adjustPenaltyAmount = async (userId: string) => {
-    console.log('🍯 [POT DEBUG] Starting penalty adjustment...')
-    console.log('🍯 [POT DEBUG] User ID:', userId)
-    console.log('🍯 [POT DEBUG] Admin profile:', profile)
-    console.log('🍯 [POT DEBUG] Group:', group)
-    
     if (!adjustmentAmount || !adjustmentReason) {
       alert('Please enter both amount and reason for the adjustment')
       return
@@ -488,20 +439,31 @@ export default function GroupAdminDashboard() {
         description: `Admin adjustment: ${adjustmentReason}`
       }
 
-      console.log('🍯 [POT DEBUG] Inserting transaction:', transactionData)
-
-      const { data, error: transactionError } = await supabase
+      const { error: transactionError } = await supabase
         .from('payment_transactions')
         .insert(transactionData)
         .select()
 
-      console.log('🍯 [POT DEBUG] Insert result:', { data, transactionError })
-
       if (transactionError) throw transactionError
 
-      // Note: We don't update profiles.total_penalty_owed since the column doesn't exist
-      // The debt will be calculated from payment_transactions on next load
-      console.log('🍯 [POT DEBUG] Transaction recorded, debt will be recalculated from transactions')
+      // Update user's total penalty owed in profiles table
+      const { data: currentProfile, error: profileFetchError } = await supabase
+        .from('profiles')
+        .select('total_penalty_owed')
+        .eq('id', userId)
+        .single()
+
+      if (!profileFetchError && currentProfile) {
+        const currentTotal = currentProfile.total_penalty_owed || 0
+        const newTotal = transactionType === 'penalty' 
+          ? currentTotal + absoluteAmount
+          : Math.max(0, currentTotal - absoluteAmount)
+
+        await supabase
+          .from('profiles')
+          .update({ total_penalty_owed: newTotal })
+          .eq('id', userId)
+      }
 
       await Promise.all([loadPotData(), loadGroupData()])
       setEditingPot(null)
@@ -509,8 +471,8 @@ export default function GroupAdminDashboard() {
       setAdjustmentReason('')
       alert('Adjustment recorded successfully!')
     } catch (error) {
-      console.error('Error adjusting penalty:', error)
-      alert('Failed to adjust penalty: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      console.error('Error adjusting penalty amount:', error)
+      alert('Failed to record adjustment: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 
@@ -1083,7 +1045,7 @@ export default function GroupAdminDashboard() {
                             <div>User ID: {profile?.id}</div>
                             <div>User Role: {profile?.role}</div>
                             <div>Group ID: {profile?.group_id}</div>
-                            <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                            <div>Check browser console for detailed logs</div>
                           </div>
                         </details>
                       </div>
@@ -1099,33 +1061,33 @@ export default function GroupAdminDashboard() {
                             <div className="flex items-center gap-4 mb-3">
                               <h4 className="text-lg font-medium text-white">{member.email}</h4>
                               <span className={`px-2 py-1 text-xs rounded ${
-                                (member.total_penalty_owed || 0) > 0 
-                                  ? 'bg-red-900/50 text-red-400 border border-red-700'
+                                (member.penalty_balance || 0) > 0 
+                                  ? 'bg-orange-900/50 text-orange-400 border border-orange-700'
                                   : 'bg-green-900/50 text-green-400 border border-green-700'
                               }`}>
-                                {(member.total_penalty_owed || 0) > 0 ? 'Owes Money' : 'Paid Up'}
+                                {(member.penalty_balance || 0) > 0 ? 'Has Penalties' : 'Current'}
                               </span>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <div className="text-gray-400 uppercase tracking-wide text-xs">Current Debt</div>
-                                <div className="text-red-400 font-bold text-2xl">€{(member.total_penalty_owed || 0).toFixed(2)}</div>
+                                <div className="text-gray-400 uppercase tracking-wide text-xs">Penalty Balance</div>
+                                <div className="text-orange-400 font-bold text-2xl">€{(member.penalty_balance || 0).toFixed(2)}</div>
                               </div>
                               <div>
-                                <div className="text-gray-400 uppercase tracking-wide text-xs">Last Penalty</div>
-                                <div className="text-orange-400 font-medium">
-                                  {member.last_penalty_date || 'No penalties yet'}
+                                <div className="text-gray-400 uppercase tracking-wide text-xs">Last Adjustment</div>
+                                <div className="text-gray-300 font-medium">
+                                  {member.last_penalty_date || 'No adjustments yet'}
                                 </div>
                               </div>
                             </div>
                           </div>
                           
-                          {/* Action Button */}
+                          {/* Manual Adjustment Controls */}
                           <div className="flex-shrink-0">
                             {editingPot === member.id ? (
                               <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg min-w-80">
-                                <h5 className="text-white font-medium mb-3">Adjust Amount</h5>
+                                <h5 className="text-white font-medium mb-3">Manual Adjustment</h5>
                                 <div className="space-y-3">
                                   <div>
                                     <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1">
@@ -1177,7 +1139,7 @@ export default function GroupAdminDashboard() {
                                 onClick={() => setEditingPot(member.id)}
                                 className="bg-orange-600 text-white px-4 py-2 text-sm hover:bg-orange-700 transition-colors"
                               >
-                                Adjust Amount
+                                Manual Adjustment
                               </button>
                             )}
                           </div>
@@ -1186,13 +1148,13 @@ export default function GroupAdminDashboard() {
                         {/* Recent Activity (only if there are transactions) */}
                         {member.recent_transactions && member.recent_transactions.length > 0 && (
                           <div className="mt-4 pt-4 border-t border-gray-800">
-                            <h5 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Recent Activity</h5>
+                            <h5 className="text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">Recent Adjustments</h5>
                             <div className="space-y-1">
                               {member.recent_transactions.slice(0, 2).map((transaction: any, index: number) => (
                                 <div key={index} className="flex justify-between items-center text-xs">
                                   <span className="text-gray-300">{transaction.description}</span>
                                   <div className="flex items-center gap-2">
-                                    <span className={transaction.transaction_type === 'penalty' ? 'text-red-400' : 'text-green-400'}>
+                                    <span className={transaction.transaction_type === 'penalty' ? 'text-orange-400' : 'text-green-400'}>
                                       {transaction.transaction_type === 'penalty' ? '+' : '-'}€{transaction.amount.toFixed(2)}
                                     </span>
                                     <span className="text-gray-500">
@@ -1233,7 +1195,7 @@ export default function GroupAdminDashboard() {
                                 <div>User ID: {profile?.id}</div>
                                 <div>User Role: {profile?.role}</div>
                                 <div>Group ID: {profile?.group_id}</div>
-                                <div>Check browser console for detailed logs (🍯 [POT DEBUG])</div>
+                                <div>Check browser console for detailed logs</div>
                               </div>
                             </details>
                           </div>

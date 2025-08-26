@@ -14,7 +14,6 @@ interface OnboardingFlowProps {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { user } = useAuth()
   
   const handleOnboardingComplete = () => {
     console.log('Onboarding completed, allowing time for profile data to refresh...')
@@ -166,7 +165,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       }, 100)
     }
     return () => clearInterval(interval)
-  }, [isHolding, holdProgress])
+  }, [isHolding, holdProgress, finalWarningQuotes, nextStep])
 
   // Handle scroll detection for final commitment page
   useEffect(() => {
@@ -446,7 +445,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       }
 
       // Check if profile exists, create if it doesn't
-      const { data: profile, error: profileError } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', user.id)
@@ -735,7 +734,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                         fontSize: revealedSentences === 0 ? '2rem' : `${Math.max(1.2, 2 - (revealedSentences * 0.15))}rem`
                       }}
                     >
-                      This is not just another fitness app - <span className="text-red-400 underline">it's a lifestyle</span>.
+                      This is not just another fitness app - <span className="text-red-400 underline">it&apos;s a lifestyle</span>.
                     </motion.div>
                     
                     <AnimatePresence>
@@ -1035,7 +1034,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                         onClick={() => onGoToLogin?.()}
                         className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl text-gray-300 hover:text-white transition-colors font-bold text-center"
                       >
-                        I'm not made for this
+                        I&apos;m not made for this
                       </button>
                     </div>
                   </motion.div>
@@ -1146,7 +1145,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             </div>
             
             <div className="text-center space-y-2">
-              <p className="text-gray-400 font-bold text-lg">Once you join, there's no hiding from your group</p>
+              <p className="text-gray-400 font-bold text-lg">Once you join, there&apos;s no hiding from your group</p>
               <p className="text-red-400 font-black text-xl">They will see everything</p>
             </div>
           </motion.div>
@@ -1187,14 +1186,14 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                   <div className="text-center space-y-6">
                     <div className="space-y-4 text-lg md:text-xl font-normal text-gray-300">
                       <p>This is where most people <span className="font-bold">back out</span>.</p>
-                      <p>You've read the rules. You understand the system.</p>
+                      <p>You&apos;ve read the rules. You understand the system.</p>
                       <p>From here on out, <span className="font-bold">every rep matters</span>. <span className="font-bold">Every miss costs</span>.</p>
                       <p>The group is <span className="font-bold">watching</span>. So is the system.</p>
                     </div>
                     
                     <div className="space-y-4 text-lg md:text-xl font-normal text-gray-300">
-                      <p>There's <span className="font-bold">no pause button</span>. <span className="font-bold">No ghosting</span>.</p>
-                      <p>You don't join to <span className="font-bold">try</span> — you join to <span className="font-bold">change</span>.</p>
+                      <p>There&apos;s <span className="font-bold">no pause button</span>. <span className="font-bold">No ghosting</span>.</p>
+                      <p>You don&apos;t join to <span className="font-bold">try</span> — you join to <span className="font-bold">change</span>.</p>
                     </div>
                     
                     {/* Additional content to require scrolling */}
@@ -1207,9 +1206,9 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                       <div className="space-y-6 text-lg text-gray-300">
                         <h3 className="text-2xl font-black text-red-400">THE REALITY CHECK</h3>
                         <div className="space-y-4">
-                          <p>Most fitness apps let you lie to yourself. This one doesn't.</p>
-                          <p>Most groups let you disappear quietly. This one doesn't.</p>
-                          <p>Most systems let you quit when it gets hard. This one doesn't.</p>
+                          <p>Most fitness apps let you lie to yourself. This one doesn&apos;t.</p>
+                          <p>Most groups let you disappear quietly. This one doesn&apos;t.</p>
+                          <p>Most systems let you quit when it gets hard. This one doesn&apos;t.</p>
                         </div>
                       </div>
 
@@ -1241,10 +1240,10 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                       <div className="space-y-6 text-lg text-gray-300">
                         <h3 className="text-2xl font-black text-red-400">WHAT HAPPENS NEXT</h3>
                         <div className="space-y-4">
-                          <p>You'll join your group. They'll see your progress every day.</p>
-                          <p>You'll choose your identity - avatar and color. <span className="font-bold text-red-400">For life.</span></p>
-                          <p>You'll start earning points immediately. Miss a day? Pay the price.</p>
-                          <p>There's no trial period. No refunds. No second chances.</p>
+                          <p>You&apos;ll join your group. They&apos;ll see your progress every day.</p>
+                          <p>You&apos;ll choose your identity - avatar and color. <span className="font-bold text-red-400">For life.</span></p>
+                          <p>You&apos;ll start earning points immediately. Miss a day? Pay the price.</p>
+                          <p>There&apos;s no trial period. No refunds. No second chances.</p>
                         </div>
                       </div>
                       
@@ -1254,7 +1253,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                       </div>
                       
                       <div className="space-y-4 text-lg md:text-xl font-bold text-gray-300 text-center">
-                        <p>If you're not ready, leave now.</p>
+                        <p>If you&apos;re not ready, leave now.</p>
                         <p>If you are — scroll down to commit, and never look back.</p>
                       </div>
                       
@@ -1717,7 +1716,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                 <div className="border-t border-gray-600 pt-6 text-center">
                   <p className="text-gray-300 text-lg font-bold mb-4">
                     The system is now active. Your group is watching.<br/>
-                    There's no turning back.
+                    There&apos;s no turning back.
                   </p>
                   <p className="text-red-400 font-black text-xl">
                     Welcome to the commitment lifestyle.
@@ -1863,7 +1862,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            I'm not made for this
+            I&apos;m not made for this
           </motion.button>
         )}
       </div>

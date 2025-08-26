@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import GroupForm from '@/components/GroupForm'
 import { supabase } from '@/lib/supabase'
 
@@ -26,7 +25,7 @@ type Profile = {
 }
 
 export default function GroupManagementPage() {
-  const { user, loading: authLoading, signOut } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading, isSupremeAdmin } = useProfile()
   const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
@@ -121,35 +120,6 @@ export default function GroupManagementPage() {
     }
   }
 
-  const promoteToGroupAdmin = async (groupId: string, userId: string) => {
-    if (!confirm('Are you sure you want to make this user a Group Admin for this group?')) {
-      return
-    }
-
-    try {
-      // Update user role to group_admin and set as admin of this group
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ role: 'group_admin' })
-        .eq('id', userId)
-
-      if (profileError) throw profileError
-
-      // Update group admin
-      const { error: groupError } = await supabase
-        .from('groups')
-        .update({ admin_id: userId })
-        .eq('id', groupId)
-
-      if (groupError) throw groupError
-
-      await loadData()
-      alert('User promoted to Group Admin successfully!')
-    } catch (error) {
-      console.error('Error promoting user:', error)
-      alert('Failed to promote user: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    }
-  }
 
   if (authLoading || profileLoading) {
     return (

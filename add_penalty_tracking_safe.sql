@@ -1,9 +1,10 @@
+-- Safe penalty tracking migration - handles existing objects
 -- Add penalty tracking columns to profiles table
 ALTER TABLE profiles 
 ADD COLUMN IF NOT EXISTS total_penalty_owed DECIMAL(10,2) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS last_penalty_check DATE;
 
--- Create penalty_logs table for audit trail
+-- Create penalty_logs table for audit trail (only if it doesn't exist)
 CREATE TABLE IF NOT EXISTS penalty_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -19,6 +20,13 @@ CREATE TABLE IF NOT EXISTS penalty_logs (
 -- Set up RLS policies for penalty_logs
 ALTER TABLE penalty_logs ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (to avoid conflicts)
+DROP POLICY IF EXISTS "Users can view own penalty logs" ON penalty_logs;
+DROP POLICY IF EXISTS "Group admins can view group penalty logs" ON penalty_logs;
+DROP POLICY IF EXISTS "System can insert penalty logs" ON penalty_logs;
+DROP POLICY IF EXISTS "Supreme admins can view all penalty logs" ON penalty_logs;
+
+-- Recreate policies
 -- Users can only view their own penalty logs
 CREATE POLICY "Users can view own penalty logs" ON penalty_logs
   FOR SELECT
@@ -51,7 +59,7 @@ CREATE POLICY "Supreme admins can view all penalty logs" ON penalty_logs
     )
   );
 
--- Create indexes for better performance
+-- Create indexes for better performance (only if they don't exist)
 CREATE INDEX IF NOT EXISTS penalty_logs_user_id_idx ON penalty_logs(user_id);
 CREATE INDEX IF NOT EXISTS penalty_logs_group_id_idx ON penalty_logs(group_id);
 CREATE INDEX IF NOT EXISTS penalty_logs_penalty_date_idx ON penalty_logs(penalty_date);
@@ -59,3 +67,6 @@ CREATE INDEX IF NOT EXISTS profiles_last_penalty_check_idx ON profiles(last_pena
 
 -- Update existing profiles to have 0 penalty owed if NULL
 UPDATE profiles SET total_penalty_owed = 0 WHERE total_penalty_owed IS NULL;
+
+-- Success message
+SELECT 'Penalty tracking system setup completed successfully!' as status;

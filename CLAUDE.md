@@ -8,8 +8,13 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
 **Tech Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS, Supabase, Radix UI
 
 ## Critical Deployment Rules
-- **ALWAYS PUSH TO DEV BRANCH ONLY** (never live unless instructed)
-- **ALWAYS DEPLOY TO**: commitment-app-dev.vercel.app
+- **NEVER DEPLOY TO PRODUCTION** without explicit user permission
+- **ALWAYS DEPLOY TO DEV ONLY**: commitment-app-dev.vercel.app
+- **PRODUCTION IS**: commitment-app-mvp.vercel.app (HANDS OFF!)
+- **DEV PROJECT NAME**: commitment-app-dev
+- **PRODUCTION PROJECT NAME**: commitment-app-mvp
+- Use `vercel link --project=commitment-app-dev --scope=pietpaulismas-projects` to link to dev
+- Before any deployment, ALWAYS confirm the target URL with the user first
 - Local development disabled - all changes must be deployed to test
 
 ## Key File Locations
@@ -33,6 +38,12 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
 - PascalCase for components, camelCase for hooks/utils
 - Proper error handling and loading states
 - Mobile-first responsive design
+
+## Function Organization
+- **Shared utilities**: Use existing `src/utils/` directory (targetCalculation, colorUtils, supabaseQueries, etc.)
+- **UI utilities**: Use `src/components/ui/utils.ts` 
+- **Component-specific helpers**: Keep in component file only if truly component-specific
+- **Always prefer**: Modifying existing utility files over creating new ones or duplicating functions
 
 ## Database
 - Supabase with Row Level Security (RLS)

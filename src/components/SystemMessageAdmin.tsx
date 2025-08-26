@@ -268,7 +268,7 @@ export function SystemMessageAdmin({ groupId, isOpen, onClose }: SystemMessageAd
                     <CalendarDaysIcon className="w-6 h-6 text-blue-400" />
                     <div className="text-left">
                       <div className="font-medium">Generate Daily Summary</div>
-                      <div className="text-sm text-gray-400">Create today's commitment summary</div>
+                      <div className="text-sm text-gray-400">Create today&apos;s commitment summary</div>
                     </div>
                   </Button>
                 </div>

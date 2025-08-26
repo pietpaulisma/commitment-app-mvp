@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import ExerciseForm from '@/components/ExerciseForm'
 import TimeGradient from '@/components/TimeGradient'
 import { useExercises } from '@/hooks/useExercises'
@@ -24,7 +23,7 @@ type Exercise = {
 }
 
 export default function ExerciseManagementPage() {
-  const { user, loading: authLoading, signOut } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading, isSupremeAdmin } = useProfile()
   const router = useRouter()
   const { exercises, loading, refreshExercises } = useExercises()

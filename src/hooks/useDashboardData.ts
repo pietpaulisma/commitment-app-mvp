@@ -47,7 +47,6 @@ export function useDashboardData() {
       const isValid = Date.now() - timestamp < CACHE_DURATION
       
       if (isValid) {
-        console.log('📦 Using cached dashboard data')
         return cachedData
       }
     } catch (error) {
@@ -226,7 +225,7 @@ export function useDashboardData() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, profile?.group_id, getCachedData, setCachedData, setStage, complete])
+  }, [user, user?.id, profile?.group_id, getCachedData, setCachedData, setStage, complete])
 
   // Refresh data (clears cache)
   const refreshData = useCallback(() => {

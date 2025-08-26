@@ -38,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const isValidCache = Date.now() - timestamp < 5 * 60 * 1000 // 5 minutes
       
       if (isValidCache) {
-        console.log('📦 Using cached auth session')
         setUser(JSON.parse(cachedUser))
         setLoading(false)
       }
@@ -82,7 +81,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email)
         const userData = session?.user ?? null
         setUser(userData)
         setLoading(false)
@@ -121,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         // Silently handle missing columns - they may not exist yet
         if (error.message?.includes('column') && error.message?.includes('does not exist')) {
-          console.log('Presence columns not available yet')
+          // Presence columns not available yet - silently ignore
         } else {
           console.error('Error updating presence:', error)
         }

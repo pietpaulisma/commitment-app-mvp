@@ -74,24 +74,7 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     return `linear-gradient(to right, ${gradientStops.join(', ')})`
   }
   
-  // Debug logging
-  console.log('=== Shared Gradient Debug ===')
-  console.log('todayLogs:', todayLogs)
-  console.log('total points:', total)
-  console.log('dailyTarget:', dailyTarget)
-  
-  // Debug individual log entries to see exercise structure
-  todayLogs?.forEach((log, index) => {
-    console.log(`Log ${index}:`, {
-      points: log.points,
-      exercise_id: log.exercise_id,
-      exercises: log.exercises,
-      exerciseType: log.exercises?.type
-    })
-  })
-  
   if (total === 0 || !todayLogs || todayLogs.length === 0) {
-    console.log('No progress - returning black gradient')
     return `linear-gradient(to right, #000000 0%, #000000 100%)`
   }
 
@@ -105,12 +88,6 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
   const sportsPoints = todayLogs?.filter(log => log.exercises?.type === 'sports')?.reduce((sum, log) => sum + getEffectivePoints(log), 0) || 0
   const regularPoints = total - recoveryPoints - sportsPoints
   
-  // Debug exercise type breakdown
-  console.log('Exercise breakdown:')
-  console.log('- Regular points:', regularPoints)
-  console.log('- Recovery points:', recoveryPoints) 
-  console.log('- Sports points:', sportsPoints)
-  console.log('- Total progress:', totalProgress + '%')
   
   const gradientStops = []
   let currentPercent = 0
@@ -132,7 +109,6 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     }
     
     currentPercent += blueWidth
-    console.log('- Blue section width:', blueWidth + '%')
   }
   
   // Green section (recovery) - With 10% blend transition
@@ -157,7 +133,6 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     }
     
     currentPercent += greenWidth
-    console.log('- Green section width:', greenWidth + '%')
   }
   
   // Purple section (sports) - With 10% blend transition
@@ -174,7 +149,6 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     gradientStops.push(`#a855f7dd ${currentPercent + purpleWidth * 0.5}%`)
     gradientStops.push(`#a855f766 ${currentPercent + purpleWidth}%`)
     currentPercent += purpleWidth
-    console.log('- Purple section width:', purpleWidth + '%')
   }
   
   // Add smooth fade out extending 20% beyond progress end (allow beyond 100%)
@@ -195,10 +169,7 @@ export const createCumulativeGradient = (todayLogs: LogEntry[], dailyTarget: num
     gradientStops.push(`#000000 100%`)
   }
   
-  const gradient = `linear-gradient(to right, ${gradientStops.join(', ')})`
-  console.log('Final gradient:', gradient)
-  console.log('=== End Shared Gradient Debug ===')
-  return gradient
+  return `linear-gradient(to right, ${gradientStops.join(', ')})`
 }
 
 // Centralized exercise type gradients with diagonal swoosh and 20% fade

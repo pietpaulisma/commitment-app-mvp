@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import RoleBasedNavigation from '@/components/RoleBasedNavigation'
 import { supabase } from '@/lib/supabase'
 
 type User = {
@@ -30,7 +29,7 @@ type Group = {
 }
 
 export default function UserManagementPage() {
-  const { user, loading: authLoading, signOut } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading, isSupremeAdmin } = useProfile()
   const router = useRouter()
   

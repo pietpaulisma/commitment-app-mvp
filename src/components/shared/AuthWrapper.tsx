@@ -62,7 +62,7 @@ export default function AuthWrapper({
         <div className="min-h-screen bg-black flex items-center justify-center">
           <div className="text-center">
             <p className="text-white text-xl mb-4">Access Denied</p>
-            <p className="text-gray-400">You don't have permission to view this page.</p>
+            <p className="text-gray-400">You don&apos;t have permission to view this page.</p>
           </div>
         </div>
       )

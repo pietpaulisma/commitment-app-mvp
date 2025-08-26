@@ -35,14 +35,18 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   // Re-enabled with better supreme admin handling
   const createSupremeAdminProfile = useCallback(async () => {
     if (isCreatingSupremeAdmin) {
-      console.log('⏳ Supreme admin profile creation already in progress...')
       return
     }
     
     setIsCreatingSupremeAdmin(true)
     
     try {
-      console.log('🔥 Creating/updating supreme admin profile for:', user?.email, 'ID:', user?.id)
+      // First check if profile already exists to preserve existing data like birth_date
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('birth_date')
+        .eq('id', user?.id)
+        .single()
       
       const profileData = {
         id: user?.id,
@@ -58,7 +62,8 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         use_ip_location: false,
         first_name: 'Matthijs',
         last_name: null,
-        birth_date: null,
+        // Preserve existing birth_date if it exists, otherwise set to null
+        birth_date: existingProfile?.birth_date || null,
         last_donation_date: null,
         total_donated: 0,
         donation_rate: 0.10,
@@ -75,7 +80,6 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       if (error) {
         console.error('❌ Error upserting supreme admin profile:', error)
       } else {
-        console.log('✅ Supreme admin profile created/updated successfully:', data)
         // Refresh profile data instead of reloading the page
         await refreshProfile()
       }
@@ -105,7 +109,6 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     const isNowOnDashboard = pathname === '/dashboard'
     
     if (wasOnOnboardingPage && isNowOnDashboard && user) {
-      console.log('🔄 Detected navigation from onboarding to dashboard - refreshing profile')
       setShouldRefreshProfile(true)
     }
     
@@ -115,93 +118,61 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   // Execute profile refresh when needed
   useEffect(() => {
     if (shouldRefreshProfile && !profileLoading && !authLoading) {
-      console.log('🔄 Executing profile refresh...')
       refreshProfile().then(() => {
-        console.log('✅ Profile refreshed successfully')
         setShouldRefreshProfile(false)
       })
     }
   }, [shouldRefreshProfile, profileLoading, authLoading, refreshProfile])
 
   useEffect(() => {
-    console.log('🚀 OnboardingGuard useEffect triggered:', {
-      authLoading,
-      profileLoading,
-      userEmail: user?.email,
-      userId: user?.id,
-      hasProfile: !!profile,
-      onboardingCompleted: profile?.onboarding_completed,
-      onboardingCompletedType: typeof profile?.onboarding_completed,
-      pathname,
-      isCreatingSupremeAdmin,
-      hasChecked,
-      timestamp: new Date().toISOString()
-    })
-
     // Wait for both auth and profile to fully load, and don't process during supreme admin creation or profile refresh
     if (isLoading) {
-      console.log('⏳ Still loading or processing, will check again when ready')
       return
     }
 
     // Don't check on auth/onboarding pages
     if (isAuthPage || isOnboardingPage) {
-      console.log('📄 On auth/onboarding page, skipping redirect check')
-      setHasChecked(true)
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
       return
     }
 
     // No user = redirect handled by other guards
     if (!user) {
-      console.log('👤 No authenticated user, letting other guards handle')
-      setHasChecked(true)
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
       return
     }
 
     // Special case for supreme admin - handle missing profile or incomplete onboarding
     if (isSupremeAdmin) {
       if (!profile || !profile.onboarding_completed) {
-        console.log('🔥 Supreme admin detected - creating/updating profile automatically')
         if (!isCreatingSupremeAdmin) {
           createSupremeAdminProfile()
         }
         return
       } else {
-        console.log('✅ Supreme admin profile is complete')
-        setHasChecked(true)
+        if (!hasChecked) {
+          setHasChecked(true)
+        }
         return
       }
     }
 
-    // DEBUG: Let's see exactly what the profile looks like
-    console.log('🔬 Profile analysis:', {
-      profile: profile,
-      hasProfile: !!profile,
-      onboardingCompleted: profile?.onboarding_completed,
-      onboardingCompletedExact: profile?.onboarding_completed === true,
-      onboardingCompletedTruthy: !!profile?.onboarding_completed
-    })
-
     // Has profile and completed onboarding = allow access
     if (profile && profile.onboarding_completed) {
-      console.log('✅ Profile exists with completed onboarding - ALLOWING ACCESS')
-      setHasChecked(true)
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
       return
     }
 
     // Only redirect if we haven't checked yet (prevent infinite loops)
     if (!hasChecked) {
-      console.log('❌ REDIRECTING TO ONBOARDING - Reason analysis:', {
-        hasUser: !!user,
-        hasProfile: !!profile,
-        onboardingStatus: profile?.onboarding_completed,
-        willRedirect: true
-      })
-      
       setHasChecked(true)
       router.replace('/onboarding')
-    } else {
-      console.log('⚠️ Already checked once, not redirecting again to avoid loops')
     }
   }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile])
 
