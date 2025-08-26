@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
@@ -27,6 +27,9 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
   const { profile } = useProfile()
+  
+  // Debounce timeout for real-time updates
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchWeeklyOverperformers = async () => {
     if (!user || !profile?.group_id) {
@@ -261,9 +264,43 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
   useEffect(() => {
     fetchWeeklyOverperformers()
     
-    // Refresh data every 5 minutes
-    const interval = setInterval(fetchWeeklyOverperformers, 5 * 60 * 1000)
-    return () => clearInterval(interval)
+    if (user && profile?.group_id) {
+      // Set up real-time subscription to logs table
+      const logsSubscription = supabase
+        .channel(`weekly-overperformers-${profile.group_id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'logs'
+          },
+          (payload) => {
+            console.log('WeeklyOverperformers: Real-time logs change detected:', payload)
+            // Debounced reload - wait for rapid changes to settle
+            clearTimeout(debounceTimeoutRef.current)
+            debounceTimeoutRef.current = setTimeout(() => {
+              console.log('WeeklyOverperformers: Reloading data due to logs change')
+              fetchWeeklyOverperformers()
+            }, 1000) // 1 second debounce
+          }
+        )
+        .subscribe((status) => {
+          console.log('WeeklyOverperformers: Subscription status:', status)
+          if (status === 'SUBSCRIPTION_ERROR') {
+            console.error('WeeklyOverperformers: Subscription failed, falling back to polling only')
+          }
+        })
+      
+      // Refresh data every 1 minute as fallback (reduced from 5 minutes)
+      const interval = setInterval(fetchWeeklyOverperformers, 1 * 60 * 1000)
+      
+      return () => {
+        clearInterval(interval)
+        clearTimeout(debounceTimeoutRef.current)
+        supabase.removeChannel(logsSubscription)
+      }
+    }
   }, [user?.id, profile?.group_id])
 
   const getRankColor = (rank: number) => {

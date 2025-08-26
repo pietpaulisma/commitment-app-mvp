@@ -1240,9 +1240,42 @@ export default function RectangularDashboard() {
   useEffect(() => {
     if (user && profile) {
       loadDashboardData()
-      // Set up real-time updates
-      const interval = setInterval(loadDashboardData, 30000) // Refresh every 30 seconds
-      return () => clearInterval(interval)
+      
+      // Set up real-time subscription to logs table
+      const logsSubscription = supabase
+        .channel(`logs-${profile.group_id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'logs'
+          },
+          (payload) => {
+            console.log('Real-time logs change detected:', payload)
+            // Debounced reload - wait for rapid changes to settle
+            clearTimeout(debounceTimeoutRef.current)
+            debounceTimeoutRef.current = setTimeout(() => {
+              console.log('Reloading dashboard data due to logs change')
+              loadDashboardData()
+            }, 1000) // 1 second debounce
+          }
+        )
+        .subscribe((status) => {
+          console.log('Dashboard: Logs subscription status:', status)
+          if (status === 'SUBSCRIPTION_ERROR') {
+            console.error('Dashboard: Real-time subscription failed, falling back to polling only')
+          }
+        })
+      
+      // Set up polling as fallback (reduced from 30s to 10s)
+      const interval = setInterval(loadDashboardData, 10000) // Refresh every 10 seconds as fallback
+      
+      return () => {
+        clearInterval(interval)
+        clearTimeout(debounceTimeoutRef.current)
+        supabase.removeChannel(logsSubscription)
+      }
     } else if (!authLoading && !profileLoading) {
       // If auth and profile loading are done but we don't have user or profile, 
       // something went wrong - redirect to login or stop loading
@@ -1282,10 +1315,10 @@ export default function RectangularDashboard() {
   useEffect(() => {
     if (!user || !profile) return
 
-    // Refresh group members every 2 minutes
+    // Refresh group members every 1 minute
     const interval = setInterval(() => {
       loadGroupMembers()
-    }, 2 * 60 * 1000) // 2 minutes
+    }, 1 * 60 * 1000) // 1 minute
 
     // Also refresh when user comes back to the page
     const handleVisibilityChange = () => {
@@ -1354,6 +1387,9 @@ export default function RectangularDashboard() {
 
   // Prevent multiple personal data loads with session-based flag
   const personalDataLoadedRef = useRef(false)
+  
+  // Debounce timeout for real-time updates
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Reset personal data loading flag when component mounts or user changes
   useEffect(() => {
