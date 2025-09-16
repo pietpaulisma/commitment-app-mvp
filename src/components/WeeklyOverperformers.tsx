@@ -97,14 +97,26 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
 
       if (logsError) throw logsError
       
-      // Debug: Log the logs data
+      // Debug: Log the logs data with enhanced validation
       const uniqueDates = [...new Set(logs?.map(l => l.date) || [])]
       const logsThisWeek = logs?.filter(l => l.date >= startDateStr && l.date <= endDateStr) || []
+      const logsOutsideWeek = logs?.filter(l => l.date < startDateStr || l.date > endDateStr) || []
       
+      console.log('=== WEEKLY LOGS ANALYSIS ===')
       console.log('Total logs found:', logs?.length || 0)
       console.log('Logs this week (', startDateStr, 'to', endDateStr, '):', logsThisWeek.length)
+      console.log('Logs OUTSIDE current week:', logsOutsideWeek.length)
       console.log('Unique dates in all logs:', uniqueDates.sort())
-      console.log('Sample logs:', logs?.slice(0, 3))
+      console.log('Outside week dates:', logsOutsideWeek.map(l => l.date).sort())
+      console.log('Sample current week logs:', logsThisWeek.slice(0, 3))
+      
+      if (logsOutsideWeek.length > 0) {
+        console.warn('⚠️ Found logs outside current week range - these will be excluded:', {
+          outsideCount: logsOutsideWeek.length,
+          weekRange: `${startDateStr} to ${endDateStr}`,
+          outsideDates: [...new Set(logsOutsideWeek.map(l => l.date))].sort()
+        })
+      }
 
       // Get group settings and group info for target calculation
       const [groupSettingsResult, groupInfoResult] = await Promise.all([
@@ -160,10 +172,16 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         }
       })
 
-      // Aggregate points by user and date
+      // Aggregate points by user and date - with strict weekly validation
       logs?.forEach(log => {
         const userId = log.user_id
         const date = log.date
+        
+        // CRITICAL: Validate that log date is within current week boundaries
+        if (date < startDateStr || date > endDateStr) {
+          console.warn(`WeeklyOverperformers: Skipping log outside week range: ${date} (week: ${startDateStr} to ${endDateStr})`)
+          return
+        }
         
         if (userStats[userId]) {
           if (!userStats[userId].dailyPoints[date]) {
@@ -185,6 +203,12 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
 
           // Calculate total overperformance for the week using user's specific week mode
           Object.entries(userStat.dailyPoints).forEach(([date, dailyPoints]) => {
+            // ADDITIONAL VALIDATION: Ensure date is within current week
+            if (date < startDateStr || date > endDateStr) {
+              console.warn(`WeeklyOverperformers: Skipping date ${date} outside week range for user ${userStat.member.username}`)
+              return
+            }
+            
             const dateObj = new Date(date)
             const dayOfWeek = dateObj.getDay()
             
@@ -198,8 +222,14 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
             })
 
             if (dailyPoints > targetForDate) {
-              totalOverperformance += (dailyPoints - targetForDate)
+              const overperformanceAmount = dailyPoints - targetForDate
+              totalOverperformance += overperformanceAmount
               activeDays++
+              
+              // Debug log for significant overperformance
+              if (overperformanceAmount > 100) {
+                console.log(`WeeklyOverperformers: Large overperformance for ${userStat.member.username} on ${date}: ${dailyPoints} points (target: ${targetForDate}, over: +${overperformanceAmount})`)
+              }
             }
           })
 
@@ -228,14 +258,15 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         .sort((a, b) => b.overperformance_points - a.overperformance_points) // Sort by total overperformance
         .slice(0, 5) // Top 5 overperformers
 
-      // Debug: Log final results with week modes
+      // Debug: Log final results with comprehensive validation
       const allUsers = Object.values(userStats).map(u => ({
         id: u.member.id,
         username: u.member.username,
         week_mode: u.member.week_mode || 'sane',
         hasValidUsername: !!(u.member.username && u.member.username.trim().length > 0),
-        totalPoints: u.totalPoints,
-        dailyPoints: u.dailyPoints,
+        totalPointsThisWeek: u.totalPoints,
+        dailyPointsThisWeek: u.dailyPoints,
+        datesWithPoints: Object.keys(u.dailyPoints).sort(),
         sampleTarget: calculateDailyTarget({
           daysSinceStart,
           weekMode: u.member.week_mode || 'sane',
@@ -245,10 +276,24 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         })
       }))
       
-      console.log('WeeklyOverperformers: Final results with individual targets', { 
-        allUsers,
-        filteredOutUsers: allUsers.filter(u => !u.hasValidUsername),
-        overperformers: overperformanceData
+      console.log('=== WEEKLY OVERPERFORMERS FINAL RESULTS ===')
+      console.log('Week range:', `${startDateStr} to ${endDateStr}`)
+      console.log('All users in group:', allUsers)
+      console.log('Users filtered out (no username):', allUsers.filter(u => !u.hasValidUsername))
+      console.log('Top overperformers:', overperformanceData)
+      console.log('Users with points this week:', allUsers.filter(u => u.totalPointsThisWeek > 0))
+      
+      // Detailed breakdown for users with significant overperformance
+      overperformanceData.forEach(op => {
+        if (op.overperformance_points > 50) {
+          const userData = allUsers.find(u => u.id === op.id)
+          console.log(`📊 ${op.username} overperformance breakdown:`, {
+            totalOverperformance: op.overperformance_points,
+            totalPointsThisWeek: op.total_points,
+            daysOverperformed: op.days_overperformed,
+            dailyBreakdown: userData?.dailyPointsThisWeek
+          })
+        }
       })
 
       setOverperformers(overperformanceData)
@@ -312,7 +357,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
       case 3:
         return 'text-white'
       default:
-        return 'text-orange-500'
+        return 'text-white'
     }
   }
 
@@ -434,7 +479,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
       {overperformers.length > 0 && (
         <div className="mt-2 pt-2 border-t border-white/10">
           <p className="text-xs text-white/60 text-center">
-            Total extra points this week • Resets Sunday night
+            Total extra points this week • Resets Monday morning at 00:00
           </p>
         </div>
       )}
