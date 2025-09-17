@@ -29,6 +29,7 @@ import { SystemMessageComponent } from './SystemMessageComponent'
 import { WorkoutSummaryPost } from './WorkoutSummaryPost'
 import { SystemMessage } from '@/types/systemMessages'
 import { SystemMessageService } from '@/services/systemMessages'
+import { NotificationService } from '@/services/notificationService'
 
 type ChatMessage = {
   id: string
@@ -202,6 +203,10 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   // Reply states
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
+  // Action menu states - manage at chat level to ensure only one menu open
+  const [activeMessageMenu, setActiveMessageMenu] = useState<string | null>(null)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
+
   // System message states
   const [systemMessages, setSystemMessages] = useState<{ [messageId: string]: SystemMessage }>({})
 
@@ -304,6 +309,61 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                 }
 
                 setMessages(prev => [...prev, newMessage])
+
+                // Send push notification for non-system messages from other users
+                if (!newMessage.is_system_message && newMessage.user_id && newMessage.user_id !== user?.id) {
+                  try {
+                    // Get all group members except the sender
+                    const { data: groupMembers } = await supabase
+                      .from('profiles')
+                      .select('id, username')
+                      .eq('group_id', profile.group_id)
+                      .neq('id', newMessage.user_id)
+
+                    if (groupMembers && groupMembers.length > 0) {
+                      const memberIds = groupMembers.map(member => member.id)
+                      const senderName = userInfo?.username || 'Someone'
+                      const groupName = await getGroupName()
+                      
+                      // Create notification title and body
+                      const notificationTitle = `${senderName} in ${groupName}`
+                      let notificationBody = newMessage.message || 'Sent a message'
+                      
+                      // Handle different message types
+                      if (newMessage.message_type === 'image') {
+                        notificationBody = '📷 Sent an image'
+                      } else if (newMessage.message_type === 'workout_completion') {
+                        notificationBody = '🏋️ Shared a workout summary'
+                      }
+
+                      // Truncate long messages
+                      if (notificationBody.length > 100) {
+                        notificationBody = notificationBody.substring(0, 97) + '...'
+                      }
+
+                      // Send notification
+                      await NotificationService.sendNotification(
+                        memberIds,
+                        notificationTitle,
+                        notificationBody,
+                        {
+                          type: 'chat_message',
+                          messageId: newMessage.id,
+                          groupId: newMessage.group_id,
+                          senderId: newMessage.user_id,
+                          senderName: senderName,
+                          messageType: newMessage.message_type
+                        },
+                        'chat_messages'
+                      )
+
+                      console.log(`Chat notification sent to ${memberIds.length} members`)
+                    }
+                  } catch (notificationError) {
+                    console.error('Error sending chat notification:', notificationError)
+                    // Don't let notification errors break the chat
+                  }
+                }
               } catch (error) {
                 console.error('Error processing real-time message:', error)
                 // Fallback to full reload only for others' messages
@@ -422,6 +482,28 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
       }
     } catch (error) {
       console.error('Error loading group name:', error)
+    }
+  }
+
+  // Helper function to get group name for notifications
+  const getGroupName = async (): Promise<string> => {
+    if (groupName) {
+      return groupName
+    }
+    
+    if (!profile?.group_id) return 'Group Chat'
+
+    try {
+      const { data: group } = await supabase
+        .from('groups')
+        .select('name')
+        .eq('id', profile.group_id)
+        .single()
+
+      return group?.name || 'Group Chat'
+    } catch (error) {
+      console.error('Error fetching group name for notification:', error)
+      return 'Group Chat'
     }
   }
 
@@ -807,10 +889,20 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
   const handleReply = (messageId: string) => {
     setReplyingTo(messageId);
+    setActiveMessageMenu(null); // Close menu when replying
   };
 
   const getReplyingToMessage = () => {
     return messages.find(msg => msg.id === replyingTo);
+  };
+
+  const handleShowMessageMenu = (messageId: string, position: { top: number, left: number }) => {
+    setActiveMessageMenu(messageId);
+    setMenuPosition(position);
+  };
+
+  const handleCloseMessageMenu = () => {
+    setActiveMessageMenu(null);
   };
 
   // Helper function to format day dividers
@@ -1035,7 +1127,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           className="flex-1 overflow-y-auto px-4 py-3"
           style={{ 
             WebkitOverflowScrolling: 'touch', 
-            touchAction: 'pan-y',
+            touchAction: 'manipulation',
             overscrollBehavior: 'contain',
             scrollBehavior: 'smooth',
             position: 'relative',
@@ -1087,6 +1179,10 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                   currentUser={{ id: user?.id || '', email: profile?.email, username: profile?.username }}
                   onAddReaction={addReaction}
                   onReply={handleReply}
+                  onShowMenu={handleShowMessageMenu}
+                  onCloseMenu={handleCloseMessageMenu}
+                  showMenu={activeMessageMenu === item.message.id}
+                  menuPosition={menuPosition}
                   getUserColor={getUserColor}
                   isFirstInGroup={'isFirstInGroup' in item ? item.isFirstInGroup : true}
                   isLastInGroup={'isLastInGroup' in item ? item.isLastInGroup : true}
@@ -1194,6 +1290,60 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             </Button>
           </form>
         </div>
+
+        {/* Message Action Menu - Rendered at modal level to avoid clipping */}
+        {activeMessageMenu && (
+          <>
+            {/* Backdrop to close menu */}
+            <div 
+              className="fixed inset-0" 
+              style={{ zIndex: 10001 }}
+              onClick={handleCloseMessageMenu}
+            />
+            
+            <div 
+              className="fixed bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-3 w-60"
+              style={{
+                top: menuPosition.top,
+                left: menuPosition.left,
+                zIndex: 10002
+              }}
+            >
+              {/* Reply Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-white hover:bg-gray-700 mb-2"
+                onClick={() => {
+                  handleReply(activeMessageMenu);
+                  handleCloseMessageMenu();
+                }}
+              >
+                <Reply className="w-4 h-4" />
+                Reply
+              </Button>
+
+              {/* Emoji Reactions */}
+              <div className="text-sm text-gray-400 mb-2">React with:</div>
+              <div className="grid grid-cols-6 gap-1">
+                {['👍', '❤️', '😂', '😮', '😢', '🔥', '💪', '🙏', '👏', '✅', '🎉', '😍'].map((emoji) => (
+                  <Button
+                    key={emoji}
+                    variant="ghost"
+                    size="sm"
+                    className="text-lg p-1 h-8 w-8 hover:bg-gray-700 rounded"
+                    onClick={() => {
+                      addReaction(activeMessageMenu, emoji);
+                      handleCloseMessageMenu();
+                    }}
+                  >
+                    {emoji}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
     </div>
   )

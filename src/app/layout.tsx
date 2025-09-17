@@ -102,7 +102,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#f97316" />
         <meta name="msapplication-config" content="none" />
         
-        {/* Service Worker Registration */}
+        {/* Service Worker Registration with PWA support */}
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {
@@ -110,13 +110,52 @@ export default function RootLayout({
                 navigator.serviceWorker.register('/sw.js')
                   .then(function(registration) {
                     console.log('SW registered: ', registration);
-                    // Don't trigger page refresh on registration
+                    
+                    // PWA Debug logging
+                    const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                      window.navigator.standalone ||
+                      document.referrer.includes('android-app://');
+                    
+                    if (isPWA) {
+                      console.log('PWA mode detected - service worker registered for standalone app');
+                    }
                   })
                   .catch(function(registrationError) {
                     console.log('SW registration failed: ', registrationError);
                   });
               });
+              
+              // Listen for messages from service worker
+              navigator.serviceWorker.addEventListener('message', function(event) {
+                console.log('Message from SW:', event.data);
+                
+                if (event.data.type === 'NOTIFICATION_CLICK') {
+                  // Handle notification click navigation
+                  if (event.data.url && event.data.url !== window.location.pathname) {
+                    window.location.href = event.data.url;
+                  }
+                } else if (event.data.type === 'OPEN_CHAT') {
+                  // Handle chat opening
+                  window.location.href = '/dashboard';
+                } else if (event.data.type === 'OPEN_CHAT_REPLY') {
+                  // Handle chat reply
+                  window.location.href = '/dashboard';
+                }
+              });
+              
+              // PWA update handling
+              navigator.serviceWorker.addEventListener('controllerchange', function() {
+                console.log('Service worker updated - PWA content refreshed');
+              });
             }
+            
+            // PWA install prompt handling
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', function(e) {
+              e.preventDefault();
+              deferredPrompt = e;
+              console.log('PWA install prompt available');
+            });
           `
         }} />
       </head>

@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState, memo, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
@@ -1207,6 +1207,7 @@ export default function RectangularDashboard() {
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
+  const pathname = usePathname()
   const [recentChats, setRecentChats] = useState<RecentChat[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
@@ -1226,6 +1227,8 @@ export default function RectangularDashboard() {
   const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false, 4: false})
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
+  const [dataLoadFailed, setDataLoadFailed] = useState(false)
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false)
   const [daysSinceDonation, setDaysSinceDonation] = useState<number>(0)
   const [insaneStreak, setInsaneStreak] = useState<number>(0)
   const [personalLongestInsaneStreak, setPersonalLongestInsaneStreak] = useState<number>(0)
@@ -1290,12 +1293,21 @@ export default function RectangularDashboard() {
     }
   }, [user?.id, profile?.id, authLoading, profileLoading, router])
 
+  // Navigation detection for PWA - reload data when returning to dashboard
+  useEffect(() => {
+    if (pathname === '/dashboard' && user && profile && !authLoading && !profileLoading) {
+      console.log('Dashboard: Navigation detected to dashboard, reloading data')
+      loadDashboardData()
+    }
+  }, [pathname, user?.id, profile?.id, authLoading, profileLoading])
+
   // Safety timeout to prevent infinite loading
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (loading) {
         console.error('Dashboard loading timeout reached - stopping loading state')
         setLoading(false)
+        setDataLoadFailed(true)
       }
     }, 15000) // 15 second timeout
 
@@ -1323,7 +1335,8 @@ export default function RectangularDashboard() {
     // Also refresh when user comes back to the page
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        loadGroupMembers()
+        console.log('Dashboard: Page became visible, reloading all data')
+        loadDashboardData()
       }
     }
 
@@ -2328,6 +2341,21 @@ export default function RectangularDashboard() {
     }))
   }
 
+  const handleManualRefresh = async () => {
+    console.log('Dashboard: Manual refresh triggered by user')
+    setIsManualRefreshing(true)
+    setDataLoadFailed(false)
+    
+    try {
+      await loadDashboardData()
+    } catch (error) {
+      console.error('Dashboard: Manual refresh failed:', error)
+      setDataLoadFailed(true)
+    } finally {
+      setIsManualRefreshing(false)
+    }
+  }
+
   const loadDashboardData = async () => {
     if (!user || !profile) {
       return
@@ -2338,6 +2366,9 @@ export default function RectangularDashboard() {
     let currentGroupData: any = null
 
     try {
+      // Clear any previous loading failures
+      setDataLoadFailed(false)
+      
       // Get group name and start date
       if (profile.group_id) {
         const { data: group } = await supabase
@@ -2468,6 +2499,7 @@ export default function RectangularDashboard() {
 
     } catch (error) {
       console.error('Error loading dashboard data:', error)
+      setDataLoadFailed(true)
     } finally {
       setLoading(false)
     }
@@ -2530,12 +2562,31 @@ export default function RectangularDashboard() {
         penaltyData={penaltyData}
       />
       
+      {/* Manual Refresh UI for Failed Data Loading */}
+      {dataLoadFailed && (
+        <div className="fixed left-4 right-4 z-50 bg-red-900/90 backdrop-blur-sm border border-red-700 rounded-lg p-4 shadow-lg" style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))' }}>
+          <div className="flex items-center justify-between text-white">
+            <div className="flex-1">
+              <p className="text-sm font-medium">Data loading failed</p>
+              <p className="text-xs text-red-200 mt-1">Tap refresh to try again</p>
+            </div>
+            <button
+              onClick={handleManualRefresh}
+              disabled={isManualRefreshing}
+              className="ml-3 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-medium rounded-md transition-colors"
+            >
+              {isManualRefreshing ? 'Loading...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
       
       <div className="pb-20" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
       {/* Logo and Settings */}
-      <div className="mx-1 mb-0 mt-5">
+      <div className="mx-1 mb-0" style={{ marginTop: 'calc(1.25rem + env(safe-area-inset-top, 0px))' }}>
         <div className="flex items-center justify-between px-2">
           <img 
             src="/logo.png" 
@@ -2746,10 +2797,10 @@ export default function RectangularDashboard() {
                             {/* Percentage text positioned lower with bigger font - NO PULSING */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-1">
                               <span className="text-white font-black text-xl leading-tight">
-                                {progressPercentage}%
+                                {member.is_sick_mode ? 'SICK' : `${progressPercentage}%`}
                               </span>
                               <span className="text-white/50 text-xs font-light tracking-wide">
-                                {member.week_mode || 'insane'}
+                                {member.is_sick_mode ? 'mode' : (member.week_mode || 'insane')}
                               </span>
                             </div>
                           </div>

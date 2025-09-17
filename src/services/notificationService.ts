@@ -1,0 +1,369 @@
+'use client'
+
+import { supabase } from '@/lib/supabase'
+
+export interface NotificationSubscription {
+  id: string
+  user_id: string
+  endpoint: string
+  p256dh: string
+  auth: string
+  created_at: string
+}
+
+export interface NotificationPreferences {
+  chat_messages: boolean
+  workout_completions: boolean
+  group_achievements: boolean
+  quiet_hours_enabled: boolean
+  quiet_hours_start: string
+  quiet_hours_end: string
+}
+
+export class NotificationService {
+  private static vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
+  
+  /**
+   * Check if push notifications are supported by the browser
+   */
+  static isSupported(): boolean {
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+  }
+
+  /**
+   * Get current notification permission status
+   */
+  static getPermissionStatus(): NotificationPermission {
+    return Notification.permission
+  }
+
+  /**
+   * Request notification permission from user
+   */
+  static async requestPermission(): Promise<NotificationPermission> {
+    if (!this.isSupported()) {
+      throw new Error('Push notifications are not supported by this browser')
+    }
+
+    const permission = await Notification.requestPermission()
+    return permission
+  }
+
+  /**
+   * Subscribe user to push notifications
+   */
+  static async subscribe(userId: string): Promise<PushSubscription | null> {
+    if (!this.isSupported()) {
+      throw new Error('Push notifications are not supported')
+    }
+
+    if (Notification.permission !== 'granted') {
+      const permission = await this.requestPermission()
+      if (permission !== 'granted') {
+        throw new Error('Permission not granted for notifications')
+      }
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready
+      
+      // Check if already subscribed
+      let subscription = await registration.pushManager.getSubscription()
+      
+      if (!subscription) {
+        // Create new subscription
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
+        })
+      }
+
+      if (subscription) {
+        // Save subscription to database
+        await this.saveSubscription(userId, subscription)
+        console.log('Push notification subscription successful:', subscription.endpoint)
+      }
+
+      return subscription
+    } catch (error) {
+      console.error('Error subscribing to push notifications:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Unsubscribe from push notifications
+   */
+  static async unsubscribe(userId: string): Promise<boolean> {
+    try {
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+      
+      if (subscription) {
+        await subscription.unsubscribe()
+        await this.removeSubscription(userId, subscription.endpoint)
+        console.log('Successfully unsubscribed from push notifications')
+        return true
+      }
+      
+      return false
+    } catch (error) {
+      console.error('Error unsubscribing from push notifications:', error)
+      return false
+    }
+  }
+
+  /**
+   * Save subscription to database
+   */
+  private static async saveSubscription(userId: string, subscription: PushSubscription): Promise<void> {
+    const subscriptionData = subscription.toJSON()
+    
+    if (!subscriptionData.endpoint || !subscriptionData.keys?.p256dh || !subscriptionData.keys?.auth) {
+      throw new Error('Invalid subscription data')
+    }
+
+    // Check if subscription already exists
+    const { data: existingSub } = await supabase
+      .from('push_subscriptions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('endpoint', subscriptionData.endpoint)
+      .single()
+
+    if (existingSub) {
+      console.log('Subscription already exists in database')
+      return
+    }
+
+    // Insert new subscription
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .insert({
+        user_id: userId,
+        endpoint: subscriptionData.endpoint,
+        p256dh: subscriptionData.keys.p256dh,
+        auth: subscriptionData.keys.auth
+      })
+
+    if (error) {
+      console.error('Error saving subscription to database:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Remove subscription from database
+   */
+  private static async removeSubscription(userId: string, endpoint: string): Promise<void> {
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .delete()
+      .eq('user_id', userId)
+      .eq('endpoint', endpoint)
+
+    if (error) {
+      console.error('Error removing subscription from database:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get user's notification preferences
+   */
+  static async getPreferences(userId: string): Promise<NotificationPreferences> {
+    const { data, error } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error('Error fetching notification preferences:', error)
+      throw error
+    }
+
+    // Return default preferences if none exist
+    if (!data) {
+      return {
+        chat_messages: true,
+        workout_completions: true,
+        group_achievements: true,
+        quiet_hours_enabled: false,
+        quiet_hours_start: '22:00',
+        quiet_hours_end: '08:00'
+      }
+    }
+
+    return {
+      chat_messages: data.chat_messages,
+      workout_completions: data.workout_completions,
+      group_achievements: data.group_achievements,
+      quiet_hours_enabled: data.quiet_hours_enabled,
+      quiet_hours_start: data.quiet_hours_start,
+      quiet_hours_end: data.quiet_hours_end
+    }
+  }
+
+  /**
+   * Update user's notification preferences
+   */
+  static async updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<void> {
+    const { error } = await supabase
+      .from('notification_preferences')
+      .upsert({
+        user_id: userId,
+        ...preferences
+      })
+
+    if (error) {
+      console.error('Error updating notification preferences:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Check if notifications should be sent during quiet hours
+   */
+  static shouldSendDuringQuietHours(preferences: NotificationPreferences): boolean {
+    if (!preferences.quiet_hours_enabled) {
+      return true
+    }
+
+    const now = new Date()
+    const currentTime = now.toTimeString().slice(0, 5) // HH:MM format
+
+    const startTime = preferences.quiet_hours_start
+    const endTime = preferences.quiet_hours_end
+
+    // Handle overnight quiet hours (e.g., 22:00 to 08:00)
+    if (startTime > endTime) {
+      return currentTime < startTime && currentTime > endTime
+    }
+
+    // Handle same-day quiet hours (e.g., 13:00 to 15:00)
+    return currentTime < startTime || currentTime > endTime
+  }
+
+  /**
+   * Send a notification to specific users
+   */
+  static async sendNotification(
+    userIds: string[],
+    title: string,
+    body: string,
+    data?: any,
+    notificationType?: keyof NotificationPreferences
+  ): Promise<void> {
+    try {
+      // Filter users based on their preferences
+      const eligibleUserIds = await this.filterUsersByPreferences(userIds, notificationType)
+
+      if (eligibleUserIds.length === 0) {
+        console.log('No eligible users for notification')
+        return
+      }
+
+      // Send to backend API route to handle the actual push
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userIds: eligibleUserIds,
+          title,
+          body,
+          data
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to send notification: ${response.statusText}`)
+      }
+
+      console.log(`Notification sent to ${eligibleUserIds.length} users`)
+    } catch (error) {
+      console.error('Error sending notification:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Filter users based on their notification preferences
+   */
+  private static async filterUsersByPreferences(
+    userIds: string[], 
+    notificationType?: keyof NotificationPreferences
+  ): Promise<string[]> {
+    if (!notificationType) {
+      return userIds // No filtering if no type specified
+    }
+
+    try {
+      const eligibleUsers: string[] = []
+
+      for (const userId of userIds) {
+        const preferences = await this.getPreferences(userId)
+        
+        // Check if user has this notification type enabled
+        if (!preferences[notificationType]) {
+          continue
+        }
+
+        // Check quiet hours
+        if (!this.shouldSendDuringQuietHours(preferences)) {
+          continue
+        }
+
+        eligibleUsers.push(userId)
+      }
+
+      return eligibleUsers
+    } catch (error) {
+      console.error('Error filtering users by preferences:', error)
+      return userIds // Return all users if filtering fails
+    }
+  }
+
+  /**
+   * Utility function to convert VAPID key
+   */
+  private static urlBase64ToUint8Array(base64String: string): Uint8Array {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+
+    const rawData = window.atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i)
+    }
+    return outputArray
+  }
+
+  /**
+   * Test if user has any active subscriptions
+   */
+  static async hasActiveSubscription(userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('push_subscriptions')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1)
+
+      if (error) {
+        console.error('Error checking subscription status:', error)
+        return false
+      }
+
+      return data && data.length > 0
+    } catch (error) {
+      console.error('Error checking active subscription:', error)
+      return false
+    }
+  }
+}

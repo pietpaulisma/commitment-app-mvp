@@ -85,7 +85,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       title: 'Group Streak',
       description: 'Show current group workout streak',
       enabled: true,
-      preview: "🔥 STREAK ALERT: We're on a 12-day group streak! Let's keep this momentum going strong!"
+      preview: "🔥 STREAK ALERT: We're on a 12-day group streak! Let&apos;s keep this momentum going strong!"
     },
     {
       id: 'motivation',
@@ -432,10 +432,110 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       }
 
       console.log('Daily summary generated with ID:', data)
-      alert('Daily summary sent successfully! Check your group chat.')
+      alert('Today\'s daily summary sent successfully! Check your group chat.')
     } catch (error) {
       console.error('Error sending daily summary:', error)
       alert(`Failed to send daily summary: ${error.message || error}`)
+    }
+    
+    if (isMountedRef.current) {
+      setSendingMessage(false)
+    }
+  }
+
+  const sendYesterdaysSummaryNow = async () => {
+    if (!profile?.group_id) {
+      alert('No group found. Please make sure you are part of a group.')
+      return
+    }
+
+    if (isMountedRef.current) {
+      setSendingMessage(true)
+    }
+    
+    try {
+      // Calculate yesterday's date
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yesterdayDateString = yesterday.toISOString().split('T')[0] // YYYY-MM-DD format
+
+      const { data, error } = await supabase.rpc('generate_daily_summary_for_date', {
+        p_group_id: profile.group_id,
+        p_date: yesterdayDateString
+      })
+
+      if (error) {
+        console.error('Database error:', error)
+        throw error
+      }
+
+      console.log('Yesterday\'s summary generated with ID:', data)
+      alert('Yesterday\'s summary sent successfully! Check your group chat.')
+    } catch (error) {
+      console.error('Error sending yesterday\'s summary:', error)
+      alert(`Failed to send yesterday's summary: ${error.message || error}`)
+    }
+    
+    if (isMountedRef.current) {
+      setSendingMessage(false)
+    }
+  }
+
+  const sendTestNotification = async () => {
+    if (!profile?.group_id) {
+      alert('No group found. Please make sure you are part of a group.')
+      return
+    }
+
+    if (isMountedRef.current) {
+      setSendingMessage(true)
+    }
+    
+    try {
+      // Get group members for testing
+      const { data: groupMembers, error: membersError } = await supabase
+        .from('group_members')
+        .select('profile_id')
+        .eq('group_id', profile.group_id)
+
+      if (membersError) {
+        throw membersError
+      }
+
+      const userIds = groupMembers.map(member => member.profile_id)
+
+      // Send test notification
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userIds,
+          title: '🧪 Test Notification',
+          body: 'This is a test notification from the admin panel! If you see this, push notifications are working correctly.',
+          data: {
+            type: 'test',
+            timestamp: Date.now()
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log('Test notification result:', result)
+      
+      if (result.sent > 0) {
+        alert(`Test notification sent successfully to ${result.sent} users! Check your device for the notification.`)
+      } else {
+        alert('Test notification sent, but no active subscriptions found. Users may need to enable notifications first.')
+      }
+    } catch (error) {
+      console.error('Error sending test notification:', error)
+      alert(`Failed to send test notification: ${error.message || error}`)
     }
     
     if (isMountedRef.current) {
@@ -544,9 +644,6 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
       <div 
         className="shrink-0 touch-manipulation" 
         style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
       >
         <Checkbox
           checked={option.enabled}
@@ -629,9 +726,6 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
           <div 
             className="shrink-0 touch-manipulation" 
             style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
           >
             <Checkbox
               checked={milestone.enabled}
@@ -735,9 +829,6 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                           <div 
                             className="touch-manipulation" 
                             style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            onClick={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchEnd={(e) => e.stopPropagation()}
                           >
                             <Switch
                               checked={challengeConfig?.enabled || false}
@@ -818,9 +909,6 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                           <div 
                             className="touch-manipulation" 
                             style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            onClick={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchEnd={(e) => e.stopPropagation()}
                           >
                             <Switch
                               checked={dailySummaryConfig?.enabled || false}
@@ -876,7 +964,7 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                               <div className="space-y-4 pt-2">
                                 <div className="w-full h-px bg-slate-700/50"></div>
                                 <h4 className="text-white text-sm">Daily Summary Timing</h4>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                   <div className="space-y-2">
                                     <Label className="text-white text-sm">Send Time</Label>
                                     <select
@@ -902,13 +990,30 @@ export function SystemMessageConfigAdmin({ isOpen, onClose }: SystemMessageConfi
                                     )}
                                   </div>
                                   
-                                  <div className="flex items-end">
+                                  <div className="grid grid-cols-2 gap-3">
                                     <Button
                                       onClick={sendDailySummaryNow}
                                       disabled={sendingMessage}
-                                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
+                                      className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-xs sm:text-sm"
                                     >
-                                      {sendingMessage ? 'Sending...' : 'Send Daily Now'}
+                                      {sendingMessage ? 'Sending...' : 'Send Today\'s Summary'}
+                                    </Button>
+                                    <Button
+                                      onClick={sendYesterdaysSummaryNow}
+                                      disabled={sendingMessage}
+                                      className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-xs sm:text-sm"
+                                    >
+                                      {sendingMessage ? 'Sending...' : 'Send Yesterday\'s Summary'}
+                                    </Button>
+                                  </div>
+                                  
+                                  <div className="mt-3">
+                                    <Button
+                                      onClick={sendTestNotification}
+                                      disabled={sendingMessage}
+                                      className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-xs sm:text-sm"
+                                    >
+                                      {sendingMessage ? 'Sending...' : '🧪 Send Test Notification'}
                                     </Button>
                                   </div>
                                 </div>

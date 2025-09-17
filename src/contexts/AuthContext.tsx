@@ -29,17 +29,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check cached session first
+    // Check cached session first - with defensive error handling
     const cachedUser = typeof window !== 'undefined' ? sessionStorage.getItem('auth_user') : null
     const cachedTimestamp = typeof window !== 'undefined' ? sessionStorage.getItem('auth_timestamp') : null
     
     if (cachedUser && cachedTimestamp) {
-      const timestamp = parseInt(cachedTimestamp)
-      const isValidCache = Date.now() - timestamp < 5 * 60 * 1000 // 5 minutes
-      
-      if (isValidCache) {
-        setUser(JSON.parse(cachedUser))
-        setLoading(false)
+      try {
+        const timestamp = parseInt(cachedTimestamp)
+        const isValidCache = Date.now() - timestamp < 5 * 60 * 1000 // 5 minutes
+        
+        if (isValidCache) {
+          const parsedUser = JSON.parse(cachedUser)
+          setUser(parsedUser)
+          setLoading(false)
+        }
+      } catch (error) {
+        // Corrupted session cache - clear it and continue with fresh auth
+        console.warn('Corrupted auth cache detected, clearing:', error)
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('auth_user')
+          sessionStorage.removeItem('auth_timestamp')
+        }
       }
     }
 
@@ -57,14 +67,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData)
         setLoading(false)
         
-        // Cache the user session
+        // Cache the user session - using both sessionStorage and localStorage for PWA
         if (typeof window !== 'undefined') {
           if (userData) {
-            sessionStorage.setItem('auth_user', JSON.stringify(userData))
-            sessionStorage.setItem('auth_timestamp', Date.now().toString())
+            const authData = JSON.stringify(userData)
+            const timestamp = Date.now().toString()
+            
+            // Primary cache (sessionStorage)
+            sessionStorage.setItem('auth_user', authData)
+            sessionStorage.setItem('auth_timestamp', timestamp)
+            
+            // PWA backup cache (localStorage) - for standalone mode recovery
+            localStorage.setItem('commitment_auth_backup', JSON.stringify({
+              user: userData,
+              timestamp: Date.now()
+            }))
           } else {
             sessionStorage.removeItem('auth_user')
             sessionStorage.removeItem('auth_timestamp')
+            localStorage.removeItem('commitment_auth_backup')
           }
         }
       } catch (error) {
@@ -85,14 +106,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData)
         setLoading(false)
         
-        // Update cache on auth change
+        // Update cache on auth change - with error handling and PWA backup
         if (typeof window !== 'undefined') {
-          if (userData) {
-            sessionStorage.setItem('auth_user', JSON.stringify(userData))
-            sessionStorage.setItem('auth_timestamp', Date.now().toString())
-          } else {
-            sessionStorage.removeItem('auth_user')
-            sessionStorage.removeItem('auth_timestamp')
+          try {
+            if (userData) {
+              const authData = JSON.stringify(userData)
+              const timestamp = Date.now().toString()
+              
+              // Primary cache
+              sessionStorage.setItem('auth_user', authData)
+              sessionStorage.setItem('auth_timestamp', timestamp)
+              
+              // PWA backup cache
+              localStorage.setItem('commitment_auth_backup', JSON.stringify({
+                user: userData,
+                timestamp: Date.now()
+              }))
+            } else {
+              sessionStorage.removeItem('auth_user')
+              sessionStorage.removeItem('auth_timestamp')
+              localStorage.removeItem('commitment_auth_backup')
+            }
+          } catch (error) {
+            // Handle sessionStorage quota exceeded or other storage errors
+            console.warn('Failed to update auth cache:', error)
+            // Clear corrupted cache as fallback
+            try {
+              sessionStorage.removeItem('auth_user')
+              sessionStorage.removeItem('auth_timestamp')
+              localStorage.removeItem('commitment_auth_backup')
+            } catch (clearError) {
+              console.warn('Failed to clear auth cache:', clearError)
+            }
           }
         }
       }
@@ -166,10 +211,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     setUser(null)
-    // Clear auth cache
+    // Clear auth cache - with error handling and PWA backup
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('auth_user')
-      sessionStorage.removeItem('auth_timestamp')
+      try {
+        sessionStorage.removeItem('auth_user')
+        sessionStorage.removeItem('auth_timestamp')
+        localStorage.removeItem('commitment_auth_backup')
+      } catch (error) {
+        console.warn('Failed to clear auth cache during signOut:', error)
+      }
     }
     await supabase.auth.signOut()
   }

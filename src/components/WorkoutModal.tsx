@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient, getExerciseTypeGradient, getButtonGradient, getButtonShadow } from '@/utils/gradientUtils'
 import TimeGradient from './TimeGradient'
@@ -9,6 +10,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 import { usePageState } from '@/hooks/usePageState'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
+import { NotificationService } from '@/services/notificationService'
 import { 
   XMarkIcon,
   HeartIcon,
@@ -116,6 +118,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [favoritesExpanded, setFavoritesExpanded] = useState(false)
   const [favoriteExerciseIds, setFavoriteExerciseIds] = useState<string[]>([])
   const [favoritesLoading, setFavoritesLoading] = useState(false)
+  const [completedExercisesExpanded, setCompletedExercisesExpanded] = useState(false)
+  const [expandedWorkouts, setExpandedWorkouts] = useState<Record<string, boolean>>({})
+  const [expandedExercises, setExpandedExercises] = useState<Set<string>>(new Set())
   const [showSportSelection, setShowSportSelection] = useState(false)
   const [selectedSport, setSelectedSport] = useState('')
   const [selectedSportType, setSelectedSportType] = useState('')
@@ -127,6 +132,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [motivationalMessage, setMotivationalMessage] = useState('')
   const [showMotivationalMessage, setShowMotivationalMessage] = useState(false)
   const [lastMinuteCount, setLastMinuteCount] = useState(0) // Track minutes for auto-increment
+  const [hasFlexibleRestDay, setHasFlexibleRestDay] = useState(false)
+  const [isUsingFlexibleRestDay, setIsUsingFlexibleRestDay] = useState(false)
+  const [hasPostedToday, setHasPostedToday] = useState(false)
+  const [checkingPostStatus, setCheckingPostStatus] = useState(false)
+  
+  const router = useRouter()
   
   // Motivational messages array
   const motivationalMessages = [
@@ -277,6 +288,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   useEffect(() => {
     saveLockedWeightsToStorage(lockedWeights)
   }, [lockedWeights])
+
+  // Load flexible rest day state from profile
+  useEffect(() => {
+    if (profile) {
+      setHasFlexibleRestDay(profile.has_flexible_rest_day || false)
+    }
+  }, [profile])
+
+  // Check if user has already posted today
+  useEffect(() => {
+    if (user && profile?.group_id) {
+      checkTodayPostStatus()
+    }
+  }, [user, profile?.group_id])
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
@@ -543,6 +568,116 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }
 
+  // Use flexible rest day function
+  const useFlexibleRestDay = async () => {
+    if (!user || !profile || isUsingFlexibleRestDay) return
+
+    setIsUsingFlexibleRestDay(true)
+    try {
+      // Calculate the required "sane" mode points for today
+      const { target: saneTarget } = await loadGroupDataAndCalculateTarget('sane')
+      
+      // Log the flexible rest day points automatically
+      const { error: logError } = await supabase
+        .from('logs')
+        .insert({
+          user_id: user.id,
+          exercise_id: null, // Special case for flexible rest day
+          points: saneTarget,
+          date: new Date().toISOString().split('T')[0],
+          count: 1,
+          weight: 0,
+          duration: 0,
+          note: 'Flexible Rest Day Used'
+        })
+
+      if (logError) throw logError
+
+      // Reset the flexible rest day flag
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ has_flexible_rest_day: false })
+        .eq('id', user.id)
+
+      if (updateError) throw updateError
+
+      // Post to group chat
+      const { error: chatError } = await supabase
+        .from('chat_messages')
+        .insert({
+          group_id: profile.group_id,
+          user_id: user.id,
+          message: `🛌 ${profile.username} used their flexible rest day and automatically earned ${saneTarget} points!`,
+          message_type: 'system',
+          created_at: new Date().toISOString()
+        })
+
+      if (chatError) throw chatError
+
+      // Update local state
+      setHasFlexibleRestDay(false)
+      
+      // Refresh the daily progress
+      await loadDailyProgress()
+      
+      alert(`✅ Flexible rest day used! You earned ${saneTarget} points automatically.`)
+      
+    } catch (error) {
+      console.error('Error using flexible rest day:', error)
+      alert('❌ Failed to use flexible rest day. Please try again.')
+    } finally {
+      setIsUsingFlexibleRestDay(false)
+    }
+  }
+
+  // Check if user should earn a flexible rest day
+  const checkFlexibleRestDayEarned = async () => {
+    if (!user || !profile || hasFlexibleRestDay) return
+
+    try {
+      // Check if today is a rest day
+      const today = new Date()
+      const currentDayOfWeek = today.getDay()
+      
+      // Get group settings to check rest days
+      const { data: groupSettings } = await supabase
+        .from('group_settings')
+        .select('rest_days')
+        .eq('group_id', profile.group_id)
+        .maybeSingle()
+
+      const restDays = groupSettings?.rest_days || [1] // Default Monday
+      
+      if (!restDays.includes(currentDayOfWeek)) {
+        return // Not a rest day
+      }
+
+      // Calculate the double target for today
+      const { target: restDayTarget } = await loadGroupDataAndCalculateTarget()
+      
+      // Check if user has met the full rest day target (which is already doubled)
+      const totalPointsToday = dailyProgress
+      
+      if (totalPointsToday >= restDayTarget) {
+        // Award flexible rest day
+        const { error } = await supabase
+          .from('profiles')
+          .update({ has_flexible_rest_day: true })
+          .eq('id', user.id)
+
+        if (!error) {
+          setHasFlexibleRestDay(true)
+          console.log('🎉 Flexible rest day earned!')
+          
+          // Optional: Show notification
+          alert('🎉 Congratulations! You earned a flexible rest day by completing your double Monday target!')
+        }
+      }
+    } catch (error) {
+      console.error('Error checking flexible rest day:', error)
+    }
+  }
+
   const loadDailyProgress = async (targetOverride?: number) => {
     if (!user || !profile) return
 
@@ -617,6 +752,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     } catch (error) {
       console.error('Error loading daily progress:', error)
     }
+
+    // Check if user earned a flexible rest day
+    await checkFlexibleRestDayEarned()
   }
 
   const loadTodaysWorkouts = async () => {
@@ -1205,7 +1343,36 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }
 
+  const checkTodayPostStatus = async () => {
+    if (!user || !profile?.group_id) return
 
+    try {
+      setCheckingPostStatus(true)
+      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+      
+      // Check if user has already posted a workout completion message today
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('group_id', profile.group_id)
+        .eq('message_type', 'workout_completion')
+        .gte('created_at', `${today}T00:00:00.000Z`)
+        .lt('created_at', `${today}T23:59:59.999Z`)
+        .limit(1)
+
+      if (error) {
+        console.error('Error checking today\'s post status:', error)
+        return
+      }
+
+      setHasPostedToday(data && data.length > 0)
+    } catch (error) {
+      console.error('Error checking post status:', error)
+    } finally {
+      setCheckingPostStatus(false)
+    }
+  }
 
   const handleSubmitToGroup = async () => {
     // Submitting workout to group
@@ -1225,6 +1392,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         groupId: profile?.group_id
       })
       alert('Unable to submit workout. Please check your group membership and that you have logged exercises.')
+      return
+    }
+
+    // Check if user has already posted today
+    if (hasPostedToday) {
+      alert('🚫 You have already shared your workout to the group chat today. You can only post once per day!')
       return
     }
 
@@ -1294,6 +1467,78 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         console.error('Error submitting to group:', error)
         alert('Error submitting workout to group chat')
       } else {
+        // Send workout completion notification to group members
+        try {
+          // Get all group members except the current user
+          const { data: groupMembers } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .eq('group_id', profile.group_id)
+            .neq('id', user.id)
+
+          if (groupMembers && groupMembers.length > 0) {
+            const memberIds = groupMembers.map(member => member.id)
+            
+            // Get group name for notification
+            const { data: group } = await supabase
+              .from('groups')
+              .select('name')
+              .eq('id', profile.group_id)
+              .single()
+
+            const groupName = group?.name || 'Group'
+            const userName = profile.username || 'Someone'
+            
+            // Determine achievement level
+            const percentage = dailyTarget > 0 ? (totalPoints / dailyTarget) * 100 : 0
+            const intensity = weekMode === 'insane' ? 'INSANE' : 'sane'
+            let achievementEmoji = '🎯'
+            let achievementText = 'completed their workout'
+            
+            if (percentage >= 150) {
+              achievementEmoji = '🔥'
+              achievementText = `crushed their ${intensity} target`
+            } else if (percentage >= 120) {
+              achievementEmoji = '💪'
+              achievementText = `exceeded their ${intensity} target`
+            } else if (percentage >= 100) {
+              achievementEmoji = '✅'
+              achievementText = `met their ${intensity} target`
+            } else {
+              achievementEmoji = '🏃'
+              achievementText = `made progress on their ${intensity} workout`
+            }
+
+            const notificationTitle = `${achievementEmoji} ${userName} in ${groupName}`
+            const notificationBody = `${achievementText} - ${totalPoints} points earned!`
+
+            // Send notification
+            await NotificationService.sendNotification(
+              memberIds,
+              notificationTitle,
+              notificationBody,
+              {
+                type: 'workout_completion',
+                workoutId: data[0]?.id,
+                userId: user.id,
+                userName: userName,
+                groupId: profile.group_id,
+                groupName: groupName,
+                totalPoints: totalPoints,
+                targetPoints: dailyTarget,
+                percentage: Math.round(percentage),
+                weekMode: weekMode,
+                exercises: Object.keys(exercisesSummary).length
+              },
+              'workout_completions'
+            )
+
+            console.log(`Workout completion notification sent to ${memberIds.length} group members`)
+          }
+        } catch (notificationError) {
+          console.error('Error sending workout completion notification:', notificationError)
+          // Don't let notification errors break the workout submission
+        }
         // Check for automatic mode switching to insane
         if (weekMode === 'sane' && isWeekModeAvailable(groupDaysSinceStart) && totalPoints >= dailyTarget) {
           try {
@@ -1329,12 +1574,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           navigator.vibrate([100, 50, 100])
         }
         
+        // Update state to reflect successful posting
+        setHasPostedToday(true)
+        
         // Clear workout state since it's complete
         clearWorkoutInProgress()
         
-        // Optionally close modal after submission
+        // Close modal and redirect to chat after submission
         setTimeout(() => {
           onClose()
+          router.push('/dashboard?tab=chat')
         }, 1000)
       }
     } catch (error) {
@@ -1611,7 +1860,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex items-center">
             {/* Progress Bar Section - Extends to fill safe area */}
-            <div className={`flex-1 relative ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`} style={{ minHeight: 'calc(64px + env(safe-area-inset-top))' }}>
+            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
               {/* Liquid gradient progress background with subtle animation */}
               <div 
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
@@ -1623,7 +1872,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               />
               
               {/* Button Content */}
-              <div className="relative flex items-center justify-between px-6 text-white" style={{ minHeight: 'calc(64px + env(safe-area-inset-top))' }}>
+              <div className="relative h-full flex items-center justify-between px-6 text-white">
                 <div className="flex flex-col items-start">
                   <span className="font-bold text-sm tracking-tight uppercase">
                     {progressPercentage >= 100 ? 'Complete!' : 'Log Workout'}
@@ -1649,8 +1898,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Chat → X Button Transition - Extends to fill safe area */}
             <button
               onClick={handleClose}
-              className="w-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
-              style={{ minHeight: 'calc(64px + env(safe-area-inset-top))' }}
+              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
               aria-label="Close workout log"
             >
               {/* Chat Icon (slides up and out when modal reaches top) */}
@@ -1676,6 +1924,194 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           </div>
         </div>
 
+        {/* Completed Exercises Section - positioned outside padded container */}
+        {!exercisesLoading && exercises.length > 0 && todaysWorkouts.length > 0 && (
+          <div 
+            className="w-full"
+            style={{
+              background: completedExercisesExpanded 
+                ? (weekMode === 'insane' 
+                  ? 'linear-gradient(180deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)' 
+                  : 'linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)')
+                : 'transparent'
+            }}
+          >
+            <button
+              onClick={() => setCompletedExercisesExpanded(!completedExercisesExpanded)}
+              className="w-full hover:opacity-80 transition-all duration-200"
+              style={{
+                background: weekMode === 'insane' 
+                  ? 'linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #7f1d1d 100%)' 
+                  : 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e3a8a 100%)',
+                minHeight: '48px',
+                border: 'none',
+                outline: 'none',
+                boxShadow: '0 -2px 4px rgba(0, 0, 0, 0.1), inset 0 -1px 2px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <div className="flex items-center justify-between px-6 text-white" style={{ minHeight: '48px' }}>
+                <span className="font-bold text-sm tracking-tight uppercase">
+                  Completed Exercises
+                </span>
+                
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs opacity-75 font-medium">
+                    ({todaysWorkouts.length})
+                  </span>
+                  <div className={`transform transition-transform duration-200 ${completedExercisesExpanded ? 'rotate-180' : ''}`}>
+                    <ChevronDownIcon className="w-5 h-5 text-gray-300" />
+                  </div>
+                </div>
+              </div>
+            </button>
+            
+            {todaysWorkouts.length > 0 && completedExercisesExpanded && (
+              <div className="space-y-0 mt-3 p-2">
+                  {getGroupedWorkouts().map((workout) => {
+                    const exerciseProgress = getExerciseProgress(workout.exercise_id)
+                    return (
+                      <div 
+                        key={`${workout.exercise_id}-${workout.weight || 0}`} 
+                        className="w-full relative overflow-hidden transition-all duration-300 mb-1"
+                      >
+                        <div className="flex items-center">
+                          {/* Main content area with progress bar - matches header layout */}
+                          <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
+                            {/* Liquid gradient progress bar background */}
+                            <div 
+                              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                              style={{ 
+                                width: '100%',
+                                background: exerciseProgress.percentage === 0 
+                                  ? '#000000'
+                                  : `linear-gradient(to right, 
+                                    ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
+                                    ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
+                                    ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${exerciseProgress.percentage}%, 
+                                    #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
+                              }}
+                            />
+                            
+                            {/* Exercise content */}
+                            <div className="relative p-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                  {getExerciseIcon(workout.exercises)}
+                                  <div>
+                                    <div className="font-medium text-white flex items-center space-x-2">
+                                      <span>{workout.exercises?.name || 'Unknown Exercise'}</span>
+                                      {workout.weight > 0 && (
+                                        <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                          {workout.weight} kg
+                                        </span>
+                                      )}
+                                      {workout.exercises?.type === 'recovery' && (
+                                        <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Recovery</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  {(() => {
+                                    const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
+                                    const rawPoints = workout.totalPoints
+                                    const isRecoveryWorkout = workout.exercises?.type === 'recovery'
+                                    const isPointsCapped = isRecoveryWorkout && effectivePoints < rawPoints
+                                    
+                                    return (
+                                      <div>
+                                        <span className="font-medium text-white">
+                                          {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
+                                        </span>
+                                        <span className="font-thin text-white ml-1">pts</span>
+                                      </div>
+                                    )
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expand/Collapse button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              // Toggle expand state for this workout
+                              const workoutKey = `${workout.exercise_id}-${workout.weight || 0}`
+                              setExpandedWorkouts(prev => ({
+                                ...prev,
+                                [workoutKey]: !prev[workoutKey]
+                              }))
+                            }}
+                            className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
+                            aria-label="Expand workout details"
+                          >
+                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${
+                              expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] ? 'rotate-180' : ''
+                            }`} />
+                          </button>
+                        </div>
+
+                        {/* Individual sets when expanded */}
+                        {expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] && (
+                          <div className="mt-3 space-y-1">
+                            {workout.logs.map((log: any, index: number) => (
+                              <div key={log.id} className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]">
+                                <div className="flex items-center">
+                                  {/* Main content area with progress bar - matches exercise layout */}
+                                  <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
+                                    {/* Exercise content */}
+                                    <div className="relative p-3">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                          <span className="w-6 h-6 rounded-full bg-gray-700 text-gray-300 text-xs flex items-center justify-center font-medium">
+                                            {index + 1}
+                                          </span>
+                                          <div>
+                                            <div className="font-medium text-white flex items-center space-x-2">
+                                              <span>{log.count || log.duration} {workout.exercises?.unit}</span>
+                                              {log.weight > 0 && (
+                                                <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                                  {log.weight} kg
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <span className="font-medium text-white">
+                                            {getEffectivePoints(log)} 
+                                          </span>
+                                          <span className="font-thin text-white ml-1">pts</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Delete button */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDeleteWorkout(log.id)
+                                    }}
+                                    className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
+                                    aria-label="Delete set"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-2">
           {exercisesLoading && (
             <div className="text-center py-8">
@@ -1698,114 +2134,45 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* Current Workouts Section */}
               <div className="pb-6">
                 
-                {todaysWorkouts.length === 0 ? (
+{todaysWorkouts.length === 0 && (
                   <div className="px-4">
                     <div className="text-center py-8 bg-black/30 backdrop-blur-sm rounded-3xl border-2 border-blue-500/50 shadow-2xl">
                       <p className="text-gray-400 font-medium">No workouts logged yet</p>
                       <p className="text-gray-500 text-sm mt-1">Select exercises below to get started</p>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="space-y-0">
-                      {getGroupedWorkouts().map((workout) => {
-                          const exerciseProgress = getExerciseProgress(workout.exercise_id)
-                          return (
-                            <div 
-                              key={`${workout.exercise_id}-${workout.weight || 0}`} 
-                              className="relative overflow-hidden cursor-pointer transition-all duration-300 mb-1 hover:scale-[1.02]"
-                              onClick={() => handleWorkoutClick(workout)}
-                            >
-                              <div className="flex items-center gap-2">
-                                {/* Main content area with progress bar - matches header layout */}
-                                <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-                                  {/* Liquid gradient progress bar background */}
-                                  <div 
-                                    className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-                                    style={{ 
-                                      width: '100%',
-                                      background: exerciseProgress.percentage === 0 
-                                        ? '#000000'
-                                        : `linear-gradient(to right, 
-                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
-                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
-                                          ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${exerciseProgress.percentage}%, 
-                                          #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
-                                    }}
-                                  />
-                                  
-                                  <div className="relative p-3">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center space-x-3">
-                                        {getExerciseIcon(workout.exercises)}
-                                        <div>
-                                          <div className="font-medium text-white flex items-center space-x-2">
-                                            <span>{workout.exercises?.name || 'Unknown Exercise'}</span>
-                                            {workout.weight > 0 && (
-                                              <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
-                                                {workout.weight} kg
-                                              </span>
-                                            )}
-                                            {workout.exercises?.type === 'recovery' && (
-                                              <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Recovery</span>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="text-right">
-                                        {(() => {
-                                          const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
-                                          const rawPoints = workout.totalPoints
-                                          const isRecoveryWorkout = workout.exercises?.type === 'recovery'
-                                          const isPointsCapped = isRecoveryWorkout && effectivePoints < rawPoints
-                                          
-                                          return (
-                                            <div>
-                                              <span className="font-medium text-white">
-                                                {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
-                                              </span>
-                                              <span className="font-thin text-white ml-1">pts</span>
-                                            </div>
-                                          )
-                                        })()}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
+                )}
 
-                                {/* Delete button - matches header X button layout */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    // Delete all logs in this group
-                                    workout.logs.forEach((log: any) => handleDeleteWorkout(log.id))
-                                  }}
-                                  className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-red-600 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
-                                  aria-label="Delete workout"
-                                >
-                                  <TrashIcon className="w-5 h-5" />
-                                </button>
-                              </div>
-                            </div>
-                          )
-                        })}
-                    </div>
-
-                    {/* Submit to Group Button - appears when target is reached */}
-                    {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && (
-                      <div className="px-4 py-6 mt-6">
-                        <button
-                          onClick={handleSubmitToGroup}
-                          className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                        >
-                          🎉 Submit to Group Chat
-                        </button>
-                        <p className="text-center text-sm text-gray-400 mt-2">
-                          Share your completed workout with the group!
-                        </p>
-                      </div>
-                    )}
-                  </>
+                {/* Submit to Group Button - appears when target is reached */}
+                {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && (
+                  <div className="px-4 py-6 mt-6">
+                    <button
+                      onClick={handleSubmitToGroup}
+                      disabled={hasPostedToday || checkingPostStatus || loading}
+                      className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                        hasPostedToday 
+                          ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
+                          : checkingPostStatus || loading
+                          ? 'bg-gray-500 text-gray-300 cursor-wait'
+                          : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white'
+                      }`}
+                    >
+                      {checkingPostStatus 
+                        ? '⏳ Checking...' 
+                        : hasPostedToday 
+                        ? '✅ Already Posted Today' 
+                        : loading
+                        ? '⏳ Posting...'
+                        : '🎉 Submit to Group Chat'
+                      }
+                    </button>
+                    <p className="text-center text-sm text-gray-400 mt-2">
+                      {hasPostedToday 
+                        ? 'You can only post your workout once per day'
+                        : 'Share your completed workout with the group!'
+                      }
+                    </p>
+                  </div>
                 )}
               </div>
 
@@ -1984,6 +2351,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Flexible Rest Day Button */}
+              {hasFlexibleRestDay && (
+                <div className="py-4 px-4">
+                  <button
+                    onClick={useFlexibleRestDay}
+                    disabled={isUsingFlexibleRestDay}
+                    className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium shadow-lg ${
+                      isUsingFlexibleRestDay ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <CalendarDaysIcon className="w-5 h-5" />
+                    {isUsingFlexibleRestDay ? 'Using Flexible Rest Day...' : 'Use Flexible Rest Day'}
+                  </button>
+                  <p className="text-xs text-gray-400 text-center mt-2">
+                    Automatically earn today's sane mode points and post to chat
+                  </p>
                 </div>
               )}
             </>

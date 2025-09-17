@@ -1,11 +1,8 @@
 {
   "mcpServers": {
-    "vercel": {
-      "command": "node",
-      "args": ["/tmp/vercel-mcp-server/dist/index.js"],
-      "env": {
-        "VERCEL_TOKEN": "1Xan92EIH2rirtEO5VyvA6RX"
-      }
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp"]
     }
   }
 }

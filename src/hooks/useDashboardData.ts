@@ -127,7 +127,7 @@ export function useDashboardData() {
         // Group members
         supabase
           .from('profiles')
-          .select('id, username, custom_icon, personal_color, is_weekly_mode, last_seen')
+          .select('id, username, custom_icon, personal_color, is_weekly_mode, is_sick_mode, last_seen')
           .eq('group_id', profile.group_id)
           .order('username'),
           

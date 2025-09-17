@@ -23,20 +23,12 @@ body {
     overflow-x: hidden;
   }
   
-  /* Handle iOS safe areas for normal content */
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
+  /* Handle iOS safe areas for normal content - Let components manage their own safe areas */
+  /* Removed global body padding to prevent thick header in PWA mode */
   
-  /* For fullscreen fixed elements like chat modals, don't inherit body padding */
+  /* Fullscreen fixed elements no longer need margin offsets */
   .fixed-fullscreen {
-    margin-top: calc(-1 * env(safe-area-inset-top));
-    margin-bottom: calc(-1 * env(safe-area-inset-bottom));
-    margin-left: calc(-1 * env(safe-area-inset-left));
-    margin-right: calc(-1 * env(safe-area-inset-right));
+    /* Class kept for compatibility but no longer applies negative margins */
   }
   
   /* Ensure smooth touch scrolling */

@@ -184,8 +184,16 @@ export function WorkoutSummaryPost({ workoutData, user, compact }: WorkoutSummar
           <Button
             variant="ghost"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               setShowDetails(!showDetails);
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
             }}
             className="text-gray-400 hover:text-white hover:bg-gray-800 h-6 px-2 text-xs"
           >

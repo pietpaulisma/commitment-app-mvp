@@ -411,7 +411,7 @@ export default function MobileWorkoutLogger() {
 
   const calculatePoints = () => {
     if (!selectedExercise || !quantity) return 0
-    return Math.round(parseFloat(quantity) * selectedExercise.points_per_unit)
+    return Math.floor(parseFloat(quantity) * selectedExercise.points_per_unit)
   }
 
   const checkAutomaticModeSwitch = async () => {
@@ -492,10 +492,10 @@ export default function MobileWorkoutLogger() {
         .insert({
           user_id: user.id,
           exercise_id: selectedExercise.id,
-          count: selectedExercise.unit === 'rep' ? parseFloat(quantity) : 0,
+          count: selectedExercise.unit === 'rep' ? Math.floor(parseFloat(quantity)) : 0,
           weight: weightValue,
-          duration: selectedExercise.is_time_based ? parseFloat(quantity) : 0,
-          points: points,
+          duration: selectedExercise.is_time_based ? Math.floor(parseFloat(quantity)) : 0,
+          points: Math.floor(points),
           date: new Date().toISOString().split('T')[0],
           timestamp: Date.now()
         })
@@ -629,39 +629,41 @@ export default function MobileWorkoutLogger() {
         }
       `}</style>
       
-      {/* Daily Target Progress Header - Copy exact navigation button structure */}
+      {/* Daily Target Progress Header - With safe-area wrapper like working headers */}
       {dailyTarget > 0 && (
-        <div 
-          className="relative bg-gray-900 overflow-hidden border-t border-gray-700 py-3"
-        >
-          {/* Stacked gradient progress bar background with subtle animation */}
+        <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div 
-            className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
-            style={{ 
-              width: progressAnimated ? '100%' : '80%',
-              background: isRecoveryDay 
-                ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
-                : createCumulativeGradient(todaysLogs || [], dailyTarget),
-              // Force cache invalidation
-              transform: `translateZ(${Date.now() % 1000}px)`
-            }}
-          />
-          
-          {/* Content */}
-          <div className="relative h-full flex items-center justify-between px-4 text-white">
-            <div className="flex flex-col items-start">
-              <span className="font-bold text-xs tracking-tight uppercase">
-                LOG WORKOUT
-              </span>
-              <span className="text-xs opacity-75 font-medium">
-                {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}/{Math.max(1, dailyTarget)} pts
-              </span>
-            </div>
+            className="relative h-16 bg-gray-900 overflow-hidden border-t border-gray-700"
+          >
+            {/* Stacked gradient progress bar background with subtle animation */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
+              style={{ 
+                width: progressAnimated ? '100%' : '80%',
+                background: isRecoveryDay 
+                  ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
+                  : createCumulativeGradient(todaysLogs || [], dailyTarget),
+                // Force cache invalidation
+                transform: `translateZ(${Date.now() % 1000}px)`
+              }}
+            />
             
-            <div className="flex flex-col items-end justify-center h-full">
-              <span className="text-2xl font-black tracking-tight leading-none">
-                {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / Math.max(1, dailyTarget) * 100)}%
-              </span>
+            {/* Content */}
+            <div className="relative h-full flex items-center justify-between px-6 text-white">
+              <div className="flex flex-col items-start">
+                <span className="font-bold text-xs tracking-tight uppercase">
+                  LOG WORKOUT
+                </span>
+                <span className="text-xs opacity-75 font-medium">
+                  {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}/{Math.max(1, dailyTarget)} pts
+                </span>
+              </div>
+              
+              <div className="flex flex-col items-end justify-center">
+                <span className="text-2xl font-black tracking-tight leading-none">
+                  {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / Math.max(1, dailyTarget) * 100)}%
+                </span>
+              </div>
             </div>
           </div>
         </div>

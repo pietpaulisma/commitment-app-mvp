@@ -7,6 +7,7 @@ import RectangularNavigation from '@/components/RectangularNavigation'
 import RectangularDashboard from '@/components/RectangularDashboard'
 import TimeGradient from '@/components/TimeGradient'
 import { useState } from 'react'
+import { isPWAMode, logPWADebugInfo } from '@/utils/pwaUtils'
 
 export default function Home() {
   const { user, loading } = useAuth()
@@ -14,12 +15,49 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
   const [isChatModalOpen, setIsChatModalOpen] = useState(false)
+  const [isPWA, setIsPWA] = useState(false)
+
+  // Detect PWA mode and setup debug logging
+  useEffect(() => {
+    const pwaMode = isPWAMode()
+    setIsPWA(pwaMode)
+    
+    // Debug logging for PWA mode
+    if (pwaMode) {
+      console.log('PWA mode detected - standalone launch from home screen')
+      logPWADebugInfo()
+    }
+  }, [])
 
   useEffect(() => {
     if (!loading && !user) {
+      // Add PWA-specific auth recovery attempt
+      if (isPWA && typeof window !== 'undefined') {
+        console.log('PWA auth recovery attempt - checking localStorage')
+        try {
+          const savedAuth = localStorage.getItem('commitment_auth_backup')
+          if (savedAuth) {
+            const authData = JSON.parse(savedAuth)
+            const isValidBackup = Date.now() - authData.timestamp < 24 * 60 * 60 * 1000 // 24 hours
+            if (isValidBackup) {
+              console.log('Found valid auth backup, attempting restore...')
+              // Don't redirect immediately, let auth context try to restore
+              setTimeout(() => {
+                if (!user && !loading) {
+                  router.push('/login')
+                }
+              }, 2000)
+              return
+            }
+          }
+        } catch (error) {
+          console.warn('PWA auth recovery failed:', error)
+        }
+      }
+      
       router.push('/login')
     }
-  }, [user, loading, router])
+  }, [user, loading, router, isPWA])
 
   useEffect(() => {
     const handleScroll = () => {

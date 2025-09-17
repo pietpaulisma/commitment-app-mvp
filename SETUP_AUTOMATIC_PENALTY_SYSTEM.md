@@ -34,10 +34,15 @@ openssl rand -base64 32
 ```
 
 ### 3. Vercel Deployment
-The cron job is already configured in `vercel.json`:
+The cron jobs are configured in `vercel.json` and **ONLY run in production environment**:
+
 ```json
 {
   "crons": [
+    {
+      "path": "/api/cron/daily-summary",
+      "schedule": "0 8 * * *"
+    },
     {
       "path": "/api/cron/daily-penalty-check",
       "schedule": "1 0 * * *"
@@ -45,6 +50,12 @@ The cron job is already configured in `vercel.json`:
   ]
 }
 ```
+
+**Important Notes:**
+- ⚠️ **Production Only**: Vercel cron jobs only execute on production deployments, never on preview/dev environments
+- 📊 **Hobby Plan Limit**: Uses 2/2 allowed cron jobs on Vercel Hobby plan
+- 🧪 **Development Testing**: Use manual admin buttons in dev environment for testing
+- 🏥 **Backup Controls**: Manual admin buttons remain available for emergency use in production
 
 ## How It Works
 

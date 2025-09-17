@@ -13,15 +13,23 @@ import {
   AdjustmentsHorizontalIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
-  SparklesIcon
+  SparklesIcon,
+  BellIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline'
 import { SystemMessageConfigAdmin } from './SystemMessageConfigAdmin'
+import NotificationSettings from './NotificationSettings'
+import { supabase } from '@/lib/supabase'
+import packageJson from '../../package.json'
 
 export default function NewMobileProfile() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
   const [showSystemMessageConfig, setShowSystemMessageConfig] = useState(false)
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false)
+  const [isSickMode, setIsSickMode] = useState(false)
+  const [isUpdatingSickMode, setIsUpdatingSickMode] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -29,13 +37,47 @@ export default function NewMobileProfile() {
     }
   }, [user, authLoading, router])
 
+  // Load sick mode state from profile
+  useEffect(() => {
+    if (profile) {
+      setIsSickMode(profile.is_sick_mode || false)
+    }
+  }, [profile])
+
   // Cleanup effect to prevent state corruption when navigating away
   useEffect(() => {
     return () => {
       // Reset any local state that might interfere with other pages
       setShowSystemMessageConfig(false)
+      setShowNotificationSettings(false)
     }
   }, [])
+
+  // Toggle sick mode function
+  const toggleSickMode = async () => {
+    if (!user || isUpdatingSickMode) return
+
+    setIsUpdatingSickMode(true)
+    try {
+      const newSickMode = !isSickMode
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_sick_mode: newSickMode })
+        .eq('id', user.id)
+
+      if (error) {
+        console.error('Error updating sick mode:', error)
+        return
+      }
+
+      setIsSickMode(newSickMode)
+    } catch (error) {
+      console.error('Error toggling sick mode:', error)
+    } finally {
+      setIsUpdatingSickMode(false)
+    }
+  }
 
 
   if (authLoading || profileLoading) {
@@ -83,6 +125,52 @@ export default function NewMobileProfile() {
       </div>
       
       <div className="px-4 pt-6 space-y-6">
+
+        {/* User Settings Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-6">Your Settings</h2>
+          <div className="space-y-4">
+            <button
+              onClick={() => setShowNotificationSettings(true)}
+              className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
+            >
+              <BellIcon className="w-6 h-6 text-blue-400 group-hover:text-blue-300" />
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-white">Notifications</div>
+                <div className="text-sm text-gray-400">Push notifications & preferences</div>
+              </div>
+              <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+            </button>
+
+            {/* Sick Mode Toggle */}
+            <div className="w-full bg-white/5 border border-gray-700 text-white py-5 px-6 rounded-xl">
+              <div className="flex items-center gap-4">
+                <HeartIcon className={`w-6 h-6 ${isSickMode ? 'text-red-400' : 'text-green-400'}`} />
+                <div className="flex-1">
+                  <div className="font-semibold text-white">Sick Mode</div>
+                  <div className="text-sm text-gray-400">
+                    {isSickMode ? 'Penalties paused while you recover' : 'Normal penalty system active'}
+                  </div>
+                </div>
+                
+                {/* Toggle Switch */}
+                <button
+                  onClick={toggleSickMode}
+                  disabled={isUpdatingSickMode}
+                  className={`relative w-12 h-6 rounded-full transition-all duration-300 ${
+                    isSickMode ? 'bg-red-500' : 'bg-gray-600'
+                  } ${isUpdatingSickMode ? 'opacity-50' : ''}`}
+                >
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-all duration-300 ${
+                      isSickMode ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Admin Tools Section */}
         {(profile.role === 'supreme_admin' || profile.role === 'group_admin') && (
@@ -180,6 +268,13 @@ export default function NewMobileProfile() {
             Sign Out
           </button>
         </div>
+
+        {/* Version Number */}
+        <div className="text-center pt-8 pb-4">
+          <p className="text-xs text-gray-500">
+            Version {packageJson.version}
+          </p>
+        </div>
       </div>
 
       {/* System Message Configuration Modal */}
@@ -188,6 +283,15 @@ export default function NewMobileProfile() {
           isOpen={showSystemMessageConfig}
           onClose={() => setShowSystemMessageConfig(false)}
         />
+      )}
+
+      {/* Notification Settings Modal */}
+      {showNotificationSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <NotificationSettings 
+            onClose={() => setShowNotificationSettings(false)}
+          />
+        </div>
       )}
     </div>
   )

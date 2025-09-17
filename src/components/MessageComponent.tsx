@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { WorkoutSummaryPost } from './WorkoutSummaryPost';
 import { Plus, Reply } from 'lucide-react';
@@ -45,6 +45,10 @@ interface MessageComponentProps {
   currentUser: { id: string; email?: string; username?: string };
   onAddReaction: (messageId: string, emoji: string) => void;
   onReply: (messageId: string) => void;
+  onShowMenu: (messageId: string, position: { top: number, left: number }) => void;
+  onCloseMenu: () => void;
+  showMenu: boolean;
+  menuPosition: { top: number, left: number };
   getUserColor: (email: string, role: string) => string;
   isFirstInGroup?: boolean;
   isLastInGroup?: boolean;
@@ -55,35 +59,42 @@ export function MessageComponent({
   currentUser, 
   onAddReaction, 
   onReply,
+  onShowMenu,
+  onCloseMenu,
+  showMenu,
+  menuPosition,
   getUserColor,
   isFirstInGroup = true,
   isLastInGroup = true
 }: MessageComponentProps) {
-  const [showActionMenu, setShowActionMenu] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const isCurrentUser = message.user_id === currentUser.id;
   const isWorkoutPost = message.message_type === 'workout_completion';
 
-  const handleShowActionMenu = (event: React.MouseEvent) => {
+
+  const handleShowActionMenu = (event: React.MouseEvent | React.TouchEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
     const rect = event.currentTarget.getBoundingClientRect();
     
     // Menu dimensions
-    const menuWidth = 240; // Actual menu width
-    const menuHeight = 120; // Approximate menu height
-    const offset = 10; // Padding from screen edges
+    const menuWidth = 240;
+    const menuHeight = 120;
+    const offset = 10;
     
-    // Start with centered position above the element
+    // Position menu relative to viewport using fixed positioning
+    // Start with centered position above the message
     let leftPosition = rect.left + rect.width / 2 - menuWidth / 2;
     let topPosition = rect.top - menuHeight - 10;
     
-    // Ensure menu stays within horizontal bounds
+    // Ensure menu stays within horizontal viewport bounds
     if (leftPosition < offset) {
       leftPosition = offset;
     } else if (leftPosition + menuWidth > window.innerWidth - offset) {
       leftPosition = window.innerWidth - menuWidth - offset;
     }
     
-    // Ensure menu stays within vertical bounds
+    // Ensure menu stays within vertical viewport bounds
     if (topPosition < offset) {
       // Show below the element if there's not enough space above
       topPosition = rect.bottom + 10;
@@ -94,21 +105,110 @@ export function MessageComponent({
       }
     }
     
-    setMenuPosition({
+    onShowMenu(message.id, {
       top: topPosition,
       left: leftPosition
     });
-    setShowActionMenu(true);
   };
+
+  // Long press implementation with proper scroll detection
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const longPressTriggeredRef = useRef(false);
+
+  const LONG_PRESS_DURATION = 600; // 600ms - industry standard
+  const MOVEMENT_THRESHOLD = 10; // 10px movement tolerance
+
+  const handleTouchStart = (event: React.TouchEvent) => {
+    event.stopPropagation();
+    
+    // Store the initial touch position
+    const touch = event.touches[0];
+    touchStartPositionRef.current = {
+      x: touch.clientX,
+      y: touch.clientY
+    };
+    
+    longPressTriggeredRef.current = false;
+
+    // Start the long press timer
+    longPressTimeoutRef.current = setTimeout(() => {
+      if (!longPressTriggeredRef.current) {
+        longPressTriggeredRef.current = true;
+        handleShowActionMenu(event);
+        
+        // Optional: Add haptic feedback if available
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50);
+        }
+      }
+    }, LONG_PRESS_DURATION);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent) => {
+    // If we don't have a start position, ignore
+    if (!touchStartPositionRef.current || !longPressTimeoutRef.current) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartPositionRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartPositionRef.current.y);
+    
+    // If movement exceeds threshold, cancel the long press
+    if (deltaX > MOVEMENT_THRESHOLD || deltaY > MOVEMENT_THRESHOLD) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+      touchStartPositionRef.current = null;
+    }
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Clean up the long press timer
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+    
+    touchStartPositionRef.current = null;
+    
+    // If long press was already triggered, don't do anything else
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
+      return;
+    }
+  };
+
+  const handleTouchCancel = () => {
+    // Clean up on touch cancel (when user drags finger off element)
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+    touchStartPositionRef.current = null;
+    longPressTriggeredRef.current = false;
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimeoutRef.current) {
+        clearTimeout(longPressTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleEmojiSelect = (emoji: string) => {
     onAddReaction(message.id, emoji);
-    setShowActionMenu(false);
+    onCloseMenu();
   };
 
   const handleReply = () => {
     onReply(message.id);
-    setShowActionMenu(false);
+    onCloseMenu();
   };
 
   const hasReactions = message.reactions && message.reactions.length > 0;
@@ -192,7 +292,7 @@ export function MessageComponent({
         <div className="relative">
           <div 
             className={`
-              relative px-3 py-2 rounded-xl shadow-sm cursor-pointer transition-colors
+              relative px-3 py-2 rounded-xl shadow-sm cursor-pointer transition-colors touch-manipulation select-none
               ${isCurrentUser 
                 ? message.id.startsWith('temp-')
                   ? `bg-gradient-to-r from-orange-700 to-red-600 text-white opacity-70 ${isLastInGroup ? 'rounded-br-none' : ''}`
@@ -201,6 +301,17 @@ export function MessageComponent({
               }
             `}
             onClick={handleShowActionMenu}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchCancel}
+            role="button"
+            tabIndex={0}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              WebkitUserSelect: 'none',
+              userSelect: 'none'
+            }}
           >
             {/* User name - show for all users and only on first message in group, inside the bubble */}
             {isFirstInGroup && (
@@ -316,51 +427,6 @@ export function MessageComponent({
         </div>
       </div>
 
-      {/* Message Action Menu */}
-      {showActionMenu && (
-        <div 
-          className="fixed z-50 bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-3 w-60"
-          style={{
-            top: menuPosition.top,
-            left: menuPosition.left
-          }}
-        >
-          {/* Reply Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2 text-white hover:bg-gray-700 mb-2"
-            onClick={handleReply}
-          >
-            <Reply className="w-4 h-4" />
-            Reply
-          </Button>
-
-          {/* Emoji Reactions */}
-          <div className="text-sm text-gray-400 mb-2">React with:</div>
-          <div className="grid grid-cols-6 gap-1">
-            {['👍', '❤️', '😂', '😮', '😢', '🔥', '💪', '🙏', '👏', '✅', '🎉', '😍'].map((emoji) => (
-              <Button
-                key={emoji}
-                variant="ghost"
-                size="sm"
-                className="text-lg p-1 h-8 w-8 hover:bg-gray-700 rounded"
-                onClick={() => handleEmojiSelect(emoji)}
-              >
-                {emoji}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Backdrop to close menu */}
-      {showActionMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowActionMenu(false)}
-        />
-      )}
     </div>
   );
 }
