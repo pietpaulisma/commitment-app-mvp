@@ -33,7 +33,8 @@ export async function GET(request: NextRequest) {
         username, 
         email, 
         group_id, 
-        is_weekly_mode,
+        week_mode,
+        is_sick_mode,
         total_penalty_owed,
         last_penalty_check,
         groups!inner(
@@ -75,6 +76,19 @@ export async function GET(request: NextRequest) {
           continue
         }
 
+        // Skip if user is in sick mode
+        if (profile.is_sick_mode) {
+          console.log(`${profile.username}: Skipping penalty - sick mode enabled`)
+          
+          // Update last penalty check without issuing penalty
+          await supabase
+            .from('profiles')
+            .update({ last_penalty_check: yesterdayStr })
+            .eq('id', profile.id)
+            
+          continue
+        }
+
         // Check if yesterday was a rest day
         const dayOfWeek = yesterday.getDay() // 0 = Sunday, 1 = Monday, etc.
         const group = profile.groups
@@ -94,8 +108,8 @@ export async function GET(request: NextRequest) {
 
         // Get user's workout logs for yesterday
         const { data: yesterdayLogs, error: logsError } = await supabase
-          .from('workout_logs')
-          .select('points, recovery_points')
+          .from('logs')
+          .select('points, exercise_id')
           .eq('user_id', profile.id)
           .eq('date', yesterdayStr)
 
@@ -104,20 +118,39 @@ export async function GET(request: NextRequest) {
           continue
         }
 
-        // Calculate actual points earned
-        const totalPoints = yesterdayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
-        const recoveryPoints = yesterdayLogs?.reduce((sum, log) => sum + (log.recovery_points || 0), 0) || 0
+        // Calculate actual points earned (with recovery cap applied)
+        let totalRecoveryPoints = 0
+        let totalNonRecoveryPoints = 0
+        
+        const recoveryExercises = ['recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga']
+        
+        yesterdayLogs?.forEach(log => {
+          if (recoveryExercises.includes(log.exercise_id)) {
+            totalRecoveryPoints += log.points
+          } else {
+            totalNonRecoveryPoints += log.points
+          }
+        })
 
         // Calculate daily target for this user
         const groupStartDate = new Date(group.start_date)
-        const dailyTarget = calculateDailyTarget(
-          yesterday,
-          groupStartDate,
-          profile.is_weekly_mode || false
-        )
+        const daysSinceStart = Math.floor((yesterday.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
+        const dayOfWeekForTarget = yesterday.getDay()
+        
+        const dailyTarget = calculateDailyTarget({
+          daysSinceStart,
+          weekMode: profile.week_mode || 'sane',
+          restDays: [group.rest_day_1, group.rest_day_2].filter(day => day !== null),
+          recoveryDays: [5], // Default Friday
+          currentDayOfWeek: dayOfWeekForTarget
+        })
 
-        // Check if user failed to meet target
-        const actualPoints = totalPoints + recoveryPoints
+        // Apply recovery cap (25% of daily target)
+        const recoveryCapLimit = Math.round(dailyTarget * 0.25)
+        const cappedRecoveryPoints = Math.min(totalRecoveryPoints, recoveryCapLimit)
+        
+        // Check if user failed to meet target (using capped recovery points)
+        const actualPoints = totalNonRecoveryPoints + cappedRecoveryPoints
         const missedTarget = actualPoints < dailyTarget
 
         console.log(`${profile.username}: Target=${dailyTarget}, Actual=${actualPoints}, Missed=${missedTarget}`)
