@@ -172,7 +172,10 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         }
       })
 
-      // Aggregate points by user and date - with strict weekly validation
+      // Aggregate points by user and date - with strict weekly validation and recovery caps
+      // First, group logs by user and date to apply recovery caps correctly
+      const logsByUserAndDate: { [userId: string]: { [date: string]: any[] } } = {}
+      
       logs?.forEach(log => {
         const userId = log.user_id
         const date = log.date
@@ -183,14 +186,65 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           return
         }
         
-        if (userStats[userId]) {
+        if (!logsByUserAndDate[userId]) {
+          logsByUserAndDate[userId] = {}
+        }
+        if (!logsByUserAndDate[userId][date]) {
+          logsByUserAndDate[userId][date] = []
+        }
+        
+        logsByUserAndDate[userId][date].push(log)
+      })
+
+      // Process each user's daily logs and apply recovery caps
+      Object.entries(logsByUserAndDate).forEach(([userId, dateEntries]) => {
+        if (!userStats[userId]) return
+
+        Object.entries(dateEntries).forEach(([date, dayLogs]) => {
+          const dateObj = new Date(date)
+          const dayOfWeek = dateObj.getDay()
+          
+          // Calculate daily target for recovery cap (25% of target)
+          const dailyTarget = calculateDailyTarget({
+            daysSinceStart,
+            weekMode: userStats[userId].member.week_mode || 'sane',
+            restDays,
+            recoveryDays,
+            currentDayOfWeek: dayOfWeek
+          })
+          
+          const recoveryCapLimit = Math.round(dailyTarget * 0.25)
+          
+          // Separate recovery and non-recovery exercises
+          const recoveryExercises = ['recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga']
+          let totalRecoveryPoints = 0
+          let totalNonRecoveryPoints = 0
+          
+          dayLogs.forEach(log => {
+            if (recoveryExercises.includes(log.exercise_id)) {
+              totalRecoveryPoints += log.points
+            } else {
+              totalNonRecoveryPoints += log.points
+            }
+          })
+          
+          // Apply recovery cap
+          const cappedRecoveryPoints = Math.min(totalRecoveryPoints, recoveryCapLimit)
+          const totalDayPoints = totalNonRecoveryPoints + cappedRecoveryPoints
+          
+          // Debug log for significant recovery caps
+          if (totalRecoveryPoints > recoveryCapLimit) {
+            console.log(`WeeklyOverperformers: Applied recovery cap for ${userStats[userId].member.username} on ${date}: ${totalRecoveryPoints} → ${cappedRecoveryPoints} (limit: ${recoveryCapLimit}, target: ${dailyTarget})`)
+          }
+          
+          // Store the capped daily total
           if (!userStats[userId].dailyPoints[date]) {
             userStats[userId].dailyPoints[date] = 0
           }
           
-          userStats[userId].dailyPoints[date] += log.points
-          userStats[userId].totalPoints += log.points
-        }
+          userStats[userId].dailyPoints[date] = totalDayPoints
+          userStats[userId].totalPoints += totalDayPoints
+        })
       })
 
       // Calculate overperformance for each user - only include users with valid usernames
