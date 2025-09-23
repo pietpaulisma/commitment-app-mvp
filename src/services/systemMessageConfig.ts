@@ -681,7 +681,7 @@ export class SystemMessageConfigService {
       
       // Create notification based on message type
       let notificationTitle = `📢 ${title}`
-      let notificationBody = content.length > 80 
+      const notificationBody = content.length > 80 
         ? content.substring(0, 80) + '...'
         : content
       

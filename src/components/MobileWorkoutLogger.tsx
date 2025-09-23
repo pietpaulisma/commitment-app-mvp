@@ -233,7 +233,7 @@ export default function MobileWorkoutLogger() {
       setHasFlexibleRestDay(false)
       
       // Show success message
-      alert('🎉 Flexible rest day activated! You can skip today\'s workout without penalty.')
+      alert('🎉 Flexible rest day activated! You can skip today&apos;s workout without penalty.')
       
     } catch (error) {
       console.error('Error using flexible rest day:', error)
