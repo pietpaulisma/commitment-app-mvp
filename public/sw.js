@@ -1,29 +1,50 @@
-const CACHE_NAME = 'commitment-app-v5'
-const STATIC_CACHE = 'commitment-static-v5'
-const RUNTIME_CACHE = 'commitment-runtime-v5'
+const CACHE_NAME = 'commitment-app-v14-ios-notifications'
+const STATIC_CACHE = 'commitment-static-v14-ios-notifications'
+const RUNTIME_CACHE = 'commitment-runtime-v14-ios-notifications'
+
+console.log('🔧 Service Worker v14 - iOS Notifications Debug - Loading...')
 
 const urlsToCache = [
   '/',
   '/dashboard',
-  '/workout',
   '/targets',
   '/leaderboard', 
   '/profile',
   '/admin',
   '/login',
-  '/manifest.json',
   '/icon.svg',
   '/icon-192.png',
   '/icon-512.png',
   '/logo.png'
+  // Note: Removed /workout and /manifest.json as they're causing cache errors
 ]
 
 // Install service worker and cache resources
 self.addEventListener('install', (event) => {
-  // Don't skipWaiting - let it activate naturally to avoid page refreshes
+  console.log('🔧 Service Worker v14 - Installing with iOS debug')
+  // Force skipWaiting to ensure immediate update
+  self.skipWaiting()
   event.waitUntil(
     Promise.all([
-      caches.open(STATIC_CACHE).then((cache) => cache.addAll(urlsToCache)),
+      caches.open(STATIC_CACHE).then(async (cache) => {
+        try {
+          await cache.addAll(urlsToCache)
+          console.log('✅ Service worker: Successfully cached all resources')
+        } catch (error) {
+          console.warn('⚠️ Service worker: Some resources failed to cache, trying individually')
+          // Try to cache resources individually to identify which ones fail
+          let successCount = 0
+          for (const url of urlsToCache) {
+            try {
+              await cache.add(url)
+              successCount++
+            } catch (urlError) {
+              console.warn(`⚠️ Service worker: Skipping ${url} (${urlError.message})`)
+            }
+          }
+          console.log(`✅ Service worker: Cached ${successCount}/${urlsToCache.length} resources`)
+        }
+      }),
       caches.open(RUNTIME_CACHE)
     ])
   )
@@ -31,7 +52,9 @@ self.addEventListener('install', (event) => {
 
 // Activate service worker and clean old caches
 self.addEventListener('activate', (event) => {
-  // Don't claim immediately - this can cause page refreshes
+  console.log('🔧 Service Worker v14 - Activating and claiming clients')
+  // Claim all clients immediately to force update
+  self.clients.claim()
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -125,47 +148,100 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification event handler
 self.addEventListener('push', (event) => {
-  console.log('Push event received:', event)
+  const isIOS = /iPhone|iPad/.test(navigator.userAgent)
+  const isMobile = navigator.userAgent.includes('Mobile')
+  
+  console.log('🔔 Push event received on:', isMobile ? 'Mobile' : 'Desktop')
+  console.log('🔔 Event details:', {
+    hasData: !!event.data,
+    type: event.type,
+    timestamp: new Date().toISOString(),
+    isIOS: isIOS,
+    userAgent: navigator.userAgent
+  })
+  
+  if (isIOS) {
+    console.log('🍎 iOS push event - checking iOS-specific requirements')
+  }
 
   if (!event.data) {
-    console.log('Push event has no data')
+    console.log('❌ Push event has no data - showing fallback notification')
+    event.waitUntil(
+      self.registration.showNotification('Commitment App', {
+        body: 'You have a new notification (no data)',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: 'no-data-fallback',
+        requireInteraction: false,
+        silent: false
+      })
+    )
     return
   }
 
   try {
     const data = event.data.json()
-    console.log('Push data:', data)
+    console.log('📋 Push data parsed:', data)
 
     const title = data.title || 'Commitment App'
+    
+    // iOS-specific notification options (very minimal for compatibility)
     const options = {
       body: data.body || 'New notification',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
-      image: data.image,
-      data: data.data || {},
       tag: data.tag || 'general',
-      renotify: true,
-      requireInteraction: data.requireInteraction || false,
-      actions: generateActions(data),
-      vibrate: [200, 100, 200],
-      timestamp: Date.now(),
       silent: false
     }
+    
+    // Add minimal additional options for non-iOS
+    if (!isIOS) {
+      options.data = data.data || {}
+      options.requireInteraction = false
+      options.vibrate = [200, 100, 200]
+      
+      // Desktop gets more features
+      if (!isMobile) {
+        options.actions = generateActions(data)
+        options.image = data.image
+        options.renotify = true
+        options.timestamp = Date.now()
+      }
+    } else {
+      console.log('🍎 Using minimal iOS notification options')
+    }
 
-    // Show notification with app-specific styling
+    console.log('📱 Showing notification with options:', options)
+
+    // Show notification with mobile-optimized options
     event.waitUntil(
-      self.registration.showNotification(title, options)
+      self.registration.showNotification(title, options).then(() => {
+        console.log('✅ Notification shown successfully')
+      }).catch(error => {
+        console.error('❌ Failed to show notification:', error)
+        // Try simplified fallback
+        return self.registration.showNotification('Commitment App', {
+          body: 'Test notification fallback',
+          icon: '/icon-192.png',
+          tag: 'error-fallback'
+        })
+      })
     )
   } catch (error) {
-    console.error('Error handling push event:', error)
+    console.error('❌ Error handling push event:', error)
     
-    // Fallback notification
+    // Fallback notification with minimal options
     event.waitUntil(
       self.registration.showNotification('Commitment App', {
         body: 'You have a new notification',
         icon: '/icon-192.png',
         badge: '/icon-192.png',
-        tag: 'fallback'
+        tag: 'error-fallback',
+        silent: false
+      }).then(() => {
+        console.log('✅ Fallback notification shown')
+      }).catch(fallbackError => {
+        console.error('❌ Even fallback notification failed:', fallbackError)
       })
     )
   }

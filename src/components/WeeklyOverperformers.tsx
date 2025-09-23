@@ -90,7 +90,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
       
       const { data: logs, error: logsError } = await supabase
         .from('logs')
-        .select('user_id, points, date')
+        .select('user_id, points, date, exercise_id')
         .in('user_id', memberIds)
         .gte('date', startDateStr)
         .lte('date', endDateStr)
@@ -216,15 +216,24 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           const recoveryCapLimit = Math.round(dailyTarget * 0.25)
           
           // Separate recovery and non-recovery exercises
-          const recoveryExercises = ['recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga']
+          const recoveryExercises = [
+            'recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga',
+            'meditation', 'stretching', 'yoga', 'foam rolling', 'blackrolling'
+          ]
           let totalRecoveryPoints = 0
           let totalNonRecoveryPoints = 0
           
           dayLogs.forEach(log => {
             if (recoveryExercises.includes(log.exercise_id)) {
               totalRecoveryPoints += log.points
+              // Debug log for ALL recovery exercises
+              console.log(`WeeklyOverperformers: RECOVERY exercise for ${userStats[userId].member.username} on ${date}: ${log.exercise_id} = ${log.points} points`)
             } else {
               totalNonRecoveryPoints += log.points
+              // Debug log for non-recovery exercises - show ALL for Marius
+              if (userStats[userId].member.username?.toLowerCase() === 'marius' || log.points > 100) {
+                console.log(`WeeklyOverperformers: NON-recovery exercise for ${userStats[userId].member.username} on ${date}: ${log.exercise_id} = ${log.points} points`)
+              }
             }
           })
           

@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { NotificationService } from '@/services/notificationService'
 import { 
   XMarkIcon, 
   PhotoIcon, 
@@ -29,7 +30,6 @@ import { SystemMessageComponent } from './SystemMessageComponent'
 import { WorkoutSummaryPost } from './WorkoutSummaryPost'
 import { SystemMessage } from '@/types/systemMessages'
 import { SystemMessageService } from '@/services/systemMessages'
-import { NotificationService } from '@/services/notificationService'
 
 type ChatMessage = {
   id: string
@@ -721,6 +721,49 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             created_at: data[0].created_at
           } : msg
         ))
+        
+        // Send notifications to other group members
+        try {
+          // Get all users in the group except the sender
+          const { data: groupMembers, error: membersError } = await supabase
+            .from('profiles')
+            .select('id, display_name')
+            .eq('group_id', profile.group_id)
+            .neq('id', user.id) // Exclude the sender
+          
+          if (!membersError && groupMembers && groupMembers.length > 0) {
+            const memberIds = groupMembers.map(member => member.id)
+            const senderName = profile?.display_name || 'Someone'
+            
+            // Create notification title and body
+            const notificationTitle = `${senderName} sent a message`
+            const notificationBody = imageUrl 
+              ? '📷 Sent a photo' 
+              : messageText.length > 50 
+                ? messageText.substring(0, 50) + '...'
+                : messageText
+            
+            // Send notification
+            await NotificationService.sendNotification(
+              memberIds,
+              notificationTitle,
+              notificationBody,
+              {
+                type: 'chat_message',
+                groupId: profile.group_id,
+                senderId: user.id,
+                senderName: senderName,
+                messageId: data[0].id
+              },
+              'chat_messages' // notification preference type
+            )
+            
+            console.log(`📱 Chat notification sent to ${memberIds.length} group members`)
+          }
+        } catch (notificationError) {
+          console.error('Error sending chat notification:', notificationError)
+          // Don't fail the whole operation if notification fails
+        }
       }
 
       console.log('Message sent successfully:', data)

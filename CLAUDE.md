@@ -80,6 +80,39 @@ className="h-16"  // 64px fixed height
 - Handle real-time subscriptions properly
 - Use TypeScript types for schemas
 
+## Push Notifications - CRITICAL FIXES
+
+### Apple Web Push Service VAPID Email Format (FIXED v0.2.26)
+**Problem**: iOS PWA notifications failing with "Received unexpected response code" from Apple Web Push Service
+**Root Cause**: VAPID email format with space after "mailto:" causes Apple to reject authentication with "BadJwtToken" error
+
+**Solution Pattern**:
+```typescript
+// ❌ WRONG - Causes Apple Web Push authentication failure:
+webpush.setVapidDetails(
+  'mailto:' + process.env.VAPID_EMAIL,  // Space can cause "BadJwtToken"
+  publicKey,
+  privateKey
+)
+
+// ✅ CORRECT - Apple-compatible VAPID email format:
+const vapidEmail = (process.env.VAPID_EMAIL || 'admin@commitment-app.com').trim()
+const vapidSubject = `mailto:${vapidEmail}`  // No spaces after mailto:
+webpush.setVapidDetails(vapidSubject, publicKey, privateKey)
+```
+
+**Key Requirements**:
+- **VAPID email MUST be properly formatted**: `mailto:email@domain.com` (no spaces)
+- **Apple Web Push Service is stricter** than Google FCM about VAPID format
+- **Always trim environment variables** to remove whitespace/newlines
+- **Apple notifications require**: TTL: 3600, urgency: 'high', no topic
+
+**Files Fixed**:
+- `src/app/api/notifications/send/route.ts`
+- `src/app/api/notifications/test-apple/route.ts`
+
+**Working Status**: ✅ iOS PWA notifications now working alongside desktop notifications
+
 ## Testing
 ```bash
 npm run test        # Playwright E2E tests

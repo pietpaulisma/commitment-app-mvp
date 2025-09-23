@@ -4,7 +4,7 @@
 const fetch = require('node-fetch')
 
 async function testNotificationAPI() {
-  const API_URL = 'https://commitment-app-8a7h0awx7-pietpaulismas-projects.vercel.app'
+  const API_URL = 'https://commitment-app-e1lkovt6v-pietpaulismas-projects.vercel.app'
   
   console.log('🧪 Testing notification API...')
   console.log(`API URL: ${API_URL}`)

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { NotificationService } from '@/services/notificationService'
 import { 
   SystemMessageTypeConfig, 
   GlobalSystemMessageConfig, 
@@ -283,6 +284,9 @@ export class SystemMessageConfigService {
       })
 
       if (error) throw error
+
+      // Send notification for developer note
+      await this.sendSystemMessageNotification(groupId, 'developer_note', 'Developer Note', content)
 
       return true
     } catch (error) {
@@ -635,10 +639,81 @@ export class SystemMessageConfigService {
 
       if (error) throw error
 
+      // Send notification for weekly challenge
+      await this.sendSystemMessageNotification(groupId, 'weekly_challenge', 'Weekly Challenge', message)
+
       return true
     } catch (error) {
       console.error('Error sending weekly challenge:', error)
       return false
+    }
+  }
+
+  // Helper function to send notifications for system messages
+  private static async sendSystemMessageNotification(
+    groupId: string,
+    messageType: SystemMessageType,
+    title: string,
+    content: string
+  ): Promise<void> {
+    try {
+      // Get all users in the group
+      const { data: groupMembers, error: membersError } = await supabase
+        .from('profiles')
+        .select('id, display_name')
+        .eq('group_id', groupId)
+      
+      if (membersError || !groupMembers || groupMembers.length === 0) {
+        console.log('No group members found for system message notification')
+        return
+      }
+
+      const memberIds = groupMembers.map(member => member.id)
+      
+      // Get group name for notification
+      const { data: group } = await supabase
+        .from('groups')
+        .select('name')
+        .eq('id', groupId)
+        .single()
+
+      const groupName = group?.name || 'Your Group'
+      
+      // Create notification based on message type
+      let notificationTitle = `📢 ${title}`
+      let notificationBody = content.length > 80 
+        ? content.substring(0, 80) + '...'
+        : content
+      
+      // Customize notification based on message type
+      if (messageType === 'daily_summary') {
+        notificationTitle = `📊 Daily Summary - ${groupName}`
+      } else if (messageType === 'weekly_challenge') {
+        notificationTitle = `🏆 Weekly Challenge - ${groupName}`
+      } else if (messageType === 'developer_note') {
+        notificationTitle = `💬 Developer Update - ${groupName}`
+      } else if (messageType === 'milestone_celebration') {
+        notificationTitle = `🎉 Milestone Achieved - ${groupName}`
+      }
+
+      // Send notification (using 'group_achievements' as the preference type since we're removing it anyway)
+      await NotificationService.sendNotification(
+        memberIds,
+        notificationTitle,
+        notificationBody,
+        {
+          type: 'system_message',
+          messageType: messageType,
+          groupId: groupId,
+          groupName: groupName
+        },
+        'system_messages'
+      )
+      
+      console.log(`📱 System message notification sent to ${memberIds.length} group members`)
+    } catch (notificationError) {
+      console.error('Error sending system message notification:', notificationError)
+      // Don't fail the system message if notification fails
     }
   }
 }

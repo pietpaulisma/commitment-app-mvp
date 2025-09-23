@@ -24,7 +24,7 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     chat_messages: true,
     workout_completions: true,
-    group_achievements: true,
+    system_messages: true,
     quiet_hours_enabled: false,
     quiet_hours_start: '22:00',
     quiet_hours_end: '08:00'
@@ -34,6 +34,7 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>('default')
   const [error, setError] = useState<string | null>(null)
+  const [testingNotification, setTestingNotification] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -82,17 +83,25 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
     try {
       setSaving(true)
       setError(null)
+      console.log('🔄 Starting notification enable process...')
 
       const subscription = await NotificationService.subscribe(user.id)
       if (subscription) {
         setIsSubscribed(true)
         setPermissionStatus('granted')
+        console.log('✅ UI state updated: notifications enabled')
+        
+        // Force a small delay to ensure state is updated
+        await new Promise(resolve => setTimeout(resolve, 100))
+      } else {
+        throw new Error('Failed to create subscription')
       }
     } catch (error) {
-      console.error('Error enabling notifications:', error)
-      setError('Failed to enable notifications. Please check your browser settings.')
+      console.error('❌ Error enabling notifications:', error)
+      setError(`Failed to enable notifications: ${error instanceof Error ? error.message : error}`)
     } finally {
       setSaving(false)
+      console.log('🔄 Enable process completed, saving state reset')
     }
   }
 
@@ -152,6 +161,69 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
       setError('Failed to save preferences')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleTestNotification = async () => {
+    if (!user || !isSubscribed) return
+
+    try {
+      setTestingNotification(true)
+      setError(null)
+      console.log('🧪 Sending test notification...')
+
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userIds: [user.id],
+          title: '🧪 Test Notification',
+          body: 'This is a test notification! If you see this, push notifications are working correctly.',
+          data: {
+            type: 'test',
+            timestamp: Date.now()
+          }
+        })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to send test notification: ${response.status} ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Test notification result:', result)
+
+      if (result.sent > 0) {
+        // Show success feedback
+        const successDiv = document.createElement('div')
+        successDiv.className = 'fixed top-4 right-4 bg-green-600 text-white p-4 rounded-lg z-50 shadow-lg'
+        successDiv.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="text-2xl">✅</div>
+            <div>
+              <div class="font-medium">Test notification sent!</div>
+              <div class="text-sm opacity-90">Check if it appeared on your device</div>
+            </div>
+          </div>
+        `
+        document.body.appendChild(successDiv)
+        
+        setTimeout(() => {
+          if (document.body.contains(successDiv)) {
+            document.body.removeChild(successDiv)
+          }
+        }, 5000)
+      } else {
+        throw new Error('No notifications were sent - check console for details')
+      }
+    } catch (error) {
+      console.error('❌ Error sending test notification:', error)
+      setError(`Failed to send test notification: ${error instanceof Error ? error.message : error}`)
+    } finally {
+      setTestingNotification(false)
     }
   }
 
@@ -236,14 +308,24 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
             {saving ? 'Enabling...' : 'Enable Notifications'}
           </Button>
         ) : (
-          <Button
-            onClick={handleDisableNotifications}
-            disabled={saving}
-            variant="outline"
-            className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
-          >
-            {saving ? 'Disabling...' : 'Disable Notifications'}
-          </Button>
+          <div className="space-y-3">
+            <Button
+              onClick={handleDisableNotifications}
+              disabled={saving}
+              variant="outline"
+              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              {saving ? 'Disabling...' : 'Disable Notifications'}
+            </Button>
+            
+            <Button
+              onClick={handleTestNotification}
+              disabled={testingNotification || saving}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {testingNotification ? 'Sending Test...' : '🧪 Send Test Notification'}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -292,20 +374,20 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
             </label>
           </div>
 
-          {/* Group Achievements */}
+          {/* System Messages */}
           <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
             <div className="flex items-center gap-3">
               <StarIcon className="w-5 h-5 text-purple-400" />
               <div>
-                <p className="font-medium text-white">Group Achievements</p>
-                <p className="text-xs text-gray-400">Milestones and group goals</p>
+                <p className="font-medium text-white">System Messages</p>
+                <p className="text-xs text-gray-400">Daily summaries, challenges, and updates</p>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={preferences.group_achievements}
-                onChange={(e) => handlePreferenceChange('group_achievements', e.target.checked)}
+                checked={preferences.system_messages}
+                onChange={(e) => handlePreferenceChange('system_messages', e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>

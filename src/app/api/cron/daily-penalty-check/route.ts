@@ -122,7 +122,10 @@ export async function GET(request: NextRequest) {
         let totalRecoveryPoints = 0
         let totalNonRecoveryPoints = 0
         
-        const recoveryExercises = ['recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga']
+        const recoveryExercises = [
+          'recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga',
+          'meditation', 'stretching', 'yoga', 'foam rolling', 'blackrolling'
+        ]
         
         yesterdayLogs?.forEach(log => {
           if (recoveryExercises.includes(log.exercise_id)) {
