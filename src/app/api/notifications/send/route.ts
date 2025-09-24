@@ -91,9 +91,9 @@ export async function POST(request: NextRequest) {
 
     // Verify authentication (could be cron secret or user auth)
     const authHeader = request.headers.get('authorization')
-    const body = await request.json()
+    const requestBody = await request.json()
     
-    const { userIds, title, body: notificationBody, data } = body
+    const { userIds, title, body: notificationBody, data } = requestBody
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json({ error: 'Invalid userIds provided' }, { status: 400 })

@@ -1,8 +1,8 @@
-const CACHE_NAME = 'commitment-app-v14-ios-notifications'
-const STATIC_CACHE = 'commitment-static-v14-ios-notifications'
-const RUNTIME_CACHE = 'commitment-runtime-v14-ios-notifications'
+const CACHE_NAME = 'commitment-app-v15-notification-fix'
+const STATIC_CACHE = 'commitment-static-v15-notification-fix'
+const RUNTIME_CACHE = 'commitment-runtime-v15-notification-fix'
 
-console.log('🔧 Service Worker v14 - iOS Notifications Debug - Loading...')
+console.log('🔧 Service Worker v15 - Notification Fix - Loading...')
 
 const urlsToCache = [
   '/',
