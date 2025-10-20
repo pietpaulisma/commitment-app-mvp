@@ -727,13 +727,13 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           // Get all users in the group except the sender
           const { data: groupMembers, error: membersError } = await supabase
             .from('profiles')
-            .select('id, display_name')
+            .select('id, username')
             .eq('group_id', profile.group_id)
             .neq('id', user.id) // Exclude the sender
-          
+
           if (!membersError && groupMembers && groupMembers.length > 0) {
             const memberIds = groupMembers.map(member => member.id)
-            const senderName = profile?.display_name || 'Someone'
+            const senderName = profile?.username || 'Someone'
             
             // Create notification title and body
             const notificationTitle = `${senderName} sent a message`
