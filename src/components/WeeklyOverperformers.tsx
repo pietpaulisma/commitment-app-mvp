@@ -466,10 +466,11 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
   const maxOverperformance = Math.max(...overperformers.map(p => p.overperformance_points))
 
   return (
-    <div 
-      className={`bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl p-3 ${className}`}
+    <div
+      className={`bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl p-3 flex flex-col ${className}`}
       style={{
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
+        aspectRatio: '1 / 2'
       }}
     >
       <div className="flex items-center mb-2">
@@ -479,7 +480,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         </h3>
       </div>
 
-      <div className="space-y-1">
+      <div className="flex-1 overflow-y-auto space-y-1 pr-1" style={{ maxHeight: 'calc(100% - 3rem)' }}>
         {overperformers.map((performer, index) => {
           const rank = index + 1
           const isCurrentUser = performer.id === user?.id
@@ -529,9 +530,6 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
                   }`}>
                     +{performer.overperformance_points}
                   </div>
-                  <div className="text-xs text-white/50">
-                    this week
-                  </div>
                 </div>
               </div>
             </div>
@@ -542,7 +540,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
       {overperformers.length > 0 && (
         <div className="mt-2 pt-2 border-t border-white/10">
           <p className="text-xs text-white/60 text-center">
-            Total extra points this week • Resets Monday morning at 00:00
+            Points beyond sane • Resets Monday
           </p>
         </div>
       )}

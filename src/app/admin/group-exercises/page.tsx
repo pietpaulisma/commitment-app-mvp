@@ -161,30 +161,37 @@ export default function GroupExercisesPage() {
     : []
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-black text-white">
+      {/* Safe area wrapper */}
+      <div className="fixed inset-0 flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-black">
           <div>
-            <h1 className="text-3xl font-bold text-white">MANAGE GROUP EXERCISES</h1>
-            <p className="text-gray-400 mt-1">Assign exercises to groups</p>
+            <h1 className="text-lg font-bold text-white">Group Exercises</h1>
+            <p className="text-sm text-gray-400">Assign exercises to groups</p>
           </div>
           <button
             onClick={() => router.push('/profile')}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 font-semibold transition-colors border border-gray-600"
+            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-800 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Close"
           >
-            Back to Profile
+            <span className="text-2xl leading-none">×</span>
           </button>
         </div>
 
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-4">
+        <div className="max-w-6xl mx-auto">
+
         {/* Group Selection */}
-        <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            SELECT GROUP
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-400 mb-2 uppercase tracking-wide">
+            Select Group
           </label>
           <select
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
-            className="w-full max-w-md px-3 py-2 border border-gray-600 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full max-w-md px-4 py-3 rounded-lg border border-gray-700 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">Choose a group...</option>
             {groups.map(group => (
@@ -198,77 +205,91 @@ export default function GroupExercisesPage() {
         {selectedGroup && (
           <>
             {/* Quick Actions */}
-            <div className="mb-6">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
               <button
                 onClick={() => assignAllExercisesToGroup(selectedGroup)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 mr-4 font-semibold transition-colors border border-green-500"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors border border-green-500"
               >
-                Assign All Exercises to Group
+                Assign All Exercises
               </button>
               <span className="text-gray-400 text-sm">
                 {selectedGroupExercises.length} of {exercises.length} exercises assigned
               </span>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8">
+            <div className="grid lg:grid-cols-2 gap-6">
               {/* Assigned Exercises */}
               <div>
-                <h2 className="text-xl font-semibold mb-4 text-green-400">
-                  ASSIGNED EXERCISES ({selectedGroupExercises.length})
+                <h2 className="text-lg font-semibold mb-3 text-green-400 flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+                  Assigned Exercises ({selectedGroupExercises.length})
                 </h2>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
                   {selectedGroupExercises.map(exercise => (
                     <div
                       key={exercise.id}
-                      className="bg-green-900/30 border border-green-600 p-3 flex items-center justify-between"
+                      className="bg-green-900/20 border border-green-700/50 p-4 rounded-lg flex items-center justify-between hover:bg-green-900/30 transition-colors"
                     >
-                      <div>
-                        <div className="font-medium">{exercise.name}</div>
-                        <div className="text-sm text-gray-400">
-                          {exercise.type} • {exercise.points_per_unit} pts/{exercise.unit}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-white">{exercise.name}</div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {exercise.type || 'regular'} • {exercise.points_per_unit} pts/{exercise.unit}
                         </div>
                       </div>
                       <button
                         onClick={() => toggleExerciseAssignment(exercise.id, selectedGroup)}
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm font-semibold transition-colors border border-red-500"
+                        className="ml-3 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-sm rounded font-medium transition-colors border border-red-500"
                       >
                         Remove
                       </button>
                     </div>
                   ))}
+                  {selectedGroupExercises.length === 0 && (
+                    <div className="text-center py-8 text-gray-400">
+                      No exercises assigned yet
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Available Exercises */}
               <div>
-                <h2 className="text-xl font-semibold mb-4 text-blue-400">
-                  AVAILABLE EXERCISES ({availableExercises.length})
+                <h2 className="text-lg font-semibold mb-3 text-blue-400 flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                  Available Exercises ({availableExercises.length})
                 </h2>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
                   {availableExercises.map(exercise => (
                     <div
                       key={exercise.id}
-                      className="bg-gray-800 border border-gray-600 p-3 flex items-center justify-between"
+                      className="bg-gray-900 border border-gray-700 p-4 rounded-lg flex items-center justify-between hover:bg-gray-800/50 transition-colors"
                     >
-                      <div>
-                        <div className="font-medium">{exercise.name}</div>
-                        <div className="text-sm text-gray-400">
-                          {exercise.type} • {exercise.points_per_unit} pts/{exercise.unit}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-white">{exercise.name}</div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {exercise.type || 'regular'} • {exercise.points_per_unit} pts/{exercise.unit}
                         </div>
                       </div>
                       <button
                         onClick={() => toggleExerciseAssignment(exercise.id, selectedGroup)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-sm font-semibold transition-colors border border-green-500"
+                        className="ml-3 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 text-sm rounded font-medium transition-colors border border-green-500"
                       >
                         Assign
                       </button>
                     </div>
                   ))}
+                  {availableExercises.length === 0 && (
+                    <div className="text-center py-8 text-gray-400">
+                      All exercises assigned
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </>
         )}
+        </div>
+        </div>
       </div>
     </div>
   )

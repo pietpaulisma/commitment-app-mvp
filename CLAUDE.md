@@ -8,20 +8,42 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
 **Tech Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS, Supabase, Radix UI
 
 ## Critical Deployment Rules
-- **NEVER DEPLOY TO PRODUCTION** without explicit user permission
-- **ALWAYS DEPLOY TO DEV ONLY**: commitment-app-dev.vercel.app
-- **PRODUCTION IS**: commitment-app-mvp.vercel.app (HANDS OFF!)
+
+### ⚠️ DEPLOYMENT SCRIPTS - MANDATORY USAGE
+- **ALWAYS use `./deploy-dev.sh` for ALL deployments**
+- **NEVER use `vercel` commands directly** - they can deploy to the wrong environment
+- **Production deployments**: ONLY via `./deploy-mvp.sh` AND requires explicit user permission
+- The deployment scripts automatically handle:
+  - Linking to the correct Vercel project
+  - Building the application
+  - Deploying to the correct environment
+  - Preventing accidental production deploys
+
+### Environment Details
+- **DEV**: commitment-app-dev.vercel.app (default for all work)
+- **PRODUCTION**: commitment-app-mvp.vercel.app (HANDS OFF unless explicitly requested!)
 - **DEV PROJECT NAME**: commitment-app-dev
 - **PRODUCTION PROJECT NAME**: commitment-app-mvp
-- Use `vercel link --project=commitment-app-dev --scope=pietpaulismas-projects` to link to dev
-- Before any deployment, ALWAYS confirm the target URL with the user first
-- Local development disabled - all changes must be deployed to test
+- Local development disabled - all changes must be deployed to dev to test
+- **Git Pre-Commit Hook**: A pre-commit hook is installed at `.git/hooks/pre-commit` that prevents accidental commits to `main` branch without explicit confirmation. See `.git/hooks/README.md` for details.
 
-## Cron Jobs (Production Only)
-- **Vercel Cron Jobs**: Only execute on production deployments (commitment-app-mvp)
-- **Dev Environment**: No automatic cron execution - use manual admin buttons for testing
-- **Current Setup**: 2/2 cron jobs on Hobby plan (daily-summary at 08:00 UTC, penalty-check at 00:01 UTC)
-- **Manual Controls**: "Send Yesterday's Summary" and other admin buttons available for development and emergency use
+### Deployment Process
+1. Make code changes
+2. Run `./deploy-dev.sh` to deploy to dev
+3. Test on commitment-app-dev.vercel.app
+4. ONLY if user explicitly requests production: Run `./deploy-mvp.sh` (requires confirmation prompt)
+
+## Penalty System - Manual Operation
+- **Cron Jobs DISABLED**: Automatic cron jobs never worked reliably and have been disabled
+- **Manual Penalty Check**: Admin must run "Run Penalty Check" button in Settings every day
+- **Button Location**: Settings/Profile menu → "Run Penalty Check" (orange button at bottom)
+- **What it does**:
+  - Checks all members for yesterday's target completion
+  - Creates pending penalties for those who missed targets
+  - Auto-accepts expired penalties (24h deadline passed)
+  - Posts daily summary to group chat
+  - Handles sick mode, rest days, and flex rest days
+- **Cron API routes**: Still exist in `src/app/api/cron/` but are not triggered automatically
 
 ## Key File Locations
 

@@ -8,5 +8,6 @@
       "dev": true,
       "main": true
     }
-  }
+  },
+  "crons": []
 }
