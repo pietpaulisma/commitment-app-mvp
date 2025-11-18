@@ -143,6 +143,8 @@ npm run lint        # Code quality check
 ```
 
 ## Development Workflow
+
+### Dev Branch Workflow
 1. Create feature branch from `dev`
 2. **MANDATORY VERSION BUMP**: Before every dev deployment, increment version in `package.json`
    - Bug fixes: `0.1.2` → `0.1.3` (patch)
@@ -152,7 +154,61 @@ npm run lint        # Code quality check
 4. Deploy and test on commitment-app-dev.vercel.app
 5. **PWA Testing**: Always test in actual PWA mode (add to home screen), not just responsive browser
 6. **Cache Issues**: Bump service worker cache version (sw.js) if layout changes don't appear in PWA
-7. Never push to live unless specifically instructed
+7. As you work, update `CHANGELOG.md` "Unreleased" section with your changes
+8. Never push to live unless specifically instructed
+
+### Production Release Workflow
+
+**IMPORTANT**: CHANGELOG.md tracks PRODUCTION RELEASES ONLY (not every dev version)
+
+When ready to deploy to production:
+
+1. **Prepare Release** - Run the helper script:
+   ```bash
+   ./prepare-release.sh
+   ```
+   This script will:
+   - Verify you're on the correct branch
+   - Show current version and unreleased changes
+   - Update CHANGELOG.md (move "Unreleased" to versioned section with date)
+   - Create git tag for the release
+   - Show next steps
+
+2. **Review and Push**:
+   ```bash
+   git show HEAD                    # Review the changelog commit
+   git push origin dev              # Push to dev branch
+   git push origin v0.x.x           # Push the version tag
+   ```
+
+3. **Deploy to Production**:
+   ```bash
+   git checkout main
+   git merge dev
+   git push origin main
+   ./deploy-mvp.sh                  # Requires confirmation prompt
+   ```
+
+4. **Start Next Version**:
+   ```bash
+   git checkout dev
+   # Update version in package.json to next version
+   # Start adding changes to CHANGELOG.md "Unreleased" section
+   ```
+
+### CHANGELOG.md Guidelines
+
+- **Update during development**: Add changes to "Unreleased" section as you work
+- **Categories**:
+  - **Added**: New features
+  - **Changed**: Changes to existing functionality
+  - **Fixed**: Bug fixes
+  - **Removed**: Removed features
+  - **Security**: Security fixes
+  - **Technical**: Internal improvements (optional)
+- **Be specific**: Write clear, user-friendly descriptions
+- **Think stakeholders**: Changelog is for sharing with non-technical users
+- **Only production**: Don't document every dev version, only what goes live
 
 ## Version Tracking
 - **Version Display**: Located at bottom of Settings/Profile screen

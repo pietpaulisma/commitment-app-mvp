@@ -1,0 +1,78 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Seasonal champions widget now calculates winners on-demand from logs table
+- Weekly overperformers automatically display without manual intervention
+
+### Changed
+- Removed dependency on `weekly_overperformer_history` table for seasonal champions
+- Removed dependency on "Run Penalty Check" button for weekly winner calculation
+- SeasonalChampionsWidget and SeasonalChampionsHistoryModal now query logs directly
+
+### Technical
+- Real-time calculation of weekly winners based on completed weeks
+- No cron jobs or manual triggers needed for weekly overperformers
+
+---
+
+## [0.2.53] - 2024-11-XX (In Production)
+
+### Added
+- Deployment safety system with `deploy-dev.sh` and `deploy-mvp.sh` scripts
+- Production deployment confirmation prompt to prevent accidents
+- Git pre-commit hook to prevent accidental commits to main branch
+
+### Fixed
+- Duplicate entries in Yesterday's Recap (deduplication by user_id)
+- Duplicate entries in daily summary system messages
+- "Hours to respond" removed from system messages (not live-updated)
+- "Money added" section removed from system messages (money added on accept, not creation)
+
+### Changed
+- Weekly Overperformers: Removed "this week" text for more compact display
+- Weekly Overperformers: Shortened footer to "Points beyond sane • Resets Monday"
+- Yesterday's Recap: Added separate "Sick Mode" section
+- Yesterday's Recap: Removed count numbers from section headers
+- Dashboard: Show "Sick Mode" instead of percentage when user toggles sick mode
+
+---
+
+## Release History (Pre-Changelog)
+
+The following releases were deployed before this changelog was established:
+
+- **v0.2.26** - Fixed Apple Web Push Service VAPID email format for iOS PWA notifications
+- **v0.1.6** - Fixed PWA header height issues (removed double safe-area handling)
+- Earlier versions - Push notification system, penalty system, workout tracking, etc.
+
+---
+
+## How to Use This Changelog
+
+**For Developers:**
+- Before deploying to production, move changes from "Unreleased" to a new version section
+- Include the deployment date
+- Update version in `package.json` to match
+- Create a git tag for the release (e.g., `git tag v0.4.21`)
+
+**For Stakeholders:**
+- Check the latest version number to see what's currently in production
+- "Unreleased" section shows what's coming in the next release
+- Each version lists all changes in that production deployment
+
+**Categories:**
+- **Added**: New features
+- **Changed**: Changes to existing functionality
+- **Fixed**: Bug fixes
+- **Removed**: Removed features
+- **Security**: Security fixes
+- **Technical**: Internal improvements (optional, for developer context)
