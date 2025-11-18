@@ -9,9 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No unreleased changes yet.
+
+---
+
+## [0.4.21] - 2025-11-18
+
 ### Added
 - Seasonal champions widget now calculates winners on-demand from logs table
 - Weekly overperformers automatically display without manual intervention
+- Production release tracking system (CHANGELOG.md)
+- Release preparation helper script (prepare-release.sh)
 
 ### Changed
 - Removed dependency on `weekly_overperformer_history` table for seasonal champions
@@ -21,10 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical
 - Real-time calculation of weekly winners based on completed weeks
 - No cron jobs or manual triggers needed for weekly overperformers
+- Automated release workflow with git tagging
 
 ---
 
-## [0.2.53] - 2024-11-XX (In Production)
+## [0.2.53] - 2024-11-XX
 
 ### Added
 - Deployment safety system with `deploy-dev.sh` and `deploy-mvp.sh` scripts
