@@ -29,12 +29,13 @@ export async function GET(request: NextRequest) {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select(`
-        id, 
-        username, 
-        email, 
-        group_id, 
+        id,
+        username,
+        email,
+        group_id,
         week_mode,
         is_sick_mode,
+        flex_rest_day_enabled,
         total_penalty_owed,
         last_penalty_check,
         groups!inner(
@@ -95,14 +96,65 @@ export async function GET(request: NextRequest) {
         const isRestDay = dayOfWeek === group.rest_day_1 || dayOfWeek === group.rest_day_2
 
         if (isRestDay) {
+          // Check if user qualifies for Flex Rest Day
+          if (profile.flex_rest_day_enabled) {
+            // Get the day before rest day (e.g., Monday if Tuesday is rest day)
+            const dayBeforeRestDay = new Date(yesterday)
+            dayBeforeRestDay.setDate(dayBeforeRestDay.getDate() - 1)
+            const dayBeforeRestDayStr = dayBeforeRestDay.toISOString().split('T')[0]
+
+            // Get points from the day before rest day
+            const { data: previousDayLogs } = await supabase
+              .from('logs')
+              .select('points')
+              .eq('user_id', profile.id)
+              .eq('date', dayBeforeRestDayStr)
+
+            const previousDayPoints = previousDayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+
+            // Calculate target for the day before rest day
+            const groupStartDate = new Date(group.start_date)
+            const daysSinceStart = Math.floor((dayBeforeRestDay.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
+            const dayOfWeekForTarget = dayBeforeRestDay.getDay()
+
+            const previousDayTarget = calculateDailyTarget({
+              daysSinceStart,
+              weekMode: profile.week_mode || 'sane',
+              restDays: [group.rest_day_1, group.rest_day_2].filter(day => day !== null),
+              recoveryDays: [5],
+              currentDayOfWeek: dayOfWeekForTarget
+            })
+
+            // Check if user earned 2x the target
+            const flexRestDayQualified = previousDayPoints >= (previousDayTarget * 2)
+
+            if (flexRestDayQualified) {
+              console.log(`${profile.username}: Flex Rest Day activated! (${previousDayPoints} points earned, ${previousDayTarget * 2} needed)`)
+
+              // Send notification about Flex Rest Day activation
+              // TODO: Add push notification here
+
+              // Update last penalty check without issuing penalty
+              await supabase
+                .from('profiles')
+                .update({ last_penalty_check: yesterdayStr })
+                .eq('id', profile.id)
+
+              continue
+            } else {
+              console.log(`${profile.username}: Flex Rest Day not qualified (${previousDayPoints} points, needed ${previousDayTarget * 2})`)
+              // Fall through to check if regular rest day applies
+            }
+          }
+
           console.log(`${profile.username}: Skipping penalty - rest day`)
-          
+
           // Update last penalty check without issuing penalty
           await supabase
             .from('profiles')
             .update({ last_penalty_check: yesterdayStr })
             .eq('id', profile.id)
-            
+
           continue
         }
 

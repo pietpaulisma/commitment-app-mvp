@@ -13,6 +13,8 @@ import { useWeekMode } from '@/contexts/WeekModeContext'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import PenaltyNotificationModal, { usePenaltyNotification } from './PenaltyNotificationModal'
 import WeeklyOverperformers from './WeeklyOverperformers'
+import { DailyRecapWidget } from './DailyRecapWidget'
+import { PenaltyAutoChecker } from './PenaltyAutoChecker'
 
 // Helper function to get motivational messages - 4 quotes per hour that cycle
 const getHourlyMessage = (hour: number): { quote: string, author: string } => {
@@ -1601,7 +1603,7 @@ export default function RectangularDashboard() {
       // Get all group members including their individual week_mode and last_seen for online status
       const { data: allMembers, error: membersError } = await supabase
         .from('profiles')
-        .select('id, email, username, personal_color, created_at, week_mode, last_seen')
+        .select('id, email, username, personal_color, created_at, week_mode, last_seen, is_sick_mode')
         .eq('group_id', profile.group_id)
 
       if (membersError) {
@@ -2797,10 +2799,10 @@ export default function RectangularDashboard() {
                             {/* Percentage text positioned lower with bigger font - NO PULSING */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-1">
                               <span className="text-white font-black text-xl leading-tight">
-                                {member.is_sick_mode ? 'SICK' : `${progressPercentage}%`}
+                                {member.is_sick_mode ? 'Sick' : `${progressPercentage}%`}
                               </span>
                               <span className="text-white/50 text-xs font-light tracking-wide">
-                                {member.is_sick_mode ? 'mode' : (member.week_mode || 'insane')}
+                                {member.is_sick_mode ? 'Mode' : (member.week_mode || 'insane')}
                               </span>
                             </div>
                           </div>
@@ -3004,10 +3006,22 @@ export default function RectangularDashboard() {
               </div>
             </div>
 
-            {/* Weekly Overperformers */}
-            <div className="mx-1 mb-1">
+            {/* Weekly Overperformers & Daily Recap - Side by Side */}
+            <div className="mx-1 mb-1 grid grid-cols-2 gap-1">
               <WeeklyOverperformers />
+              {profile?.group_id && (
+                <DailyRecapWidget
+                  isAdmin={profile.role === 'group_admin' || profile.role === 'supreme_admin'}
+                  groupId={profile.group_id}
+                  userId={profile.id}
+                />
+              )}
             </div>
+
+            {/* Penalty Auto Checker - runs on page load */}
+            {user && profile && (
+              <PenaltyAutoChecker userId={profile.id} />
+            )}
 
             {/* Workout Times - Full width block */}
             <div className="relative">

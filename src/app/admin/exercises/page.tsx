@@ -8,6 +8,7 @@ import ExerciseForm from '@/components/ExerciseForm'
 import TimeGradient from '@/components/TimeGradient'
 import { useExercises } from '@/hooks/useExercises'
 import { supabase } from '@/lib/supabase'
+import { PencilIcon, TrashIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 type Exercise = {
   id: string
@@ -83,34 +84,36 @@ export default function ExerciseManagementPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Time-based gradient background with increased intensity */}
-      <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" intensity={1.2} />
-      
-      <div className="fixed inset-0 bg-black/80 z-50 flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-black">
-        <div>
-          <h1 className="text-lg font-bold text-white">EXERCISE MANAGEMENT</h1>
-          <p className="text-sm text-gray-400">Manage exercises</p>
+      {/* Time-based gradient background */}
+      <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" intensity={0.6} />
+
+      <div className="fixed inset-0 bg-black/60 z-50 flex flex-col backdrop-blur-sm">
+      {/* Header with safe area padding */}
+      <div className="sticky top-0 bg-gradient-to-b from-black/90 to-black/70 border-b border-white/10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="flex justify-between items-center px-4 py-3">
+          <div>
+            <h1 className="text-xl font-bold text-white">Exercises</h1>
+            <p className="text-xs text-gray-400">Manage workout library</p>
+          </div>
+          <button
+            onClick={() => router.push('/profile')}
+            className="text-gray-400 hover:text-white transition-all p-2 hover:bg-white/10 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center backdrop-blur-sm"
+            aria-label="Close"
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
         </div>
-        <button
-          onClick={() => router.push('/profile')}
-          className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700"
-        >
-          <span className="text-2xl">×</span>
-        </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4">
-        <div className="mb-4">
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="w-full bg-green-600 text-white py-3 hover:bg-green-500 font-semibold transition-colors border border-green-500"
-          >
-            + Add Exercise
-          </button>
-        </div>
+      <div className="flex-1 overflow-auto px-4 py-3">
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2.5 rounded-xl font-medium transition-all hover:shadow-lg hover:shadow-green-500/20 border border-green-500/20 flex items-center justify-center gap-2 mb-4"
+        >
+          <PlusIcon className="w-5 h-5" />
+          Add Exercise
+        </button>
 
         {loading ? (
           <div className="text-center py-8">
@@ -118,68 +121,53 @@ export default function ExerciseManagementPage() {
             <p className="mt-2 text-gray-400">Loading exercises...</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-white mb-4">ALL EXERCISES ({exercises.length})</h3>
-            
-            {exercises.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-400">No exercises found</p>
-              </div>
-            ) : (
-              <>
-              {exercises.map((exercise) => (
-                <div key={exercise.id} className="bg-gray-900 border border-gray-700 p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h4 className="text-white font-semibold">{exercise.name}</h4>
-                      <p className="text-xs text-gray-400">ID: {exercise.id}</p>
-                    </div>
-                    <span className={`px-2 py-1 text-xs font-bold border ${exercise.type === 'recovery' ? 'bg-blue-600 text-white border-blue-500' : 'bg-gray-700 text-gray-300 border-gray-600'}`}>
-                      {exercise.type}
-                    </span>
+          <div className="space-y-4">
+            {/* Regular Exercises */}
+            {(() => {
+              const regularExercises = exercises.filter(ex => ex.type !== 'recovery' && ex.type !== 'sport')
+              return regularExercises.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 shadow-lg shadow-blue-500/50"></div>
+                    <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wide">Regular ({regularExercises.length})</h3>
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
-                    <div>
-                      <span className="text-gray-400">Unit:</span>
-                      <span className="text-gray-300 ml-1">{exercise.unit}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Points:</span>
-                      <span className="text-green-400 font-bold ml-1">{exercise.points_per_unit}</span>
-                    </div>
-                  </div>
-
-                  {(exercise.is_weighted || exercise.is_time_based || exercise.supports_decreased) && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {exercise.is_weighted && <span className="text-xs bg-yellow-600 text-white px-2 py-1 border border-yellow-500">Weighted</span>}
-                      {exercise.is_time_based && <span className="text-xs bg-purple-600 text-white px-2 py-1 border border-purple-500">Time-based</span>}
-                      {exercise.supports_decreased && <span className="text-xs bg-orange-600 text-white px-2 py-1 border border-orange-500">Decreasing sets</span>}
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditingExercise(exercise)}
-                      className="flex-1 bg-blue-600 text-white py-2 hover:bg-blue-500 transition-colors border border-blue-500 font-semibold"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteExercise(exercise.id)}
-                      className="flex-1 bg-red-600 text-white py-2 hover:bg-red-500 transition-colors border border-red-500 font-semibold"
-                    >
-                      Delete
-                    </button>
+                  <div className="space-y-2">
+                    {regularExercises.map((exercise) => (
+                      <ExerciseCard key={exercise.id} exercise={exercise} onEdit={setEditingExercise} onDelete={deleteExercise} />
+                    ))}
                   </div>
                 </div>
-              ))}
-              </>
+              )
+            })()}
+
+            {/* Recovery Exercises */}
+            {(() => {
+              const recoveryExercises = exercises.filter(ex => ex.type === 'recovery')
+              return recoveryExercises.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-400 shadow-lg shadow-green-500/50"></div>
+                    <h3 className="text-sm font-semibold text-white/90 uppercase tracking-wide">Recovery ({recoveryExercises.length})</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {recoveryExercises.map((exercise) => (
+                      <ExerciseCard key={exercise.id} exercise={exercise} onEdit={setEditingExercise} onDelete={deleteExercise} />
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
+
+            {exercises.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-400 text-sm">No exercises found</p>
+              </div>
             )}
           </div>
         )}
       </div>
-      
+
       {/* Add/Edit Exercise Modal */}
       <ExerciseForm
         exercise={editingExercise}
@@ -197,4 +185,79 @@ export default function ExerciseManagementPage() {
       </div>
     </div>
   );
+}
+
+// Exercise Card Component - condensed with gradients
+function ExerciseCard({
+  exercise,
+  onEdit,
+  onDelete
+}: {
+  exercise: Exercise
+  onEdit: (exercise: Exercise) => void
+  onDelete: (id: string) => void
+}) {
+  const getTypeGradient = () => {
+    if (exercise.type === 'recovery') return 'from-green-600/10 to-emerald-600/5 border-green-500/20'
+    if (exercise.type === 'sport') return 'from-purple-600/10 to-violet-600/5 border-purple-500/20'
+    return 'from-blue-600/10 to-blue-500/5 border-blue-500/20'
+  }
+
+  const getTypeBadge = () => {
+    if (exercise.type === 'recovery') return 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
+    if (exercise.type === 'sport') return 'bg-gradient-to-r from-purple-600 to-violet-600 text-white'
+    return 'bg-gradient-to-r from-blue-600 to-blue-500 text-white'
+  }
+
+  return (
+    <div className={`bg-gradient-to-br ${getTypeGradient()} border backdrop-blur-sm rounded-2xl overflow-hidden`}>
+      <div className="p-3">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-white font-semibold text-sm truncate">{exercise.name}</h4>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-gray-400">{exercise.unit}</span>
+              <span className="text-[10px] text-green-400 font-semibold">{exercise.points_per_unit} pts</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => onEdit(exercise)}
+              className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all active:scale-95"
+              aria-label="Edit"
+            >
+              <PencilIcon className="w-4 h-4 text-blue-400" />
+            </button>
+            <button
+              onClick={() => onDelete(exercise.id)}
+              className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all active:scale-95"
+              aria-label="Delete"
+            >
+              <TrashIcon className="w-4 h-4 text-red-400" />
+            </button>
+          </div>
+        </div>
+
+        {(exercise.is_weighted || exercise.is_time_based || exercise.supports_decreased) && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {exercise.is_weighted && (
+              <span className="text-[10px] bg-yellow-500/10 text-yellow-300 px-1.5 py-0.5 rounded border border-yellow-500/20">
+                ⚖️
+              </span>
+            )}
+            {exercise.is_time_based && (
+              <span className="text-[10px] bg-purple-500/10 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/20">
+                ⏱️
+              </span>
+            )}
+            {exercise.supports_decreased && (
+              <span className="text-[10px] bg-orange-500/10 text-orange-300 px-1.5 py-0.5 rounded border border-orange-500/20">
+                📉
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

@@ -71,14 +71,23 @@ export default function GroupAdminDashboard() {
   const [editingPot, setEditingPot] = useState<string | null>(null)
   const [adjustmentAmount, setAdjustmentAmount] = useState('')
   const [adjustmentReason, setAdjustmentReason] = useState('')
-  
+
   // Chat settings state
   const [systemSenderName, setSystemSenderName] = useState('Barry')
   const [originalSenderName, setOriginalSenderName] = useState('Barry')
   const [chatLoading, setChatLoading] = useState(false)
-  
+
   // System message config state
   const [showSystemMessageConfig, setShowSystemMessageConfig] = useState(false)
+
+  // Penalty check state
+  const [penaltyCheckLoading, setPenaltyCheckLoading] = useState(false)
+  const [penaltyCheckStats, setPenaltyCheckStats] = useState<{
+    total_members: number
+    members_checked: number
+    penalties_created: number
+    auto_accepted: number
+  } | null>(null)
   
 
   useEffect(() => {
@@ -497,7 +506,7 @@ export default function GroupAdminDashboard() {
     try {
       setChatLoading(true)
       const success = await SystemMessageService.updateSystemSenderName(group.id, systemSenderName.trim())
-      
+
       if (success) {
         setOriginalSenderName(systemSenderName.trim())
         alert('Chat settings saved successfully!')
@@ -511,6 +520,54 @@ export default function GroupAdminDashboard() {
       setSystemSenderName(originalSenderName)
     } finally {
       setChatLoading(false)
+    }
+  }
+
+  const runPenaltyCheck = async () => {
+    if (!group?.id || !confirm('Run penalty check for all members? This will check yesterday\'s targets and create penalties for those who missed.')) {
+      return
+    }
+
+    try {
+      setPenaltyCheckLoading(true)
+      setPenaltyCheckStats(null)
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        alert('Session expired. Please refresh and try again.')
+        return
+      }
+
+      const response = await fetch('/api/admin/check-all-penalties', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to run penalty check')
+      }
+
+      const result = await response.json()
+      setPenaltyCheckStats(result.stats)
+
+      // Reload pot data to show updated penalties
+      await loadPotData()
+
+      alert(`Penalty check complete!\n\n` +
+        `Members checked: ${result.stats.members_checked}/${result.stats.total_members}\n` +
+        `New penalties: ${result.stats.penalties_created}\n` +
+        `Auto-accepted expired: ${result.stats.auto_accepted}\n\n` +
+        `Daily summary has been posted to group chat.`)
+
+    } catch (error) {
+      console.error('Error running penalty check:', error)
+      alert('Failed to run penalty check: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setPenaltyCheckLoading(false)
     }
   }
 
@@ -1018,10 +1075,28 @@ export default function GroupAdminDashboard() {
               /* Pot Tab */
               <div className="bg-gray-900/30 border border-gray-800">
                 <div className="px-6 py-4 border-b border-gray-800">
-                  <h3 className="text-lg font-semibold text-white">Money Pot Management</h3>
-                  <p className="text-gray-400 text-sm mt-1">Track member contributions and adjust penalty amounts</p>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Money Pot Management</h3>
+                      <p className="text-gray-400 text-sm mt-1">Track member contributions and adjust penalty amounts</p>
+                    </div>
+                    <button
+                      onClick={runPenaltyCheck}
+                      disabled={penaltyCheckLoading}
+                      className="bg-orange-600 text-white px-4 py-2 hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {penaltyCheckLoading ? 'Checking...' : 'Run Check for All Members'}
+                    </button>
+                  </div>
+                  {penaltyCheckStats && (
+                    <div className="mt-4 bg-green-900/20 border border-green-700/50 p-3 rounded">
+                      <div className="text-sm text-green-300">
+                        ✅ Last check: {penaltyCheckStats.members_checked}/{penaltyCheckStats.total_members} members checked, {penaltyCheckStats.penalties_created} new penalties, {penaltyCheckStats.auto_accepted} auto-accepted
+                      </div>
+                    </div>
+                  )}
                 </div>
-                
+
                 {potLoading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>

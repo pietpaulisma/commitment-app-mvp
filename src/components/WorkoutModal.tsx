@@ -136,7 +136,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [isUsingFlexibleRestDay, setIsUsingFlexibleRestDay] = useState(false)
   const [hasPostedToday, setHasPostedToday] = useState(false)
   const [checkingPostStatus, setCheckingPostStatus] = useState(false)
-  
+  const [sportsList, setSportsList] = useState<Array<{id: string, name: string, emoji: string}>>([])
+
   const router = useRouter()
   
   // Motivational messages array
@@ -305,20 +306,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   useEffect(() => {
     if (isOpen && user && profile?.group_id) {
-      
+
       // Mark workout as in progress for state preservation
       markWorkoutInProgress()
-      
+
       // Prevent background scrolling
       document.body.style.overflow = 'hidden'
-      
+
       // Only load data if we haven't loaded it already (prevent reload on mode change)
       if (exercises.length === 0) {
         loadExercises()
         loadTodaysWorkouts()
         loadFavoriteExercises()
       }
-      
+
+      // Load sports list from database
+      if (sportsList.length === 0) {
+        loadSports()
+      }
+
       // Always reload daily progress for target calculation
       loadDailyProgress()
       
@@ -1118,7 +1124,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     )
   }
 
-  const renderSportButton = (sportName: string) => {
+  const renderSportButton = (sportName: string, sportEmoji?: string) => {
     return (
       <div
         key={sportName}
@@ -1128,14 +1134,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           {/* Main content area with progress bar - matches header layout */}
           <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
             {/* Gradient background for sports */}
-            <div 
+            <div
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-              style={{ 
+              style={{
                 width: '100%',
                 background: '#000000'
               }}
             />
-            
+
             {/* Main sport button */}
             <button
               onClick={() => {
@@ -1146,7 +1152,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <BoltIcon className="w-6 h-6 text-purple-400" />
+                  {sportEmoji ? (
+                    <span className="text-2xl">{sportEmoji}</span>
+                  ) : (
+                    <BoltIcon className="w-6 h-6 text-purple-400" />
+                  )}
                   <div>
                     <div className="font-medium text-white text-left">{sportName}</div>
                   </div>
@@ -1340,6 +1350,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       console.error('Error loading exercises:', error)
     } finally {
       setExercisesLoading(false)
+    }
+  }
+
+  const loadSports = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sports')
+        .select('id, name, emoji')
+        .order('name')
+
+      if (error) {
+        console.error('Error loading sports:', error)
+        return
+      }
+
+      setSportsList(data || [])
+    } catch (error) {
+      console.error('Error loading sports:', error)
     }
   }
 
@@ -1770,23 +1798,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
 
 
-
-  // Predefined sports types with better variety
-  const sportTypes = [
-    'Running',
-    'Basketball', 
-    'Soccer/Football',
-    'Tennis',
-    'Swimming',
-    'Cycling',
-    'Volleyball',
-    'Hiking',
-    'Rock Climbing',
-    'Surfing',
-    'Mountain Biking',
-    'Canoeing',
-    'Bodycombat'
-  ]
 
   if (!isOpen) return null
 
@@ -2272,7 +2283,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <h4 className="text-2xl font-bold text-white">Sports</h4>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">({sportTypes.length})</span>
+                      <span className="text-sm text-gray-400">({sportsList.length})</span>
                       <ChevronDownIcon 
                         className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
                           sportsExpanded ? 'rotate-180' : ''
@@ -2282,7 +2293,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </button>
                   {sportsExpanded && (
                     <div className="space-y-0 mt-6">
-                      {sportTypes.map((sportName) => renderSportButton(sportName))}
+                      {sportsList.map((sport) => renderSportButton(sport.name, sport.emoji))}
                     </div>
                   )}
                 </div>
@@ -2368,7 +2379,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {isUsingFlexibleRestDay ? 'Using Flexible Rest Day...' : 'Use Flexible Rest Day'}
                   </button>
                   <p className="text-xs text-gray-400 text-center mt-2">
-                    Automatically earn today's sane mode points and post to chat
+                    Automatically earn today&apos;s sane mode points and post to chat
                   </p>
                 </div>
               )}

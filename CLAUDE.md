@@ -8,20 +8,42 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
 **Tech Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS, Supabase, Radix UI
 
 ## Critical Deployment Rules
-- **NEVER DEPLOY TO PRODUCTION** without explicit user permission
-- **ALWAYS DEPLOY TO DEV ONLY**: commitment-app-dev.vercel.app
-- **PRODUCTION IS**: commitment-app-mvp.vercel.app (HANDS OFF!)
+
+### ⚠️ DEPLOYMENT SCRIPTS - MANDATORY USAGE
+- **ALWAYS use `./deploy-dev.sh` for ALL deployments**
+- **NEVER use `vercel` commands directly** - they can deploy to the wrong environment
+- **Production deployments**: ONLY via `./deploy-mvp.sh` AND requires explicit user permission
+- The deployment scripts automatically handle:
+  - Linking to the correct Vercel project
+  - Building the application
+  - Deploying to the correct environment
+  - Preventing accidental production deploys
+
+### Environment Details
+- **DEV**: commitment-app-dev.vercel.app (default for all work)
+- **PRODUCTION**: commitment-app-mvp.vercel.app (HANDS OFF unless explicitly requested!)
 - **DEV PROJECT NAME**: commitment-app-dev
 - **PRODUCTION PROJECT NAME**: commitment-app-mvp
-- Use `vercel link --project=commitment-app-dev --scope=pietpaulismas-projects` to link to dev
-- Before any deployment, ALWAYS confirm the target URL with the user first
-- Local development disabled - all changes must be deployed to test
+- Local development disabled - all changes must be deployed to dev to test
+- **Git Pre-Commit Hook**: A pre-commit hook is installed at `.git/hooks/pre-commit` that prevents accidental commits to `main` branch without explicit confirmation. See `.git/hooks/README.md` for details.
 
-## Cron Jobs (Production Only)
-- **Vercel Cron Jobs**: Only execute on production deployments (commitment-app-mvp)
-- **Dev Environment**: No automatic cron execution - use manual admin buttons for testing
-- **Current Setup**: 2/2 cron jobs on Hobby plan (daily-summary at 08:00 UTC, penalty-check at 00:01 UTC)
-- **Manual Controls**: "Send Yesterday's Summary" and other admin buttons available for development and emergency use
+### Deployment Process
+1. Make code changes
+2. Run `./deploy-dev.sh` to deploy to dev
+3. Test on commitment-app-dev.vercel.app
+4. ONLY if user explicitly requests production: Run `./deploy-mvp.sh` (requires confirmation prompt)
+
+## Penalty System - Manual Operation
+- **Cron Jobs DISABLED**: Automatic cron jobs never worked reliably and have been disabled
+- **Manual Penalty Check**: Admin must run "Run Penalty Check" button in Settings every day
+- **Button Location**: Settings/Profile menu → "Run Penalty Check" (orange button at bottom)
+- **What it does**:
+  - Checks all members for yesterday's target completion
+  - Creates pending penalties for those who missed targets
+  - Auto-accepts expired penalties (24h deadline passed)
+  - Posts daily summary to group chat
+  - Handles sick mode, rest days, and flex rest days
+- **Cron API routes**: Still exist in `src/app/api/cron/` but are not triggered automatically
 
 ## Key File Locations
 
@@ -121,6 +143,8 @@ npm run lint        # Code quality check
 ```
 
 ## Development Workflow
+
+### Dev Branch Workflow
 1. Create feature branch from `dev`
 2. **MANDATORY VERSION BUMP**: Before every dev deployment, increment version in `package.json`
    - Bug fixes: `0.1.2` → `0.1.3` (patch)
@@ -130,7 +154,61 @@ npm run lint        # Code quality check
 4. Deploy and test on commitment-app-dev.vercel.app
 5. **PWA Testing**: Always test in actual PWA mode (add to home screen), not just responsive browser
 6. **Cache Issues**: Bump service worker cache version (sw.js) if layout changes don't appear in PWA
-7. Never push to live unless specifically instructed
+7. As you work, update `CHANGELOG.md` "Unreleased" section with your changes
+8. Never push to live unless specifically instructed
+
+### Production Release Workflow
+
+**IMPORTANT**: CHANGELOG.md tracks PRODUCTION RELEASES ONLY (not every dev version)
+
+When ready to deploy to production:
+
+1. **Prepare Release** - Run the helper script:
+   ```bash
+   ./prepare-release.sh
+   ```
+   This script will:
+   - Verify you're on the correct branch
+   - Show current version and unreleased changes
+   - Update CHANGELOG.md (move "Unreleased" to versioned section with date)
+   - Create git tag for the release
+   - Show next steps
+
+2. **Review and Push**:
+   ```bash
+   git show HEAD                    # Review the changelog commit
+   git push origin dev              # Push to dev branch
+   git push origin v0.x.x           # Push the version tag
+   ```
+
+3. **Deploy to Production**:
+   ```bash
+   git checkout main
+   git merge dev
+   git push origin main
+   ./deploy-mvp.sh                  # Requires confirmation prompt
+   ```
+
+4. **Start Next Version**:
+   ```bash
+   git checkout dev
+   # Update version in package.json to next version
+   # Start adding changes to CHANGELOG.md "Unreleased" section
+   ```
+
+### CHANGELOG.md Guidelines
+
+- **Update during development**: Add changes to "Unreleased" section as you work
+- **Categories**:
+  - **Added**: New features
+  - **Changed**: Changes to existing functionality
+  - **Fixed**: Bug fixes
+  - **Removed**: Removed features
+  - **Security**: Security fixes
+  - **Technical**: Internal improvements (optional)
+- **Be specific**: Write clear, user-friendly descriptions
+- **Think stakeholders**: Changelog is for sharing with non-technical users
+- **Only production**: Don't document every dev version, only what goes live
 
 ## Version Tracking
 - **Version Display**: Located at bottom of Settings/Profile screen
