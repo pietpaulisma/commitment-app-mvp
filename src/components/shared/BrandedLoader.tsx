@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import packageJson from '../../../package.json'
 
 interface LoadingStage {
   key: string
@@ -85,6 +86,11 @@ export default function BrandedLoader({
         {/* Progress percentage */}
         <p className="text-xs text-gray-500 font-mono">
           {Math.round(progress)}%
+        </p>
+
+        {/* Version number */}
+        <p className="text-xs text-gray-600 font-mono mt-2">
+          v{packageJson.version}
         </p>
       </div>
 

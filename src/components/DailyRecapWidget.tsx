@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { CalendarDaysIcon } from '@heroicons/react/24/outline'
-import { formatDateShort, formatTimeRemaining, getReasonLabel } from '@/utils/penaltyHelpers'
+import { formatDateShort, getReasonLabel } from '@/utils/penaltyHelpers'
+import { calculateDailyTarget } from '@/utils/targetCalculation'
 import { supabase } from '@/lib/supabase'
-import type { PendingMemberInfo, DisputedMemberInfo } from '@/types/penalties'
 
 interface DailyRecapWidgetProps {
   isAdmin: boolean
@@ -15,23 +15,34 @@ interface DailyRecapWidgetProps {
 interface RecapStats {
   total: number
   completed: number
+  toBeConfirmed: number
   pending: number
   disputed: number
-  autoAccepted: number
+}
+
+interface MemberStatus {
+  username: string
+  userId: string
+  target: number
+  actual: number
+  status: 'completed' | 'to_be_confirmed' | 'pending' | 'disputed' | 'sick'
+  reasonCategory?: string
+  reasonMessage?: string
 }
 
 export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetProps) {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<RecapStats | null>(null)
   const [completedMembers, setCompletedMembers] = useState<string[]>([])
-  const [pendingMembers, setPendingMembers] = useState<PendingMemberInfo[]>([])
-  const [disputedMembers, setDisputedMembers] = useState<DisputedMemberInfo[]>([])
+  const [toBeConfirmedMembers, setToBeConfirmedMembers] = useState<MemberStatus[]>([])
+  const [pendingMembers, setPendingMembers] = useState<MemberStatus[]>([])
+  const [disputedMembers, setDisputedMembers] = useState<MemberStatus[]>([])
   const [sickMembers, setSickMembers] = useState<string[]>([])
   const [groupStreak, setGroupStreak] = useState(0)
-  const [totalPot, setTotalPot] = useState(0)
   const [yesterdayDate, setYesterdayDate] = useState('')
   const [userStatus, setUserStatus] = useState<{
     targetMet: boolean
+    toBeConfirmed: boolean
     hasPending: boolean
     disputed: boolean
     isSick: boolean
@@ -42,160 +53,325 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
   useEffect(() => {
     if (groupId) {
       loadRecapData()
+      // Auto-create penalty for current user if needed (non-admin only)
+      if (!isAdmin && userId) {
+        checkAndCreatePenaltyForCurrentUser()
+      }
     }
   }, [groupId, userId])
 
+  const checkAndCreatePenaltyForCurrentUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      // Calculate yesterday in user's local timezone
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const year = yesterday.getFullYear()
+      const month = String(yesterday.getMonth() + 1).padStart(2, '0')
+      const day = String(yesterday.getDate()).padStart(2, '0')
+      const yesterdayDate = `${year}-${month}-${day}`
+
+      const response = await fetch('/api/penalties/auto-create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ yesterdayDate })
+      })
+
+      const result = await response.json()
+      console.log('[DailyRecap] Auto-create penalty result:', result)
+
+      // If penalty was created, reload recap data to show updated status
+      if (result.penaltyCreated) {
+        await loadRecapData()
+      }
+    } catch (error) {
+      console.error('[DailyRecap] Error checking/creating penalty:', error)
+    }
+  }
+
   const loadRecapData = async () => {
-    if (!groupId) return
+    if (!groupId) {
+      console.log('[DailyRecap] No groupId provided')
+      return
+    }
 
     try {
       setLoading(true)
+      console.log('[DailyRecap] Starting to load recap data for group:', groupId, 'type:', typeof groupId)
 
       // Get yesterday's date
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
       const yesterdayStr = yesterday.toISOString().split('T')[0]
+      const yesterdayDate = new Date(yesterdayStr)
+      const dayOfWeek = yesterdayDate.getDay()
       setYesterdayDate(yesterdayStr)
+      console.log('[DailyRecap] Yesterday:', yesterdayStr, 'Day of week:', dayOfWeek)
 
-      // Fetch pending penalties for the group
-      const { data: pending } = await supabase
-        .from('pending_penalties')
-        .select(`
-          id,
-          user_id,
-          target_points,
-          actual_points,
-          deadline,
-          profiles!inner(username)
-        `)
-        .eq('group_id', groupId)
-        .eq('status', 'pending')
+      // Get group settings and data
+      const [groupSettingsRes, groupDataRes] = await Promise.all([
+        supabase
+          .from('group_settings')
+          .select('rest_days, recovery_days')
+          .eq('group_id', groupId)
+          .single(),
+        supabase
+          .from('groups')
+          .select('start_date')
+          .eq('id', groupId)
+          .single()
+      ])
 
-      // Deduplicate pending penalties by user_id - keep most recent per user
-      const pendingByUser = new Map<string, PendingMemberInfo>()
-      if (pending) {
-        pending.forEach(p => {
-          const deadlineDate = new Date(p.deadline)
-          const now = new Date()
-          const hoursRemaining = (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+      console.log('[DailyRecap] Group settings response:', groupSettingsRes)
+      console.log('[DailyRecap] Group data response:', groupDataRes)
 
-          const memberInfo: PendingMemberInfo = {
-            username: (p.profiles as any).username,
-            userId: p.user_id,
-            actual: p.actual_points,
-            target: p.target_points,
-            hours_remaining: Math.max(0, hoursRemaining),
-            penaltyId: p.id
-          }
-
-          // Keep the most recent penalty per user
-          if (!pendingByUser.has(p.user_id)) {
-            pendingByUser.set(p.user_id, memberInfo)
-          }
-        })
+      if (!groupDataRes.data) {
+        console.error('[DailyRecap] No group data found. Error:', groupDataRes.error)
+        return
       }
-      const pendingList = Array.from(pendingByUser.values())
-      setPendingMembers(pendingList)
 
-      // Fetch disputed penalties
-      const { data: disputed } = await supabase
-        .from('pending_penalties')
-        .select(`
-          id,
-          user_id,
-          reason_category,
-          reason_message,
-          profiles!inner(username)
-        `)
-        .eq('group_id', groupId)
-        .eq('status', 'disputed')
+      const restDays = Array.isArray(groupSettingsRes.data?.rest_days) ? groupSettingsRes.data.rest_days : []
+      const recoveryDays = Array.isArray(groupSettingsRes.data?.recovery_days) ? groupSettingsRes.data.recovery_days : []
+      const groupStartDate = new Date(groupDataRes.data.start_date)
+      // Note: current_streak doesn't exist in groups table, using 0 as placeholder
+      setGroupStreak(0)
+      console.log('[DailyRecap] Group settings loaded. Rest days:', restDays, 'Recovery days:', recoveryDays)
 
-      const disputedList: DisputedMemberInfo[] = []
-      if (disputed) {
-        disputed.forEach(p => {
-          disputedList.push({
-            username: (p.profiles as any).username,
-            userId: p.user_id,
-            reason_category: p.reason_category as any,
-            reason_message: p.reason_message || '',
-            penaltyId: p.id
-          })
-        })
-      }
-      setDisputedMembers(disputedList)
+      // Check if yesterday was a rest day
+      const isRestDay = restDays.includes(dayOfWeek)
 
-      // Get total members count and sick mode status
-      const { data: allMembers } = await supabase
+      // Get all members
+      const { data: members } = await supabase
         .from('profiles')
-        .select('username, is_sick_mode')
+        .select('id, username, week_mode, is_sick_mode, has_flexible_rest_day')
         .eq('group_id', groupId)
 
-      const totalMembers = allMembers?.length || 0
+      if (!members) {
+        console.error('[DailyRecap] No members found')
+        return
+      }
+      console.log('[DailyRecap] Found', members.length, 'members')
 
-      // Get sick members
-      const sickMembers = allMembers?.filter(m => m.is_sick_mode) || []
-      const sickUsernames = sickMembers.map(m => m.username)
+      // Get all penalties for yesterday
+      const { data: penalties } = await supabase
+        .from('pending_penalties')
+        .select('id, user_id, status, reason_category, reason_message, target_points, actual_points')
+        .eq('group_id', groupId)
+        .eq('date', yesterdayStr)
 
-      // Calculate completed (total - pending - disputed - sick)
-      const completed = (totalMembers || 0) - pendingList.length - disputedList.length - sickMembers.length
+      // Create a map of penalties by user_id
+      const penaltyMap = new Map(penalties?.map(p => [p.user_id, p]) || [])
 
-      setStats({
-        total: totalMembers || 0,
-        completed,
-        pending: pendingList.length,
-        disputed: disputedList.length,
-        autoAccepted: 0 // This would need to be tracked separately
+      // Calculate days since start
+      const daysSinceStart = Math.floor((yesterdayDate.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
+
+      // Get all member IDs
+      const memberIds = members.map(m => m.id)
+
+      // Fetch all logs for yesterday and day before (for flex rest day checks) in one query
+      const dayBeforeRestDay = new Date(yesterdayDate)
+      dayBeforeRestDay.setDate(dayBeforeRestDay.getDate() - 1)
+      const dayBeforeStr = dayBeforeRestDay.toISOString().split('T')[0]
+
+      // Skip log query if no members
+      let allLogs = null
+      if (memberIds.length > 0) {
+        console.log('[DailyRecap] Fetching logs for', memberIds.length, 'members')
+        const { data, error: logsError } = await supabase
+          .from('logs')
+          .select('user_id, points, exercise_id, date')
+          .in('user_id', memberIds)
+          .in('date', [yesterdayStr, dayBeforeStr])
+
+        if (logsError) {
+          console.error('[DailyRecap] Error fetching logs:', logsError)
+        } else {
+          allLogs = data
+          console.log('[DailyRecap] Fetched', allLogs?.length || 0, 'log entries')
+        }
+      }
+
+      // Group logs by user_id and date
+      const logsByUserAndDate = new Map<string, Map<string, { points: number, exercise_id: string }[]>>()
+      allLogs?.forEach(log => {
+        if (!logsByUserAndDate.has(log.user_id)) {
+          logsByUserAndDate.set(log.user_id, new Map())
+        }
+        const userLogs = logsByUserAndDate.get(log.user_id)!
+        if (!userLogs.has(log.date)) {
+          userLogs.set(log.date, [])
+        }
+        userLogs.get(log.date)!.push({ points: log.points, exercise_id: log.exercise_id })
       })
 
-      // Get completed members list (for admin view) - exclude sick members
-      if (isAdmin) {
-        const allUsernames = allMembers?.map(m => m.username) || []
-        const pendingUsernames = pendingList.map(p => p.username)
-        const disputedUsernames = disputedList.map(p => p.username)
-        const completedUsernames = allUsernames.filter(
-          u => !pendingUsernames.includes(u) && !disputedUsernames.includes(u) && !sickUsernames.includes(u)
-        )
-        setCompletedMembers(completedUsernames)
-        setSickMembers(sickUsernames)
+      // Process each member
+      const memberStatuses: MemberStatus[] = []
+      const completedList: string[] = []
+      const toBeConfirmedList: MemberStatus[] = []
+      const pendingList: MemberStatus[] = []
+      const disputedList: MemberStatus[] = []
+      const sickList: string[] = []
+
+      for (const member of members) {
+        // Skip if sick
+        if (member.is_sick_mode) {
+          sickList.push(member.username)
+          continue
+        }
+
+        // Handle rest days
+        if (isRestDay) {
+          // Check for Flex Rest Day qualification
+          if (member.has_flexible_rest_day) {
+            const userLogs = logsByUserAndDate.get(member.id)
+            const prevDayLogs = userLogs?.get(dayBeforeStr) || []
+
+            const prevDayPoints = prevDayLogs.reduce((sum, log) => sum + log.points, 0)
+            const prevDaysSinceStart = daysSinceStart - 1
+            const prevDayOfWeek = dayBeforeRestDay.getDay()
+
+            const prevDayTarget = calculateDailyTarget({
+              daysSinceStart: prevDaysSinceStart,
+              weekMode: member.week_mode || 'sane',
+              restDays,
+              recoveryDays,
+              currentDayOfWeek: prevDayOfWeek
+            })
+
+            // Qualified for flex rest day
+            if (prevDayPoints >= (prevDayTarget * 2)) {
+              completedList.push(member.username)
+              continue
+            }
+          }
+
+          // Regular rest day
+          completedList.push(member.username)
+          continue
+        }
+
+        // Calculate target for yesterday
+        const dailyTarget = calculateDailyTarget({
+          daysSinceStart,
+          weekMode: member.week_mode || 'sane',
+          restDays,
+          recoveryDays,
+          currentDayOfWeek: dayOfWeek
+        })
+
+        // Get yesterday's workout logs from pre-fetched data
+        const userLogs = logsByUserAndDate.get(member.id)
+        const logs = userLogs?.get(yesterdayStr) || []
+
+        // Calculate actual points with recovery cap
+        let totalRecoveryPoints = 0
+        let totalNonRecoveryPoints = 0
+
+        const recoveryExercises = [
+          'recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga',
+          'meditation', 'stretching', 'yoga', 'foam rolling', 'blackrolling'
+        ]
+
+        logs.forEach(log => {
+          if (recoveryExercises.includes(log.exercise_id)) {
+            totalRecoveryPoints += log.points
+          } else {
+            totalNonRecoveryPoints += log.points
+          }
+        })
+
+        const recoveryCapLimit = Math.round(dailyTarget * 0.25)
+        const cappedRecoveryPoints = Math.min(totalRecoveryPoints, recoveryCapLimit)
+        const actualPoints = totalNonRecoveryPoints + cappedRecoveryPoints
+
+        // Check if target was met
+        const metTarget = actualPoints >= dailyTarget
+
+        // Check if penalty exists
+        const penalty = penaltyMap.get(member.id)
+
+        const memberStatus: MemberStatus = {
+          username: member.username,
+          userId: member.id,
+          target: dailyTarget,
+          actual: actualPoints,
+          status: 'completed',
+          reasonCategory: penalty?.reason_category,
+          reasonMessage: penalty?.reason_message
+        }
+
+        if (metTarget) {
+          // Met target
+          memberStatus.status = 'completed'
+          completedList.push(member.username)
+        } else if (penalty) {
+          // Didn't meet target and has penalty
+          if (penalty.status === 'pending') {
+            memberStatus.status = 'pending'
+            pendingList.push(memberStatus)
+          } else if (penalty.status === 'disputed') {
+            memberStatus.status = 'disputed'
+            disputedList.push(memberStatus)
+          }
+        } else {
+          // Didn't meet target but no penalty yet
+          memberStatus.status = 'to_be_confirmed'
+          toBeConfirmedList.push(memberStatus)
+        }
+
+        memberStatuses.push(memberStatus)
       }
 
-      // Get group streak
-      const { data: groupData } = await supabase
-        .from('groups')
-        .select('current_streak')
-        .eq('id', groupId)
-        .single()
+      console.log('[DailyRecap] Processing complete:', {
+        completed: completedList.length,
+        toBeConfirmed: toBeConfirmedList.length,
+        pending: pendingList.length,
+        disputed: disputedList.length,
+        sick: sickList.length
+      })
 
-      setGroupStreak(groupData?.current_streak || 0)
+      // Set all state
+      setCompletedMembers(completedList)
+      setToBeConfirmedMembers(toBeConfirmedList)
+      setPendingMembers(pendingList)
+      setDisputedMembers(disputedList)
+      setSickMembers(sickList)
 
-      // Get total pot
-      const { data: potData } = await supabase
-        .from('profiles')
-        .select('total_penalty_owed')
-        .eq('group_id', groupId)
+      setStats({
+        total: members.length,
+        completed: completedList.length,
+        toBeConfirmed: toBeConfirmedList.length,
+        pending: pendingList.length,
+        disputed: disputedList.length
+      })
 
-      const pot = potData?.reduce((sum, p) => sum + (p.total_penalty_owed || 0), 0) || 0
-      setTotalPot(pot)
+      console.log('[DailyRecap] Stats set, finishing load')
 
-      // Get user's personal status (for non-admin view)
+      // Set user status for non-admin view
       if (!isAdmin && userId) {
-        const myPending = pendingList.find(p => p.userId === userId)
-        const myDisputed = disputedList.find(p => p.userId === userId)
-        const amISick = sickUsernames.includes(allMembers?.find(m => m.username)?.username || '')
+        const myStatus = memberStatuses.find(m => m.userId === userId)
+        const amISick = sickList.some(username => members.find(m => m.id === userId)?.username === username)
 
         setUserStatus({
-          targetMet: !myPending && !myDisputed && !amISick,
-          hasPending: !!myPending,
-          disputed: !!myDisputed,
+          targetMet: myStatus?.status === 'completed',
+          toBeConfirmed: myStatus?.status === 'to_be_confirmed',
+          hasPending: myStatus?.status === 'pending',
+          disputed: myStatus?.status === 'disputed',
           isSick: amISick,
-          points: myPending?.actual || 0,
-          target: myPending?.target || 0
+          points: myStatus?.actual || 0,
+          target: myStatus?.target || 0
         })
       }
 
     } catch (error) {
-      console.error('Error loading recap data:', error)
+      console.error('[DailyRecap] Error loading recap data:', error)
     } finally {
+      console.log('[DailyRecap] Setting loading to false')
       setLoading(false)
     }
   }
@@ -250,15 +426,15 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
             </div>
           )}
 
-          {/* Who Didn't Make It - Pending */}
-          {pendingMembers.length > 0 && (
-            <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-2">
-              <div className="text-xs text-yellow-300 font-medium mb-1">
-                ⏳ Didn&apos;t Make It
+          {/* To Be Confirmed */}
+          {toBeConfirmedMembers.length > 0 && (
+            <div className="bg-orange-900/20 border border-orange-600/30 rounded-lg p-2">
+              <div className="text-xs text-orange-300 font-medium mb-1">
+                ⏳ To Be Confirmed
               </div>
-              <div className="text-xs text-yellow-200/60 space-y-0.5">
-                {pendingMembers.map(m => (
-                  <div key={m.penaltyId}>
+              <div className="text-xs text-orange-200/60 space-y-0.5">
+                {toBeConfirmedMembers.map(m => (
+                  <div key={m.userId}>
                     {m.username} • {m.actual}/{m.target}pts
                   </div>
                 ))}
@@ -266,20 +442,36 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
             </div>
           )}
 
-          {/* Who Didn't Make It - Disputed with Reasons */}
+          {/* Pending Response */}
+          {pendingMembers.length > 0 && (
+            <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-2">
+              <div className="text-xs text-yellow-300 font-medium mb-1">
+                ⏰ Pending Response
+              </div>
+              <div className="text-xs text-yellow-200/60 space-y-0.5">
+                {pendingMembers.map(m => (
+                  <div key={m.userId}>
+                    {m.username} • {m.actual}/{m.target}pts
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Disputed */}
           {disputedMembers.length > 0 && (
             <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-2">
               <div className="text-xs text-blue-300 font-medium mb-1">
-                💭 Didn&apos;t Make It - With Reason
+                💭 Disputed
               </div>
               <div className="text-xs text-blue-200/60 space-y-1">
                 {disputedMembers.map(m => (
-                  <div key={m.penaltyId}>
+                  <div key={m.userId}>
                     <div className="font-medium">{m.username}</div>
-                    {m.reason_category && (
+                    {m.reasonCategory && (
                       <div className="text-blue-200/40 text-[10px]">
-                        {getReasonLabel(m.reason_category)}
-                        {m.reason_message && `: ${m.reason_message}`}
+                        {getReasonLabel(m.reasonCategory)}
+                        {m.reasonMessage && `: ${m.reasonMessage}`}
                       </div>
                     )}
                   </div>
@@ -303,7 +495,7 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           )}
         </div>
 
-        {/* Footer - Streak only */}
+        {/* Footer */}
         <div className="mt-2 pt-2 border-t border-white/10">
           <p className="text-xs text-white/60 text-center">
             🔥 {groupStreak} day streak
@@ -349,10 +541,19 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
               Take care and get well soon!
             </div>
           </div>
+        ) : userStatus?.toBeConfirmed ? (
+          <div className="bg-orange-900/20 border border-orange-600/30 rounded-lg p-2">
+            <div className="text-xs text-orange-300 font-medium">
+              ⏳ To Be Confirmed
+            </div>
+            <div className="text-xs text-orange-200/60 mt-0.5">
+              Waiting for penalty check
+            </div>
+          </div>
         ) : userStatus?.hasPending ? (
           <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-2">
             <div className="text-xs text-yellow-300 font-medium">
-              ⏳ Response Needed
+              ⏰ Response Needed
             </div>
             <div className="text-xs text-yellow-200/60 mt-0.5">
               Check the pop-up to accept or dispute

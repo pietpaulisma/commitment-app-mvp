@@ -13,6 +13,15 @@ No unreleased changes yet.
 
 ---
 
+## [0.4.22] - 2025-11-20
+
+### Recovered
+- Restored missing features from Vercel deployment (Pot history, timezone fixes, etc.)
+- Fixed flexible rest day logic
+- Updated dashboard components
+
+---
+
 ## [0.4.21] - 2025-11-18
 
 ### Added

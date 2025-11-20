@@ -79,7 +79,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return colorArray[colorIndex]
   }
 
-  // Get colors based on week mode like dashboard  
+  // Get workout date in user's local timezone (not UTC)
+  // This ensures workouts logged late at night count for the correct day
+  const getLocalDateString = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // Get colors based on week mode like dashboard
   const getModeColor = () => {
     switch (weekMode) {
       case 'sane':
@@ -327,6 +337,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Always reload daily progress for target calculation
       loadDailyProgress()
+
+      // Always recheck if user has posted today (important for sick mode changes)
+      checkTodayPostStatus()
       
       // Wait for modal to be fully mounted before starting animation
       setTimeout(() => {
@@ -590,7 +603,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           user_id: user.id,
           exercise_id: null, // Special case for flexible rest day
           points: saneTarget,
-          date: new Date().toISOString().split('T')[0],
+          date: getLocalDateString(),
           count: 1,
           weight: 0,
           duration: 0,
@@ -1459,7 +1472,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         total_points: totalPoints,
         target_points: dailyTarget,
         exercises: exercisesSummary,
-        workout_date: new Date().toISOString().split('T')[0],
+        workout_date: getLocalDateString(),
         completed_at: new Date().toISOString(),
         week_mode: weekMode // Include actual week mode when workout was completed
       }
@@ -1751,7 +1764,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             weight: selectedWeight,
             duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
             points: points,
-            date: new Date().toISOString().split('T')[0],
+            date: getLocalDateString(),
             timestamp: Date.now(),
             is_decreased: isDecreasedExercise
           })
@@ -2781,7 +2794,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         weight: selectedWeight,
                         duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
                         points: points,
-                        date: new Date().toISOString().split('T')[0],
+                        date: getLocalDateString(),
                         timestamp: Date.now(),
                         is_decreased: isDecreasedExercise
                       })

@@ -15,6 +15,8 @@ import PenaltyNotificationModal, { usePenaltyNotification } from './PenaltyNotif
 import WeeklyOverperformers from './WeeklyOverperformers'
 import { DailyRecapWidget } from './DailyRecapWidget'
 import { PenaltyAutoChecker } from './PenaltyAutoChecker'
+import { PotHistoryModal } from './PotHistoryModal'
+import { SeasonalChampionsWidget } from './SeasonalChampionsWidget'
 
 // Helper function to get motivational messages - 4 quotes per hour that cycle
 const getHourlyMessage = (hour: number): { quote: string, author: string } => {
@@ -496,14 +498,15 @@ const getProgressiveColor = (count: number, type: 'bg' | 'text' | 'border' = 'bg
 }
 
 // Memoized chart component for performance
-const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceDonation, insaneStreak, personalLongestInsaneStreak }: { 
-  stat: any, 
-  index: number, 
-  getLayoutClasses: (blockType: string) => string, 
+const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceDonation, insaneStreak, personalLongestInsaneStreak, onShowPotHistory }: {
+  stat: any,
+  index: number,
+  getLayoutClasses: (blockType: string) => string,
   userProfile: any,
   daysSinceDonation?: number,
   insaneStreak?: number,
-  personalLongestInsaneStreak?: number
+  personalLongestInsaneStreak?: number,
+  onShowPotHistory?: () => void
 }) => {
   // Simple color selection without useMemo to avoid circular dependencies
   const accentColor = CHART_COLORS[index % CHART_COLORS.length] || 'text-gray-400'
@@ -526,7 +529,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
   // Typography stat - Big number with accent background
   if (stat.type === 'typography_stat') {
     const bgColor = 'bg-gray-900/30' // Use neutral background
-    
+
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
@@ -840,13 +843,27 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
   if (stat.type === 'pot_contributors') {
     const contributors = stat.contributors || []
     const bgColor = 'bg-gray-900/30'
-    
+
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
           {/* Header */}
           <div className="mb-2">
-            <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-xs text-white uppercase tracking-wide">{stat.title}</div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  console.log('History button clicked!')
+                  onShowPotHistory?.()
+                }}
+                className="text-white/60 hover:text-white transition-colors p-1.5 rounded hover:bg-white/10"
+                aria-label="View pot history"
+              >
+                <ClockIcon className="w-4 h-4" />
+              </button>
+            </div>
             <div className="text-2xl font-black text-white leading-none mb-1">
               €{stat.value}
             </div>
@@ -1022,19 +1039,22 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
 }
 
 // Wrapper component that adds interactive functionality to any stat component
-const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonalData, userProfile }: {
+const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonalData, userProfile, statType }: {
   children: React.ReactNode,
   onClick?: () => void,
   isPersonalMode?: boolean,
   hasPersonalData?: boolean,
-  userProfile: any
+  userProfile: any,
+  statType?: string
 }) => {
   const personalBorderColor = isPersonalMode ? '#c084fc60' : 'transparent'
-  
+  // Disable onClick for pot_contributors to allow History button to work
+  const shouldEnableClick = onClick && hasPersonalData && statType !== 'pot_contributors'
+
   return (
-    <div 
-      className={`relative transition-all duration-300 ${onClick && hasPersonalData ? 'cursor-pointer hover:scale-[1.02] hover:shadow-lg' : ''}`}
-      onClick={onClick && hasPersonalData ? onClick : undefined}
+    <div
+      className={`relative transition-all duration-300 ${shouldEnableClick ? 'cursor-pointer hover:scale-[1.02] hover:shadow-lg' : ''}`}
+      onClick={shouldEnableClick ? onClick : undefined}
       style={{
         border: isPersonalMode ? `2px solid ${personalBorderColor}` : '2px solid transparent',
         boxShadow: isPersonalMode ? `0 0 15px ${personalBorderColor}40` : undefined,
@@ -1060,7 +1080,7 @@ const InteractiveStatWrapper = ({ children, onClick, isPersonalMode, hasPersonal
   )
 }
 
-const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfile, onClick, isPersonalMode, hasPersonalData, daysSinceDonation, insaneStreak, personalLongestInsaneStreak }: {
+const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfile, onClick, isPersonalMode, hasPersonalData, daysSinceDonation, insaneStreak, personalLongestInsaneStreak, onShowPotHistory }: {
   stat: any,
   index: number,
   getLayoutClasses: (blockType: string) => string,
@@ -1070,7 +1090,8 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
   hasPersonalData?: boolean,
   daysSinceDonation?: number,
   insaneStreak?: number,
-  personalLongestInsaneStreak?: number
+  personalLongestInsaneStreak?: number,
+  onShowPotHistory?: () => void
 }) => {
   return (
     <InteractiveStatWrapper
@@ -1078,6 +1099,7 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
       isPersonalMode={isPersonalMode}
       hasPersonalData={hasPersonalData}
       userProfile={userProfile}
+      statType={stat?.type}
     >
       <ChartComponent
         stat={stat}
@@ -1087,6 +1109,7 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
         daysSinceDonation={daysSinceDonation}
         insaneStreak={insaneStreak}
         personalLongestInsaneStreak={personalLongestInsaneStreak}
+        onShowPotHistory={onShowPotHistory}
       />
     </InteractiveStatWrapper>
   )
@@ -1097,6 +1120,7 @@ const MemoizedChartComponent = memo(({ stat, index, getLayoutClasses, userProfil
 export default function RectangularDashboard() {
   const { weekMode } = useWeekMode()
   const { showPenalty, penaltyData, closePenaltyModal } = usePenaltyNotification()
+  const [showPotHistory, setShowPotHistory] = useState(false)
   
   // Get time-of-day gradient - same as dashboard background
   const getTimeOfDayGradient = () => {
@@ -1761,12 +1785,12 @@ export default function RectangularDashboard() {
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
 
-      // 2. Money Pot - load group transaction data (both penalties and payments)
+      // 2. Money Pot - load group transaction data (penalties, payments, and donations)
       const { data: groupTransactions, error: transactionError } = await supabase
         .from('payment_transactions')
         .select('amount, user_id, transaction_type, created_at, profiles!inner(username)')
         .eq('group_id', profile.group_id)
-        .in('transaction_type', ['penalty', 'payment'])
+        .in('transaction_type', ['penalty', 'payment', 'donation'])
         .order('created_at', { ascending: false })
 
       if (transactionError) {
@@ -1839,9 +1863,9 @@ export default function RectangularDashboard() {
           }
         })
 
-        // Convert to array and sort by amount (highest first) - show all users
+        // Convert to array and sort by most recent contribution (latest first) - show all users
         const positiveContributors = Array.from(userContributions.values())
-          .sort((a, b) => b.netAmount - a.netAmount)
+          .sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime())
           
         // Debug logging
         console.log('All group members:', members.map(m => ({ id: m.id, username: m.username })))
@@ -1890,7 +1914,7 @@ export default function RectangularDashboard() {
       // 4. Next Birthday in Group - find the next upcoming birthday
       const { data: memberProfiles } = await supabase
         .from('profiles')
-        .select('email, birth_date')
+        .select('username, birth_date')
         .in('id', memberIds)
         .not('birth_date', 'is', null)
       
@@ -1901,19 +1925,23 @@ export default function RectangularDashboard() {
       
       if (memberProfiles && memberProfiles.length > 0) {
         const today = new Date()
+        today.setHours(0, 0, 0, 0)
         let closestBirthday: Date | null = null
         let closestPerson = ''
-        
+
         memberProfiles.forEach(member => {
           if (member.birth_date) {
-            const birthDate = new Date(member.birth_date)
-            const nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
-            
-            // If birthday has passed this year, set it to next year
+            // Parse the birth date (format: YYYY-MM-DD)
+            const [birthYear, birthMonth, birthDay] = member.birth_date.split('-').map(Number)
+
+            // Create next birthday date in current year (birthMonth is 1-indexed, JS Date months are 0-indexed)
+            const nextBirthday = new Date(today.getFullYear(), birthMonth - 1, birthDay, 0, 0, 0, 0)
+
+            // If birthday already passed this year, use next year
             if (nextBirthday < today) {
               nextBirthday.setFullYear(today.getFullYear() + 1)
             }
-            
+
             // Check if this is the closest birthday
             if (!closestBirthday || nextBirthday < closestBirthday) {
               closestBirthday = nextBirthday
@@ -1921,10 +1949,11 @@ export default function RectangularDashboard() {
             }
           }
         })
-        
+
         if (closestBirthday) {
-          const diffTime = closestBirthday.getTime() - today.getTime()
-          nextBirthdayDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+          const msPerDay = 1000 * 60 * 60 * 24
+          const diffMs = closestBirthday.getTime() - today.getTime()
+          nextBirthdayDays = Math.round(diffMs / msPerDay)
           monthName = closestBirthday.toLocaleString('default', { month: 'long' })
           dayNum = closestBirthday.getDate().toString()
           nextBirthdayPerson = closestPerson
@@ -2107,25 +2136,28 @@ export default function RectangularDashboard() {
       let dayNum = ''
       
       if (profile?.birth_date) {
-        const birthDate = new Date(profile.birth_date)
+        // Parse the birth date (format: YYYY-MM-DD)
+        const [birthYear, birthMonth, birthDay] = profile.birth_date.split('-').map(Number)
+
+        // Get today's date in local timezone, normalized to start of day
         const today = new Date()
-        
-        // Calculate next birthday
-        const nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
-        
-        // If birthday has passed this year, set it to next year
+        today.setHours(0, 0, 0, 0)
+
+        // Create next birthday date in current year (birthMonth is 1-indexed, JS Date months are 0-indexed)
+        const nextBirthday = new Date(today.getFullYear(), birthMonth - 1, birthDay, 0, 0, 0, 0)
+
+        // If birthday already passed this year, use next year
         if (nextBirthday < today) {
           nextBirthday.setFullYear(today.getFullYear() + 1)
         }
-        
-        // Calculate days until next birthday
-        const diffTime = nextBirthday.getTime() - today.getTime()
-        nextBirthdayDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-        
+
+        // Calculate days difference
+        const msPerDay = 1000 * 60 * 60 * 24
+        const diffMs = nextBirthday.getTime() - today.getTime()
+        nextBirthdayDays = Math.round(diffMs / msPerDay)
+
         monthName = nextBirthday.toLocaleString('default', { month: 'long' })
         dayNum = nextBirthday.getDate().toString()
-        
-        // Birthday calculation debug removed
       } else {
         // No birthday set - show placeholder
         nextBirthdayDays = 0
@@ -2563,7 +2595,15 @@ export default function RectangularDashboard() {
         onClose={closePenaltyModal}
         penaltyData={penaltyData}
       />
-      
+
+      {/* Pot History Modal */}
+      {showPotHistory && profile?.group_id && (
+        <PotHistoryModal
+          groupId={profile.group_id}
+          onClose={() => setShowPotHistory(false)}
+        />
+      )}
+
       {/* Manual Refresh UI for Failed Data Loading */}
       {dataLoadFailed && (
         <div className="fixed left-4 right-4 z-50 bg-red-900/90 backdrop-blur-sm border border-red-700 rounded-lg p-4 shadow-lg" style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))' }}>
@@ -2823,80 +2863,24 @@ export default function RectangularDashboard() {
           </div>
         </div>
 
-        {/* Chats Section */}
-        <div id="chats" className="relative">
-          {/* Glass morphism container wrapper */}
-          <div className="relative">
-            {/* Main container */}
-            <div 
-              className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
-              style={{
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
-              }}
-            >
-              
-              <div className="relative py-6 px-4 z-10">
-                <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
-                  Chats
-                </h3>
-            
-            {recentChats.length === 0 ? (
-              <div className="text-center py-8 px-4">
-                <p className="text-gray-400 font-medium text-lg">No recent messages</p>
-                <p className="text-gray-500 text-sm mt-2">Start a conversation with your group</p>
-              </div>
-            ) : (
-              <div className="space-y-3 px-4">
-                {recentChats
-                  .filter((chat) => {
-                    // Filter out workout completion messages from dashboard
-                    try {
-                      if (chat.message && (chat.message.includes('workout_data') || chat.message.includes('Workout completed!'))) {
-                        const parsed = JSON.parse(chat.message)
-                        if (parsed.workout_data) {
-                          return false // Skip workout messages on dashboard
-                        }
-                      }
-                    } catch (e) {
-                      // If parsing fails, include the message
-                    }
-                    return true // Include regular messages
-                  })
-                  .slice(0, 7)
-                  .map((chat) => {
-                  // Only regular messages reach here now
-                  let displayText = chat.message
-
-                  return (
-                    <div key={chat.id} className="p-2 mx-2 mb-2 text-sm rounded-xl"
-                    style={{
-                      background: chat.is_own_message 
-                        ? 'rgba(255, 255, 255, 0.08)' 
-                        : 'rgba(255, 255, 255, 0.05)'
-                    }}>
-                      {/* Regular message display only - workout messages filtered out */}
-                      <div className="text-sm text-gray-300">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <span className="font-medium text-white mr-2">
-                              {chat.is_own_message ? 'You' : (chat.username || 'User')}:
-                            </span>
-                            <span>{displayText}</span>
-                          </div>
-                          <span className="text-xs text-gray-500 flex-shrink-0">
-                            {formatTimeAgo(chat.created_at)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-              </div>
-            </div>
-          </div>
+        {/* Weekly Overperformers & Daily Recap - Side by Side */}
+        <div className="mx-1 mb-1 grid grid-cols-2 gap-1">
+          <WeeklyOverperformers />
+          {profile?.group_id && (
+            <DailyRecapWidget
+              isAdmin={profile.role === 'group_admin' || profile.role === 'supreme_admin'}
+              groupId={profile.group_id}
+              userId={profile.id}
+            />
+          )}
         </div>
+
+        {/* Seasonal Champions - Full Width */}
+        {profile?.group_id && (
+          <div className="mx-1 mb-1">
+            <SeasonalChampionsWidget groupId={profile.group_id} />
+          </div>
+        )}
 
         {/* Individual Stat Blocks - integrated into dashboard */}
         {groupStats && groupStats.interestingStats && groupStats.interestingStats.length > 0 && (
@@ -2909,10 +2893,10 @@ export default function RectangularDashboard() {
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                <MemoizedChartComponent 
+                <MemoizedChartComponent
                   key={`${individualStatsMode[0] ? 'personal' : 'group'}-${(individualStatsMode[0] && personalStats?.interestingStats?.[0]) ? personalStats.interestingStats[0].type : groupStats.interestingStats[0].type}-0`}
-                  stat={individualStatsMode[0] && personalStats?.interestingStats?.[0] ? personalStats.interestingStats[0] : groupStats.interestingStats[0]} 
-                  index={0} 
+                  stat={individualStatsMode[0] && personalStats?.interestingStats?.[0] ? personalStats.interestingStats[0] : groupStats.interestingStats[0]}
+                  index={0}
                   getLayoutClasses={getLayoutClasses}
                   userProfile={profile}
                   onClick={() => toggleIndividualStat(0)}
@@ -2921,6 +2905,7 @@ export default function RectangularDashboard() {
                   daysSinceDonation={daysSinceDonation}
                   insaneStreak={insaneStreak}
                   personalLongestInsaneStreak={personalLongestInsaneStreak}
+                  onShowPotHistory={() => setShowPotHistory(true)}
                 />
               </div>
             </div>
@@ -2937,10 +2922,10 @@ export default function RectangularDashboard() {
                       aspectRatio: '1 / 2'
                     }}
                   >
-                    <MemoizedChartComponent 
+                    <MemoizedChartComponent
                       key={`${individualStatsMode[1] ? 'personal' : 'group'}-${(individualStatsMode[1] && personalStats?.interestingStats?.[1]) ? personalStats.interestingStats[1].type : groupStats.interestingStats[1].type}-1`}
-                      stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]} 
-                      index={1} 
+                      stat={individualStatsMode[1] && personalStats?.interestingStats?.[1] ? personalStats.interestingStats[1] : groupStats.interestingStats[1]}
+                      index={1}
                       getLayoutClasses={getLayoutClasses}
                       userProfile={profile}
                       onClick={() => toggleIndividualStat(1)}
@@ -2949,6 +2934,7 @@ export default function RectangularDashboard() {
                       daysSinceDonation={daysSinceDonation}
                       insaneStreak={insaneStreak}
                       personalLongestInsaneStreak={personalLongestInsaneStreak}
+                      onShowPotHistory={() => setShowPotHistory(true)}
                     />
                   </div>
                 </div>
@@ -2963,10 +2949,10 @@ export default function RectangularDashboard() {
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                       }}
                     >
-                      <MemoizedChartComponent 
+                      <MemoizedChartComponent
                         key={`${individualStatsMode[2] ? 'personal' : 'group'}-${(individualStatsMode[2] && personalStats?.interestingStats?.[2]) ? personalStats.interestingStats[2].type : groupStats.interestingStats[2].type}-2`}
-                        stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]} 
-                        index={2} 
+                        stat={individualStatsMode[2] && personalStats?.interestingStats?.[2] ? personalStats.interestingStats[2] : groupStats.interestingStats[2]}
+                        index={2}
                         getLayoutClasses={getLayoutClasses}
                         userProfile={profile}
                         onClick={() => toggleIndividualStat(2)}
@@ -2975,6 +2961,7 @@ export default function RectangularDashboard() {
                         daysSinceDonation={daysSinceDonation}
                         insaneStreak={insaneStreak}
                         personalLongestInsaneStreak={personalLongestInsaneStreak}
+                        onShowPotHistory={() => setShowPotHistory(true)}
                       />
                     </div>
                   </div>
@@ -2987,10 +2974,10 @@ export default function RectangularDashboard() {
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                       }}
                     >
-                      <MemoizedChartComponent 
+                      <MemoizedChartComponent
                         key={`${individualStatsMode[3] ? 'personal' : 'group'}-${(individualStatsMode[3] && personalStats?.interestingStats?.[3]) ? personalStats.interestingStats[3].type : groupStats.interestingStats[3].type}-3`}
-                        stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]} 
-                        index={3} 
+                        stat={individualStatsMode[3] && personalStats?.interestingStats?.[3] ? personalStats.interestingStats[3] : groupStats.interestingStats[3]}
+                        index={3}
                         getLayoutClasses={getLayoutClasses}
                         userProfile={profile}
                         onClick={() => toggleIndividualStat(3)}
@@ -2999,23 +2986,12 @@ export default function RectangularDashboard() {
                         daysSinceDonation={daysSinceDonation}
                         insaneStreak={insaneStreak}
                         personalLongestInsaneStreak={personalLongestInsaneStreak}
+                        onShowPotHistory={() => setShowPotHistory(true)}
                       />
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Weekly Overperformers & Daily Recap - Side by Side */}
-            <div className="mx-1 mb-1 grid grid-cols-2 gap-1">
-              <WeeklyOverperformers />
-              {profile?.group_id && (
-                <DailyRecapWidget
-                  isAdmin={profile.role === 'group_admin' || profile.role === 'supreme_admin'}
-                  groupId={profile.group_id}
-                  userId={profile.id}
-                />
-              )}
             </div>
 
             {/* Penalty Auto Checker - runs on page load */}
@@ -3031,10 +3007,10 @@ export default function RectangularDashboard() {
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                <MemoizedChartComponent 
+                <MemoizedChartComponent
                   key={`${individualStatsMode[4] ? 'personal' : 'group'}-${(individualStatsMode[4] && personalStats?.interestingStats?.[4]) ? personalStats.interestingStats[4].type : groupStats.interestingStats[4].type}-4`}
-                  stat={individualStatsMode[4] && personalStats?.interestingStats?.[4] ? personalStats.interestingStats[4] : groupStats.interestingStats[4]} 
-                  index={4} 
+                  stat={individualStatsMode[4] && personalStats?.interestingStats?.[4] ? personalStats.interestingStats[4] : groupStats.interestingStats[4]}
+                  index={4}
                   getLayoutClasses={getLayoutClasses}
                   userProfile={profile}
                   onClick={() => toggleIndividualStat(4)}
@@ -3043,6 +3019,7 @@ export default function RectangularDashboard() {
                   daysSinceDonation={daysSinceDonation}
                   insaneStreak={insaneStreak}
                   personalLongestInsaneStreak={personalLongestInsaneStreak}
+                  onShowPotHistory={() => setShowPotHistory(true)}
                 />
               </div>
             </div>

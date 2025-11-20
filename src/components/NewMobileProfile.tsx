@@ -21,6 +21,8 @@ import {
 } from '@heroicons/react/24/outline'
 import { SystemMessageConfigAdmin } from './SystemMessageConfigAdmin'
 import NotificationSettings from './NotificationSettings'
+import { PenaltyResponseModal } from './PenaltyResponseModal'
+import type { PendingPenalty } from '@/types/penalties'
 import { supabase } from '@/lib/supabase'
 import packageJson from '../../package.json'
 
@@ -30,6 +32,7 @@ export default function NewMobileProfile() {
   const router = useRouter()
   const [showSystemMessageConfig, setShowSystemMessageConfig] = useState(false)
   const [showNotificationSettings, setShowNotificationSettings] = useState(false)
+  const [showTestPenaltyModal, setShowTestPenaltyModal] = useState(false)
   const [isSickMode, setIsSickMode] = useState(false)
   const [isUpdatingSickMode, setIsUpdatingSickMode] = useState(false)
   const [isRunningCheck, setIsRunningCheck] = useState(false)
@@ -53,6 +56,7 @@ export default function NewMobileProfile() {
       // Reset any local state that might interfere with other pages
       setShowSystemMessageConfig(false)
       setShowNotificationSettings(false)
+      setShowTestPenaltyModal(false)
     }
   }, [])
 
@@ -97,7 +101,7 @@ export default function NewMobileProfile() {
         return
       }
 
-      const response = await fetch('/api/admin/check-all-penalties', {
+      const response = await fetch('/api/admin/send-daily-summary', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,16 +113,19 @@ export default function NewMobileProfile() {
         const error = await response.json()
         console.error('API Error Response:', error)
         const details = typeof error.details === 'object' ? JSON.stringify(error.details, null, 2) : error.details
-        const errorMsg = details ? `${error.error}:\n${details}` : (error.error || 'Failed to run penalty check')
+        const errorMsg = details ? `${error.error}:\n${details}` : (error.error || 'Failed to send daily summary')
         throw new Error(errorMsg)
       }
 
       const result = await response.json()
 
-      alert(`✅ Penalty check complete!\n\n` +
-        `Members checked: ${result.stats.members_checked}/${result.stats.total_members}\n` +
-        `New penalties: ${result.stats.penalties_created}\n` +
-        `Auto-accepted expired: ${result.stats.auto_accepted}\n\n` +
+      alert(`✅ Daily summary sent!\n\n` +
+        `Total members: ${result.stats.totalMembers}\n` +
+        `Completed: ${result.stats.completed}\n` +
+        `To be confirmed: ${result.stats.toBeConfirmed}\n` +
+        `Pending response: ${result.stats.pending}\n` +
+        `Auto-accepted expired: ${result.stats.autoAccepted}\n` +
+        `Notifications sent: ${result.stats.notificationsSent}\n\n` +
         `Daily summary posted to group chat.`)
 
     } catch (error) {
@@ -278,6 +285,18 @@ export default function NewMobileProfile() {
                   </Link>
 
                   <Link
+                    href="/admin/error-logs"
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
+                  >
+                    <XMarkIcon className="w-6 h-6 text-red-400 group-hover:text-red-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">Error Logs</div>
+                      <div className="text-sm text-gray-400">View reported bugs & issues</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                  </Link>
+
+                  <Link
                     href="/admin/group-exercises"
                     className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
                   >
@@ -297,6 +316,18 @@ export default function NewMobileProfile() {
                     <div className="flex-1 text-left">
                       <div className="font-semibold text-white">System Messages</div>
                       <div className="text-sm text-gray-400">Configure automated chat messages</div>
+                    </div>
+                    <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                  </button>
+
+                  <button
+                    onClick={() => setShowTestPenaltyModal(true)}
+                    className="w-full bg-white/5 hover:bg-white/10 border border-gray-700 hover:border-gray-600 text-white py-5 px-6 rounded-xl transition-all duration-200 flex items-center gap-4 group"
+                  >
+                    <PlayIcon className="w-6 h-6 text-orange-400 group-hover:text-orange-300" />
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-white">Test Penalty Modal</div>
+                      <div className="text-sm text-gray-400">Preview penalty response screen</div>
                     </div>
                     <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
                   </button>
@@ -320,7 +351,7 @@ export default function NewMobileProfile() {
         )}
 
 
-        {/* Admin: Run Penalty Check Button */}
+        {/* Admin: Send Daily Summary Button */}
         {(profile.role === 'group_admin' || profile.role === 'supreme_admin') && (
           <div className="pt-8">
             <button
@@ -329,7 +360,7 @@ export default function NewMobileProfile() {
               className="w-full bg-orange-600/20 hover:bg-orange-600/30 border border-orange-700/50 hover:border-orange-600 text-orange-300 hover:text-orange-200 py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <PlayIcon className="w-5 h-5" />
-              {isRunningCheck ? 'Running Check...' : 'Run Penalty Check'}
+              {isRunningCheck ? 'Sending Summary...' : 'Send Daily Summary & Reminders'}
             </button>
           </div>
         )}
@@ -364,10 +395,34 @@ export default function NewMobileProfile() {
       {/* Notification Settings Modal */}
       {showNotificationSettings && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <NotificationSettings 
+          <NotificationSettings
             onClose={() => setShowNotificationSettings(false)}
           />
         </div>
+      )}
+
+      {/* Test Penalty Modal */}
+      {showTestPenaltyModal && (
+        <PenaltyResponseModal
+          penalties={[
+            {
+              id: 'test-penalty-1',
+              user_id: user?.id || '',
+              group_id: profile?.group_id || '',
+              date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // Yesterday
+              target_points: 100,
+              actual_points: 45,
+              penalty_amount: 10,
+              status: 'pending',
+              created_at: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
+              deadline: new Date(Date.now() + 43200000).toISOString(), // 12 hours from now
+              is_expired: false,
+              hours_remaining: 12
+            }
+          ]}
+          onComplete={() => setShowTestPenaltyModal(false)}
+          isTestMode={true}
+        />
       )}
     </div>
   )

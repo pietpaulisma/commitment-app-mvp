@@ -50,7 +50,7 @@ fi
 # Show unreleased changes
 echo -e "${YELLOW}📋 Unreleased changes in CHANGELOG.md:${NC}"
 echo ""
-sed -n '/## \[Unreleased\]/,/^## \[/p' CHANGELOG.md | head -n -1
+sed -n '/## \[Unreleased\]/,/^---$/p' CHANGELOG.md
 echo ""
 
 # Ask if version is correct
