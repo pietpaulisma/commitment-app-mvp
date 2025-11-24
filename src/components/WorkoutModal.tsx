@@ -2690,7 +2690,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               setSelectedWeight(button.value)
                             }
                           }}
-                          className={`${buttonStyle} aspect-square rounded-2xl relative`}
+                          className={`${buttonStyle} aspect-square relative`}
                         >
                           {isLocked && (
                             <div className="absolute top-2 right-2 z-20">
