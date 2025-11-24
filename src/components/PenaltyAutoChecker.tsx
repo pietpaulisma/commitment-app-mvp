@@ -29,6 +29,28 @@ export function PenaltyAutoChecker({ userId, onComplete }: PenaltyAutoCheckerPro
         return
       }
 
+      // Auto-create penalty for current user if needed (before checking)
+      try {
+        // Calculate yesterday in user's local timezone
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const year = yesterday.getFullYear()
+        const month = String(yesterday.getMonth() + 1).padStart(2, '0')
+        const day = String(yesterday.getDate()).padStart(2, '0')
+        const yesterdayDate = `${year}-${month}-${day}`
+
+        await fetch('/api/penalties/auto-create', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ yesterdayDate })
+        })
+      } catch (error) {
+        console.error('[PenaltyAutoChecker] Error auto-creating penalty:', error)
+      }
+
       // Call API to get pending penalties
       const response = await fetch('/api/penalties/my-pending', {
         headers: {

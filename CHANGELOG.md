@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes yet.
+### Fixed
+- Fixed penalty popup not appearing due to timezone mismatch (UTC vs Local) in Daily Recap
+- Fixed race condition where penalty check ran before penalty creation
 
 ---
 

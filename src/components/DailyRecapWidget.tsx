@@ -53,65 +53,28 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
   useEffect(() => {
     if (groupId) {
       loadRecapData()
-      // Auto-create penalty for current user if needed (non-admin only)
-      if (!isAdmin && userId) {
-        checkAndCreatePenaltyForCurrentUser()
-      }
     }
   }, [groupId, userId])
 
-  const checkAndCreatePenaltyForCurrentUser = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      // Calculate yesterday in user's local timezone
-      const yesterday = new Date()
-      yesterday.setDate(yesterday.getDate() - 1)
-      const year = yesterday.getFullYear()
-      const month = String(yesterday.getMonth() + 1).padStart(2, '0')
-      const day = String(yesterday.getDate()).padStart(2, '0')
-      const yesterdayDate = `${year}-${month}-${day}`
-
-      const response = await fetch('/api/penalties/auto-create', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ yesterdayDate })
-      })
-
-      const result = await response.json()
-      console.log('[DailyRecap] Auto-create penalty result:', result)
-
-      // If penalty was created, reload recap data to show updated status
-      if (result.penaltyCreated) {
-        await loadRecapData()
-      }
-    } catch (error) {
-      console.error('[DailyRecap] Error checking/creating penalty:', error)
-    }
-  }
-
   const loadRecapData = async () => {
     if (!groupId) {
-      console.log('[DailyRecap] No groupId provided')
       return
     }
 
     try {
       setLoading(true)
-      console.log('[DailyRecap] Starting to load recap data for group:', groupId, 'type:', typeof groupId)
 
-      // Get yesterday's date
+      // Get yesterday's date in local time (consistent with auto-create logic)
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
-      const yesterdayStr = yesterday.toISOString().split('T')[0]
+      const year = yesterday.getFullYear()
+      const month = String(yesterday.getMonth() + 1).padStart(2, '0')
+      const day = String(yesterday.getDate()).padStart(2, '0')
+      const yesterdayStr = `${year}-${month}-${day}`
+
       const yesterdayDate = new Date(yesterdayStr)
       const dayOfWeek = yesterdayDate.getDay()
       setYesterdayDate(yesterdayStr)
-      console.log('[DailyRecap] Yesterday:', yesterdayStr, 'Day of week:', dayOfWeek)
 
       // Get group settings and data
       const [groupSettingsRes, groupDataRes] = await Promise.all([
@@ -127,9 +90,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           .single()
       ])
 
-      console.log('[DailyRecap] Group settings response:', groupSettingsRes)
-      console.log('[DailyRecap] Group data response:', groupDataRes)
-
       if (!groupDataRes.data) {
         console.error('[DailyRecap] No group data found. Error:', groupDataRes.error)
         return
@@ -140,7 +100,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       const groupStartDate = new Date(groupDataRes.data.start_date)
       // Note: current_streak doesn't exist in groups table, using 0 as placeholder
       setGroupStreak(0)
-      console.log('[DailyRecap] Group settings loaded. Rest days:', restDays, 'Recovery days:', recoveryDays)
 
       // Check if yesterday was a rest day
       const isRestDay = restDays.includes(dayOfWeek)
@@ -155,7 +114,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
         console.error('[DailyRecap] No members found')
         return
       }
-      console.log('[DailyRecap] Found', members.length, 'members')
 
       // Get all penalties for yesterday
       const { data: penalties } = await supabase
@@ -181,7 +139,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       // Skip log query if no members
       let allLogs = null
       if (memberIds.length > 0) {
-        console.log('[DailyRecap] Fetching logs for', memberIds.length, 'members')
         const { data, error: logsError } = await supabase
           .from('logs')
           .select('user_id, points, exercise_id, date')
@@ -192,7 +149,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           console.error('[DailyRecap] Error fetching logs:', logsError)
         } else {
           allLogs = data
-          console.log('[DailyRecap] Fetched', allLogs?.length || 0, 'log entries')
         }
       }
 
@@ -327,14 +283,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
         memberStatuses.push(memberStatus)
       }
 
-      console.log('[DailyRecap] Processing complete:', {
-        completed: completedList.length,
-        toBeConfirmed: toBeConfirmedList.length,
-        pending: pendingList.length,
-        disputed: disputedList.length,
-        sick: sickList.length
-      })
-
       // Set all state
       setCompletedMembers(completedList)
       setToBeConfirmedMembers(toBeConfirmedList)
@@ -349,8 +297,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
         pending: pendingList.length,
         disputed: disputedList.length
       })
-
-      console.log('[DailyRecap] Stats set, finishing load')
 
       // Set user status for non-admin view
       if (!isAdmin && userId) {
@@ -371,7 +317,6 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
     } catch (error) {
       console.error('[DailyRecap] Error loading recap data:', error)
     } finally {
-      console.log('[DailyRecap] Setting loading to false')
       setLoading(false)
     }
   }

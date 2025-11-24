@@ -25,6 +25,7 @@ export type UserProfile = {
   total_donated: number
   donation_rate: number
   onboarding_completed: boolean
+  has_flexible_rest_day?: boolean
   created_at: string
   updated_at: string
 }
@@ -40,7 +41,7 @@ export function useProfile() {
   // Cache key for sessionStorage
   const getCacheKey = (userId: string) => `profile_cache_${userId}`
   const getCacheTimestampKey = (userId: string) => `profile_cache_timestamp_${userId}`
-  
+
   // Cache duration: 5 minutes
   const CACHE_DURATION = 5 * 60 * 1000
 
@@ -61,15 +62,15 @@ export function useProfile() {
     // Check cache first
     const cacheKey = getCacheKey(user.id)
     const timestampKey = getCacheTimestampKey(user.id)
-    
+
     if (typeof window !== 'undefined') {
       const cachedProfile = sessionStorage.getItem(cacheKey)
       const cachedTimestamp = sessionStorage.getItem(timestampKey)
-      
+
       if (cachedProfile && cachedTimestamp) {
         const timestamp = parseInt(cachedTimestamp)
         const isValidCache = Date.now() - timestamp < CACHE_DURATION
-        
+
         if (isValidCache) {
           const parsed = JSON.parse(cachedProfile)
           setProfile(parsed)
@@ -84,7 +85,7 @@ export function useProfile() {
 
     loadingRef.current = true
     currentUserRef.current = user.id
-    
+
     if (showLoading) {
       setLoading(true)
     }
@@ -101,13 +102,13 @@ export function useProfile() {
         throw error
       }
 
-      
+
       // Cache the profile data
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(cacheKey, JSON.stringify(data))
         sessionStorage.setItem(timestampKey, Date.now().toString())
       }
-      
+
       setProfile(data)
       return data
     } catch (error) {
@@ -142,7 +143,7 @@ export function useProfile() {
   // Check for role preview override (for testing purposes) - only client-side
   const [roleOverride, setRoleOverride] = useState<UserRole | null>(null)
   const [mounted, setMounted] = useState(false)
-  
+
   useEffect(() => {
     setMounted(true)
     const override = localStorage.getItem('role-preview-override') as UserRole
@@ -150,12 +151,12 @@ export function useProfile() {
       setRoleOverride(override)
     }
   }, [])
-  
+
   // Use original role until mounted to avoid SSR issues
   const effectiveRole = mounted ? (roleOverride || profile?.role) : profile?.role
 
   const isSupremeAdmin = effectiveRole === 'supreme_admin'
-  const isGroupAdmin = effectiveRole === 'group_admin' 
+  const isGroupAdmin = effectiveRole === 'group_admin'
   const isUser = effectiveRole === 'user'
   const hasAdminPrivileges = isSupremeAdmin || isGroupAdmin
 

@@ -11,7 +11,7 @@ import { useWeekMode } from '@/contexts/WeekModeContext'
 import { usePageState } from '@/hooks/usePageState'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { NotificationService } from '@/services/notificationService'
-import { 
+import {
   XMarkIcon,
   HeartIcon,
   FireIcon,
@@ -72,7 +72,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       'recovery': ['#22c55e', '#16a34a', '#15803d', '#166534'], // Green variations  
       'sports': ['#a855f7', '#9333ea', '#7c3aed', '#6d28d9'], // Purple variations
     }
-    
+
     const colorArray = variations[type as keyof typeof variations] || variations['all']
     // Use exercise ID to consistently pick a color variation
     const colorIndex = exerciseId.charCodeAt(0) % colorArray.length
@@ -100,7 +100,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         return '#3b82f6' // Default to blue
     }
   }
-  
+
   const userColor = getModeColor()
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [loading, setLoading] = useState(false)
@@ -134,6 +134,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [showSportSelection, setShowSportSelection] = useState(false)
   const [selectedSport, setSelectedSport] = useState('')
   const [selectedSportType, setSelectedSportType] = useState('')
+  const [selectedIntensity, setSelectedIntensity] = useState('')
   const [isStopwatchExpanded, setIsStopwatchExpanded] = useState(false)
   const [stopwatchTime, setStopwatchTime] = useState(0) // in milliseconds
   const [isStopwatchRunning, setIsStopwatchRunning] = useState(false)
@@ -146,10 +147,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [isUsingFlexibleRestDay, setIsUsingFlexibleRestDay] = useState(false)
   const [hasPostedToday, setHasPostedToday] = useState(false)
   const [checkingPostStatus, setCheckingPostStatus] = useState(false)
-  const [sportsList, setSportsList] = useState<Array<{id: string, name: string, emoji: string}>>([])
+  const [sportsList, setSportsList] = useState<Array<{ id: string, name: string, emoji: string }>>([])
+  const [isDragging, setIsDragging] = useState(false)
+  const [sliderPosition, setSliderPosition] = useState(0)
+  const [isSliderComplete, setIsSliderComplete] = useState(false)
 
   const router = useRouter()
-  
+
   // Motivational messages array
   const motivationalMessages = [
     "Your future self is already clapping.",
@@ -340,24 +344,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Always recheck if user has posted today (important for sick mode changes)
       checkTodayPostStatus()
-      
+
       // Wait for modal to be fully mounted before starting animation
       setTimeout(() => {
         setIsAnimatedIn(true)
-        
+
         // Delay icon transition until modal reaches the top (cherry on the cake!)
         setTimeout(() => {
           setShowIconTransition(true)
         }, 400) // Start icon transition near end of modal slide-up
       }, 50) // Small delay to ensure DOM is ready
-      
+
       // Trigger subtle progress animation after modal loads
       setTimeout(() => setProgressAnimated(true), 300)
     } else if (!isOpen) {
       setIsAnimatedIn(false)
       setIsClosing(false)
       setShowIconTransition(false)
-      
+
       // Restore background scrolling
       document.body.style.overflow = 'unset'
     }
@@ -387,29 +391,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   useEffect(() => {
     let messageInterval: NodeJS.Timeout
     let initialTimeout: NodeJS.Timeout
-    
+
     if (isStopwatchRunning) {
       const showMessage = () => {
         const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]
         setMotivationalMessage(randomMessage)
         setShowMotivationalMessage(true)
-        
+
         // Let CSS animation handle the fade out (4 second duration)
         // Reset the message state after animation completes
         setTimeout(() => {
           setShowMotivationalMessage(false)
         }, 4000)
       }
-      
+
       // Show first message after 1 second
       initialTimeout = setTimeout(showMessage, 1000)
-      
+
       // Then show every 5 seconds
       messageInterval = setInterval(showMessage, 5000)
     } else {
       setShowMotivationalMessage(false)
     }
-    
+
     return () => {
       clearInterval(messageInterval)
       clearTimeout(initialTimeout)
@@ -422,10 +426,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       const currentMinutes = Math.floor(stopwatchTime / 60000)
       if (currentMinutes > lastMinuteCount && currentMinutes > 0) {
         // Determine increment amount based on exercise unit
-        const incrementAmount = selectedWorkoutExercise.unit === 'hour' 
-          ? parseFloat((1/60).toFixed(4)) // 1 minute = 1/60 hour, rounded to 4 decimal places
+        const incrementAmount = selectedWorkoutExercise.unit === 'hour'
+          ? parseFloat((1 / 60).toFixed(4)) // 1 minute = 1/60 hour, rounded to 4 decimal places
           : 1 // 1 minute for minute-based exercises
-        
+
         setWorkoutCount(prev => parseFloat((prev + incrementAmount).toFixed(4)))
         setLastMinuteCount(currentMinutes)
       }
@@ -435,7 +439,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   // Helper function to get the appropriate step amount for manual increments
   const getStepAmount = () => {
     if (selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour') {
-      return parseFloat((1/60).toFixed(4)) // 1 minute = 1/60 hour
+      return parseFloat((1 / 60).toFixed(4)) // 1 minute = 1/60 hour
     }
     return 1 // 1 minute for minute-based exercises, 1 rep for rep-based exercises
   }
@@ -460,11 +464,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
     setIsStopwatchRunning(true)
   }
-  
+
   const pauseStopwatch = () => {
     setIsStopwatchRunning(false)
   }
-  
+
   const resetStopwatch = () => {
     setIsStopwatchRunning(false)
     setStopwatchTime(0)
@@ -476,21 +480,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const handleClose = () => {
     setIsClosing(true)
-    
+
     // Clear workout in progress state
     clearWorkoutInProgress()
-    
+
     // Start reverse icon animation immediately - X flips back to chat
     setShowIconTransition(false)
-    
+
     // Start modal slide down animation
     setIsAnimatedIn(false)
-    
+
     // Notify parent immediately that close animation started (for button sync)
     if (onCloseStart) {
       onCloseStart()
     }
-    
+
     // Wait for animation to complete, then actually close
     setTimeout(() => {
       onClose()
@@ -570,14 +574,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Calculate what the insane target would be for today
       const { target: insaneTargetForToday } = await loadGroupDataAndCalculateTarget('insane')
-      
+
       // If user met/exceeded insane target while in sane mode, switch to insane
       if (currentTotalPoints >= insaneTargetForToday) {
         await setWeekModeWithSync('insane', user?.id)
-        
+
         // Recalculate target with new mode
         await recalculateTargetWithMode('insane')
-        
+
         // Show mode switch notification
         alert(`🔥 INSANE MODE ACTIVATED! You exceeded the insane target (${insaneTargetForToday}) with ${currentTotalPoints} points!`)
       }
@@ -593,16 +597,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     setIsUsingFlexibleRestDay(true)
     try {
-      // Calculate the required "sane" mode points for today
-      const { target: saneTarget } = await loadGroupDataAndCalculateTarget('sane')
-      
+      // Calculate the required points for today based on current mode
+      // We use the current weekMode to ensure they get enough points to meet their target
+      const { target: targetPoints } = await loadGroupDataAndCalculateTarget()
+
       // Log the flexible rest day points automatically
       const { error: logError } = await supabase
         .from('logs')
         .insert({
           user_id: user.id,
           exercise_id: null, // Special case for flexible rest day
-          points: saneTarget,
+          points: targetPoints,
           date: getLocalDateString(),
           count: 1,
           weight: 0,
@@ -626,7 +631,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         .insert({
           group_id: profile.group_id,
           user_id: user.id,
-          message: `🛌 ${profile.username} used their flexible rest day and automatically earned ${saneTarget} points!`,
+          message: `🛌 ${profile.username} used their flexible rest day and automatically earned ${targetPoints} points!`,
           message_type: 'system',
           created_at: new Date().toISOString()
         })
@@ -635,12 +640,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Update local state
       setHasFlexibleRestDay(false)
-      
+
       // Refresh the daily progress
       await loadDailyProgress()
-      
-      alert(`✅ Flexible rest day used! You earned ${saneTarget} points automatically.`)
-      
+
+      alert(`✅ Flexible rest day used! You earned ${targetPoints} points automatically.`)
+
     } catch (error) {
       console.error('Error using flexible rest day:', error)
       alert('❌ Failed to use flexible rest day. Please try again.')
@@ -657,7 +662,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Check if today is a rest day
       const today = new Date()
       const currentDayOfWeek = today.getDay()
-      
+
       // Get group settings to check rest days
       const { data: groupSettings } = await supabase
         .from('group_settings')
@@ -666,17 +671,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         .maybeSingle()
 
       const restDays = groupSettings?.rest_days || [1] // Default Monday
-      
+
       if (!restDays.includes(currentDayOfWeek)) {
         return // Not a rest day
       }
 
-      // Calculate the double target for today
-      const { target: restDayTarget } = await loadGroupDataAndCalculateTarget()
-      
+      // Calculate the double target for today using INSANE mode explicitly
+      // User must hit double the INSANE target to earn a flexible rest day
+      const { target: restDayTarget } = await loadGroupDataAndCalculateTarget('insane')
+
       // Check if user has met the full rest day target (which is already doubled)
       const totalPointsToday = dailyProgress
-      
+
       if (totalPointsToday >= restDayTarget) {
         // Award flexible rest day
         const { error } = await supabase
@@ -687,7 +693,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         if (!error) {
           setHasFlexibleRestDay(true)
           console.log('🎉 Flexible rest day earned!')
-          
+
           // Optional: Show notification
           alert('🎉 Congratulations! You earned a flexible rest day by completing your double Monday target!')
         }
@@ -702,9 +708,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     try {
       const today = new Date().toISOString().split('T')[0]
-      
+
       // Load points and recovery days, optionally load target data if not provided
-      const loadPromises = [
+      const loadPromises: any[] = [
         supabase
           .from('logs')
           .select(`
@@ -729,11 +735,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       }
 
       const results = await Promise.all(loadPromises)
-      const pointsResult = results[0]
-      let targetData, groupSettings
+      const pointsResult = results[0] as any
+      let targetData: any, groupSettings: any
 
       if (targetOverride) {
-        targetData = { target: targetOverride }
+        targetData = { target: targetOverride, daysSinceStart: 0 }
         groupSettings = results[1]
       } else {
         targetData = results[1]
@@ -742,12 +748,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Calculate regular and recovery points separately
       const regularPoints = pointsResult.data
-        ?.filter(log => log.exercises?.type !== 'recovery')
-        ?.reduce((sum, log) => sum + log.points, 0) || 0
-      
+        ?.filter((log: any) => log.exercises?.type !== 'recovery')
+        ?.reduce((sum: number, log: any) => sum + log.points, 0) || 0
+
       const recoveryPoints = pointsResult.data
-        ?.filter(log => log.exercises?.type === 'recovery')
-        ?.reduce((sum, log) => sum + log.points, 0) || 0
+        ?.filter((log: any) => log.exercises?.type === 'recovery')
+        ?.reduce((sum: number, log: any) => sum + log.points, 0) || 0
 
       // Check if today is a recovery day
       const currentDayOfWeek = new Date().getDay()
@@ -781,7 +787,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     try {
       const today = new Date().toISOString().split('T')[0]
-      
+
       const { data: workouts } = await supabase
         .from('logs')
         .select(`
@@ -816,7 +822,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       }
       return acc
     }, {} as Record<string, any>)
-    
+
     return Object.values(grouped)
   }
 
@@ -864,7 +870,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     try {
       const isFavorite = favoriteExerciseIds.includes(exerciseId)
-      
+
       if (isFavorite) {
         // Remove from favorites
         const { error } = await supabase
@@ -900,7 +906,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const getExerciseIcon = (exercise: Exercise) => {
     const name = exercise.name.toLowerCase()
-    
+
     // Exercise-specific icon mappings using Heroicons
     switch (name) {
       // Strength exercises
@@ -921,7 +927,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         return <BoltIcon className="w-5 h-5 text-gray-400" />
       case 'jumping jacks':
         return <SparklesIcon className="w-5 h-5 text-gray-400" />
-      
+
       // Cardio exercises
       case 'running':
         return <BoltIcon className="w-5 h-5 text-gray-400" />
@@ -932,7 +938,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         return <SparklesIcon className="w-5 h-5 text-gray-400" />
       case 'walking':
         return <FireIcon className="w-5 h-5 text-gray-400" />
-      
+
       // Recovery exercises
       case 'stretching':
         return <SparklesIcon className="w-5 h-5 text-gray-400" />
@@ -950,7 +956,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       case 'ice bath':
       case 'cold shower':
         return <BoltIcon className="w-5 h-5 text-gray-400" />
-      
+
       // Sport activities
       case 'tennis':
         return <BoltIcon className="w-5 h-5 text-gray-400" />
@@ -961,7 +967,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         return <HeartIcon className="w-5 h-5 text-gray-400" />
       case 'volleyball':
         return <SparklesIcon className="w-5 h-5 text-gray-400" />
-      
+
       default:
         // Fallback to type-based icons
         const type = exercise.type?.toLowerCase()
@@ -984,7 +990,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const renderFavoriteExerciseButton = (exercise: ExerciseWithProgress) => {
     const exerciseProgress = getExerciseProgress(exercise.id)
-    
+
     return (
       <div
         key={exercise.id}
@@ -994,11 +1000,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           {/* Main content area with progress bar */}
           <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
             {/* Liquid gradient progress bar background */}
-            <div 
+            <div
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-              style={{ 
+              style={{
                 width: '100%',
-                background: exerciseProgress.percentage === 0 
+                background: exerciseProgress.percentage === 0
                   ? '#000000'
                   : `linear-gradient(to right, 
                     ${getCategoryColor(exercise.type, exercise.id)} 0%, 
@@ -1007,7 +1013,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
               }}
             />
-            
+
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
@@ -1022,8 +1028,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
                 <div className="text-right">
                   <span className="font-medium text-gray-500">
-                    {exercise.points_per_unit % 1 === 0 
-                      ? exercise.points_per_unit 
+                    {exercise.points_per_unit % 1 === 0
+                      ? exercise.points_per_unit
                       : exercise.points_per_unit.toFixed(2)
                     }
                   </span>
@@ -1034,10 +1040,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               </div>
             </button>
           </div>
-          
+
           {/* Reorder icon for favorites */}
           <button
-            className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
+            className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
             aria-label="Reorder favorite"
           >
             <Bars3Icon className="w-4 h-4" />
@@ -1051,10 +1057,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     const exerciseLogs = todayLogs?.filter(log => log.exercise_id === exerciseId) || []
     const exercisePoints = exerciseLogs.reduce((sum, log) => sum + log.points, 0)
     const effectivePoints = exerciseLogs.reduce((sum, log) => sum + getEffectivePoints(log), 0)
-    
+
     // Calculate percentage of daily target this exercise represents (using effective points)
     const progressPercentage = dailyTarget > 0 ? Math.min(100, (effectivePoints / dailyTarget) * 100) : 0
-    
+
     return {
       points: exercisePoints, // Keep raw points for display
       effectivePoints: effectivePoints,
@@ -1065,7 +1071,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const renderExerciseButton = (exercise: ExerciseWithProgress, showFavorite: boolean = true) => {
     const isFavorite = favoriteExerciseIds.includes(exercise.id)
     const exerciseProgress = getExerciseProgress(exercise.id)
-    
+
     return (
       <div
         key={exercise.id}
@@ -1075,11 +1081,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           {/* Main content area with progress bar */}
           <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
             {/* Liquid gradient progress bar background */}
-            <div 
+            <div
               className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-              style={{ 
+              style={{
                 width: '100%',
-                background: exerciseProgress.percentage === 0 
+                background: exerciseProgress.percentage === 0
                   ? '#000000'
                   : `linear-gradient(to right, 
                     ${getCategoryColor(exercise.type, exercise.id)} 0%, 
@@ -1088,7 +1094,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
               }}
             />
-            
+
             {/* Main exercise button */}
             <button
               onClick={() => quickAddExercise(exercise)}
@@ -1103,8 +1109,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
                 <div className="text-right">
                   <span className="font-medium text-gray-500">
-                    {exercise.points_per_unit % 1 === 0 
-                      ? exercise.points_per_unit 
+                    {exercise.points_per_unit % 1 === 0
+                      ? exercise.points_per_unit
                       : exercise.points_per_unit.toFixed(2)
                     }
                   </span>
@@ -1115,7 +1121,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               </div>
             </button>
           </div>
-          
+
           {/* Star icon button */}
           {showFavorite && (
             <button
@@ -1123,7 +1129,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 e.stopPropagation()
                 toggleFavorite(exercise.id)
               }}
-              className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
+              className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
             >
               {isFavorite ? (
                 <StarIconSolid className="w-4 h-4 text-yellow-400" />
@@ -1187,7 +1193,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const calculateWorkoutPoints = (exercise: ExerciseWithProgress, count: number, weight: number, isDecreased: boolean) => {
     let points = count * exercise.points_per_unit
-    
+
     // Apply weight multiplier for weighted exercises
     if (exercise.is_weighted && weight > 0) {
       let weightMultiplier = 1
@@ -1198,15 +1204,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       else if (weight >= 30 && weight < 35) weightMultiplier = 3.5
       else if (weight >= 35 && weight < 40) weightMultiplier = 4
       else if (weight >= 40) weightMultiplier = 4.5
-      
+
       points *= weightMultiplier
     }
-    
+
     // Apply decreased exercise bonus (1.5x points)
     if (isDecreased && exercise.supports_decreased) {
       points *= 1.5
     }
-    
+
     return Math.ceil(points) // Round up to avoid decimal submission errors
   }
 
@@ -1223,7 +1229,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     // Friday is typically recovery day (5), but we should check group settings
     // For now, assume Friday is recovery day - this could be enhanced
     const isRecoveryDay = currentDayOfWeek === 5 // Friday
-    
+
     // On recovery days, use full points
     if (isRecoveryDay) {
       return log.points
@@ -1234,7 +1240,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     const totalRecoveryPoints = todayLogs
       ?.filter(l => l.exercises?.type === 'recovery')
       ?.reduce((total, l) => total + l.points, 0) || 0
-    
+
     if (totalRecoveryPoints === 0) return 0
     if (totalRecoveryPoints <= maxRecoveryAllowed) {
       return log.points // No cap needed
@@ -1248,14 +1254,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   // Get total effective points (capped recovery contribution)
   const getCappedTotalPoints = () => {
     if (!todayLogs || todayLogs.length === 0) return 0
-    
+
     return todayLogs.reduce((total, log) => total + getEffectivePoints(log), 0)
   }
 
   // Calculate effective points for a new workout being submitted
   const getEffectiveWorkoutPoints = (exercise: ExerciseWithProgress, count: number, weight: number, isDecreased: boolean) => {
     const rawPoints = calculateWorkoutPoints(exercise, count, weight, isDecreased)
-    
+
     // For non-recovery exercises, return full points
     if (exercise.type !== 'recovery') {
       return rawPoints
@@ -1265,7 +1271,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     const today = new Date()
     const currentDayOfWeek = today.getDay()
     const isRecoveryDay = currentDayOfWeek === 5 // Friday
-    
+
     if (isRecoveryDay) {
       return rawPoints
     }
@@ -1275,9 +1281,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     const currentRecoveryPoints = todayLogs
       ?.filter(l => l.exercises?.type === 'recovery')
       ?.reduce((total, l) => total + l.points, 0) || 0
-    
+
     const newRecoveryTotal = currentRecoveryPoints + rawPoints
-    
+
     if (newRecoveryTotal <= maxRecoveryAllowed) {
       return rawPoints // No capping needed
     }
@@ -1296,7 +1302,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       setExercisesLoading(true)
       const today = new Date().toISOString().split('T')[0]
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      
+
       // First, let's see what's in group_exercises table
       const { data: groupExercises, error: exerciseError } = await supabase
         .from('group_exercises')
@@ -1311,18 +1317,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         return
       }
 
-      
+
       // Also get ALL exercises to compare
       const { data: allExercises } = await supabase
         .from('exercises')
         .select('*')
-      
 
-      const exerciseList = (groupExercises?.map(ge => ge.exercises).filter(Boolean) || [])
-        .sort((a, b) => a.name.localeCompare(b.name))
-      
+
+      const exerciseList = (groupExercises?.map(ge => (ge.exercises as any)).filter(Boolean) || [])
+        .sort((a: any, b: any) => a.name.localeCompare(b.name))
+
       // Try to get today's workout counts (may fail if logs table doesn't exist)
-      let todayLogs = []
+      let todayLogs: any[] = []
       try {
         const { data } = await supabase
           .from('logs')
@@ -1333,7 +1339,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       } catch (error) {
         // Logs table not accessible, skipping progress tracking
       }
-      
+
       // Try to get yesterday's workouts (may fail if logs table doesn't exist)
       let yesterdayLogs = []
       try {
@@ -1346,19 +1352,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       } catch (error) {
         // Cannot load yesterday logs for recommendations
       }
-      
+
       // Process exercises with progress
       const exercisesWithProgress: ExerciseWithProgress[] = exerciseList.map(exercise => {
         const todayCount = todayLogs?.filter(log => log.exercise_id === exercise.id).length || 0
-        
+
         return {
           ...exercise,
           todayCount,
           emoji: '' // Keep for compatibility but will use icons instead
         }
       })
-      
-      setExercises(exercisesWithProgress)
+
+      setExercises(exercisesWithProgress as any)
+      setLoading(false)
+      setExercisesLoading(false)
     } catch (error) {
       console.error('Error loading exercises:', error)
     } finally {
@@ -1390,7 +1398,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     try {
       setCheckingPostStatus(true)
       const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-      
+
       // Check if user has already posted a workout completion message today
       const { data, error } = await supabase
         .from('chat_messages')
@@ -1424,7 +1432,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       dailyProgress,
       todayLogs: todayLogs?.length
     });
-    
+
     if (!user || !profile?.group_id || dailyProgress <= 0) {
       console.error('Workout submission blocked:', {
         hasUser: !!user,
@@ -1444,10 +1452,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     try {
       setLoading(true)
-      
+
       // Calculate total points from today's logs (same data as dailyProgress)
       const totalPoints = dailyProgress
-      
+
       // Group exercises by type for better presentation
       const exercisesSummary = todayLogs.reduce((acc: any, log) => {
         const exerciseName = log.exercises?.name || 'Unknown Exercise'
@@ -1464,7 +1472,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         }
         return acc
       }, {})
-      
+
       // Create workout completion message
       const workoutData = {
         user_id: user.id,
@@ -1476,14 +1484,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         completed_at: new Date().toISOString(),
         week_mode: weekMode // Include actual week mode when workout was completed
       }
-      
+
       // Insert into chat as a special workout completion message
       // Store workout data as JSON in the message field
       const messageWithData = JSON.stringify({
         text: `🎯 Workout completed! ${totalPoints} points achieved`,
         workout_data: workoutData
       })
-      
+
       // Inserting workout message
       console.log('Inserting workout message:', {
         user_id: user.id,
@@ -1519,7 +1527,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
           if (groupMembers && groupMembers.length > 0) {
             const memberIds = groupMembers.map(member => member.id)
-            
+
             // Get group name for notification
             const { data: group } = await supabase
               .from('groups')
@@ -1529,13 +1537,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
             const groupName = group?.name || 'Group'
             const userName = profile.username || 'Someone'
-            
+
             // Determine achievement level
             const percentage = dailyTarget > 0 ? (totalPoints / dailyTarget) * 100 : 0
             const intensity = weekMode === 'insane' ? 'INSANE' : 'sane'
             let achievementEmoji = '🎯'
             let achievementText = 'completed their workout'
-            
+
             if (percentage >= 150) {
               achievementEmoji = '🔥'
               achievementText = `crushed their ${intensity} target`
@@ -1585,15 +1593,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           try {
             // Calculate what insane target would be for today
             const { target: insaneTargetForToday } = await loadGroupDataAndCalculateTarget('insane')
-            
+
             // If user met/exceeded insane target while in sane mode, switch to insane
             if (totalPoints >= insaneTargetForToday) {
               await setWeekModeWithSync('insane', user?.id)
               console.log(`Auto-switched to insane mode! Points: ${totalPoints}, Insane target: ${insaneTargetForToday}`)
-              
+
               // Recalculate target with new mode
               await recalculateTargetWithMode('insane')
-              
+
               // Show special message for mode switch
               alert(`🔥 INSANE MODE ACTIVATED! You exceeded the insane target (${insaneTargetForToday}) with ${totalPoints} points!`)
             } else {
@@ -1609,18 +1617,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           // Show normal success message
           alert('🎉 Workout submitted to group chat!')
         }
-        
+
         // Success feedback
         if (navigator.vibrate) {
           navigator.vibrate([100, 50, 100])
         }
-        
+
         // Update state to reflect successful posting
         setHasPostedToday(true)
-        
+
         // Clear workout state since it's complete
         clearWorkoutInProgress()
-        
+
         // Close modal and redirect to chat after submission
         setTimeout(() => {
           onClose()
@@ -1640,7 +1648,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     try {
       setLoading(true)
-      
+
       const { error } = await supabase
         .from('logs')
         .delete()
@@ -1654,11 +1662,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         // Refresh data after deletion
         loadDailyProgress()
         loadTodaysWorkouts()
-        
+
         if (onWorkoutAdded) {
           onWorkoutAdded()
         }
-        
+
         // Haptic feedback
         if (navigator.vibrate) {
           navigator.vibrate(50)
@@ -1686,7 +1694,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       setShowSportSelection(true)
       return
     }
-    
+
     // Reset state and open workout input popup
     setSelectedWorkoutExercise(exercise)
     setWorkoutCount(defaultQuantity || 0) // All exercises start at 0
@@ -1697,7 +1705,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const handleWeightClick = (weight: number) => {
     if (!selectedWorkoutExercise) return
-    
+
     if (selectedWeight === weight) {
       if (lockedWeights[selectedWorkoutExercise.id] === weight) {
         // Third click: unlock and deselect
@@ -1729,14 +1737,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const handleSliderMove = (e: React.TouchEvent | React.MouseEvent) => {
     if (!isDragging) return
-    
+
     const slider = e.currentTarget as HTMLElement
     const rect = slider.getBoundingClientRect()
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
     const position = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-    
+
     setSliderPosition(position)
-    
+
     // Complete if slider reaches 85% or more
     if (position >= 85 && !isSliderComplete) {
       setIsSliderComplete(true)
@@ -1745,15 +1753,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const handleSliderEnd = async () => {
     setIsDragging(false)
-    
+
     if (isSliderComplete) {
       // Execute the workout save
       if (!user || !selectedWorkoutExercise || workoutCount <= 0) return
-      
+
       setLoading(true)
       try {
         const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-        
+
         const { error } = await supabase
           .from('logs')
           .insert({
@@ -1780,17 +1788,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           setIsDecreasedExercise(false)
           setSliderPosition(0)
           setIsSliderComplete(false)
-          
+
           // Refresh data
           if (onWorkoutAdded) {
             onWorkoutAdded()
           }
           loadDailyProgress()
           loadTodaysWorkouts()
-          
+
           // Check for automatic mode switching after exercise submission
           await checkAutomaticModeSwitch()
-          
+
           // Haptic feedback
           if (navigator.vibrate) {
             navigator.vibrate(100)
@@ -1816,16 +1824,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   // Group exercises by their actual types, with recovery and sports separate
   const allExercises = exercises.filter(ex => ex.type !== 'recovery' && ex.type !== 'sport')
-  
+
   // Get sport exercises (Light Sport, Medium Sport, Intense Sport)
   const sportsExercises = exercises.filter(ex => ex.type === 'sport')
-  
+
   // Get favorite exercises
   const favoriteExercises = exercises.filter(ex => favoriteExerciseIds.includes(ex.id))
-  
+
   // TEMP FIX: Deduplicate recovery exercises by name to handle database duplicates
   const recoveryExercisesRaw = exercises.filter(ex => ex.type === 'recovery')
-  
+
   // Remove duplicates by exercise name (case insensitive)
   const seenNames = new Set()
   const recoveryExercises = recoveryExercisesRaw.filter(ex => {
@@ -1836,7 +1844,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     seenNames.add(normalizedName)
     return true
   })
-  
+
   const progressPercentage = dailyTarget > 0 ? (dailyProgress / dailyTarget) * 100 : 0
   const totalRawProgress = todayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
   const recoveryPercentage = totalRawProgress > 0 ? (recoveryProgress / totalRawProgress) * 100 : 0
@@ -1866,10 +1874,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           100% { opacity: 0; transform: translateY(10px); }
         }
       `}</style>
-      
-      <div 
+
+      <div
         className="fixed inset-0 bg-black flex flex-col transition-all duration-500 ease-out shadow-2xl"
-        style={{ 
+        style={{
           transform: isAnimatedIn ? 'translate3d(0, 0, 0)' : 'translate3d(0, 100vh, 0)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
@@ -1886,15 +1894,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Progress Bar Section - Extends to fill safe area */}
             <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
               {/* Liquid gradient progress background with subtle animation */}
-              <div 
+              <div
                 className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
-                style={{ 
+                style={{
                   width: progressAnimated ? '100%' : '75%',
                   background: createCumulativeGradient(todayLogs || [], dailyTarget, weekMode),
                   opacity: isClosing ? 0 : 1
                 }}
               />
-              
+
               {/* Button Content */}
               <div className="relative h-full flex items-center justify-between px-6 text-white">
                 <div className="flex flex-col items-start">
@@ -1905,7 +1913,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {dailyProgress}/{dailyTarget} pts
                   </span>
                 </div>
-                
+
                 <div className="flex flex-col items-end justify-center h-full">
                   <span className="text-3xl font-black tracking-tight leading-none">
                     {Math.round(progressPercentage)}%
@@ -1926,7 +1934,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               aria-label="Close workout log"
             >
               {/* Chat Icon (slides up and out when modal reaches top) */}
-              <div 
+              <div
                 className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
                 style={{
                   transform: showIconTransition ? 'translateY(-64px)' : 'translateY(0px)'
@@ -1934,9 +1942,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               >
                 <ChatBubbleLeftRightIcon className="w-6 h-6" />
               </div>
-              
+
               {/* X Icon (slides up from below when modal reaches top) */}
-              <div 
+              <div
                 className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
                 style={{
                   transform: showIconTransition ? 'translateY(0px)' : 'translateY(64px)'
@@ -1950,12 +1958,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         {/* Completed Exercises Section - positioned outside padded container */}
         {!exercisesLoading && exercises.length > 0 && todaysWorkouts.length > 0 && (
-          <div 
+          <div
             className="w-full"
             style={{
-              background: completedExercisesExpanded 
-                ? (weekMode === 'insane' 
-                  ? 'linear-gradient(180deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)' 
+              background: completedExercisesExpanded
+                ? (weekMode === 'insane'
+                  ? 'linear-gradient(180deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)'
                   : 'linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)')
                 : 'transparent'
             }}
@@ -1964,8 +1972,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               onClick={() => setCompletedExercisesExpanded(!completedExercisesExpanded)}
               className="w-full hover:opacity-80 transition-all duration-200"
               style={{
-                background: weekMode === 'insane' 
-                  ? 'linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #7f1d1d 100%)' 
+                background: weekMode === 'insane'
+                  ? 'linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #7f1d1d 100%)'
                   : 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e3a8a 100%)',
                 minHeight: '48px',
                 border: 'none',
@@ -1977,7 +1985,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 <span className="font-bold text-sm tracking-tight uppercase">
                   Completed Exercises
                 </span>
-                
+
                 <div className="flex items-center space-x-2">
                   <span className="text-xs opacity-75 font-medium">
                     ({todaysWorkouts.length})
@@ -1988,149 +1996,148 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
             </button>
-            
+
             {todaysWorkouts.length > 0 && completedExercisesExpanded && (
               <div className="space-y-0 mt-3 p-2">
-                  {getGroupedWorkouts().map((workout) => {
-                    const exerciseProgress = getExerciseProgress(workout.exercise_id)
-                    return (
-                      <div 
-                        key={`${workout.exercise_id}-${workout.weight || 0}`} 
-                        className="w-full relative overflow-hidden transition-all duration-300 mb-1"
-                      >
-                        <div className="flex items-center">
-                          {/* Main content area with progress bar - matches header layout */}
-                          <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-                            {/* Liquid gradient progress bar background */}
-                            <div 
-                              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-                              style={{ 
-                                width: '100%',
-                                background: exerciseProgress.percentage === 0 
-                                  ? '#000000'
-                                  : `linear-gradient(to right, 
+                {getGroupedWorkouts().map((workout: any) => {
+                  const exerciseProgress = getExerciseProgress(workout.exercise_id)
+                  return (
+                    <div
+                      key={`${workout.exercise_id}-${workout.weight || 0}`}
+                      className="w-full relative overflow-hidden transition-all duration-300 mb-1"
+                    >
+                      <div className="flex items-center">
+                        {/* Main content area with progress bar - matches header layout */}
+                        <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
+                          {/* Liquid gradient progress bar background */}
+                          <div
+                            className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                            style={{
+                              width: '100%',
+                              background: exerciseProgress.percentage === 0
+                                ? '#000000'
+                                : `linear-gradient(to right, 
                                     ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
                                     ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
                                     ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${exerciseProgress.percentage}%, 
                                     #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
-                              }}
-                            />
-                            
-                            {/* Exercise content */}
-                            <div className="relative p-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                  {getExerciseIcon(workout.exercises)}
-                                  <div>
-                                    <div className="font-medium text-white flex items-center space-x-2">
-                                      <span>{workout.exercises?.name || 'Unknown Exercise'}</span>
-                                      {workout.weight > 0 && (
-                                        <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
-                                          {workout.weight} kg
-                                        </span>
-                                      )}
-                                      {workout.exercises?.type === 'recovery' && (
-                                        <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Recovery</span>
-                                      )}
-                                    </div>
+                            }}
+                          />
+
+                          {/* Exercise content */}
+                          <div className="relative p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                {getExerciseIcon(workout.exercises)}
+                                <div>
+                                  <div className="font-medium text-white flex items-center space-x-2">
+                                    <span>{workout.exercises?.name || 'Unknown Exercise'}</span>
+                                    {workout.weight > 0 && (
+                                      <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                        {workout.weight} kg
+                                      </span>
+                                    )}
+                                    {workout.exercises?.type === 'recovery' && (
+                                      <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Recovery</span>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  {(() => {
-                                    const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
-                                    const rawPoints = workout.totalPoints
-                                    const isRecoveryWorkout = workout.exercises?.type === 'recovery'
-                                    const isPointsCapped = isRecoveryWorkout && effectivePoints < rawPoints
-                                    
-                                    return (
-                                      <div>
-                                        <span className="font-medium text-white">
-                                          {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
-                                        </span>
-                                        <span className="font-thin text-white ml-1">pts</span>
-                                      </div>
-                                    )
-                                  })()}
-                                </div>
+                              </div>
+                              <div className="text-right">
+                                {(() => {
+                                  const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
+                                  const rawPoints = workout.totalPoints
+                                  const isRecoveryWorkout = workout.exercises?.type === 'recovery'
+                                  const isPointsCapped = isRecoveryWorkout && effectivePoints < rawPoints
+
+                                  return (
+                                    <div>
+                                      <span className="font-medium text-white">
+                                        {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
+                                      </span>
+                                      <span className="font-thin text-white ml-1">pts</span>
+                                    </div>
+                                  )
+                                })()}
                               </div>
                             </div>
                           </div>
-
-                          {/* Expand/Collapse button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              // Toggle expand state for this workout
-                              const workoutKey = `${workout.exercise_id}-${workout.weight || 0}`
-                              setExpandedWorkouts(prev => ({
-                                ...prev,
-                                [workoutKey]: !prev[workoutKey]
-                              }))
-                            }}
-                            className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
-                            aria-label="Expand workout details"
-                          >
-                            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${
-                              expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] ? 'rotate-180' : ''
-                            }`} />
-                          </button>
                         </div>
 
-                        {/* Individual sets when expanded */}
-                        {expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] && (
-                          <div className="mt-3 space-y-1">
-                            {workout.logs.map((log: any, index: number) => (
-                              <div key={log.id} className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]">
-                                <div className="flex items-center">
-                                  {/* Main content area with progress bar - matches exercise layout */}
-                                  <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-                                    {/* Exercise content */}
-                                    <div className="relative p-3">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3">
-                                          <span className="w-6 h-6 rounded-full bg-gray-700 text-gray-300 text-xs flex items-center justify-center font-medium">
-                                            {index + 1}
-                                          </span>
-                                          <div>
-                                            <div className="font-medium text-white flex items-center space-x-2">
-                                              <span>{log.count || log.duration} {workout.exercises?.unit}</span>
-                                              {log.weight > 0 && (
-                                                <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
-                                                  {log.weight} kg
-                                                </span>
-                                              )}
-                                            </div>
+                        {/* Expand/Collapse button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Toggle expand state for this workout
+                            const workoutKey = `${workout.exercise_id}-${workout.weight || 0}`
+                            setExpandedWorkouts(prev => ({
+                              ...prev,
+                              [workoutKey]: !prev[workoutKey]
+                            }))
+                          }}
+                          className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
+                          aria-label="Expand workout details"
+                        >
+                          <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] ? 'rotate-180' : ''
+                            }`} />
+                        </button>
+                      </div>
+
+                      {/* Individual sets when expanded */}
+                      {expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] && (
+                        <div className="mt-3 space-y-1">
+                          {workout.logs.map((log: any, index: number) => (
+                            <div key={log.id} className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]">
+                              <div className="flex items-center">
+                                {/* Main content area with progress bar - matches exercise layout */}
+                                <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
+                                  {/* Exercise content */}
+                                  <div className="relative p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-3">
+                                        <span className="w-6 h-6 rounded-full bg-gray-700 text-gray-300 text-xs flex items-center justify-center font-medium">
+                                          {index + 1}
+                                        </span>
+                                        <div>
+                                          <div className="font-medium text-white flex items-center space-x-2">
+                                            <span>{log.count || log.duration} {workout.exercises?.unit}</span>
+                                            {log.weight > 0 && (
+                                              <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                                {log.weight} kg
+                                              </span>
+                                            )}
                                           </div>
                                         </div>
-                                        <div className="text-right">
-                                          <span className="font-medium text-white">
-                                            {getEffectivePoints(log)} 
-                                          </span>
-                                          <span className="font-thin text-white ml-1">pts</span>
-                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <span className="font-medium text-white">
+                                          {getEffectivePoints(log)}
+                                        </span>
+                                        <span className="font-thin text-white ml-1">pts</span>
                                       </div>
                                     </div>
                                   </div>
-
-                                  {/* Delete button */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleDeleteWorkout(log.id)
-                                    }}
-                                    className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{borderRadius: '50%'}}
-                                    aria-label="Delete set"
-                                  >
-                                    <TrashIcon className="w-4 h-4" />
-                                  </button>
                                 </div>
+
+                                {/* Delete button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteWorkout(log.id)
+                                  }}
+                                  className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
+                                  aria-label="Delete set"
+                                >
+                                  <TrashIcon className="w-4 h-4" />
+                                </button>
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -2143,7 +2150,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               <p className="mt-2 text-gray-400 text-sm">Loading exercises...</p>
             </div>
           )}
-          
+
           {!exercisesLoading && exercises.length === 0 && (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">🏋️</div>
@@ -2151,14 +2158,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               <p className="text-gray-400 text-sm">No exercises are set up for your group yet.</p>
             </div>
           )}
-          
+
           {!exercisesLoading && exercises.length > 0 && (
             <>
 
               {/* Current Workouts Section */}
               <div className="pb-6">
-                
-{todaysWorkouts.length === 0 && (
+
+                {todaysWorkouts.length === 0 && (
                   <div className="px-4">
                     <div className="text-center py-8 bg-black/30 backdrop-blur-sm rounded-3xl border-2 border-blue-500/50 shadow-2xl">
                       <p className="text-gray-400 font-medium">No workouts logged yet</p>
@@ -2173,25 +2180,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <button
                       onClick={handleSubmitToGroup}
                       disabled={hasPostedToday || checkingPostStatus || loading}
-                      className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
-                        hasPostedToday 
-                          ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
-                          : checkingPostStatus || loading
+                      className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${hasPostedToday
+                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                        : checkingPostStatus || loading
                           ? 'bg-gray-500 text-gray-300 cursor-wait'
                           : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white'
-                      }`}
+                        }`}
                     >
-                      {checkingPostStatus 
-                        ? '⏳ Checking...' 
-                        : hasPostedToday 
-                        ? '✅ Already Posted Today' 
-                        : loading
-                        ? '⏳ Posting...'
-                        : '🎉 Submit to Group Chat'
+                      {checkingPostStatus
+                        ? '⏳ Checking...'
+                        : hasPostedToday
+                          ? '✅ Already Posted Today'
+                          : loading
+                            ? '⏳ Posting...'
+                            : '🎉 Submit to Group Chat'
                       }
                     </button>
                     <p className="text-center text-sm text-gray-400 mt-2">
-                      {hasPostedToday 
+                      {hasPostedToday
                         ? 'You can only post your workout once per day'
                         : 'Share your completed workout with the group!'
                       }
@@ -2213,10 +2219,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-400">({favoriteExercises.length})</span>
-                      <ChevronDownIcon 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          favoritesExpanded ? 'rotate-180' : ''
-                        }`} 
+                      <ChevronDownIcon
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${favoritesExpanded ? 'rotate-180' : ''
+                          }`}
                       />
                     </div>
                   </button>
@@ -2241,10 +2246,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-400">({allExercises.length})</span>
-                      <ChevronDownIcon 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          allExercisesExpanded ? 'rotate-180' : ''
-                        }`} 
+                      <ChevronDownIcon
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${allExercisesExpanded ? 'rotate-180' : ''
+                          }`}
                       />
                     </div>
                   </button>
@@ -2269,10 +2273,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-400">({recoveryExercises.length})</span>
-                      <ChevronDownIcon 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          recoveryExpanded ? 'rotate-180' : ''
-                        }`} 
+                      <ChevronDownIcon
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${recoveryExpanded ? 'rotate-180' : ''
+                          }`}
                       />
                     </div>
                   </button>
@@ -2297,10 +2300,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-400">({sportsList.length})</span>
-                      <ChevronDownIcon 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                          sportsExpanded ? 'rotate-180' : ''
-                        }`} 
+                      <ChevronDownIcon
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${sportsExpanded ? 'rotate-180' : ''
+                          }`}
                       />
                     </div>
                   </button>
@@ -2317,57 +2319,53 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 <div className="py-6 px-4">
                   <div className="bg-black/30 backdrop-blur-sm p-4 rounded-lg">
                     <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
-                    
+
                     {/* Horizontal Toggle */}
                     <div className="relative bg-gray-800 rounded-full p-1 w-full">
-                      <div 
-                        className={`absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out ${
-                          weekMode === 'sane' ? 'left-1 right-1/2' : 'left-1/2 right-1'
-                        }`}
+                      <div
+                        className={`absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out ${weekMode === 'sane' ? 'left-1 right-1/2' : 'left-1/2 right-1'
+                          }`}
                         style={{
-                          background: weekMode === 'sane' 
+                          background: weekMode === 'sane'
                             ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)'
                             : 'linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%)'
                         }}
                       />
-                      
+
                       <div className="relative flex bg-gray-800/50 rounded-full p-1">
                         {/* Animated background slider */}
-                        <div 
-                          className={`absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${
-                            weekMode === 'sane' 
-                              ? 'left-1 bg-blue-600/30' 
-                              : 'left-[calc(50%+2px)] bg-red-600/30'
-                          }`}
+                        <div
+                          className={`absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${weekMode === 'sane'
+                            ? 'left-1 bg-blue-600/30'
+                            : 'left-[calc(50%+2px)] bg-red-600/30'
+                            }`}
                         />
-                        
+
                         <button
                           onClick={async () => {
                             await setWeekModeWithSync('sane', user?.id)
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('sane')
                           }}
-                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${
-                            weekMode === 'sane' 
-                              ? 'text-white scale-105' 
-                              : 'text-gray-400 hover:text-gray-300 scale-100'
-                          }`}
+                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${weekMode === 'sane'
+                            ? 'text-white scale-105'
+                            : 'text-gray-400 hover:text-gray-300 scale-100'
+                            }`}
                         >
                           <MoonIcon className="w-4 h-4" />
                           <span className="font-medium">Sane</span>
                         </button>
-                        
+
                         <button
                           onClick={async () => {
                             await setWeekModeWithSync('insane', user?.id)
                             // Recalculate target immediately with the new mode
                             await recalculateTargetWithMode('insane')
                           }}
-                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${
-                            weekMode === 'insane' 
-                              ? 'text-white scale-105' 
-                              : 'text-red-400 hover:text-red-300 scale-100'
-                          }`}
+                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${weekMode === 'insane'
+                            ? 'text-white scale-105'
+                            : 'text-red-400 hover:text-red-300 scale-100'
+                            }`}
                         >
                           <FireIcon className="w-4 h-4" />
                           <span className="font-medium">Insane</span>
@@ -2384,9 +2382,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     onClick={useFlexibleRestDay}
                     disabled={isUsingFlexibleRestDay}
-                    className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium shadow-lg ${
-                      isUsingFlexibleRestDay ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium shadow-lg ${isUsingFlexibleRestDay ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                   >
                     <CalendarDaysIcon className="w-5 h-5" />
                     {isUsingFlexibleRestDay ? 'Using Flexible Rest Day...' : 'Use Flexible Rest Day'}
@@ -2407,7 +2404,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           <div className="fixed inset-0 bg-black text-white z-[110] flex flex-col animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {/* Subtle background pattern */}
             <div className="absolute inset-0 opacity-3">
-              <div className="absolute inset-0" style={{ 
+              <div className="absolute inset-0" style={{
                 backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 0%, transparent 25%), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 25%)',
                 backgroundSize: '100px 100px'
               }}></div>
@@ -2417,25 +2414,25 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             <div className="relative overflow-hidden transition-all duration-300 mb-4 px-4 pt-4">
               {/* Compact exercise button with integrated X */}
               <div className="relative overflow-hidden rounded-3xl shadow-xl border border-white/10 bg-black/70 backdrop-blur-xl h-14">
-                  {/* Liquid gradient progress bar background - matches exercise button */}
-                  <div 
-                    className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-                    style={{ 
-                      width: '100%',
-                      background: (() => {
-                        const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                        const progressPercent = Math.min(100, (effectivePoints / Math.max(1, dailyTarget)) * 100)
-                        const color = getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)
-                        
-                        return `linear-gradient(to right, 
+                {/* Liquid gradient progress bar background - matches exercise button */}
+                <div
+                  className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
+                  style={{
+                    width: '100%',
+                    background: (() => {
+                      const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                      const progressPercent = Math.min(100, (effectivePoints / Math.max(1, dailyTarget)) * 100)
+                      const color = getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)
+
+                      return `linear-gradient(to right, 
                           ${color} 0%, 
                           ${color} ${Math.max(0, progressPercent - 5)}%, 
                           ${color}dd ${progressPercent}%, 
                           #000000 ${Math.min(100, progressPercent + 3)}%)`
-                      })()
-                    }}
-                  />
-                  
+                    })()
+                  }}
+                />
+
                 {/* Header content with integrated X button */}
                 <div className="w-full px-4 py-2 relative flex items-center h-full">
                   <div className="flex items-center space-x-3 flex-1">
@@ -2447,7 +2444,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       <div className="text-xl font-bold text-white">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</div>
                     </div>
                     {/* Integrated X button */}
-                    <button 
+                    <button
                       onClick={() => setWorkoutInputOpen(false)}
                       className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-200 flex items-center justify-center"
                     >
@@ -2471,16 +2468,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
                 {isStopwatchExpanded ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
               </button>
-              
+
               {isStopwatchExpanded && (
                 <div className="px-4 pb-4 space-y-6 animate-in slide-in-from-top-2 duration-200">
                   {/* Motivational message area - above timer */}
                   <div className="h-12 flex items-center justify-center relative">
                     {showMotivationalMessage && (
-                      <div 
-                        className={`text-center transition-opacity duration-1000 ease-out ${
-                          showMotivationalMessage ? 'opacity-100' : 'opacity-0'
-                        }`}
+                      <div
+                        className={`text-center transition-opacity duration-1000 ease-out ${showMotivationalMessage ? 'opacity-100' : 'opacity-0'
+                          }`}
                         style={{
                           animation: showMotivationalMessage ? 'fadeInOut 4s ease-in-out' : 'none'
                         }}
@@ -2491,14 +2487,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Large time display */}
                   <div className="text-center">
                     <div className="font-sans text-6xl font-bold tracking-wider" style={{ color: userColor }}>
                       {formatTime(stopwatchTime)}
                     </div>
                   </div>
-                  
+
                   {/* Controls */}
                   <div className="flex justify-center gap-6 mt-8">
                     <div
@@ -2512,7 +2508,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       {/* Glass effect overlays */}
                       <div className="absolute inset-[2px] rounded-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
                       <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none" />
-                      
+
                       <button
                         onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
                         className="absolute inset-0 w-full h-full bg-transparent border-0 rounded-full font-bold text-white text-sm flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-colors duration-200"
@@ -2520,7 +2516,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         {isStopwatchRunning ? 'Pause' : 'Start'}
                       </button>
                     </div>
-                    
+
                     <div
                       className="w-20 h-20 rounded-full overflow-hidden backdrop-blur-xl border-2 border-zinc-500/60 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.3),0_12px_40px_rgba(0,0,0,0.8)] active:scale-[0.95] transition-all duration-200 relative bg-gradient-to-br from-zinc-600/80 via-zinc-700/90 to-zinc-800/80 hover:from-zinc-500/80 hover:via-zinc-600/90 hover:to-zinc-700/80"
                       style={{
@@ -2530,7 +2526,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       {/* Glass effect overlays */}
                       <div className="absolute inset-[2px] rounded-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
                       <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none" />
-                      
+
                       <button
                         onClick={resetStopwatch}
                         className="absolute inset-0 w-full h-full bg-transparent border-0 rounded-full font-bold text-white text-sm flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-colors duration-200"
@@ -2548,7 +2544,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               <div className="relative flex items-center justify-center h-32 group">
                 {/* Background glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-purple-500/8 rounded-3xl blur-xl"></div>
-                
+
                 {/* Number display with interactive click zones */}
                 <div className="relative w-full h-full flex items-center justify-center rounded-3xl bg-gradient-to-b from-zinc-800/60 to-zinc-900/60 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] overflow-hidden">
                   {/* Left click zone (decrement) */}
@@ -2561,7 +2557,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   >
                     <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">−</span>
                   </button>
-                  
+
                   {/* Right click zone (increment) */}
                   <button
                     onClick={() => {
@@ -2572,14 +2568,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   >
                     <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">+</span>
                   </button>
-                  
+
                   {/* Number display */}
                   <div className="relative z-0 w-full h-full flex items-center justify-center">
-                    <span 
-                      className="font-sans font-black tabular-nums text-white leading-none tracking-tight drop-shadow-2xl" 
-                      style={{ 
+                    <span
+                      className="font-sans font-black tabular-nums text-white leading-none tracking-tight drop-shadow-2xl"
+                      style={{
                         fontSize: '5rem',
-                        textShadow: '0 0 40px rgba(255,255,255,0.2)' 
+                        textShadow: '0 0 40px rgba(255,255,255,0.2)'
                       }}
                     >
                       {(() => {
@@ -2607,23 +2603,23 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 {(() => {
                   const stepAmount = getStepAmount()
                   const isHourBased = selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour'
-                  
+
                   return [
-                    { 
-                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (10 * stepAmount)).toFixed(4)))), 
-                      label: isHourBased ? '-10m' : '-10' 
+                    {
+                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (10 * stepAmount)).toFixed(4)))),
+                      label: isHourBased ? '-10m' : '-10'
                     },
-                    { 
-                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (5 * stepAmount)).toFixed(4)))), 
-                      label: isHourBased ? '-5m' : '-5' 
+                    {
+                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (5 * stepAmount)).toFixed(4)))),
+                      label: isHourBased ? '-5m' : '-5'
                     },
-                    { 
-                      action: () => setWorkoutCount(parseFloat((workoutCount + (5 * stepAmount)).toFixed(4))), 
-                      label: isHourBased ? '+5m' : '+5' 
+                    {
+                      action: () => setWorkoutCount(parseFloat((workoutCount + (5 * stepAmount)).toFixed(4))),
+                      label: isHourBased ? '+5m' : '+5'
                     },
-                    { 
-                      action: () => setWorkoutCount(parseFloat((workoutCount + (10 * stepAmount)).toFixed(4))), 
-                      label: isHourBased ? '+10m' : '+10' 
+                    {
+                      action: () => setWorkoutCount(parseFloat((workoutCount + (10 * stepAmount)).toFixed(4))),
+                      label: isHourBased ? '+10m' : '+10'
                     }
                   ]
                 })().map((button, index) => (
@@ -2643,7 +2639,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <div className="text-center">
                     <div className="text-sm text-white/60 font-medium uppercase tracking-wider">Weight Selection (kg)</div>
                   </div>
-                  
+
                   <div className="grid grid-cols-4 gap-1">
                     {[
                       { label: 'body', value: 0, multiplier: 1.0 },
@@ -2655,59 +2651,59 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       { label: '35', value: 35, multiplier: 4.0 },
                       { label: '40', value: 40, multiplier: 4.5 }
                     ].map((button, index) => {
-                    const isSelected = selectedWeight === button.value
-                    const isLocked = selectedWorkoutExercise && lockedWeights[selectedWorkoutExercise.id] === button.value
-                    
-                    let buttonStyle = ''
-                    if (isLocked) {
-                      buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 border-2 border-amber-300 shadow-[inset_0_2px_0_rgba(255,255,255,0.3),inset_0_0_25px_rgba(245,158,11,0.3),0_0_25px_rgba(245,158,11,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.35),inset_0_0_30px_rgba(245,158,11,0.35),0_0_30px_rgba(245,158,11,0.7)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.4),inset_0_0_35px_rgba(245,158,11,0.4),0_0_20px_rgba(245,158,11,0.5)] hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 active:from-amber-500 active:via-amber-600 active:to-amber-700 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/20 before:via-white/8 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-amber-600/20 after:to-transparent after:pointer-events-none'
-                    } else if (isSelected) {
-                      buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 border-2 border-indigo-400 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),inset_0_0_20px_rgba(99,102,241,0.2),0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.25),inset_0_0_25px_rgba(99,102,241,0.25),0_0_25px_rgba(99,102,241,0.5)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.3),inset_0_0_30px_rgba(99,102,241,0.3),0_0_15px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/15 before:via-white/5 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-indigo-600/20 after:to-transparent after:pointer-events-none'
-                    } else {
-                      buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 border-2 border-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.3)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_1px_4px_rgba(0,0,0,0.1)] hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 active:from-slate-700 active:via-slate-800 active:to-slate-900 active:scale-[0.95] transition-all duration-150 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/3 before:to-transparent before:pointer-events-none'
-                    }
+                      const isSelected = selectedWeight === button.value
+                      const isLocked = selectedWorkoutExercise && lockedWeights[selectedWorkoutExercise.id] === button.value
 
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          if (!selectedWorkoutExercise) return
-                          
-                          if (isSelected && !isLocked) {
-                            setLockedWeights(prev => ({
-                              ...prev,
-                              [selectedWorkoutExercise.id]: button.value
-                            }))
-                          } else if (isLocked) {
-                            setLockedWeights(prev => {
-                              const newLocked = { ...prev }
-                              delete newLocked[selectedWorkoutExercise.id]
-                              return newLocked
-                            })
-                            setSelectedWeight(0)
-                          } else {
-                            setSelectedWeight(button.value)
-                          }
-                        }}
-                        className={`${buttonStyle} aspect-square rounded-2xl relative`}
-                      >
-                        {isLocked && (
-                          <div className="absolute top-2 right-2 z-20">
-                            <LockClosedIcon className="w-4 h-4 text-amber-900 drop-shadow-sm" />
+                      let buttonStyle = ''
+                      if (isLocked) {
+                        buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 border-2 border-amber-300 shadow-[inset_0_2px_0_rgba(255,255,255,0.3),inset_0_0_25px_rgba(245,158,11,0.3),0_0_25px_rgba(245,158,11,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.35),inset_0_0_30px_rgba(245,158,11,0.35),0_0_30px_rgba(245,158,11,0.7)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.4),inset_0_0_35px_rgba(245,158,11,0.4),0_0_20px_rgba(245,158,11,0.5)] hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 active:from-amber-500 active:via-amber-600 active:to-amber-700 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/20 before:via-white/8 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-amber-600/20 after:to-transparent after:pointer-events-none'
+                      } else if (isSelected) {
+                        buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 border-2 border-indigo-400 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),inset_0_0_20px_rgba(99,102,241,0.2),0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.25),inset_0_0_25px_rgba(99,102,241,0.25),0_0_25px_rgba(99,102,241,0.5)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.3),inset_0_0_30px_rgba(99,102,241,0.3),0_0_15px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/15 before:via-white/5 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-indigo-600/20 after:to-transparent after:pointer-events-none'
+                      } else {
+                        buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 border-2 border-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.3)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_1px_4px_rgba(0,0,0,0.1)] hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 active:from-slate-700 active:via-slate-800 active:to-slate-900 active:scale-[0.95] transition-all duration-150 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/3 before:to-transparent before:pointer-events-none'
+                      }
+
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            if (!selectedWorkoutExercise) return
+
+                            if (isSelected && !isLocked) {
+                              setLockedWeights(prev => ({
+                                ...prev,
+                                [selectedWorkoutExercise.id]: button.value
+                              }))
+                            } else if (isLocked) {
+                              setLockedWeights(prev => {
+                                const newLocked = { ...prev }
+                                delete newLocked[selectedWorkoutExercise.id]
+                                return newLocked
+                              })
+                              setSelectedWeight(0)
+                            } else {
+                              setSelectedWeight(button.value)
+                            }
+                          }}
+                          className={`${buttonStyle} aspect-square rounded-2xl relative`}
+                        >
+                          {isLocked && (
+                            <div className="absolute top-2 right-2 z-20">
+                              <LockClosedIcon className="w-4 h-4 text-amber-900 drop-shadow-sm" />
+                            </div>
+                          )}
+
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className={`relative z-10 font-bold ${button.label === 'body' ? 'text-xl' : 'text-3xl'} ${isLocked ? 'text-amber-900' : ''}`}>
+                              {button.label}
+                            </span>
                           </div>
-                        )}
-                        
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className={`relative z-10 font-bold ${button.label === 'body' ? 'text-xl' : 'text-3xl'} ${isLocked ? 'text-amber-900' : ''}`}>
-                            {button.label}
+
+                          <span className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 text-xs z-10 ${isLocked ? 'text-amber-900/60' : 'text-white/30'}`}>
+                            ×{button.multiplier}
                           </span>
-                        </div>
-                        
-                        <span className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 text-xs z-10 ${isLocked ? 'text-amber-900/60' : 'text-white/30'}`}>
-                          ×{button.multiplier}
-                        </span>
-                      </button>
-                    )
+                        </button>
+                      )
                     })}
                   </div>
                 </div>
@@ -2720,17 +2716,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {selectedWorkoutExercise.supports_decreased && (
                 <button
                   onClick={() => setIsDecreasedExercise(!isDecreasedExercise)}
-                  className={`w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl transition-all duration-200 backdrop-blur-sm relative overflow-hidden ${
-                    isDecreasedExercise 
-                      ? 'bg-gradient-to-b from-amber-600/40 via-amber-700/40 to-amber-800/40 border border-amber-500/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/5 before:to-transparent before:pointer-events-none' 
-                      : 'bg-gradient-to-b from-zinc-800/30 via-zinc-900/30 to-black/30 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:from-zinc-800/40 hover:via-zinc-900/40 hover:to-black/40 before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/3 before:to-transparent before:pointer-events-none'
-                  }`}
+                  className={`w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl transition-all duration-200 backdrop-blur-sm relative overflow-hidden ${isDecreasedExercise
+                    ? 'bg-gradient-to-b from-amber-600/40 via-amber-700/40 to-amber-800/40 border border-amber-500/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/5 before:to-transparent before:pointer-events-none'
+                    : 'bg-gradient-to-b from-zinc-800/30 via-zinc-900/30 to-black/30 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:from-zinc-800/40 hover:via-zinc-900/40 hover:to-black/40 before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/3 before:to-transparent before:pointer-events-none'
+                    }`}
                 >
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all relative z-10 ${
-                    isDecreasedExercise 
-                      ? 'bg-amber-400 border-amber-400' 
-                      : 'border-white/30 bg-transparent'
-                  }`}>
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all relative z-10 ${isDecreasedExercise
+                    ? 'bg-amber-400 border-amber-400'
+                    : 'border-white/30 bg-transparent'
+                    }`}>
                     {isDecreasedExercise && <CheckIcon className="w-3 h-3 text-black" />}
                   </div>
                   <span className="font-medium relative z-10 text-center flex-1">
@@ -2754,101 +2748,100 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       else if (selectedWeight >= 35 && selectedWeight < 40) weightMultiplier = 4
                       else if (selectedWeight >= 40) weightMultiplier = 4.5
                     }
-                    
+
                     const rawPoints = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
                     const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                    
+
                     let calculation = ""
                     if (selectedWeight === 0) {
                       calculation = `${workoutCount} reps = ${rawPoints} pts`
                     } else {
                       calculation = `${workoutCount} × ${weightMultiplier}x = ${rawPoints} pts`
                     }
-                    
+
                     if (selectedWorkoutExercise.type === 'recovery' && effectivePoints < rawPoints) {
                       calculation += ` → ${effectivePoints} pts (25% cap)`
                     }
-                    
+
                     return calculation
                   })()}
                 </div>
               </div>
-              
+
               {/* Submit button - Always at bottom */}
               <div style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
                 <button
-                onClick={async () => {
-                  if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
-                  
-                  setLoading(true)
-                  try {
-                    const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                    
-                    const { error } = await supabase
-                      .from('logs')
-                      .insert({
-                        user_id: user.id,
-                        group_id: profile?.group_id,
-                        exercise_id: selectedWorkoutExercise.id,
-                        count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
-                        weight: selectedWeight,
-                        duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
-                        points: points,
-                        date: getLocalDateString(),
-                        timestamp: Date.now(),
-                        is_decreased: isDecreasedExercise
-                      })
-                    
-                    if (error) {
-                      alert('Error logging workout: ' + error.message)
-                    } else {
-                      // Refresh data
-                      if (onWorkoutAdded) {
-                        onWorkoutAdded()
+                  onClick={async () => {
+                    if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
+
+                    setLoading(true)
+                    try {
+                      const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+
+                      const { error } = await supabase
+                        .from('logs')
+                        .insert({
+                          user_id: user.id,
+                          group_id: profile?.group_id,
+                          exercise_id: selectedWorkoutExercise.id,
+                          count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
+                          weight: selectedWeight,
+                          duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
+                          points: points,
+                          date: getLocalDateString(),
+                          timestamp: Date.now(),
+                          is_decreased: isDecreasedExercise
+                        })
+
+                      if (error) {
+                        alert('Error logging workout: ' + error.message)
+                      } else {
+                        // Refresh data
+                        if (onWorkoutAdded) {
+                          onWorkoutAdded()
+                        }
+                        loadDailyProgress()
+                        loadTodaysWorkouts()
+
+                        // Check for automatic mode switching after exercise submission
+                        await checkAutomaticModeSwitch()
+
+                        // Reset and close
+                        setWorkoutInputOpen(false)
+                        setWorkoutCount(0)
+                        setSelectedWeight(selectedWorkoutExercise ? (lockedWeights[selectedWorkoutExercise.id] || 0) : 0)
+                        setIsDecreasedExercise(false)
+
+                        // Haptic feedback
+                        if (navigator.vibrate) {
+                          navigator.vibrate(100)
+                        }
                       }
-                      loadDailyProgress()
-                      loadTodaysWorkouts()
-                      
-                      // Check for automatic mode switching after exercise submission
-                      await checkAutomaticModeSwitch()
-                      
-                      // Reset and close
-                      setWorkoutInputOpen(false)
-                      setWorkoutCount(0)
-                      setSelectedWeight(selectedWorkoutExercise ? (lockedWeights[selectedWorkoutExercise.id] || 0) : 0)
-                      setIsDecreasedExercise(false)
-                      
-                      // Haptic feedback
-                      if (navigator.vibrate) {
-                        navigator.vibrate(100)
-                      }
+                    } catch (error) {
+                      console.error('Error saving workout:', error)
+                      alert('An error occurred while saving your workout.')
+                    } finally {
+                      setLoading(false)
                     }
-                  } catch (error) {
-                    console.error('Error saving workout:', error)
-                    alert('An error occurred while saving your workout.')
-                  } finally {
-                    setLoading(false)
-                  }
-                }}
-                disabled={loading || workoutCount <= 0}
-                className={`w-full relative overflow-hidden shadow-2xl hover:scale-105 active:scale-95 py-6 rounded-3xl font-black text-xl transition-all duration-200 touch-manipulation ${
-                  calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
+                  }}
+                  disabled={loading || workoutCount <= 0}
+                  className={`w-full relative overflow-hidden shadow-2xl hover:scale-105 active:scale-95 py-6 rounded-3xl font-black text-xl transition-all duration-200 touch-manipulation ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
                     ? 'bg-gradient-to-r from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 text-white'
                     : 'border border-white/10 bg-black/70 backdrop-blur-xl text-white/60'
-                }`}
-              >
-                <span className="relative z-10">
-                  {(() => {
-                    const rawPoints = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                    const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                    
-                    if (selectedWorkoutExercise.type === 'recovery' && effectivePoints < rawPoints) {
-                      return `SUBMIT • ${effectivePoints}/${rawPoints} pts (25% cap)`
-                    }
-                    
-                    return `SUBMIT • ${effectivePoints} pts`
-                  })()}
-                </span>
+                    }`}
+                >
+                  <span className="relative z-10">
+                    {(() => {
+                      const rawPoints = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                      const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+
+                      if (selectedWorkoutExercise.type === 'recovery' && effectivePoints < rawPoints) {
+                        return `SUBMIT • ${effectivePoints}/${rawPoints} pts (25% cap)`
+                      }
+
+                      return `SUBMIT • ${effectivePoints} pts`
+                    })()}
+                  </span>
                 </button>
               </div>
             </div>
@@ -2858,20 +2851,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {showSportSelection && (
           <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[120] flex items-center justify-center p-4">
             <div className="relative bg-black border border-white/10 rounded-3xl max-w-sm w-full max-h-[95vh] overflow-hidden shadow-2xl">
-              
+
               {/* Header */}
               <div className="relative overflow-hidden">
-                <div 
+                <div
                   className="absolute inset-0"
                   style={{
                     background: 'linear-gradient(135deg, #a855f750 0%, #a855f730 50%, transparent 100%)'
                   }}
                 />
-                
+
                 <div className="relative p-6 border-b border-white/10/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div 
+                      <div
                         className="p-3 rounded-2xl"
                         style={{
                           background: 'linear-gradient(135deg, #a855f740 0%, #a855f720 100%)'
