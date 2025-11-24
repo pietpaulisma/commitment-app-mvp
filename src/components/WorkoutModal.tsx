@@ -2403,11 +2403,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black text-white z-[110] flex flex-col animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {/* Vibrant gradient background */}
-            <div className="absolute inset-0" style={{
+            <div className="absolute inset-0 pointer-events-none" style={{
               background: `
-                radial-gradient(ellipse 140% 100% at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                radial-gradient(ellipse 120% 90% at 100% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 35%),
-                radial-gradient(ellipse 100% 120% at 50% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 30%),
+                radial-gradient(ellipse 140% 100% at 0% 0%, rgba(99, 102, 241, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse 120% 90% at 100% 0%, rgba(139, 92, 246, 0.35) 0%, transparent 45%),
+                radial-gradient(ellipse 100% 120% at 50% 100%, rgba(59, 130, 246, 0.3) 0%, transparent 40%),
                 #000000
               `
             }}></div>
