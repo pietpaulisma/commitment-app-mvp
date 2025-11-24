@@ -7,6 +7,13 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.30] - 2025-11-24
+
+### Changed
+- **Workout Input UI**: Replaced static gradient with dynamic `TimeGradient` to match dashboard aesthetic (changes based on time of day)
+
+---
+
 ## [0.4.29] - 2025-11-24
 
 ### Changed
