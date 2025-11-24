@@ -7,6 +7,18 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.24] - 2025-11-24
+
+### Fixed
+- **Flexible Rest Day**: Logic now correctly requires double the *Insane* target (not Sane) to earn a rest day on Mondays.
+- **Penalty Popup**: Improved reliability by fixing race conditions and timezone handling.
+- **Code Cleanup**: Removed unused files, optimized console logs, and resolved TypeScript lint errors.
+
+### Changed
+- **Flexible Rest Day**: Button now explicitly states it uses the current mode's points.
+
+---
+
 ## [Unreleased]
 
 ### Fixed
