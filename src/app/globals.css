@@ -114,11 +114,7 @@ body {
 
 /* Keep rectangular corners for main UI elements but allow some rounding for interactive elements */
 .bg-modern-card,
-.border-modern,
-button:not(.rounded),
-input:not(.rounded),
-textarea:not(.rounded),
-select:not(.rounded) {
+.border-modern {
   border-radius: 0;
 }
 
