@@ -2402,18 +2402,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Workout Input Overlay - Fixed Layout */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black text-white z-[110] flex flex-col animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-            {/* Subtle background pattern */}
-            <div className="absolute inset-0 opacity-3">
-              <div className="absolute inset-0" style={{
-                backgroundImage: 'radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 0%, transparent 25%), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 25%)',
-                backgroundSize: '100px 100px'
-              }}></div>
-            </div>
+            {/* Vibrant gradient background */}
+            <div className="absolute inset-0" style={{
+              background: `
+                radial-gradient(ellipse 140% 100% at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(ellipse 120% 90% at 100% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 35%),
+                radial-gradient(ellipse 100% 120% at 50% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 30%),
+                #000000
+              `
+            }}></div>
 
             {/* Header styled like clicked exercise button */}
-            <div className="relative overflow-hidden transition-all duration-300 mb-4 px-4 pt-4">
+            <div className="relative overflow-hidden transition-all duration-300 mb-2 px-3 pt-3">
               {/* Compact exercise button with integrated X */}
-              <div className="relative overflow-hidden rounded-3xl shadow-xl border border-white/10 bg-black/70 backdrop-blur-xl h-14">
+              <div className="relative overflow-hidden rounded-3xl shadow-xl border border-white/10 bg-black/70 backdrop-blur-xl h-12">
                 {/* Liquid gradient progress bar background - matches exercise button */}
                 <div
                   className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
@@ -2439,12 +2441,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {getExerciseIcon(selectedWorkoutExercise)}
                     <div className="font-medium text-white text-left">{selectedWorkoutExercise.name}</div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
                     <div className="text-right">
-                      <div className="text-xl font-bold text-white">
+                      <div className="text-lg font-bold text-white">
                         {(() => {
                           const remainingPoints = Math.max(0, dailyTarget - dailyProgress)
-                          return `${remainingPoints} pts left`
+                          return `${remainingPoints} left`
                         })()}
                       </div>
                     </div>
@@ -2461,10 +2463,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
 
             {/* Stopwatch Section */}
-            <div className="border-b border-white/10 backdrop-blur-sm px-4">
+            <div className="border-b border-white/10 backdrop-blur-sm px-3">
               <button
                 onClick={() => setIsStopwatchExpanded(!isStopwatchExpanded)}
-                className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+                className="w-full py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <ClockIcon className="w-5 h-5" style={{ color: userColor }} />
@@ -2544,7 +2546,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               )}
             </div>
 
-            <div className="flex-1 p-3 flex flex-col gap-3 overflow-y-auto">
+            {/* Main scrollable content area - Dynamic content with inputs */}
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               {/* Interactive Counter Display */}
               <div className="relative flex items-center justify-center h-32 group">
                 {/* Background glow effect */}
@@ -2603,8 +2606,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-4 gap-1">
+              {/* Increment/Decrement Buttons - Below number display */}
+              <div className="grid grid-cols-4 gap-1.5">
                 {(() => {
                   const stepAmount = getStepAmount()
                   const isHourBased = selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour'
@@ -2645,7 +2648,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <div className="text-sm text-white/60 font-medium uppercase tracking-wider">Weight Selection (kg)</div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-1">
+                  <div className="grid grid-cols-4 gap-1.5">
                     {[
                       { label: 'body', value: 0, multiplier: 1.0 },
                       { label: '10', value: 10, multiplier: 1.5 },
@@ -2716,7 +2719,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
 
             {/* Bottom section with calculation and submit - Fixed at bottom */}
-            <div className="flex-shrink-0 p-4 space-y-2 border-t border-white/10 backdrop-blur-sm">
+            <div className="flex-shrink-0 px-3 py-3 space-y-2 border-t border-white/10 backdrop-blur-sm">
               {/* Decreased/Regular toggle */}
               {selectedWorkoutExercise.supports_decreased && (
                 <button

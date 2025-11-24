@@ -7,6 +7,15 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.28] - 2025-11-24
+
+### Changed
+- **Workout Input UI**: Added vibrant gradient background for more visual appeal
+- **Workout Input UI**: Reduced excessive whitespace while maintaining visual hierarchy
+- **Workout Input UI**: Optimized font sizes and spacing for tighter, more polished design
+
+---
+
 ## [0.4.27] - 2025-11-24
 
 ### Fixed
