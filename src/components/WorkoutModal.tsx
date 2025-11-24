@@ -2441,7 +2441,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="text-right">
-                      <div className="text-xl font-bold text-white">{calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts</div>
+                      <div className="text-xl font-bold text-white">
+                        {(() => {
+                          const remainingPoints = Math.max(0, dailyTarget - dailyProgress)
+                          return `${remainingPoints} pts left`
+                        })()}
+                      </div>
                     </div>
                     {/* Integrated X button */}
                     <button
@@ -2825,9 +2830,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }
                   }}
                   disabled={loading || workoutCount <= 0}
-                  className={`w-full relative overflow-hidden shadow-2xl hover:scale-105 active:scale-95 py-6 rounded-3xl font-black text-xl transition-all duration-200 touch-manipulation ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
-                    ? 'bg-gradient-to-r from-indigo-500 via-purple-600 to-violet-700 border border-indigo-400 text-white'
-                    : 'border border-white/10 bg-black/70 backdrop-blur-xl text-white/60'
+                  className={`w-full relative overflow-hidden shadow-xl hover:scale-[1.02] active:scale-95 py-6 rounded-3xl font-bold text-xl transition-all duration-200 touch-manipulation border border-white/10 bg-black/70 backdrop-blur-xl ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
+                    ? 'text-white'
+                    : 'text-white/60'
                     }`}
                 >
                   <span className="relative z-10">
