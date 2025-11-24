@@ -2451,9 +2451,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     {/* Integrated X button */}
                     <button
                       onClick={() => setWorkoutInputOpen(false)}
-                      className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-200 flex items-center justify-center"
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/25 transition-all duration-200 flex items-center justify-center border border-white/10"
                     >
-                      <XMarkIcon className="w-4 h-4" />
+                      <XMarkIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -2631,7 +2631,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   <button
                     key={index}
                     onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-2xl flex items-center justify-center"
+                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
                   >
                     <span className="text-2xl font-bold">{button.label}</span>
                   </button>
@@ -2661,11 +2661,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
                       let buttonStyle = ''
                       if (isLocked) {
-                        buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 border-2 border-amber-300 shadow-[inset_0_2px_0_rgba(255,255,255,0.3),inset_0_0_25px_rgba(245,158,11,0.3),0_0_25px_rgba(245,158,11,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.35),inset_0_0_30px_rgba(245,158,11,0.35),0_0_30px_rgba(245,158,11,0.7)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.4),inset_0_0_35px_rgba(245,158,11,0.4),0_0_20px_rgba(245,158,11,0.5)] hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 active:from-amber-500 active:via-amber-600 active:to-amber-700 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/20 before:via-white/8 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-amber-600/20 after:to-transparent after:pointer-events-none'
+                        buttonStyle = 'relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 border border-amber-300/50 shadow-lg hover:shadow-amber-500/50 active:shadow-amber-500/30 active:scale-[0.96] transition-all duration-200 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:via-white/10 before:to-white/20 before:pointer-events-none'
                       } else if (isSelected) {
-                        buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 border-2 border-indigo-400 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),inset_0_0_20px_rgba(99,102,241,0.2),0_0_20px_rgba(99,102,241,0.4)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.25),inset_0_0_25px_rgba(99,102,241,0.25),0_0_25px_rgba(99,102,241,0.5)] active:shadow-[inset_0_3px_0_rgba(255,255,255,0.3),inset_0_0_30px_rgba(99,102,241,0.3),0_0_15px_rgba(99,102,241,0.3)] hover:from-indigo-400 hover:via-purple-500 hover:to-violet-600 active:from-indigo-600 active:via-purple-700 active:to-violet-800 active:scale-[0.95] transition-all duration-200 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/15 before:via-white/5 before:to-transparent before:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:bg-gradient-to-t after:from-indigo-600/20 after:to-transparent after:pointer-events-none'
+                        buttonStyle = 'relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 border border-violet-400/50 shadow-lg hover:shadow-violet-500/50 active:shadow-violet-500/30 active:scale-[0.96] transition-all duration-200 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:via-white/10 before:to-white/20 before:pointer-events-none'
                       } else {
-                        buttonStyle = 'relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 border-2 border-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.3)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2),0_1px_4px_rgba(0,0,0,0.1)] hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 active:from-slate-700 active:via-slate-800 active:to-slate-900 active:scale-[0.95] transition-all duration-150 touch-manipulation before:absolute before:inset-[2px] before:rounded-[inherit] before:bg-gradient-to-br before:from-white/3 before:to-transparent before:pointer-events-none'
+                        buttonStyle = 'relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-white/10 hover:border-white/20 active:scale-[0.96] transition-all duration-150 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:to-white/5 before:pointer-events-none'
                       }
 
                       return (
@@ -2830,9 +2830,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }
                   }}
                   disabled={loading || workoutCount <= 0}
-                  className={`w-full relative overflow-hidden shadow-xl hover:scale-[1.02] active:scale-95 py-6 rounded-3xl font-bold text-xl transition-all duration-200 touch-manipulation border border-white/10 bg-black/70 backdrop-blur-xl ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
-                    ? 'text-white'
-                    : 'text-white/60'
+                  className={`w-full relative overflow-hidden shadow-xl hover:scale-[1.02] active:scale-95 py-6 rounded-3xl font-bold text-xl transition-all duration-200 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:to-white/10 before:pointer-events-none ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
+                    ? (weekMode === 'insane' ? 'bg-gradient-to-r from-red-600 via-red-500 to-red-600 border border-red-400/50 text-white shadow-red-500/50' : 'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 border border-blue-400/50 text-white shadow-blue-500/50')
+                    : 'border border-white/10 bg-black/70 backdrop-blur-xl text-white/40'
                     }`}
                 >
                   <span className="relative z-10">
