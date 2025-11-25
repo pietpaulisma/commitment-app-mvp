@@ -280,6 +280,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     async function fetchPR() {
       if (!selectedWorkoutExercise || !user) return
 
+      console.log('Fetching PR for:', selectedWorkoutExercise.name, selectedWorkoutExercise.id)
+
       const { data, error } = await supabase
         .from('workout_logs')
         .select('count')
@@ -289,14 +291,27 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         .limit(1)
         .single()
 
+      if (error) {
+        console.error('Error fetching PR:', error)
+      }
+
       if (data) {
+        console.log('PR found:', data.count)
         setPersonalRecord(data.count)
       } else {
+        console.log('No PR found')
         setPersonalRecord(null)
       }
     }
     fetchPR()
   }, [selectedWorkoutExercise, user])
+
+  // Debug daily target
+  useEffect(() => {
+    console.log('Daily Target:', dailyTarget)
+    console.log('Daily Progress:', dailyProgress)
+    console.log('Remaining:', Math.max(0, dailyTarget - dailyProgress))
+  }, [dailyTarget, dailyProgress])
 
   // localStorage functions for locked weights
   const saveLockedWeightsToStorage = (weights: Record<string, number>) => {
@@ -2550,21 +2565,22 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             {/* Main scrollable content area - Dynamic content with inputs */}
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               {/* Interactive Counter Display */}
-              <div className="relative flex items-center justify-center h-32 group">
-                {/* Background glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/8 via-transparent to-purple-500/8 rounded-3xl blur-xl"></div>
-
+              {/* Interactive Counter & Quick Add Group */}
+              <div className="rounded-3xl bg-zinc-900/50 border border-white/10 overflow-hidden backdrop-blur-md shadow-lg">
                 {/* Number display with interactive click zones */}
-                <div className="relative w-full h-full flex items-center justify-center rounded-3xl bg-gradient-to-b from-zinc-800/60 to-zinc-900/60 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] overflow-hidden">
+                <div className="relative h-32 flex items-center justify-center border-b border-white/5 bg-gradient-to-b from-zinc-800/50 to-zinc-900/50">
+                  {/* Background glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 blur-xl"></div>
+
                   {/* Left click zone (decrement) */}
                   <button
                     onClick={() => {
                       const stepAmount = getStepAmount()
                       setWorkoutCount(Math.max(0, parseFloat((workoutCount - stepAmount).toFixed(4))))
                     }}
-                    className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/8 active:bg-white/12 transition-all duration-150 active:scale-95 touch-manipulation"
+                    className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 active:scale-95 touch-manipulation group/left"
                   >
-                    <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">−</span>
+                    <span className="opacity-0 group-hover/left:opacity-30 text-4xl font-bold transition-opacity duration-200">−</span>
                   </button>
 
                   {/* Right click zone (increment) */}
@@ -2573,78 +2589,75 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       const stepAmount = getStepAmount()
                       setWorkoutCount(parseFloat((workoutCount + stepAmount).toFixed(4)))
                     }}
-                    className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/8 active:bg-white/12 transition-all duration-150 active:scale-95 touch-manipulation"
+                    className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 active:scale-95 touch-manipulation group/right"
                   >
-                    <span className="opacity-25 hover:opacity-50 active:opacity-70 text-3xl font-bold transition-opacity duration-200">+</span>
+                    <span className="opacity-0 group-hover/right:opacity-30 text-4xl font-bold transition-opacity duration-200">+</span>
                   </button>
 
                   {/* Number display */}
-                  <div className="relative z-0 w-full h-full flex items-center justify-center">
+                  <div className="relative z-0 flex flex-col items-center justify-center">
                     <span
                       className="font-sans font-black tabular-nums text-white leading-none tracking-tight drop-shadow-2xl"
                       style={{
-                        fontSize: '5rem',
-                        textShadow: '0 0 40px rgba(255,255,255,0.2)'
+                        fontSize: '4.5rem',
+                        textShadow: '0 0 30px rgba(255,255,255,0.1)'
                       }}
                     >
                       {(() => {
                         // Format display based on exercise unit
                         if (selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour') {
-                          // Convert hours to minutes for display: 1.0833 hours = 65 minutes
                           const minutes = Math.round(workoutCount * 60)
                           return (
                             <>
                               {minutes}
-                              <span style={{ fontWeight: '300' }}>m</span>
+                              <span style={{ fontWeight: '300', fontSize: '0.5em' }}>m</span>
                             </>
                           )
                         }
-                        // For rep-based or minute-based exercises, show as-is
                         return workoutCount
                       })()}
                     </span>
+                    {/* Label inside number display */}
+                    <span className="text-white/40 text-xs font-bold tracking-[0.2em] uppercase mt-1">
+                      {selectedWorkoutExercise.unit === 'hour' ? 'MINUTES' : 'REPS'}
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Label below counter */}
-              <div className="text-center text-white/40 text-sm font-bold uppercase tracking-widest mt-[-8px] mb-4">
-                {selectedWorkoutExercise.unit === 'hour' ? 'mins' : 'reps'}
-              </div>
+                {/* Quick Add Buttons - Connected below */}
+                <div className="grid grid-cols-4 divide-x divide-white/5 bg-white/5">
+                  {(() => {
+                    const stepAmount = getStepAmount()
+                    const isHourBased = selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour'
 
-              {/* Increment/Decrement Buttons - Below number display */}
-              <div className="grid grid-cols-4 gap-1.5">
-                {(() => {
-                  const stepAmount = getStepAmount()
-                  const isHourBased = selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour'
-
-                  return [
-                    {
-                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (10 * stepAmount)).toFixed(4)))),
-                      label: isHourBased ? '-10m' : '-10'
-                    },
-                    {
-                      action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (5 * stepAmount)).toFixed(4)))),
-                      label: isHourBased ? '-5m' : '-5'
-                    },
-                    {
-                      action: () => setWorkoutCount(parseFloat((workoutCount + (5 * stepAmount)).toFixed(4))),
-                      label: isHourBased ? '+5m' : '+5'
-                    },
-                    {
-                      action: () => setWorkoutCount(parseFloat((workoutCount + (10 * stepAmount)).toFixed(4))),
-                      label: isHourBased ? '+10m' : '+10'
-                    }
-                  ]
-                })().map((button, index) => (
-                  <button
-                    key={index}
-                    onClick={button.action}
-                    className="relative overflow-hidden bg-gradient-to-b from-zinc-800/40 to-zinc-900/40 backdrop-blur-sm border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-gradient-to-b hover:from-zinc-800/60 hover:to-zinc-900/60 hover:border-white/15 active:bg-gradient-to-b active:from-zinc-900/60 active:to-black/60 active:scale-[0.96] transition-all duration-150 touch-manipulation aspect-square rounded-3xl flex items-center justify-center"
-                  >
-                    <span className="text-2xl font-bold">{button.label}</span>
-                  </button>
-                ))}
+                    return [
+                      {
+                        action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (10 * stepAmount)).toFixed(4)))),
+                        label: isHourBased ? '-10m' : '-10'
+                      },
+                      {
+                        action: () => setWorkoutCount(Math.max(0, parseFloat((workoutCount - (5 * stepAmount)).toFixed(4)))),
+                        label: isHourBased ? '-5m' : '-5'
+                      },
+                      {
+                        action: () => setWorkoutCount(parseFloat((workoutCount + (5 * stepAmount)).toFixed(4))),
+                        label: isHourBased ? '+5m' : '+5'
+                      },
+                      {
+                        action: () => setWorkoutCount(parseFloat((workoutCount + (10 * stepAmount)).toFixed(4))),
+                        label: isHourBased ? '+10m' : '+10'
+                      }
+                    ]
+                  })().map((button, index) => (
+                    <button
+                      key={index}
+                      onClick={button.action}
+                      className="py-4 hover:bg-white/10 active:bg-white/20 transition-colors flex items-center justify-center"
+                    >
+                      <span className="text-lg font-bold text-white/80">{button.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Weight Selector Section - only show for weighted exercises */}
@@ -2722,7 +2735,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
 
                   {/* Label below weight grid */}
-                  <div className="text-center text-white/40 text-xs font-bold uppercase tracking-widest mt-2">
+                  <div className="text-center text-white/60 text-xs font-bold uppercase tracking-widest mt-2">
                     Weight Multiplier
                   </div>
                 </div>

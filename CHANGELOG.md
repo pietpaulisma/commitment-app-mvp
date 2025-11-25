@@ -7,6 +7,15 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.32] - 2025-11-25
+
+### Changed
+- **Workout Input UI**: Merged number display and increment buttons into a single cohesive card
+- **Workout Input UI**: Improved label visibility and positioning ("REPS" inside display)
+- **Workout Input UI**: Added debug logging for data troubleshooting
+
+---
+
 ## [0.4.31] - 2025-11-25
 
 ### Changed
