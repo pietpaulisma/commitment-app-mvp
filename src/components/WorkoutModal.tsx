@@ -2466,11 +2466,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       })()}
                     </div>
                     {/* PR Pill */}
-                    {personalRecord !== null && (
-                      <div className="bg-white/10 rounded-full px-3 py-1 text-xs font-medium text-white/70">
-                        PR: {selectedWorkoutExercise.unit === 'hour' ? `${Math.round(personalRecord * 60)}m` : personalRecord}
-                      </div>
-                    )}
+                    <div className="bg-white/10 rounded-full px-3 py-1 text-xs font-medium text-white/70">
+                      {personalRecord !== null ? (
+                        <>PR: {selectedWorkoutExercise.unit === 'hour' ? `${Math.round(personalRecord * 60)}m` : personalRecord}</>
+                      ) : (
+                        <span className="opacity-50">No PR</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -2709,8 +2711,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </span>
                   </div>
 
-                  {/* Scrollable Buttons */}
-                  <div className="flex overflow-x-auto p-2 gap-2 no-scrollbar snap-x">
+                  {/* Connected Grid Buttons */}
+                  <div className="grid grid-cols-7 divide-x divide-white/5 bg-white/5">
                     {[
                       { label: 'BW', value: 0, multiplier: 1.0 },
                       { label: '10', value: 10, multiplier: 1.5 },
@@ -2718,21 +2720,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       { label: '20', value: 20, multiplier: 2.5 },
                       { label: '25', value: 25, multiplier: 3.0 },
                       { label: '30', value: 30, multiplier: 3.5 },
-                      { label: '35', value: 35, multiplier: 4.0 },
-                      { label: '40', value: 40, multiplier: 4.5 },
-                      { label: '45', value: 45, multiplier: 5.0 },
-                      { label: '50', value: 50, multiplier: 5.5 }
+                      { label: '35', value: 35, multiplier: 4.0 }
                     ].map((button, index) => {
                       const isSelected = selectedWeight === button.value
                       const isLocked = selectedWorkoutExercise && lockedWeights[selectedWorkoutExercise.id] === button.value
 
-                      let buttonStyle = ''
+                      let buttonClass = 'relative flex flex-col items-center justify-center py-3 transition-all duration-200 hover:bg-white/10 active:bg-white/20'
+
                       if (isLocked) {
-                        buttonStyle = 'bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400/50 shadow-lg shadow-amber-900/20'
+                        buttonClass += ' bg-amber-500/20 hover:bg-amber-500/30'
                       } else if (isSelected) {
-                        buttonStyle = 'bg-gradient-to-br from-violet-600 to-indigo-600 border-violet-400/50 shadow-lg shadow-violet-900/20'
-                      } else {
-                        buttonStyle = 'bg-zinc-800/50 border-white/5 hover:bg-zinc-700/50'
+                        buttonClass += ' bg-white/10'
                       }
 
                       return (
@@ -2757,17 +2755,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               setSelectedWeight(button.value)
                             }
                           }}
-                          className={`flex-shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center border transition-all duration-200 snap-center ${buttonStyle}`}
+                          className={buttonClass}
                         >
                           {isLocked && (
                             <div className="absolute top-1 right-1">
-                              <LockClosedIcon className="w-3 h-3 text-amber-900/70" />
+                              <LockClosedIcon className="w-3 h-3 text-amber-500" />
                             </div>
                           )}
-                          <span className={`text-lg font-bold ${isLocked ? 'text-amber-950' : 'text-white'}`}>
+                          <span className={`text-lg font-bold ${isLocked ? 'text-amber-500' : isSelected ? 'text-white' : 'text-white/60'}`}>
                             {button.label}
                           </span>
-                          <span className={`text-[10px] ${isLocked ? 'text-amber-900/60' : 'text-white/40'}`}>
+                          <span className={`text-[10px] ${isLocked ? 'text-amber-500/80' : isSelected ? 'text-white/80' : 'text-white/30'}`}>
                             ×{button.multiplier}
                           </span>
                         </button>
