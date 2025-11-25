@@ -7,6 +7,14 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.35] - 2025-11-25
+
+### Fixed
+- **Workout Input UI**: Fixed Personal Record (PR) not updating after workout submission
+- **Workout Input UI**: Fixed PR fetching logic for time-based exercises (fetching duration instead of count)
+
+---
+
 ## [0.4.34] - 2025-11-25
 
 ### Changed

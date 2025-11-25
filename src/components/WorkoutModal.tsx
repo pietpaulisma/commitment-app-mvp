@@ -275,36 +275,44 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     "MAKE THE TIMER BEG FOR MERCY."
   ]
 
-  // Fetch Personal Record when exercise is selected
+  // Fetch Personal Record when exercise is selected or modal opens
   useEffect(() => {
     async function fetchPR() {
-      if (!selectedWorkoutExercise || !user) return
+      if (!selectedWorkoutExercise || !user || !workoutInputOpen) return
 
       console.log('Fetching PR for:', selectedWorkoutExercise.name, selectedWorkoutExercise.id)
 
+      // Determine which field to query based on exercise type
+      // Use 'duration' for time-based exercises, 'count' for others
+      // We check unit === 'hour' or is_time_based flag if available
+      const isTimeBased = selectedWorkoutExercise.unit === 'hour' || selectedWorkoutExercise.unit === 'min' || selectedWorkoutExercise.is_time_based
+      const field = isTimeBased ? 'duration' : 'count'
+
       const { data, error } = await supabase
         .from('workout_logs')
-        .select('count')
+        .select(field)
         .eq('user_id', user.id)
         .eq('exercise_id', selectedWorkoutExercise.id)
-        .order('count', { ascending: false })
+        .order(field, { ascending: false })
         .limit(1)
         .single()
 
       if (error) {
-        console.error('Error fetching PR:', error)
-      }
-
-      if (data) {
-        console.log('PR found:', data.count)
-        setPersonalRecord(data.count)
+        // It's normal to have no rows if no PR exists yet
+        if (error.code !== 'PGRST116') {
+          console.error('Error fetching PR:', error)
+        }
+        setPersonalRecord(null)
+      } else if (data) {
+        const prValue = data[field as keyof typeof data]
+        console.log('PR found:', prValue)
+        setPersonalRecord(prValue)
       } else {
-        console.log('No PR found')
         setPersonalRecord(null)
       }
     }
     fetchPR()
-  }, [selectedWorkoutExercise, user])
+  }, [selectedWorkoutExercise, user, workoutInputOpen])
 
   // Debug daily target
   useEffect(() => {
