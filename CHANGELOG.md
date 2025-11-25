@@ -7,6 +7,15 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.33] - 2025-11-25
+
+### Changed
+- **Workout Input UI**: Added dynamic header that updates remaining points in real-time
+- **Workout Input UI**: Added visual progress bar showing daily progress + current input
+- **Workout Input UI**: Redesigned Weight Selection to match Counter card style (Top Display + Horizontal Scroll)
+
+---
+
 ## [0.4.32] - 2025-11-25
 
 ### Changed

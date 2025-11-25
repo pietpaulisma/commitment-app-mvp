@@ -2454,9 +2454,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </h1>
                   <div className="flex items-center gap-2">
                     {/* Gradient Pill for Points */}
-                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full px-3 py-1 text-sm font-bold text-white shadow-lg shadow-blue-900/20">
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full px-3 py-1 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-300">
                       {(() => {
-                        const remainingPoints = Math.max(0, dailyTarget - dailyProgress)
+                        const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                        const remainingPoints = Math.max(0, dailyTarget - (dailyProgress + currentPoints))
+
+                        if (remainingPoints === 0 && dailyTarget > 0) {
+                          return <span className="flex items-center gap-1">🎉 Done!</span>
+                        }
                         return `${remainingPoints} left`
                       })()}
                     </div>
@@ -2475,6 +2480,32 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 >
                   <XMarkIcon className="w-6 h-6 text-white" />
                 </button>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-2 h-2 bg-white/10 rounded-full overflow-hidden flex">
+                {(() => {
+                  const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                  const progressPercent = Math.min(100, (dailyProgress / Math.max(1, dailyTarget)) * 100)
+                  const currentPercent = Math.min(100 - progressPercent, (currentPoints / Math.max(1, dailyTarget)) * 100)
+
+                  return (
+                    <>
+                      {/* Already Done */}
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-500 ease-out"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                      {/* Current Input (Pulsing) */}
+                      {currentPercent > 0 && (
+                        <div
+                          className="h-full bg-purple-500 animate-pulse transition-all duration-300 ease-out"
+                          style={{ width: `${currentPercent}%` }}
+                        />
+                      )}
+                    </>
+                  )
+                })()}
               </div>
             </div>
 
@@ -2662,32 +2693,46 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
               {/* Weight Selector Section - only show for weighted exercises */}
               {selectedWorkoutExercise.is_weighted && (
-                <div className="space-y-2">
-                  <div className="text-center">
-                    {/* Removed top label as requested */}
+                <div className="rounded-3xl bg-zinc-900/50 border border-white/10 overflow-hidden backdrop-blur-md shadow-lg">
+                  {/* Top Display */}
+                  <div className="relative h-24 flex flex-col items-center justify-center border-b border-white/5 bg-gradient-to-b from-zinc-800/50 to-zinc-900/50">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl font-black text-white tracking-tight drop-shadow-xl">
+                        {selectedWeight === 0 ? 'BW' : selectedWeight}
+                      </span>
+                      <span className="text-sm font-bold text-white/40 tracking-widest uppercase">
+                        {selectedWeight === 0 ? '' : 'KG'}
+                      </span>
+                    </div>
+                    <span className="text-white/40 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">
+                      WEIGHT
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-1.5">
+                  {/* Scrollable Buttons */}
+                  <div className="flex overflow-x-auto p-2 gap-2 no-scrollbar snap-x">
                     {[
-                      { label: 'body', value: 0, multiplier: 1.0 },
+                      { label: 'BW', value: 0, multiplier: 1.0 },
                       { label: '10', value: 10, multiplier: 1.5 },
                       { label: '15', value: 15, multiplier: 2.0 },
                       { label: '20', value: 20, multiplier: 2.5 },
                       { label: '25', value: 25, multiplier: 3.0 },
                       { label: '30', value: 30, multiplier: 3.5 },
                       { label: '35', value: 35, multiplier: 4.0 },
-                      { label: '40', value: 40, multiplier: 4.5 }
+                      { label: '40', value: 40, multiplier: 4.5 },
+                      { label: '45', value: 45, multiplier: 5.0 },
+                      { label: '50', value: 50, multiplier: 5.5 }
                     ].map((button, index) => {
                       const isSelected = selectedWeight === button.value
                       const isLocked = selectedWorkoutExercise && lockedWeights[selectedWorkoutExercise.id] === button.value
 
                       let buttonStyle = ''
                       if (isLocked) {
-                        buttonStyle = 'relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 border border-amber-300/50 shadow-lg hover:shadow-amber-500/50 active:shadow-amber-500/30 active:scale-[0.96] transition-all duration-200 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:via-white/10 before:to-white/20 before:pointer-events-none'
+                        buttonStyle = 'bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400/50 shadow-lg shadow-amber-900/20'
                       } else if (isSelected) {
-                        buttonStyle = 'relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 border border-violet-400/50 shadow-lg hover:shadow-violet-500/50 active:shadow-violet-500/30 active:scale-[0.96] transition-all duration-200 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:via-white/10 before:to-white/20 before:pointer-events-none'
+                        buttonStyle = 'bg-gradient-to-br from-violet-600 to-indigo-600 border-violet-400/50 shadow-lg shadow-violet-900/20'
                       } else {
-                        buttonStyle = 'relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-white/10 hover:border-white/20 active:scale-[0.96] transition-all duration-150 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:to-white/5 before:pointer-events-none'
+                        buttonStyle = 'bg-zinc-800/50 border-white/5 hover:bg-zinc-700/50'
                       }
 
                       return (
@@ -2712,31 +2757,22 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               setSelectedWeight(button.value)
                             }
                           }}
-                          className={`${buttonStyle} aspect-square relative`}
+                          className={`flex-shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center border transition-all duration-200 snap-center ${buttonStyle}`}
                         >
                           {isLocked && (
-                            <div className="absolute top-2 right-2 z-20">
-                              <LockClosedIcon className="w-4 h-4 text-amber-900 drop-shadow-sm" />
+                            <div className="absolute top-1 right-1">
+                              <LockClosedIcon className="w-3 h-3 text-amber-900/70" />
                             </div>
                           )}
-
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className={`relative z-10 font-bold ${button.label === 'body' ? 'text-xl' : 'text-3xl'} ${isLocked ? 'text-amber-900' : ''}`}>
-                              {button.label}
-                            </span>
-                          </div>
-
-                          <span className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 text-xs z-10 ${isLocked ? 'text-amber-900/60' : 'text-white/30'}`}>
+                          <span className={`text-lg font-bold ${isLocked ? 'text-amber-950' : 'text-white'}`}>
+                            {button.label}
+                          </span>
+                          <span className={`text-[10px] ${isLocked ? 'text-amber-900/60' : 'text-white/40'}`}>
                             ×{button.multiplier}
                           </span>
                         </button>
                       )
                     })}
-                  </div>
-
-                  {/* Label below weight grid */}
-                  <div className="text-center text-white/60 text-xs font-bold uppercase tracking-widest mt-2">
-                    Weight Multiplier
                   </div>
                 </div>
               )}
