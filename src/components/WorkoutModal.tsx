@@ -151,6 +151,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [isDragging, setIsDragging] = useState(false)
   const [sliderPosition, setSliderPosition] = useState(0)
   const [isSliderComplete, setIsSliderComplete] = useState(false)
+  const [personalRecord, setPersonalRecord] = useState<number | null>(null)
 
   const router = useRouter()
 
@@ -273,6 +274,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     "DESTROY THE CLOCK WITH EVERY REP.",
     "MAKE THE TIMER BEG FOR MERCY."
   ]
+
+  // Fetch Personal Record when exercise is selected
+  useEffect(() => {
+    async function fetchPR() {
+      if (!selectedWorkoutExercise || !user) return
+
+      const { data, error } = await supabase
+        .from('workout_logs')
+        .select('count')
+        .eq('user_id', user.id)
+        .eq('exercise_id', selectedWorkoutExercise.id)
+        .order('count', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) {
+        setPersonalRecord(data.count)
+      } else {
+        setPersonalRecord(null)
+      }
+    }
+    fetchPR()
+  }, [selectedWorkoutExercise, user])
 
   // localStorage functions for locked weights
   const saveLockedWeightsToStorage = (weights: Record<string, number>) => {
@@ -2407,52 +2431,35 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             <TimeGradient className="absolute inset-0 pointer-events-none" intensity={0.4} />
 
             {/* Header styled like clicked exercise button */}
-            <div className="relative overflow-hidden transition-all duration-300 mb-2 px-3 pt-3">
-              {/* Compact exercise button with integrated X */}
-              <div className="relative overflow-hidden rounded-3xl shadow-xl border border-white/10 bg-black/70 backdrop-blur-xl h-12">
-                {/* Liquid gradient progress bar background - matches exercise button */}
-                <div
-                  className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-                  style={{
-                    width: '100%',
-                    background: (() => {
-                      const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                      const progressPercent = Math.min(100, (effectivePoints / Math.max(1, dailyTarget)) * 100)
-                      const color = getCategoryColor(selectedWorkoutExercise.type, selectedWorkoutExercise.id)
-
-                      return `linear-gradient(to right, 
-                          ${color} 0%, 
-                          ${color} ${Math.max(0, progressPercent - 5)}%, 
-                          ${color}dd ${progressPercent}%, 
-                          #000000 ${Math.min(100, progressPercent + 3)}%)`
-                    })()
-                  }}
-                />
-
-                {/* Header content with integrated X button */}
-                <div className="w-full px-4 py-2 relative flex items-center h-full">
-                  <div className="flex items-center space-x-3 flex-1">
-                    {getExerciseIcon(selectedWorkoutExercise)}
-                    <div className="font-medium text-white text-left">{selectedWorkoutExercise.name}</div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-white">
-                        {(() => {
-                          const remainingPoints = Math.max(0, dailyTarget - dailyProgress)
-                          return `${remainingPoints} left`
-                        })()}
-                      </div>
+            <div className="relative mb-2 px-4 pt-6 pb-2">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-4xl font-black text-white tracking-tight leading-none">
+                    {selectedWorkoutExercise.name}
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    {/* Gradient Pill for Points */}
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full px-3 py-1 text-sm font-bold text-white shadow-lg shadow-blue-900/20">
+                      {(() => {
+                        const remainingPoints = Math.max(0, dailyTarget - dailyProgress)
+                        return `${remainingPoints} left`
+                      })()}
                     </div>
-                    {/* Integrated X button */}
-                    <button
-                      onClick={() => setWorkoutInputOpen(false)}
-                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/25 transition-all duration-200 flex items-center justify-center border border-white/10"
-                    >
-                      <XMarkIcon className="w-5 h-5" />
-                    </button>
+                    {/* PR Pill */}
+                    {personalRecord !== null && (
+                      <div className="bg-white/10 rounded-full px-3 py-1 text-xs font-medium text-white/70">
+                        PR: {selectedWorkoutExercise.unit === 'hour' ? `${Math.round(personalRecord * 60)}m` : personalRecord}
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                <button
+                  onClick={() => setWorkoutInputOpen(false)}
+                  className="bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
+                >
+                  <XMarkIcon className="w-6 h-6 text-white" />
+                </button>
               </div>
             </div>
 
@@ -2600,6 +2607,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
+              {/* Label below counter */}
+              <div className="text-center text-white/40 text-sm font-bold uppercase tracking-widest mt-[-8px] mb-4">
+                {selectedWorkoutExercise.unit === 'hour' ? 'mins' : 'reps'}
+              </div>
+
               {/* Increment/Decrement Buttons - Below number display */}
               <div className="grid grid-cols-4 gap-1.5">
                 {(() => {
@@ -2639,7 +2651,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {selectedWorkoutExercise.is_weighted && (
                 <div className="space-y-2">
                   <div className="text-center">
-                    <div className="text-sm text-white/60 font-medium uppercase tracking-wider">Weight Selection (kg)</div>
+                    {/* Removed top label as requested */}
                   </div>
 
                   <div className="grid grid-cols-4 gap-1.5">
@@ -2707,6 +2719,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         </button>
                       )
                     })}
+                  </div>
+
+                  {/* Label below weight grid */}
+                  <div className="text-center text-white/40 text-xs font-bold uppercase tracking-widest mt-2">
+                    Weight Multiplier
                   </div>
                 </div>
               )}

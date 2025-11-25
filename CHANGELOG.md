@@ -7,6 +7,15 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.31] - 2025-11-25
+
+### Changed
+- **Workout Input UI**: Redesigned header with large title, gradient points pill, and Personal Record (PR) display
+- **Workout Input UI**: Added explicit labels for "reps/mins" and "Weight Multiplier"
+- **Workout Input UI**: Moved close button to standalone position
+
+---
+
 ## [0.4.30] - 2025-11-24
 
 ### Changed
