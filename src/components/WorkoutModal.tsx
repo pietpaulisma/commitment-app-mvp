@@ -2481,6 +2481,29 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         <span className="opacity-50">No PR</span>
                       )}
                     </div>
+                    {/* Debug Button */}
+                    <button
+                      onClick={async () => {
+                        console.log('Debug: Fetching last logs...');
+                        const { data, error } = await supabase
+                          .from('workout_logs')
+                          .select('*')
+                          .eq('user_id', user?.id)
+                          .eq('exercise_id', selectedWorkoutExercise.id)
+                          .order('logged_at', { ascending: false })
+                          .limit(5);
+
+                        if (error) {
+                          alert('Debug Error: ' + error.message);
+                        } else {
+                          console.log('Debug Logs:', data);
+                          alert('Last 5 Logs:\n' + JSON.stringify(data, null, 2));
+                        }
+                      }}
+                      className="bg-red-500/20 hover:bg-red-500/30 text-red-200 text-xs px-2 py-1 rounded-full transition-colors"
+                    >
+                      Debug
+                    </button>
                   </div>
                 </div>
 
