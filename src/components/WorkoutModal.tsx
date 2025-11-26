@@ -2658,7 +2658,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }}
                     className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 active:scale-95 touch-manipulation group/left"
                   >
-                    <span className="opacity-0 group-hover/left:opacity-30 text-4xl font-bold transition-opacity duration-200">−</span>
+                    <span className="opacity-30 group-hover/left:opacity-100 text-4xl font-bold transition-opacity duration-200">−</span>
                   </button>
 
                   {/* Right click zone (increment) */}
@@ -2669,7 +2669,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }}
                     className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 active:scale-95 touch-manipulation group/right"
                   >
-                    <span className="opacity-0 group-hover/right:opacity-30 text-4xl font-bold transition-opacity duration-200">+</span>
+                    <span className="opacity-30 group-hover/right:opacity-100 text-4xl font-bold transition-opacity duration-200">+</span>
                   </button>
 
                   {/* Number display */}
@@ -2969,80 +2969,83 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          </div >
+        )
+        }
         {/* Sport Selection Modal */}
-        {showSportSelection && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[120] flex items-center justify-center p-4">
-            <div className="relative bg-black border border-white/10 rounded-3xl max-w-sm w-full max-h-[95vh] overflow-hidden shadow-2xl">
+        {
+          showSportSelection && (
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[120] flex items-center justify-center p-4">
+              <div className="relative bg-black border border-white/10 rounded-3xl max-w-sm w-full max-h-[95vh] overflow-hidden shadow-2xl">
 
-              {/* Header */}
-              <div className="relative overflow-hidden">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(135deg, #a855f750 0%, #a855f730 50%, transparent 100%)'
-                  }}
-                />
+                {/* Header */}
+                <div className="relative overflow-hidden">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(135deg, #a855f750 0%, #a855f730 50%, transparent 100%)'
+                    }}
+                  />
 
-                <div className="relative p-6 border-b border-white/10/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div
-                        className="p-3 rounded-2xl"
-                        style={{
-                          background: 'linear-gradient(135deg, #a855f740 0%, #a855f720 100%)'
-                        }}
+                  <div className="relative p-6 border-b border-white/10/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div
+                          className="p-3 rounded-2xl"
+                          style={{
+                            background: 'linear-gradient(135deg, #a855f740 0%, #a855f720 100%)'
+                          }}
+                        >
+                          <BoltIcon className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-1">{selectedSport}</h3>
+                          <div className="text-white/80 text-sm">Select intensity level</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowSportSelection(false)}
+                        className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-110"
                       >
-                        <BoltIcon className="w-6 h-6 text-purple-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-white mb-1">{selectedSport}</h3>
-                        <div className="text-white/80 text-sm">Select intensity level</div>
-                      </div>
+                        <XMarkIcon className="w-6 h-6" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setShowSportSelection(false)}
-                      className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-110"
-                    >
-                      <XMarkIcon className="w-6 h-6" />
-                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {/* Intensity Selection */}
+                  <div className="space-y-3">
+                    {sportsExercises.map((exercise) => (
+                      <button
+                        key={exercise.id}
+                        onClick={() => {
+                          setSelectedWorkoutExercise(exercise)
+                          setWorkoutCount(0)
+                          setSelectedWeight(0)
+                          setIsDecreasedExercise(false)
+                          setShowSportSelection(false)
+                          setWorkoutInputOpen(true)
+                        }}
+                        className="w-full bg-black/30 backdrop-blur-sm hover:bg-gray-800/40 border border-white/10/50 hover:border-purple-400/50 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between group"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <BoltIcon className="w-5 h-5 text-purple-400" />
+                          <div className="text-left">
+                            <div className="font-semibold">{exercise.name}</div>
+                            <div className="text-sm text-gray-400">{exercise.points_per_unit} pts/{exercise.unit}</div>
+                          </div>
+                        </div>
+                        <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
-
-              <div className="p-6">
-                {/* Intensity Selection */}
-                <div className="space-y-3">
-                  {sportsExercises.map((exercise) => (
-                    <button
-                      key={exercise.id}
-                      onClick={() => {
-                        setSelectedWorkoutExercise(exercise)
-                        setWorkoutCount(0)
-                        setSelectedWeight(0)
-                        setIsDecreasedExercise(false)
-                        setShowSportSelection(false)
-                        setWorkoutInputOpen(true)
-                      }}
-                      className="w-full bg-black/30 backdrop-blur-sm hover:bg-gray-800/40 border border-white/10/50 hover:border-purple-400/50 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between group"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <BoltIcon className="w-5 h-5 text-purple-400" />
-                        <div className="text-left">
-                          <div className="font-semibold">{exercise.name}</div>
-                          <div className="text-sm text-gray-400">{exercise.points_per_unit} pts/{exercise.unit}</div>
-                        </div>
-                      </div>
-                      <div className="text-gray-400 group-hover:text-white transition-colors">→</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )
+        }
+      </div >
     </>
   )
 }

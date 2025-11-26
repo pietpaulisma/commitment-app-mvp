@@ -7,6 +7,13 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.41] - 2025-11-26
+
+### Fixed
+- **Workout Input UI**: Restored visibility of "-" and "+" buttons for workout counter (now always visible instead of hover-only)
+
+---
+
 ## [0.4.40] - 2025-11-26
 
 ### Fixed
