@@ -7,6 +7,14 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.39] - 2025-11-26
+
+### Fixed
+- **Workout Input UI**: Fixed workout deletion (trash button) not working
+- **Workout Input UI**: Fixed flexible rest day and slider submission logic to use correct table and schema
+
+---
+
 ## [0.4.38] - 2025-11-26
 
 ### Fixed

@@ -650,16 +650,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Log the flexible rest day points automatically
       const { error: logError } = await supabase
-        .from('logs')
+        .from('workout_logs')
         .insert({
           user_id: user.id,
-          exercise_id: null, // Special case for flexible rest day
+          exercise_id: 'flexible_rest_day', // Special case for flexible rest day
+          exercise_name: 'Flexible Rest Day',
           points: targetPoints,
           date: getLocalDateString(),
           count: 1,
           weight: 0,
-          duration: 0,
-          note: 'Flexible Rest Day Used'
+          duration: 0
         })
 
       if (logError) throw logError
@@ -1383,11 +1383,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       const exerciseList = (groupExercises?.map(ge => (ge.exercises as any)).filter(Boolean) || [])
         .sort((a: any, b: any) => a.name.localeCompare(b.name))
 
-      // Try to get today's workout counts (may fail if logs table doesn't exist)
+      // Try to get today's workout counts
       let todayLogs: any[] = []
       try {
         const { data } = await supabase
-          .from('logs')
+          .from('workout_logs')
           .select('exercise_id, count, duration')
           .eq('user_id', user.id)
           .eq('date', today)
@@ -1396,12 +1396,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         // Logs table not accessible, skipping progress tracking
       }
 
-      // Try to get yesterday's workouts (may fail if logs table doesn't exist)
+      // Try to get yesterday's workouts
       let yesterdayLogs = []
       try {
         const { data } = await supabase
-          .from('logs')
-          .select('exercise_id, exercises(name, type)')
+          .from('workout_logs')
+          .select('exercise_id')
           .eq('user_id', user.id)
           .eq('date', yesterday)
         yesterdayLogs = data || []
@@ -1706,7 +1706,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       setLoading(true)
 
       const { error } = await supabase
-        .from('logs')
+        .from('workout_logs')
         .delete()
         .eq('id', workoutId)
         .eq('user_id', user.id) // Security check
@@ -1819,11 +1819,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
 
         const { error } = await supabase
-          .from('logs')
+          .from('workout_logs')
           .insert({
             user_id: user.id,
             group_id: profile?.group_id,
             exercise_id: selectedWorkoutExercise.id,
+            exercise_name: selectedWorkoutExercise.name,
             count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
             weight: selectedWeight,
             duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
