@@ -2485,6 +2485,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <button
                       onClick={async () => {
                         console.log('Debug: Fetching last logs...');
+                        console.log('Debug: Current User ID:', user?.id);
+                        console.log('Debug: Exercise ID:', selectedWorkoutExercise.id);
+
                         const { data, error } = await supabase
                           .from('workout_logs')
                           .select('*')
@@ -2497,7 +2500,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           alert('Debug Error: ' + error.message);
                         } else {
                           console.log('Debug Logs:', data);
-                          alert('Last 5 Logs:\n' + JSON.stringify(data, null, 2));
+                          alert(`User ID: ${user?.id}\nLogs Found: ${data?.length}\n\n` + JSON.stringify(data, null, 2));
                         }
                       }}
                       className="bg-red-500/20 hover:bg-red-500/30 text-red-200 text-xs px-2 py-1 rounded-full transition-colors"
@@ -2875,12 +2878,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     try {
                       const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
 
+                      console.log('Submitting workout payload:', {
+                        user_id: user.id,
+                        group_id: profile?.group_id,
+                        exercise_id: selectedWorkoutExercise.id,
+                        count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
+                        weight: selectedWeight,
+                        duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
+                        points: points,
+                        is_decreased: isDecreasedExercise
+                      })
+
                       const { error } = await supabase
-                        .from('logs')
+                        .from('workout_logs')
                         .insert({
                           user_id: user.id,
                           group_id: profile?.group_id,
                           exercise_id: selectedWorkoutExercise.id,
+                          exercise_name: selectedWorkoutExercise.name,
                           count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
                           weight: selectedWeight,
                           duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
@@ -2891,7 +2906,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         })
 
                       if (error) {
-                        alert('Error logging workout: ' + error.message)
+                        console.error('Supabase Insert Error:', error)
+                        alert('Error logging workout: ' + error.message + '\nCode: ' + error.code)
                       } else {
                         // Refresh data
                         if (onWorkoutAdded) {
