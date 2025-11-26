@@ -960,7 +960,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
 
-  const getExerciseIcon = (exercise: Exercise) => {
+  const getExerciseIcon = (exercise: Exercise | undefined) => {
+    if (!exercise) return <FireIcon className="w-5 h-5 text-gray-400" />
     const name = exercise.name.toLowerCase()
 
     // Exercise-specific icon mappings using Heroicons
