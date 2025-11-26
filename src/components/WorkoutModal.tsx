@@ -759,13 +759,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Load points and recovery days, optionally load target data if not provided
       const loadPromises: any[] = [
         supabase
-          .from('logs')
+          .from('workout_logs')
           .select(`
             points,
             exercise_id,
             count,
-            duration,
-            exercises (name, type, unit, is_time_based)
+            duration
           `)
           .eq('user_id', user.id)
           .eq('date', today),
@@ -795,11 +794,18 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Calculate regular and recovery points separately
       const regularPoints = pointsResult.data
-        ?.filter((log: any) => log.exercises?.type !== 'recovery')
+        ?.filter((log: any) => {
+          // Find exercise in local state since we can't join
+          const exercise = exercises.find(e => e.id === log.exercise_id)
+          return exercise?.type !== 'recovery'
+        })
         ?.reduce((sum: number, log: any) => sum + log.points, 0) || 0
 
       const recoveryPoints = pointsResult.data
-        ?.filter((log: any) => log.exercises?.type === 'recovery')
+        ?.filter((log: any) => {
+          const exercise = exercises.find(e => e.id === log.exercise_id)
+          return exercise?.type === 'recovery'
+        })
         ?.reduce((sum: number, log: any) => sum + log.points, 0) || 0
 
       // Check if today is a recovery day
@@ -836,16 +842,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       const today = new Date().toISOString().split('T')[0]
 
       const { data: workouts } = await supabase
-        .from('logs')
-        .select(`
-          *,
-          exercises (*)
-        `)
+        .from('workout_logs')
+        .select('*')
         .eq('user_id', user.id)
         .eq('date', today)
         .order('points', { ascending: false })
 
-      setTodaysWorkouts(workouts || [])
+      // Map exercises to workouts
+      const workoutsWithExercises = workouts?.map(workout => ({
+        ...workout,
+        exercises: exercises.find(e => e.id === workout.exercise_id)
+      })) || []
+
+      setTodaysWorkouts(workoutsWithExercises)
     } catch (error) {
       console.error('Error loading today\'s workouts:', error)
     }
