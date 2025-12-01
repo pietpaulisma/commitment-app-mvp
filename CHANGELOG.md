@@ -7,6 +7,14 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.45] - 2025-11-26
+
+### Fixed
+- **Daily Recap History**: Fixed data inaccuracy by using local dates instead of UTC
+- **UX**: Redesigned history view to be a vertical scrolling feed of detailed daily recaps (Made It / Missed / Sick)
+
+---
+
 ## [0.4.44] - 2025-11-26
 
 ### Fixed
