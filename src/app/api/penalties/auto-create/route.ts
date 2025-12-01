@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
         const dayBeforeStr = dayBeforeRestDay.toISOString().split('T')[0]
 
         const { data: prevDayLogs } = await supabase
-          .from('logs')
+          .from('workout_logs')
           .select('points')
           .eq('user_id', user.id)
           .eq('date', dayBeforeStr)
@@ -175,22 +175,25 @@ export async function POST(request: NextRequest) {
 
     // Get yesterday's workout logs
     const { data: logs } = await supabase
-      .from('logs')
+      .from('workout_logs')
       .select('points, exercise_id')
       .eq('user_id', user.id)
       .eq('date', yesterdayStr)
+
+    // Get all exercises to check types
+    const { data: exercises } = await supabase
+      .from('exercises')
+      .select('id, type')
+
+    const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || [])
 
     // Calculate actual points with recovery cap
     let totalRecoveryPoints = 0
     let totalNonRecoveryPoints = 0
 
-    const recoveryExercises = [
-      'recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga',
-      'meditation', 'stretching', 'yoga', 'foam rolling', 'blackrolling'
-    ]
-
     logs?.forEach(log => {
-      if (recoveryExercises.includes(log.exercise_id)) {
+      const type = exerciseTypeMap.get(log.exercise_id)
+      if (type === 'recovery') {
         totalRecoveryPoints += log.points
       } else {
         totalNonRecoveryPoints += log.points

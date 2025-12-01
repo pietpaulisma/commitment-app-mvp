@@ -7,6 +7,15 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.42] - 2025-11-26
+
+### Fixed
+- **Daily Recap**: Fixed inaccurate points display by pointing to correct `workout_logs` table
+- **Penalty System**: Fixed 500 error and missing penalties by using correct table and improving recovery exercise detection
+- **Daily Recap**: Added history navigation (Previous/Next day buttons)
+
+---
+
 ## [0.4.41] - 2025-11-26
 
 ### Fixed

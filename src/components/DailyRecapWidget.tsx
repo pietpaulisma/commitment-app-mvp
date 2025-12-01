@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CalendarDaysIcon } from '@heroicons/react/24/outline'
+import { CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { formatDateShort, getReasonLabel } from '@/utils/penaltyHelpers'
 import { calculateDailyTarget } from '@/utils/targetCalculation'
 import { supabase } from '@/lib/supabase'
@@ -39,7 +39,11 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
   const [disputedMembers, setDisputedMembers] = useState<MemberStatus[]>([])
   const [sickMembers, setSickMembers] = useState<string[]>([])
   const [groupStreak, setGroupStreak] = useState(0)
-  const [yesterdayDate, setYesterdayDate] = useState('')
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    return d
+  })
   const [userStatus, setUserStatus] = useState<{
     targetMet: boolean
     toBeConfirmed: boolean
@@ -54,7 +58,27 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
     if (groupId) {
       loadRecapData()
     }
-  }, [groupId, userId])
+  }, [groupId, userId, selectedDate])
+
+  const handlePrevDay = () => {
+    const newDate = new Date(selectedDate)
+    newDate.setDate(newDate.getDate() - 1)
+    setSelectedDate(newDate)
+  }
+
+  const handleNextDay = () => {
+    const newDate = new Date(selectedDate)
+    newDate.setDate(newDate.getDate() + 1)
+
+    // Don't allow going into the future (beyond yesterday)
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    yesterday.setHours(0, 0, 0, 0)
+
+    if (newDate <= yesterday) {
+      setSelectedDate(newDate)
+    }
+  }
 
   const loadRecapData = async () => {
     if (!groupId) {
@@ -64,17 +88,13 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
     try {
       setLoading(true)
 
-      // Get yesterday's date in local time (consistent with auto-create logic)
-      const yesterday = new Date()
-      yesterday.setDate(yesterday.getDate() - 1)
-      const year = yesterday.getFullYear()
-      const month = String(yesterday.getMonth() + 1).padStart(2, '0')
-      const day = String(yesterday.getDate()).padStart(2, '0')
-      const yesterdayStr = `${year}-${month}-${day}`
+      // Use selectedDate instead of hardcoded yesterday
+      const year = selectedDate.getFullYear()
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(selectedDate.getDate()).padStart(2, '0')
+      const targetDateStr = `${year}-${month}-${day}`
 
-      const yesterdayDate = new Date(yesterdayStr)
-      const dayOfWeek = yesterdayDate.getDay()
-      setYesterdayDate(yesterdayStr)
+      const dayOfWeek = selectedDate.getDay()
 
       // Get group settings and data
       const [groupSettingsRes, groupDataRes] = await Promise.all([
@@ -115,24 +135,24 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
         return
       }
 
-      // Get all penalties for yesterday
+      // Get all penalties for target date
       const { data: penalties } = await supabase
         .from('pending_penalties')
         .select('id, user_id, status, reason_category, reason_message, target_points, actual_points')
         .eq('group_id', groupId)
-        .eq('date', yesterdayStr)
+        .eq('date', targetDateStr)
 
       // Create a map of penalties by user_id
-      const penaltyMap = new Map(penalties?.map(p => [p.user_id, p]) || [])
+      const penaltyMap = new Map(penalties?.map((p: any) => [p.user_id, p]) || [])
 
       // Calculate days since start
-      const daysSinceStart = Math.floor((yesterdayDate.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
+      const daysSinceStart = Math.floor((selectedDate.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
 
       // Get all member IDs
       const memberIds = members.map(m => m.id)
 
-      // Fetch all logs for yesterday and day before (for flex rest day checks) in one query
-      const dayBeforeRestDay = new Date(yesterdayDate)
+      // Fetch all logs for target date and day before (for flex rest day checks) in one query
+      const dayBeforeRestDay = new Date(selectedDate)
       dayBeforeRestDay.setDate(dayBeforeRestDay.getDate() - 1)
       const dayBeforeStr = dayBeforeRestDay.toISOString().split('T')[0]
 
@@ -140,10 +160,10 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       let allLogs = null
       if (memberIds.length > 0) {
         const { data, error: logsError } = await supabase
-          .from('logs')
+          .from('workout_logs')
           .select('user_id, points, exercise_id, date')
           .in('user_id', memberIds)
-          .in('date', [yesterdayStr, dayBeforeStr])
+          .in('date', [targetDateStr, dayBeforeStr])
 
         if (logsError) {
           console.error('[DailyRecap] Error fetching logs:', logsError)
@@ -172,6 +192,13 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       const pendingList: MemberStatus[] = []
       const disputedList: MemberStatus[] = []
       const sickList: string[] = []
+
+      // Get all exercises to check types
+      const { data: exercises } = await supabase
+        .from('exercises')
+        .select('id, type')
+
+      const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || [])
 
       for (const member of members) {
         // Skip if sick
@@ -220,21 +247,17 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           currentDayOfWeek: dayOfWeek
         })
 
-        // Get yesterday's workout logs from pre-fetched data
+        // Get workout logs from pre-fetched data
         const userLogs = logsByUserAndDate.get(member.id)
-        const logs = userLogs?.get(yesterdayStr) || []
+        const logs = userLogs?.get(targetDateStr) || []
 
         // Calculate actual points with recovery cap
         let totalRecoveryPoints = 0
         let totalNonRecoveryPoints = 0
 
-        const recoveryExercises = [
-          'recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga',
-          'meditation', 'stretching', 'yoga', 'foam rolling', 'blackrolling'
-        ]
-
         logs.forEach(log => {
-          if (recoveryExercises.includes(log.exercise_id)) {
+          const type = exerciseTypeMap.get(log.exercise_id)
+          if (type === 'recovery') {
             totalRecoveryPoints += log.points
           } else {
             totalNonRecoveryPoints += log.points
@@ -348,11 +371,31 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
         }}
       >
         {/* Header */}
-        <div className="flex items-center mb-2">
-          <CalendarDaysIcon className="w-4 h-4 text-white/60 mr-2" />
-          <h3 className="text-xs font-light text-white/80 uppercase tracking-widest">
-            Yesterday&apos;s Recap
-          </h3>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <CalendarDaysIcon className="w-4 h-4 text-white/60 mr-2" />
+            <h3 className="text-xs font-light text-white/80 uppercase tracking-widest">
+              Recap: {formatDateShort(selectedDate.toISOString().split('T')[0])}
+            </h3>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handlePrevDay}
+              className="p-1 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <ChevronLeftIcon className="w-4 h-4 text-white/60" />
+            </button>
+            <button
+              onClick={handleNextDay}
+              className={`p-1 rounded-full transition-colors ${selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()
+                ? 'opacity-30 cursor-not-allowed'
+                : 'hover:bg-white/10'
+                }`}
+              disabled={selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()}
+            >
+              <ChevronRightIcon className="w-4 h-4 text-white/60" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable content area */}
@@ -459,11 +502,31 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       }}
     >
       {/* Header */}
-      <div className="flex items-center mb-2">
-        <CalendarDaysIcon className="w-4 h-4 text-white/60 mr-2" />
-        <h3 className="text-xs font-light text-white/80 uppercase tracking-widest">
-          Last Night ({yesterdayDate && formatDateShort(yesterdayDate)})
-        </h3>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center">
+          <CalendarDaysIcon className="w-4 h-4 text-white/60 mr-2" />
+          <h3 className="text-xs font-light text-white/80 uppercase tracking-widest">
+            Recap ({formatDateShort(selectedDate.toISOString().split('T')[0])})
+          </h3>
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handlePrevDay}
+            className="p-1 hover:bg-white/10 rounded-full transition-colors"
+          >
+            <ChevronLeftIcon className="w-4 h-4 text-white/60" />
+          </button>
+          <button
+            onClick={handleNextDay}
+            className={`p-1 rounded-full transition-colors ${selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()
+              ? 'opacity-30 cursor-not-allowed'
+              : 'hover:bg-white/10'
+              }`}
+            disabled={selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()}
+          >
+            <ChevronRightIcon className="w-4 h-4 text-white/60" />
+          </button>
+        </div>
       </div>
 
       {/* User Status */}
