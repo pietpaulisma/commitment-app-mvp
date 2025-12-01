@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { XMarkIcon, ClockIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { supabase } from '@/lib/supabase'
 import { calculateDailyTarget } from '@/utils/targetCalculation'
@@ -158,17 +159,15 @@ export function DailyRecapHistoryModal({ groupId, onClose, onSelectDate }: Daily
         }
     }
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
             <div
-                className="relative bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl max-w-md w-full"
+                className="relative bg-black/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col"
                 style={{
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
-                    maxHeight: '85vh',
-                    display: 'flex',
-                    flexDirection: 'column'
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3)',
+                    maxHeight: '85vh'
                 }}
             >
                 {/* Header */}
@@ -222,7 +221,7 @@ export function DailyRecapHistoryModal({ groupId, onClose, onSelectDate }: Daily
                                             <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full ${day.completedMembers === day.totalMembers ? 'bg-green-500' :
-                                                            day.completedMembers >= day.totalMembers / 2 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        day.completedMembers >= day.totalMembers / 2 ? 'bg-yellow-500' : 'bg-red-500'
                                                         }`}
                                                     style={{ width: `${(day.completedMembers / day.totalMembers) * 100}%` }}
                                                 />
@@ -236,6 +235,7 @@ export function DailyRecapHistoryModal({ groupId, onClose, onSelectDate }: Daily
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     )
 }
