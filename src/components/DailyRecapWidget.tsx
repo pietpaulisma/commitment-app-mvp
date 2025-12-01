@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { formatDateShort, getReasonLabel } from '@/utils/penaltyHelpers'
+import { DailyRecapHistoryModal } from './DailyRecapHistoryModal'
 import { calculateDailyTarget } from '@/utils/targetCalculation'
 import { supabase } from '@/lib/supabase'
 
@@ -44,6 +45,7 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
     d.setDate(d.getDate() - 1)
     return d
   })
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [userStatus, setUserStatus] = useState<{
     targetMet: boolean
     toBeConfirmed: boolean
@@ -60,24 +62,9 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
     }
   }, [groupId, userId, selectedDate])
 
-  const handlePrevDay = () => {
-    const newDate = new Date(selectedDate)
-    newDate.setDate(newDate.getDate() - 1)
-    setSelectedDate(newDate)
-  }
-
-  const handleNextDay = () => {
-    const newDate = new Date(selectedDate)
-    newDate.setDate(newDate.getDate() + 1)
-
-    // Don't allow going into the future (beyond yesterday)
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    yesterday.setHours(0, 0, 0, 0)
-
-    if (newDate <= yesterday) {
-      setSelectedDate(newDate)
-    }
+  const handleSelectDate = (date: Date) => {
+    setSelectedDate(date)
+    setShowHistoryModal(false)
   }
 
   const loadRecapData = async () => {
@@ -378,24 +365,13 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
               Recap: {formatDateShort(selectedDate.toISOString().split('T')[0])}
             </h3>
           </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handlePrevDay}
-              className="p-1 hover:bg-white/10 rounded-full transition-colors"
-            >
-              <ChevronLeftIcon className="w-4 h-4 text-white/60" />
-            </button>
-            <button
-              onClick={handleNextDay}
-              className={`p-1 rounded-full transition-colors ${selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()
-                ? 'opacity-30 cursor-not-allowed'
-                : 'hover:bg-white/10'
-                }`}
-              disabled={selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()}
-            >
-              <ChevronRightIcon className="w-4 h-4 text-white/60" />
-            </button>
-          </div>
+          <button
+            onClick={() => setShowHistoryModal(true)}
+            className="p-1 hover:bg-white/10 rounded-full transition-colors"
+            aria-label="View history"
+          >
+            <ClockIcon className="w-4 h-4 text-white/60" />
+          </button>
         </div>
 
         {/* Scrollable content area */}
@@ -489,6 +465,14 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
             🔥 {groupStreak} day streak
           </p>
         </div>
+        {/* History Modal */}
+        {showHistoryModal && groupId && (
+          <DailyRecapHistoryModal
+            groupId={groupId}
+            onClose={() => setShowHistoryModal(false)}
+            onSelectDate={handleSelectDate}
+          />
+        )}
       </div>
     )
   }
@@ -509,24 +493,13 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
             Recap ({formatDateShort(selectedDate.toISOString().split('T')[0])})
           </h3>
         </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handlePrevDay}
-            className="p-1 hover:bg-white/10 rounded-full transition-colors"
-          >
-            <ChevronLeftIcon className="w-4 h-4 text-white/60" />
-          </button>
-          <button
-            onClick={handleNextDay}
-            className={`p-1 rounded-full transition-colors ${selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()
-              ? 'opacity-30 cursor-not-allowed'
-              : 'hover:bg-white/10'
-              }`}
-            disabled={selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()}
-          >
-            <ChevronRightIcon className="w-4 h-4 text-white/60" />
-          </button>
-        </div>
+        <button
+          onClick={() => setShowHistoryModal(true)}
+          className="p-1 hover:bg-white/10 rounded-full transition-colors"
+          aria-label="View history"
+        >
+          <ClockIcon className="w-4 h-4 text-white/60" />
+        </button>
       </div>
 
       {/* User Status */}
@@ -585,6 +558,14 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           Group: {stats.completed}/{stats.total} hit target
         </p>
       </div>
+      {/* History Modal */}
+      {showHistoryModal && groupId && (
+        <DailyRecapHistoryModal
+          groupId={groupId}
+          onClose={() => setShowHistoryModal(false)}
+          onSelectDate={handleSelectDate}
+        />
+      )}
     </div>
   )
 }
