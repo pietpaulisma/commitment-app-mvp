@@ -26,152 +26,152 @@ const getHourlyMessage = (hour: number): { quote: string, author: string } => {
     { quote: "Sleep is for people who skipped the gym.", author: "Ron Burgundy" },
     { quote: "I'm a rider... even at 1 AM.", author: "Zanger Rinus" },
     { quote: "Your dreams can wait, your gains can't.", author: "Arnold Schwarzenegger" },
-    
+
     // 1 AM - 2 AM
     { quote: "If it's quiet, your grunts will echo.", author: "Will Ferrell" },
     { quote: "Leg day at 1 AM. Because why not scare the janitor?", author: "Rocky Balboa" },
     { quote: "The gym lights at 1 AM hit different when you're this dedicated.", author: "Terry Crews" },
     { quote: "This is the hour legends are made… and sleep-deprived.", author: "Muhammad Ali" },
-    
+
     // 2 AM - 3 AM
     { quote: "Push till your shadow leaves.", author: "David Hasselhoff" },
     { quote: "You said you'd start tomorrow. Welcome to tomorrow.", author: "Dwayne Johnson" },
     { quote: "One more set while the world sleeps. That's how champions are built.", author: "Arnold Schwarzenegger" },
     { quote: "The weights don't judge, but I do.", author: "Gordon Ramsay" },
-    
+
     // 3 AM - 4 AM
     { quote: "Your pillow is for the weak.", author: "Scooter" },
     { quote: "If you're here at 3 AM, you're either insane or unstoppable.", author: "Terry Crews" },
     { quote: "3 AM is when the weak go to bed and the strong get started.", author: "Ron Burgundy" },
     { quote: "Train like the sun is watching.", author: "Muhammad Ali" },
-    
+
     // 4 AM - 5 AM
     { quote: "Only ghosts and gains live here.", author: "Ron Burgundy" },
     { quote: "Beat the sunrise, own the day.", author: "Rocky Balboa" },
     { quote: "Starting the day with push-ups while others start with excuses.", author: "Michael Scott" },
     { quote: "Your competition is still asleep.", author: "Arnold Schwarzenegger" },
-    
+
     // 5 AM - 6 AM
     { quote: "HYPER HYPER! THE DAY IS YOURS!", author: "Scooter" },
     { quote: "The early set catches the glory.", author: "Dwayne Johnson" },
     { quote: "5 AM workouts separate the legends from the wannabes.", author: "Terry Crews" },
     { quote: "If you're lifting now, you've already won.", author: "Muhammad Ali" },
-    
+
     // 6 AM - 7 AM
     { quote: "One last set before breakfast destroys your abs.", author: "Gordon Ramsay" },
     { quote: "Do. Or do not. At sunrise, there is no excuse.", author: "Arnold Schwarzenegger" },
     { quote: "You miss 100% of the morning push-ups… enjoy your printer-ink body.", author: "Michael Scott" },
     { quote: "Sweat at sunrise is just liquid victory leaking out.", author: "Will Ferrell" },
-    
+
     // 7 AM - 8 AM
     { quote: "If you want results, wake up before the excuses do.", author: "Muhammad Ali" },
     { quote: "Run like you stole breakfast from Gordon Ramsay's kitchen.", author: "Gordon Ramsay" },
     { quote: "Rise and shine, champ — even my grandma ran faster… and she's been gone for ten years.", author: "Rocky Balboa" },
     { quote: "Real champions do push-ups in the rain while others find excuses.", author: "David Hasselhoff" },
-    
+
     // 8 AM - 9 AM
     { quote: "No traffic at this hour — except for you, sprinting past your limits.", author: "Usain Bolt" },
     { quote: "Bench press like you're proving something to your ex's new boyfriend.", author: "Ron Burgundy" },
     { quote: "HYPER HYPER! FASTER HARDER STRONGER — YOUR BOSS CAN WAIT!", author: "Scooter" },
     { quote: "If you can lift it before 9, you own the whole day.", author: "Arnold Schwarzenegger" },
-    
+
     // 9 AM - 10 AM
     { quote: "Push now, type later. The laptop isn't going anywhere.", author: "Dwayne Johnson" },
     { quote: "Don't just sit there — chair dips won't break your Zoom connection.", author: "Will Ferrell" },
     { quote: "Squats at 9 AM? Your desk chair is already jealous.", author: "Gordon Ramsay" },
     { quote: "Make the printer jealous. It's the only thing here working as hard as you.", author: "Michael Scott" },
-    
+
     // 10 AM - 11 AM
     { quote: "Flex break! Show the interns what real gains look like.", author: "Terry Crews" },
     { quote: "Hydrate like you're about to arm-wrestle Poseidon.", author: "Jason Momoa" },
     { quote: "Punch the bag like it owes you lunch money.", author: "Rocky Balboa" },
     { quote: "If the dumbbell feels heavy, remember — it's lighter than regret.", author: "Arnold Schwarzenegger" },
-    
+
     // 11 AM - 12 PM
     { quote: "This isn't a coffee break, it's a gains break.", author: "Arnold Schwarzenegger" },
     { quote: "Go hard now so you can eat like a king at noon.", author: "Dwayne Johnson" },
     { quote: "Your arms should be shaking harder than the office coffee machine.", author: "Will Ferrell" },
     { quote: "Lunch is earned, not deserved. Keep pushing.", author: "Terry Crews" },
-    
+
     // 12 PM - 1 PM
     { quote: "If you're not sweating, you're just rearranging furniture.", author: "Gordon Ramsay" },
     { quote: "Do curls until your fork feels like a dumbbell.", author: "Ron Burgundy" },
     { quote: "Lunch tastes better after lunges.", author: "Michael Scott" },
     { quote: "Even my salad has more crunch than your core.", author: "Gordon Ramsay" },
-    
+
     // 1 PM - 2 PM
     { quote: "Cycle toward gains, not toward the snack bar.", author: "David Hasselhoff" },
     { quote: "Stand up. Squat. Scare your coworkers.", author: "Will Ferrell" },
     { quote: "Push-ups at 1 PM — because coffee only wakes the mind, not the body.", author: "Rocky Balboa" },
     { quote: "Afternoon workouts hit different when everyone else is food-coma'd.", author: "Terry Crews" },
-    
+
     // 2 PM - 3 PM
     { quote: "If you're not working out, you're working on your excuses.", author: "Arnold Schwarzenegger" },
     { quote: "Wake up those legs before your brain falls asleep.", author: "Dwayne Johnson" },
     { quote: "If your posture drops, so does your reputation.", author: "Ron Burgundy" },
     { quote: "Training, laughing, living while others sit behind desks.", author: "Scooter" },
-    
+
     // 3 PM - 4 PM
     { quote: "No meeting will pump you up like this set will.", author: "Terry Crews" },
     { quote: "Lift now, so you don't lift regrets later.", author: "Muhammad Ali" },
     { quote: "Do it for the pump… and for that mirror selfie at 4 PM.", author: "Arnold Schwarzenegger" },
     { quote: "Green light means go harder, not go home.", author: "Scooter" },
-    
+
     // 4 PM - 5 PM
     { quote: "If you can still text during the set, add weight.", author: "Gordon Ramsay" },
     { quote: "Punch out of work, punch into the gym.", author: "Rocky Balboa" },
     { quote: "Your commute home is the cooldown. No skipping the main set.", author: "Dwayne Johnson" },
     { quote: "Ik trek mijn sportpak aan, jij je jas. We weten wie wint.", author: "Zanger Rinus" },
-    
+
     // 5 PM - 6 PM
     { quote: "If you don't sweat now, you'll cry later.", author: "Scooter" },
     { quote: "This is the real happy hour.", author: "Will Ferrell" },
     { quote: "Load the bar like you load your plate — with ambition.", author: "Arnold Schwarzenegger" },
     { quote: "Tomorrow's soreness is today's evidence of greatness.", author: "Muhammad Ali" },
-    
+
     // 6 PM - 7 PM
     { quote: "If you leave now, you're only cheating yourself.", author: "Muhammad Ali" },
     { quote: "Lift like your dinner depends on it.", author: "Gordon Ramsay" },
     { quote: "Train like you're about to run through a wall.", author: "Rocky Balboa" },
     { quote: "Running, laughing, singing, and winning. That's the formula.", author: "Will Ferrell" },
-    
+
     // 7 PM - 8 PM
     { quote: "Every rep now is one less excuse later.", author: "Dwayne Johnson" },
     { quote: "The day isn't over until your muscles say so.", author: "Terry Crews" },
     { quote: "Sweat more now, shine more later.", author: "Arnold Schwarzenegger" },
     { quote: "Sunset runs hit different when you're chasing your dreams.", author: "Ron Burgundy" },
-    
+
     // 8 PM - 9 PM
     { quote: "If your shirt is dry, you haven't worked out.", author: "Scooter" },
     { quote: "Don't go to bed. The bed is for cowards.", author: "David Hasselhoff" },
     { quote: "If you can still walk after leg day… you didn't do leg day.", author: "Rocky Balboa" },
     { quote: "Ik spring, ik stoot, ik scoor.", author: "Zanger Rinus" },
-    
+
     // 9 PM - 10 PM
     { quote: "Your couch is whispering. Ignore it.", author: "Ron Burgundy" },
     { quote: "Champions finish when others Netflix.", author: "Dwayne Johnson" },
     { quote: "HYPER HYPER! NIGHT TIME IS LIFT TIME!", author: "Scooter" },
     { quote: "The night is dark, but your determination burns bright.", author: "Will Ferrell" },
-    
+
     // 10 PM - 11 PM
     { quote: "Push harder — the world isn't watching, but you are.", author: "Muhammad Ali" },
     { quote: "If you're still here, you're already winning.", author: "Terry Crews" },
     { quote: "Train now, sleep like royalty.", author: "Arnold Schwarzenegger" },
     { quote: "Ik doe nog een rondje… jij doet nog een excuus.", author: "Zanger Rinus" },
-    
+
     // 11 PM - 12 AM
     { quote: "One more set. Your bed will forgive you.", author: "Will Ferrell" },
     { quote: "The iron doesn't care what time it is.", author: "Dwayne Johnson" },
     { quote: "If you lift at midnight, you own tomorrow.", author: "Rocky Balboa" },
     { quote: "This late-night dedication deserves a medal for persistence.", author: "David Hasselhoff" }
   ]
-  
+
   // Get 4 messages for the current hour, cycling through them based on minutes
   const baseIndex = hour * 4
   const minute = new Date().getMinutes()
   const cycleIndex = Math.floor(minute / 15) // Change every 15 minutes
   const messageIndex = (baseIndex + cycleIndex) % allMessages.length
-  
+
   return allMessages[messageIndex] || allMessages[0]
 }
 
@@ -181,106 +181,106 @@ const getTargetAchievedMessage = (hour: number): { quote: string, author: string
     // 12 AM - 1 AM
     { quote: "Day over. Gains secured. Now rest.", author: "Dwayne Johnson" },
     { quote: "You've already ridden this day to victory.", author: "David Hasselhoff" },
-    
+
     // 1 AM - 2 AM
     { quote: "Victory at 1 AM. Now go dream about how great you are.", author: "Muhammad Ali" },
     { quote: "Today is pure white from the rest you've earned.", author: "Ron Burgundy" },
-    
+
     // 2 AM - 3 AM
     { quote: "All done. The rest of the night is yours.", author: "Ron Burgundy" },
     { quote: "The music keeps playing, but you can finally chill.", author: "Terry Crews" },
-    
+
     // 3 AM - 4 AM
     { quote: "Mission complete. Time to haunt the fridge.", author: "Terry Crews" },
     { quote: "The day may be gray, but your victory is crystal clear.", author: "Muhammad Ali" },
-    
+
     // 4 AM - 5 AM
     { quote: "Goal hit before sunrise. Go watch everyone else wake up.", author: "Rocky Balboa" },
     { quote: "Started the day with victory, now you can rest like a champion.", author: "Ron Burgundy" },
-    
+
     // 5 AM - 6 AM
     { quote: "Done before dawn. You're officially a superhero.", author: "Arnold Schwarzenegger" },
     { quote: "Golden achievement unlocked. You're officially done for the day.", author: "Terry Crews" },
-    
+
     // 6 AM - 7 AM
     { quote: "Target smashed before sunrise. You may now return to being a legend.", author: "Dwayne Johnson" },
     { quote: "Mission complete. You don't need to prove anything else today.", author: "Will Ferrell" },
-    
+
     // 7 AM - 8 AM
     { quote: "Mission accomplished. Go eat breakfast like a king.", author: "Michael Scott" },
     { quote: "You've crossed the finish line while others are still hitting snooze.", author: "David Hasselhoff" },
-    
+
     // 8 AM - 9 AM
     { quote: "All goals crushed. Clock out, champ.", author: "Scooter" },
     { quote: "You've already won the day. Anything else is just showing off.", author: "Ron Burgundy" },
-    
+
     // 9 AM - 10 AM
     { quote: "Green light for rest - you've earned every minute.", author: "Arnold Schwarzenegger" },
     { quote: "You're done. Take the rest of the day off from being this awesome.", author: "Arnold Schwarzenegger" },
-    
+
     // 10 AM - 11 AM
     { quote: "Workout complete. Now hydrate and brag.", author: "Will Ferrell" },
     { quote: "One song, one set, and you're already victorious.", author: "Scooter" },
-    
+
     // 11 AM - 12 PM
     { quote: "Mission complete. Go eat like you just conquered Rome.", author: "Gordon Ramsay" },
     { quote: "You're glowing with victory. Literally radiating success.", author: "Ron Burgundy" },
-    
+
     // 12 PM - 1 PM
     { quote: "Lunchtime and you're already done. Enjoy being superior.", author: "Terry Crews" },
     { quote: "While others cycle to lunch, you're cycling toward your trophy.", author: "Michael Scott" },
-    
+
     // 1 PM - 2 PM
     { quote: "Target met. You are officially excused from all future effort today.", author: "Dwayne Johnson" },
     { quote: "Victory achieved. You can lean back and enjoy the view.", author: "Arnold Schwarzenegger" },
-    
+
     // 2 PM - 3 PM
     { quote: "Crushed it. Go relax while the mortals sweat.", author: "Muhammad Ali" },
     { quote: "Trained hard, laughed harder. Now you get to chill.", author: "Will Ferrell" },
-    
+
     // 3 PM - 4 PM
     { quote: "Achievement unlocked. Rest mode engaged.", author: "Rocky Balboa" },
     { quote: "Orange you glad you're done? No more steps required.", author: "Terry Crews" },
-    
+
     // 4 PM - 5 PM
     { quote: "You're finished. Go home, flex once, and sit down.", author: "Ron Burgundy" },
     { quote: "Ik trek mijn sportpak uit… want jij bent klaar.", author: "Zanger Rinus" },
-    
+
     // 5 PM - 6 PM
     { quote: "Victory hour. The gym misses you already.", author: "Will Ferrell" },
     { quote: "Royal purple throne awaits after this victory.", author: "Gordon Ramsay" },
-    
+
     // 6 PM - 7 PM
     { quote: "Done and dusted. Pass the carbs.", author: "Gordon Ramsay" },
     { quote: "Ran hard, sang loud, now you can relax loud.", author: "David Hasselhoff" },
-    
+
     // 7 PM - 8 PM
     { quote: "Day's work is over. Time to strut.", author: "Terry Crews" },
     { quote: "Today's gold medal is already in your pocket.", author: "Muhammad Ali" },
-    
+
     // 8 PM - 9 PM
     { quote: "Workout complete. Couch mode activated.", author: "David Hasselhoff" },
     { quote: "Ik spring… maar jij hoeft niks meer te doen.", author: "Zanger Rinus" },
-    
+
     // 9 PM - 10 PM
     { quote: "You're done. Everyone else is just late to the party.", author: "Rocky Balboa" },
     { quote: "The day may be dark, but you rest as a champion.", author: "Rocky Balboa" },
-    
+
     // 10 PM - 11 PM
     { quote: "Day finished. Put the dumbbells to bed.", author: "Arnold Schwarzenegger" },
     { quote: "Ik doe nog een rondje… maar jij mag stoppen.", author: "Zanger Rinus" },
-    
+
     // 11 PM - 12 AM
     { quote: "You closed the day with a win. Sleep like royalty.", author: "Scooter" },
     { quote: "Silver lining complete. Tomorrow you prove nothing because today you proved everything.", author: "Gordon Ramsay" }
   ]
-  
+
   // Get 2 messages for the current hour, cycling through them based on minutes (every 30 minutes)
   const baseIndex = hour * 2
   const minute = new Date().getMinutes()
   const cycleIndex = Math.floor(minute / 30) // Change every 30 minutes
   const messageIndex = (baseIndex + cycleIndex) % achievementMessages.length
-  
+
   return achievementMessages[messageIndex] || achievementMessages[0]
 }
 
@@ -289,17 +289,17 @@ const getGradientStyle = (colorClass: string, type: 'organic' | 'linear' = 'line
   if (type === 'organic') {
     const organicMap: Record<string, string> = {
       'bg-orange-400': 'radial-gradient(ellipse 200% 100% at 50% 0%, #fb923c 0%, #f97316 30%, #ea580c 60%, #dc2626 100%)',
-      'bg-purple-400': 'radial-gradient(ellipse 200% 100% at 50% 0%, #c084fc 0%, #a855f7 30%, #9333ea 60%, #7c3aed 100%)', 
+      'bg-purple-400': 'radial-gradient(ellipse 200% 100% at 50% 0%, #c084fc 0%, #a855f7 30%, #9333ea 60%, #7c3aed 100%)',
       'bg-gray-500': 'radial-gradient(ellipse 200% 100% at 50% 0%, #6b7280 0%, #4b5563 30%, #374151 60%, #1f2937 100%)',
       'bg-gray-500': 'radial-gradient(ellipse 150% 100% at 50% 0%, #6b7280 0%, #4b5563 40%, #374151 80%, #1f2937 100%)',
       'bg-gray-700': 'radial-gradient(ellipse 150% 100% at 50% 0%, #374151 0%, #1f2937 50%, #111827 100%)'
     }
     return organicMap[colorClass] || colorClass
   }
-  
+
   const gradientMap: Record<string, string> = {
     'bg-orange-400': 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
-    'bg-purple-400': 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)', 
+    'bg-purple-400': 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #9333ea 100%)',
     'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
     'bg-gray-500': 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
     'bg-gray-700': 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)'
@@ -329,7 +329,7 @@ type RecentActivity = {
 // Constant colors array to avoid useMemo issues
 const CHART_COLORS = [
   'text-white',
-  'text-green-400', 
+  'text-green-400',
   'text-purple-400',
   'text-gray-400',
   'text-yellow-400',
@@ -339,7 +339,7 @@ const CHART_COLORS = [
 // Helper function to calculate days since last donation
 const calculateDaysSinceDonation = (lastDonationDate: string | null, profileCreatedAt?: string): number => {
   const today = new Date()
-  
+
   if (!lastDonationDate) {
     // If no donation date, calculate days since profile creation or return a default
     if (profileCreatedAt) {
@@ -350,11 +350,11 @@ const calculateDaysSinceDonation = (lastDonationDate: string | null, profileCrea
     }
     return 0 // Return 0 only if we truly have no reference date
   }
-  
+
   const donationDate = new Date(lastDonationDate)
   const diffTime = today.getTime() - donationDate.getTime()
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-  
+
   return diffDays >= 0 ? diffDays : 0
 }
 
@@ -362,38 +362,38 @@ const calculateDaysSinceDonation = (lastDonationDate: string | null, profileCrea
 // Fixed logic: Only count days where user met/exceeded their actual insane target
 const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: number[] = [1], recoveryDays: number[] = [5]): number => {
   if (!logs || logs.length === 0) return 0
-  
+
   // Group logs by date and sum points per day
   const dailyPoints = logs.reduce((acc, log) => {
     const date = log.date
     acc[date] = (acc[date] || 0) + log.points
     return acc
   }, {} as Record<string, number>)
-  
+
   const today = new Date().toISOString().split('T')[0]
   const groupStartTime = new Date(groupStartDate).getTime()
-  
+
   // Get all dates from logs, but exclude today if no workout yet (to avoid breaking active streaks)
   const workoutDates = Object.keys(dailyPoints)
   const hasWorkedOutToday = dailyPoints[today] > 0
-  
+
   // Sort dates in descending order (most recent first), excluding today if no workout
   const sortedDates = workoutDates
     .filter(date => date !== today || hasWorkedOutToday)
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-  
+
   let streak = 0
-  
+
   for (const date of sortedDates) {
     const currentDate = new Date(date)
     const daysSinceStart = Math.floor((currentDate.getTime() - groupStartTime) / (1000 * 60 * 60 * 24))
     const dayOfWeek = currentDate.getDay()
-    
+
     // Skip rest days and recovery days - they don't count toward or break insane streaks
     if (restDays.includes(dayOfWeek) || recoveryDays.includes(dayOfWeek)) {
       continue // Skip this day, don't break or count the streak
     }
-    
+
     // Calculate what the insane target would have been for this date
     const insaneTarget = calculateDailyTarget({
       daysSinceStart,
@@ -402,7 +402,7 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
       recoveryDays,
       currentDayOfWeek: dayOfWeek
     })
-    
+
     // Only count as insane streak if they met/exceeded the insane target
     if (dailyPoints[date] >= insaneTarget) {
       streak++
@@ -410,7 +410,7 @@ const calculateInsaneStreak = (logs: any[], groupStartDate: string, restDays: nu
       break // Streak broken - they didn't meet the insane target
     }
   }
-  
+
   return streak
 }
 
@@ -426,7 +426,7 @@ const calculateLongestStreak = (logs: any[], groupStartDate: string, restDays: n
 
   // Get all dates and sort chronologically (oldest first for longest streak calculation)
   const sortedDates = Object.keys(dailyPoints).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-  
+
   let maxStreak = 0
   let currentStreak = 0
   const groupStartTime = new Date(groupStartDate).getTime()
@@ -464,7 +464,7 @@ const calculateLongestStreak = (logs: any[], groupStartDate: string, restDays: n
 // Helper function to get dynamic colors based on streak/count progression
 const getProgressiveColor = (count: number, type: 'bg' | 'text' | 'border' = 'bg') => {
   let colorClass = ''
-  
+
   if (count === 0) {
     // Boring grey for 0
     colorClass = type === 'bg' ? 'bg-gray-500/20' : type === 'text' ? 'text-gray-400' : 'border-gray-500/30'
@@ -493,7 +493,7 @@ const getProgressiveColor = (count: number, type: 'bg' | 'text' | 'border' = 'bg
       return 'border-gradient-to-r from-pink-500/50 via-purple-500/50 to-indigo-500/50'
     }
   }
-  
+
   return colorClass
 }
 
@@ -558,28 +558,28 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
   if (stat.type === 'heatmap_grid') {
     const data = stat.data || []
     const maxActivity = Math.max(...data.map((d: any) => d.activity), 1)
-    
+
     return (
       <div key={index} className={`relative bg-gray-900/20 ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
           <div className="mb-3">
             <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
           </div>
-          
+
           {/* 24-hour grid (12x2) */}
           <div className="flex-1 flex flex-col justify-center">
             <div className="grid grid-cols-12 grid-rows-2 gap-1">
               {data.map((hour: any, i: number) => {
                 const intensity = (hour.activity / maxActivity) * 100
                 const isHigh = intensity > 70
-                
+
                 return (
                   <div
                     key={i}
                     className="aspect-square rounded transition-all duration-500 relative flex items-center justify-center"
                     style={{
-                      background: isHigh ? getGradientStyle('bg-purple-400') : 
-                                 intensity > 30 ? getGradientStyle('bg-gray-500') : getGradientStyle('bg-gray-700'),
+                      background: isHigh ? getGradientStyle('bg-purple-400') :
+                        intensity > 30 ? getGradientStyle('bg-gray-500') : getGradientStyle('bg-gray-700'),
                       animationDelay: `${i * 30}ms`,
                       animation: 'fadeInScale 0.6s ease-out forwards'
                     }}
@@ -593,7 +593,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
               })}
             </div>
           </div>
-          
+
           <div className="text-xs text-gray-400 text-center">
             Peak: {data.find((h: any) => h.activity === maxActivity)?.hour || '0'}
           </div>
@@ -605,12 +605,12 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
   // Stacked bars for overachievers
   if (stat.type === 'stacked_bars') {
     const data = stat.data || []
-    
+
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-3 h-full flex flex-col">
           <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">{stat.title}</div>
-          
+
           <div className="flex-1 flex flex-col justify-center gap-2">
             {data.map((member: any, i: number) => (
               <div key={i} className="flex items-center gap-2">
@@ -623,7 +623,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
                     style={{
                       width: '100%',
                       background: `linear-gradient(to right, 
-                        ${i === 0 
+                        ${i === 0
                           ? `#c084fc 0%, 
                              #c084fcdd ${Math.max(0, member.percentage - 15)}%, 
                              #c084fc66 ${member.percentage}%, 
@@ -651,7 +651,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
   // Time stat with clock icon
   if (stat.type === 'time_stat') {
     const bgColor = accentColor.replace('text-', 'bg-').replace('-400', '-400') + '/20'
-    
+
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden border border-gray-700/30`}>
         <div className="p-3 h-full flex flex-col justify-center text-center">
@@ -671,7 +671,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
   if (stat.type === 'horizontal_bar_chart') {
     const data = stat.data || []
     const maxCount = Math.max(...data.map((d: any) => d.count), 1)
-    
+
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
@@ -680,24 +680,24 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
             <div className="text-xs text-white uppercase tracking-wide mb-1">{stat.title}</div>
             <div className="text-xs text-gray-500">{stat.subtitle}</div>
           </div>
-          
+
           {/* Horizontal Bars */}
           <div className="flex-1 flex flex-col justify-center gap-2">
             {data.map((workout: any, i: number) => {
               const percentage = (workout.count / maxCount) * 100
               const isTop = i === 0
-              
+
               return (
                 <div key={i} className="relative">
                   {/* Background bar */}
                   <div className="w-full bg-gray-700 h-6 relative overflow-hidden">
                     {/* Liquid gradient filled bar */}
-                    <div 
+                    <div
                       className="h-full transition-all duration-700"
-                      style={{ 
+                      style={{
                         width: '100%',
                         background: `linear-gradient(to right, 
-                          ${isTop 
+                          ${isTop
                             ? `#c084fc 0%, 
                                #c084fcdd ${Math.max(0, percentage - 15)}%, 
                                #c084fc66 ${percentage}%, 
@@ -708,7 +708,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
                         animation: 'slideInLeft 0.8s ease-out forwards'
                       }}
                     />
-                    
+
                     {/* Workout name inside bar */}
                     <div className="absolute inset-0 flex items-center px-3">
                       <span className="text-xs font-medium text-white truncate">
@@ -733,20 +733,20 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
     const daysUntil = stat.daysUntil || 0
     const maxDays = 365
     const progressPercentage = Math.max(0, ((maxDays - daysUntil) / maxDays) * 100)
-    
+
     return (
       <div key={index} className={`relative ${layoutClasses} overflow-hidden`}>
         {/* Full rectangle progress background */}
-        <div 
+        <div
           className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
-          style={{ 
+          style={{
             background: getGradientStyle('bg-purple-400'),
             width: `${progressPercentage}%`,
             borderTopLeftRadius: '16px',
             borderBottomLeftRadius: '16px'
           }}
         />
-        
+
         {/* Content overlay */}
         <div className="relative p-4 h-full flex flex-col z-10">
           <div className="mb-3">
@@ -758,11 +758,11 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
               <span className="text-6xl font-black">{daysUntil}</span>
               <span className="text-2xl font-thin ml-1">DAYS</span>
             </div>
-            
+
             {/* Person name with birthday icon */}
             <div className="flex items-center gap-1 text-white">
               <div className="w-3 h-3 bg-white rounded-full relative">
-                <div 
+                <div
                   className="absolute top-0.5 left-0.5 w-2 h-1.5 rounded-t-full"
                   style={{ backgroundColor: '#c084fc' }}
                 ></div>
@@ -781,7 +781,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
     const maxValue = Math.max(...data.map((d: any) => d.points), 1)
     const recordIndex = data.findIndex((d: any) => d.points === maxValue)
     const recordDay = recordIndex >= 0 ? data[recordIndex] : null
-    
+
     return (
       <div key={index} className={`relative bg-gray-900/20 rounded-lg ${layoutClasses} overflow-hidden`}>
         <div className="p-4 h-full flex flex-col">
@@ -797,13 +797,13 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
               </div>
             )}
           </div>
-          
+
           {/* Vertical Bar Chart */}
           <div className="flex-1 flex items-end gap-1 px-4">
             {data.slice(-40).map((point: any, i: number) => {
               const height = Math.max(2, (point.points / maxValue) * 70)
               const isRecord = data.indexOf(point) === recordIndex
-              
+
               return (
                 <div
                   key={i}
@@ -812,7 +812,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
                   {/* Vertical bar */}
                   <div
                     className="w-0.5 transition-all duration-700"
-                    style={{ 
+                    style={{
                       background: isRecord ? getGradientStyle('bg-purple-400') : getGradientStyle('bg-gray-500'),
                       height: `${height}px`,
                       animationDelay: `${i * 20}ms`,
@@ -822,9 +822,9 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
                   />
                   {/* Record highlight dot */}
                   {isRecord && (
-                    <div 
+                    <div
                       className="w-2 h-2 rounded-full -mt-1 animate-pulse"
-                      style={{ 
+                      style={{
                         background: getGradientStyle('bg-purple-400'),
                         animationDelay: `${(i * 20) + 400}ms`
                       }}
@@ -868,7 +868,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
               €{stat.value}
             </div>
           </div>
-          
+
           {/* Contributors List */}
           <div className="flex-1 flex flex-col gap-1">
             {contributors.map((contributor: any, i: number) => (
@@ -882,11 +882,10 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
                   </div>
                 </div>
                 {contributor.timeAgo && (
-                  <div className={`text-xs flex items-center gap-1 ${
-                    contributor.isMostRecent 
-                      ? `text-${contributor.userColor}-400` 
+                  <div className={`text-xs flex items-center gap-1 ${contributor.isMostRecent
+                      ? `text-${contributor.userColor}-400`
                       : 'text-gray-400'
-                  }`}>
+                    }`}>
                     <span>{contributor.timeAgo}</span>
                   </div>
                 )}
@@ -909,32 +908,32 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
     const commitmentDays = daysSinceDonation || 0
     const insaneDays = insaneStreak || 0
     const longestRecord = personalLongestInsaneStreak || 0
-    
+
     // Calculate progress percentages for background fills
     // If on a record (current = longest), fill 100%. Otherwise, show progress toward record.
     const commitmentProgress = commitmentDays >= 44 ? 100 : Math.min((commitmentDays / 44) * 100, 100)
-    const insaneProgress = insaneDays >= longestRecord && longestRecord > 0 ? 100 : 
-                          longestRecord > 0 ? Math.min((insaneDays / longestRecord) * 100, 100) : 
-                          insaneDays > 0 ? 50 : 0 // Show some progress if they have days but no record yet
-    
+    const insaneProgress = insaneDays >= longestRecord && longestRecord > 0 ? 100 :
+      longestRecord > 0 ? Math.min((insaneDays / longestRecord) * 100, 100) :
+        insaneDays > 0 ? 50 : 0 // Show some progress if they have days but no record yet
+
     // Check for new records
     const isCommitmentNewRecord = commitmentDays >= 44
     const isInsaneNewRecord = insaneDays >= longestRecord && longestRecord > 0
-    
+
     return (
       <div key={index} className={`relative rounded-lg ${layoutClasses} overflow-hidden`}>
         {/* Top Section - Commitment Streak */}
         <div className="relative h-1/2 overflow-hidden bg-gray-900/30">
           {/* Progress fill background */}
-          <div 
+          <div
             className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
-            style={{ 
+            style={{
               background: getGradientStyle('bg-orange-400', 'organic'),
               width: `${commitmentProgress}%`,
               borderTopLeftRadius: '12px'
             }}
           />
-          
+
           {/* Content */}
           <div className="relative p-3 h-full flex flex-col">
             <div className="text-xs text-white/90 uppercase tracking-wider font-bold mb-1">
@@ -961,19 +960,19 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
             </div>
           </div>
         </div>
-        
+
         {/* Bottom Section - Insane Streak */}
         <div className="relative h-1/2 overflow-hidden bg-gray-900/30">
           {/* Progress fill background */}
-          <div 
+          <div
             className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
-            style={{ 
+            style={{
               background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
               width: `${insaneProgress}%`,
               borderBottomLeftRadius: '12px'
             }}
           />
-          
+
           {/* Content */}
           <div className="relative p-3 h-full flex flex-col">
             <div className="text-xs text-white/90 uppercase tracking-wider font-bold mb-1">
@@ -1020,13 +1019,13 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
 
   // Default simple stat display - some get accent backgrounds for visual variety
   const shouldHaveAccentBg = (index % 4 === 1 || index % 4 === 3) // Every 2nd and 4th item
-  const bgColor = shouldHaveAccentBg ? 
-    accentColor.replace('text-', 'bg-').replace('-400', '') : 
+  const bgColor = shouldHaveAccentBg ?
+    accentColor.replace('text-', 'bg-').replace('-400', '') :
     'bg-gray-900/30'
   const textColor = shouldHaveAccentBg ? 'text-black' : 'text-white'
   const subtitleColor = shouldHaveAccentBg ? 'text-black/70' : 'text-gray-400'
   const valueColor = shouldHaveAccentBg ? 'text-black' : accentColor
-  
+
   return (
     <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} group cursor-pointer hover:shadow-xl transition-all duration-500 ${shouldHaveAccentBg ? 'hover:opacity-90' : 'hover:bg-gray-900/40'}`}>
       <div className="p-3 h-full flex flex-col justify-center items-center text-center">
@@ -1121,12 +1120,12 @@ export default function RectangularDashboard() {
   const { weekMode } = useWeekMode()
   const { showPenalty, penaltyData, closePenaltyModal } = usePenaltyNotification()
   const [showPotHistory, setShowPotHistory] = useState(false)
-  
+
   // Get time-of-day gradient - same as dashboard background
   const getTimeOfDayGradient = () => {
     const now = new Date()
     const hour = now.getHours()
-    
+
     if (hour >= 5 && hour < 8) {
       // Dawn - vibrant orange/pink from bottom
       return 'radial-gradient(ellipse 150% 120% at 30% 80%, rgba(255, 94, 77, 0.35) 0%, rgba(255, 159, 67, 0.25) 30%, rgba(0, 0, 0, 0.85) 50%, #000000 75%)'
@@ -1250,7 +1249,7 @@ export default function RectangularDashboard() {
   const [groupMembers, setGroupMembers] = useState<any[]>([])
   const [groupStats, setGroupStats] = useState<any>(null)
   const [personalStats, setPersonalStats] = useState<any>(null)
-  const [individualStatsMode, setIndividualStatsMode] = useState<{[key: number]: boolean}>({0: false, 1: false, 2: false, 3: false, 4: false})
+  const [individualStatsMode, setIndividualStatsMode] = useState<{ [key: number]: boolean }>({ 0: false, 1: false, 2: false, 3: false, 4: false })
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [isAnimationLoaded, setIsAnimationLoaded] = useState(false)
   const [dataLoadFailed, setDataLoadFailed] = useState(false)
@@ -1269,7 +1268,7 @@ export default function RectangularDashboard() {
   useEffect(() => {
     if (user && profile) {
       loadDashboardData()
-      
+
       // Set up real-time subscription to logs table
       const logsSubscription = supabase
         .channel(`logs-${profile.group_id}`)
@@ -1296,10 +1295,10 @@ export default function RectangularDashboard() {
             console.error('Dashboard: Real-time subscription failed, falling back to polling only')
           }
         })
-      
+
       // Set up polling as fallback (reduced from 30s to 10s)
       const interval = setInterval(loadDashboardData, 10000) // Refresh every 10 seconds as fallback
-      
+
       return () => {
         clearInterval(interval)
         clearTimeout(debounceTimeoutRef.current)
@@ -1396,24 +1395,24 @@ export default function RectangularDashboard() {
       startOfDay.setHours(0, 0, 0, 0)
       const endOfDay = new Date(now)
       endOfDay.setHours(23, 59, 59, 999)
-      
+
       const timeDiff = endOfDay.getTime() - now.getTime()
       const hours = Math.floor(timeDiff / (1000 * 60 * 60))
       const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
       const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000)
-      
+
       // Calculate percentage of day elapsed (for progress bar)
       const totalDayTime = endOfDay.getTime() - startOfDay.getTime()
       const elapsedTime = now.getTime() - startOfDay.getTime()
       const elapsedPercentage = (elapsedTime / totalDayTime) * 100
-      
+
       setTimeLeft(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`)
       setTimeRemainingPercentage(Math.min(100, Math.max(0, elapsedPercentage)))
     }
 
     updateTimer() // Initial update
     const timer = setInterval(updateTimer, 1000) // Update every second
-    
+
     return () => clearInterval(timer)
   }, [])
 
@@ -1426,7 +1425,7 @@ export default function RectangularDashboard() {
 
   // Prevent multiple personal data loads with session-based flag
   const personalDataLoadedRef = useRef(false)
-  
+
   // Debounce timeout for real-time updates
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -1441,15 +1440,15 @@ export default function RectangularDashboard() {
     const startDate = new Date(groupStartDate)
     const today = new Date()
     today.setHours(0, 0, 0, 0) // Reset time for accurate day calculation
-    
+
     const timeDiff = today.getTime() - startDate.getTime()
     const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1 // +1 because day 1 is the start date
-    
+
     setChallengeDay(Math.max(1, daysDiff))
-    
+
     // Get current day of week (0 = Sunday, 1 = Monday, etc.)
     const currentDayOfWeek = today.getDay()
-    
+
     // Determine day type
     if (restDays.includes(currentDayOfWeek)) {
       setDayType('rest')
@@ -1525,7 +1524,7 @@ export default function RectangularDashboard() {
     const endOfDay = new Date(now)
     endOfDay.setHours(23, 59, 59, 999)
     const hoursRemaining = (endOfDay.getTime() - now.getTime()) / (1000 * 60 * 60)
-    
+
     if (hoursRemaining <= 1) {
       // Last hour: urgent red
       return 'bg-red-500'
@@ -1544,7 +1543,7 @@ export default function RectangularDashboard() {
     const endOfDay = new Date(now)
     endOfDay.setHours(23, 59, 59, 999)
     const hoursRemaining = (endOfDay.getTime() - now.getTime()) / (1000 * 60 * 60)
-    
+
     if (hoursRemaining <= 1) {
       // Last hour: urgent red text
       return 'text-red-400'
@@ -1563,12 +1562,12 @@ export default function RectangularDashboard() {
     const now = new Date()
     const hour = now.getHours()
     const minutes = now.getMinutes()
-    
+
     // Calculate position as percentage across the day (6AM = 0%, 6PM = 100%)
     const dayStart = 6 // 6AM
     const dayEnd = 18 // 6PM
     const currentTime = hour + (minutes / 60)
-    
+
     let position = 0
     if (currentTime >= dayStart && currentTime <= dayEnd) {
       position = ((currentTime - dayStart) / (dayEnd - dayStart)) * 100
@@ -1577,13 +1576,13 @@ export default function RectangularDashboard() {
     } else {
       position = 100 // After 6PM, stay at right
     }
-    
+
     // Clamp position between 0 and 100
     position = Math.max(0, Math.min(100, position))
-    
+
     // Get time-based colors with rgba values
     let primaryColor, secondaryColor
-    
+
     if (hour >= 5 && hour < 7) {
       primaryColor = 'rgba(252, 165, 165, 0.3)' // orange-300
       secondaryColor = 'rgba(254, 240, 138, 0.15)' // yellow-300
@@ -1603,7 +1602,7 @@ export default function RectangularDashboard() {
       primaryColor = 'rgba(107, 114, 128, 0.25)' // gray-500
       secondaryColor = 'rgba(75, 85, 99, 0.12)' // gray-600
     }
-    
+
     return {
       background: `radial-gradient(ellipse 80% 60% at ${position}% 80%, ${primaryColor} 0%, ${secondaryColor} 40%, transparent 70%)`,
       position
@@ -1623,7 +1622,7 @@ export default function RectangularDashboard() {
       }
 
       const today = new Date().toISOString().split('T')[0]
-      
+
       // Get all group members including their individual week_mode and last_seen for online status
       const { data: allMembers, error: membersError } = await supabase
         .from('profiles')
@@ -1652,7 +1651,7 @@ export default function RectangularDashboard() {
 
       // Calculate days since start for target calculations
       const daysSinceStart = group?.start_date ? getDaysSinceStart(group.start_date) : 1
-      
+
       // Calculate today's target using centralized utility
       let dailyTarget = 1 // Default fallback
       if (group?.start_date) {
@@ -1683,7 +1682,7 @@ export default function RectangularDashboard() {
         if (!memberPointsMap.has(log.user_id)) {
           memberPointsMap.set(log.user_id, { regular: 0, recovery: 0 })
         }
-        
+
         const current = memberPointsMap.get(log.user_id)
         if (log.exercises?.type === 'recovery') {
           current.recovery += log.points
@@ -1697,12 +1696,12 @@ export default function RectangularDashboard() {
         if (memberPointsMap.has(userId)) {
           const { regular, recovery } = memberPointsMap.get(userId)
           let effectiveRecovery = recovery
-          
+
           if (!isRecoveryDay && recovery > 0) {
             const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
             effectiveRecovery = Math.min(recovery, maxRecoveryAllowed)
           }
-          
+
           // Store the capped total
           memberPointsMap.set(userId, regular + effectiveRecovery)
         } else {
@@ -1720,14 +1719,14 @@ export default function RectangularDashboard() {
           restDays: groupSettings?.rest_days || [1],
           recoveryDays: groupSettings?.recovery_days || [5]
         })
-        
+
         // Calculate online status - consider user online if active within last 5 minutes
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
         const lastSeen = member.last_seen ? new Date(member.last_seen) : null
         const is_online = lastSeen && lastSeen > fiveMinutesAgo
-        
+
         // Online status debug removed
-        
+
         return {
           ...member,
           todayPoints: memberPointsMap.get(member.id) || 0,
@@ -1765,7 +1764,7 @@ export default function RectangularDashboard() {
       const today = new Date().toISOString().split('T')[0]
 
       // 1. Group Points (30 days)
-      const past30Days = Array.from({length: 30}, (_, i) => {
+      const past30Days = Array.from({ length: 30 }, (_, i) => {
         const date = new Date()
         date.setDate(date.getDate() - i)
         return date.toISOString().split('T')[0]
@@ -1804,12 +1803,12 @@ export default function RectangularDashboard() {
         const amount = transaction.transaction_type === 'penalty' ? transaction.amount : -transaction.amount
         userNetAmountMap.set(userId, (userNetAmountMap.get(userId) || 0) + amount)
       })
-      
+
       // Calculate total pot amount (sum of all positive net amounts)
       const totalPotAmount = Array.from(userNetAmountMap.values())
         .filter(amount => amount > 0)
         .reduce((sum, amount) => sum + amount, 0)
-      
+
       // Find biggest net contributor
       let biggestContributor = 'No contributions yet'
       let maxNetAmount = 0
@@ -1832,7 +1831,7 @@ export default function RectangularDashboard() {
             .from('profiles')
             .select('id, personal_color')
             .in('id', userIds)
-          
+
           userProfiles?.forEach(user => {
             userColorsMap.set(user.id, user.personal_color || 'gray')
           })
@@ -1849,7 +1848,7 @@ export default function RectangularDashboard() {
             userColor: member.personal_color || 'gray'
           })
         })
-        
+
         // Process transactions to update amounts and dates
         groupTransactions.forEach(transaction => {
           const userId = transaction.user_id
@@ -1866,21 +1865,21 @@ export default function RectangularDashboard() {
         // Convert to array and sort by most recent contribution (latest first) - show all users
         const positiveContributors = Array.from(userContributions.values())
           .sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime())
-          
+
         // Debug logging
         console.log('All group members:', members.map(m => ({ id: m.id, username: m.username })))
         console.log('Group transactions:', groupTransactions?.length || 0)
         console.log('User contributions:', Array.from(userContributions.values()).map(c => ({ name: c.name, amount: c.netAmount })))
 
         // Find the most recent transaction date among all contributors
-        const mostRecentDate = positiveContributors.length > 0 
+        const mostRecentDate = positiveContributors.length > 0
           ? Math.max(...positiveContributors.map(c => c.latestDate.getTime()))
           : 0
 
         contributors = positiveContributors.map((contributor, index) => {
           const now = new Date()
           let timeAgo = ''
-          
+
           // Handle users with no transactions
           if (contributor.latestDate.getTime() === 0) {
             timeAgo = contributor.netAmount > 0 ? 'No payments yet' : 'No penalties'
@@ -1888,7 +1887,7 @@ export default function RectangularDashboard() {
             const diffTime = now.getTime() - contributor.latestDate.getTime()
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
             const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
-            
+
             if (diffDays > 0) {
               timeAgo = `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
             } else if (diffHours > 0) {
@@ -1917,12 +1916,12 @@ export default function RectangularDashboard() {
         .select('username, birth_date')
         .in('id', memberIds)
         .not('birth_date', 'is', null)
-      
+
       let nextBirthdayDays = 0
       let monthName = 'None Set'
       let dayNum = ''
       let nextBirthdayPerson = 'No birthdays'
-      
+
       if (memberProfiles && memberProfiles.length > 0) {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
@@ -1993,8 +1992,8 @@ export default function RectangularDashboard() {
 
       // Calculate group-wide current streak (using recent data from past 30 days)
       const currentStreak = calculateInsaneStreak(
-        logs || [], 
-        groupStartDate, 
+        logs || [],
+        groupStartDate,
         [1], // Default rest days
         [5]  // Default recovery days  
       )
@@ -2012,9 +2011,9 @@ export default function RectangularDashboard() {
           title: 'Group Points',
           subtitle: '30-day total',
           value: `${totalGroupPoints} PT`,
-          data: dailyTotals.map((day, i) => ({ 
-            day: `D${i+1}`, 
-            points: day.totalPoints 
+          data: dailyTotals.map((day, i) => ({
+            day: `D${i + 1}`,
+            points: day.totalPoints
           })),
           type: 'line_chart'
         },
@@ -2093,7 +2092,7 @@ export default function RectangularDashboard() {
 
     try {
       // Get personal workout data for the last 30 days
-      const past30Days = Array.from({length: 30}, (_, i) => {
+      const past30Days = Array.from({ length: 30 }, (_, i) => {
         const date = new Date()
         date.setDate(date.getDate() - i)
         return date.toISOString().split('T')[0]
@@ -2134,7 +2133,7 @@ export default function RectangularDashboard() {
       let nextBirthdayDays = 0
       let monthName = 'Not Set'
       let dayNum = ''
-      
+
       if (profile?.birth_date) {
         // Parse the birth date (format: YYYY-MM-DD)
         const [birthYear, birthMonth, birthDay] = profile.birth_date.split('-').map(Number)
@@ -2187,9 +2186,9 @@ export default function RectangularDashboard() {
             title: 'Your Points',
             subtitle: '30-day total',
             value: `${totalPersonalPoints} PT`,
-            data: dailyTotals.map((day, i) => ({ 
-              day: `D${i+1}`, 
-              points: day.totalPoints 
+            data: dailyTotals.map((day, i) => ({
+              day: `D${i + 1}`,
+              points: day.totalPoints
             })),
             type: 'line_chart',
             layout: 'col-span-2' // Top row - full width
@@ -2323,14 +2322,14 @@ export default function RectangularDashboard() {
   }
 
   const getStatLayout = (stats: any[], isShowingAll = false) => {
-    
+
     // Filter out hidden positions (B2, C2)
     const selectedLayout = getSelectedLayout()
     const visiblePositions = selectedLayout.filter(pos => pos.type !== 'B2' && pos.type !== 'C2')
-    
+
     const layouts = []
     let statIndex = 0
-    
+
     if (isShowingAll) {
       // For showing all stats, repeat layouts as needed
       for (let i = 0; i < stats.length; i++) {
@@ -2339,7 +2338,7 @@ export default function RectangularDashboard() {
       }
       return layouts
     }
-    
+
     // For main view: use exactly 8 positions but only show visible ones (typically 5-6)
     visiblePositions.forEach((layoutPos) => {
       if (statIndex < stats.length) {
@@ -2358,7 +2357,7 @@ export default function RectangularDashboard() {
         })
       }
     })
-    
+
     return layouts
   }
 
@@ -2379,7 +2378,7 @@ export default function RectangularDashboard() {
     console.log('Dashboard: Manual refresh triggered by user')
     setIsManualRefreshing(true)
     setDataLoadFailed(false)
-    
+
     try {
       await loadDashboardData()
     } catch (error) {
@@ -2402,7 +2401,7 @@ export default function RectangularDashboard() {
     try {
       // Clear any previous loading failures
       setDataLoadFailed(false)
-      
+
       // Get group name and start date
       if (profile.group_id) {
         const { data: group } = await supabase
@@ -2410,7 +2409,7 @@ export default function RectangularDashboard() {
           .select('name, start_date')
           .eq('id', profile.group_id)
           .single()
-        
+
         currentGroupData = group // Store for use in streak calculation
         setGroupName(group?.name || 'Your Group')
         setGroupStartDate(group?.start_date || null)
@@ -2480,52 +2479,52 @@ export default function RectangularDashboard() {
           const donationGap = calculateDaysSinceDonation(profileData?.last_donation_date, profileData?.created_at)
           setDaysSinceDonation(donationGap)
 
-        // Get logs for streak calculation (last 30 days)
-        const past30Days = Array.from({ length: 30 }, (_, i) => {
-          const date = new Date()
-          date.setDate(date.getDate() - i)
-          return date.toISOString().split('T')[0]
-        })
+          // Get logs for streak calculation (last 30 days)
+          const past30Days = Array.from({ length: 30 }, (_, i) => {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            return date.toISOString().split('T')[0]
+          })
 
-        const { data: userLogs } = await supabase
-          .from('logs')
-          .select('date, points')
-          .eq('user_id', user.id)
-          .in('date', past30Days)
-
-        // Calculate insane streak using proper group data
-        if (currentGroupData?.start_date) {
-          const streak = calculateInsaneStreak(
-            userLogs || [], 
-            currentGroupData.start_date, 
-            restDays, 
-            recoveryDays
-          )
-          setInsaneStreak(streak)
-          
-          // Also calculate personal longest streak for the record
-          // Get ALL user logs (not just 30 days) for longest streak calculation
-          const { data: allPersonalLogs } = await supabase
+          const { data: userLogs } = await supabase
             .from('logs')
             .select('date, points')
             .eq('user_id', user.id)
-          
-          const personalLongestStreak = calculateLongestStreak(
-            allPersonalLogs || [],
-            currentGroupData.start_date,
-            restDays,
-            recoveryDays
-          )
-          
-          setPersonalLongestInsaneStreak(personalLongestStreak)
-          
-          // Mark personal data as loaded to prevent multiple loads
-          personalDataLoadedRef.current = true
-        } else {
-          setInsaneStreak(0)
-          setPersonalLongestInsaneStreak(0)
-          personalDataLoadedRef.current = true
-        }
+            .in('date', past30Days)
+
+          // Calculate insane streak using proper group data
+          if (currentGroupData?.start_date) {
+            const streak = calculateInsaneStreak(
+              userLogs || [],
+              currentGroupData.start_date,
+              restDays,
+              recoveryDays
+            )
+            setInsaneStreak(streak)
+
+            // Also calculate personal longest streak for the record
+            // Get ALL user logs (not just 30 days) for longest streak calculation
+            const { data: allPersonalLogs } = await supabase
+              .from('logs')
+              .select('date, points')
+              .eq('user_id', user.id)
+
+            const personalLongestStreak = calculateLongestStreak(
+              allPersonalLogs || [],
+              currentGroupData.start_date,
+              restDays,
+              recoveryDays
+            )
+
+            setPersonalLongestInsaneStreak(personalLongestStreak)
+
+            // Mark personal data as loaded to prevent multiple loads
+            personalDataLoadedRef.current = true
+          } else {
+            setInsaneStreak(0)
+            setPersonalLongestInsaneStreak(0)
+            personalDataLoadedRef.current = true
+          }
         } catch (error) {
           // Could not load donation/streak data - non-critical
         }
@@ -2578,7 +2577,7 @@ export default function RectangularDashboard() {
     router.push('/login')
     return null
   }
-  
+
   if (!profile) {
     router.push('/onboarding')
     return null
@@ -2622,29 +2621,29 @@ export default function RectangularDashboard() {
           </div>
         </div>
       )}
-      
+
       {/* Inject chart animation styles */}
       <style dangerouslySetInnerHTML={{ __html: chartAnimationStyles }} />
-      
+
       <div className="pb-20" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
-      {/* Logo and Settings */}
-      <div className="mx-1 mb-0" style={{ marginTop: 'calc(1.25rem + env(safe-area-inset-top, 0px))' }}>
-        <div className="flex items-center justify-between px-2">
-          <img 
-            src="/logo.png" 
-            alt="The Commitment" 
-            className="h-10 w-auto drop-shadow-lg"
-          />
-          <Link 
-            href="/profile" 
-            className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2 bg-black/20 backdrop-blur-sm rounded-full"
-          >
-            <Cog6ToothIcon className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
-          </Link>
+        {/* Logo and Settings */}
+        <div className="mx-1 mb-0" style={{ marginTop: 'calc(1.25rem + env(safe-area-inset-top, 0px))' }}>
+          <div className="flex items-center justify-between px-2">
+            <img
+              src="/logo.png"
+              alt="The Commitment"
+              className="h-10 w-auto drop-shadow-lg"
+            />
+            <Link
+              href="/profile"
+              className="flex items-center justify-center transition-all duration-200 hover:opacity-80 p-2 bg-black/20 backdrop-blur-sm rounded-full"
+            >
+              <Cog6ToothIcon className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+            </Link>
+          </div>
         </div>
       </div>
-      </div>
-      
+
       {/* Dashboard Content */}
       {groupStartDate && (
         <div className="relative overflow-hidden">
@@ -2683,10 +2682,10 @@ export default function RectangularDashboard() {
                     // Find current user's progress
                     const currentUserMember = groupMembers.find(member => member.isCurrentUser)
                     const hasAchievedTarget = currentUserMember && currentUserMember.todayPoints >= currentUserMember.dailyTarget
-                    const message = hasAchievedTarget 
+                    const message = hasAchievedTarget
                       ? getTargetAchievedMessage(currentTime.getHours())
                       : getHourlyMessage(currentTime.getHours())
-                    
+
                     return (
                       <div>
                         <p className="text-sm text-white/90 font-medium drop-shadow leading-relaxed mb-2">
@@ -2714,60 +2713,62 @@ export default function RectangularDashboard() {
           {/* Glass morphism container wrapper */}
           <div className="relative">
             {/* Main container */}
-            <div 
+            <div
               className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
               style={{
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
             >
-              
+
               <div className="relative py-6 px-4 z-10">
                 <h3 className="text-xs font-light text-white/80 mb-4 uppercase tracking-widest drop-shadow" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                   Status
                 </h3>
-            
-            {groupMembers.length === 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-gray-900/30">
-                  <div className="animate-pulse bg-gray-800 rounded h-10 mb-2"></div>
-                  <div className="animate-pulse bg-gray-700 rounded h-4"></div>
-                </div>
-                <div className="p-3 rounded-lg bg-gray-900/30">
-                  <div className="animate-pulse bg-gray-800 rounded h-10 mb-2"></div>
-                  <div className="animate-pulse bg-gray-700 rounded h-4"></div>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-4 gap-3 py-4 px-1">
-                {groupMembers.map((member) => {
-                  const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
-                  const shouldGlow = progressPercentage > 110
-                  const baseColor = member.personal_color || "#ef4444"
-                  
-                  // Calculate progressive glow intensity based on percentage
-                  const getGlowIntensity = () => {
-                    if (progressPercentage <= 110) return 0
-                    const excessPercentage = progressPercentage - 110
-                    const glowLevel = Math.floor(excessPercentage / 10) + 1 // +1 for base glow at 110%
-                    const baseSize = 20
-                    const maxSize = 60
-                    const glowSize = Math.min(baseSize + (glowLevel * 10), maxSize)
-                    return { level: glowLevel, size: glowSize }
-                  }
-                  
-                  const glowData = getGlowIntensity()
-                  
-                  // Calculate stroke progress
-                  const radius = 36
-                  const circumference = 2 * Math.PI * radius
-                  const strokeDasharray = circumference
-                  const strokeDashoffset = circumference - (Math.min(progressPercentage, 100) / 100) * circumference
-                      
-                  return (
-                        <div key={member.id} className="flex flex-col items-center relative">
+
+                {groupMembers.length === 0 ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-gray-900/30">
+                      <div className="animate-pulse bg-gray-800 rounded h-10 mb-2"></div>
+                      <div className="animate-pulse bg-gray-700 rounded h-4"></div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-gray-900/30">
+                      <div className="animate-pulse bg-gray-800 rounded h-10 mb-2"></div>
+                      <div className="animate-pulse bg-gray-700 rounded h-4"></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-3 py-4 px-1">
+                    {groupMembers.map((member) => {
+                      const progressPercentage = Math.round((member.todayPoints / (member.dailyTarget || 100)) * 100)
+                      const shouldGlow = progressPercentage > 110
+                      // Color scheme: cyan/teal for sane, orange/red for insane
+                      const isSaneMode = member.week_mode === 'sane'
+                      const baseColor = isSaneMode ? "#14b8a6" : "#f97316" // teal-500 : orange-500
+
+                      // Calculate progressive glow intensity based on percentage
+                      const getGlowIntensity = () => {
+                        if (progressPercentage <= 110) return 0
+                        const excessPercentage = progressPercentage - 110
+                        const glowLevel = Math.floor(excessPercentage / 10) + 1 // +1 for base glow at 110%
+                        const baseSize = 20
+                        const maxSize = 60
+                        const glowSize = Math.min(baseSize + (glowLevel * 10), maxSize)
+                        return { level: glowLevel, size: glowSize }
+                      }
+
+                      const glowData = getGlowIntensity()
+
+                      // Calculate stroke progress
+                      const radius = 36
+                      const circumference = 2 * Math.PI * radius
+                      const strokeDasharray = circumference
+                      const strokeDashoffset = circumference - (Math.min(progressPercentage, 100) / 100) * circumference
+
+                      return (
+                        <div key={member.id} className={`flex flex-col items-center relative ${member.isCurrentUser ? 'p-2 bg-white/5 rounded-xl' : ''}`}>
                           {/* Progressive external glow effect - ONLY pulses when over 110% */}
                           {shouldGlow && (
-                            <div 
+                            <div
                               className="absolute rounded-full animate-pulse"
                               style={{
                                 boxShadow: `0 0 ${glowData.size}px ${baseColor}${60 + glowData.level * 10}, 0 0 ${glowData.size * 2}px ${baseColor}${40 + glowData.level * 5}`,
@@ -2779,13 +2780,13 @@ export default function RectangularDashboard() {
                               }}
                             />
                           )}
-                          
+
                           {/* Stroke-based circular progress */}
                           <div className="relative w-20 h-20 z-10">
                             {/* Background circle - removed separate div, using SVG background */}
-                            
+
                             {/* Progress stroke circle */}
-                            <svg 
+                            <svg
                               className="w-20 h-20 -rotate-90"
                               viewBox="0 0 80 80"
                             >
@@ -2797,7 +2798,7 @@ export default function RectangularDashboard() {
                                 fill="rgba(31, 41, 55, 0.5)"
                                 stroke="none"
                               />
-                              
+
                               {/* Background stroke */}
                               <circle
                                 cx="40"
@@ -2807,7 +2808,7 @@ export default function RectangularDashboard() {
                                 stroke="#374151"
                                 strokeWidth="3"
                               />
-                              
+
                               {/* Progress stroke */}
                               <circle
                                 cx="40"
@@ -2822,20 +2823,19 @@ export default function RectangularDashboard() {
                                 className="transition-all duration-1000 ease-out"
                               />
                             </svg>
-                            
-                            {/* Online status indicator */}
+
+                            {/* Online status indicator - LIVE text */}
                             {member.is_online && (
-                              <div 
-                                className="absolute top-2.5 right-0.5 w-4 h-4 rounded-full animate-pulse border border-gray-900"
-                                style={{ 
-                                  backgroundColor: member.personal_color || "#ef4444",
-                                  boxShadow: `0 0 15px ${member.personal_color || "#ef4444"}CC, 0 0 8px ${member.personal_color || "#ef4444"}80, inset 0 0 0 1px rgba(255,255,255,0.2)`,
-                                  zIndex: 10
-                                }}
+                              <div
+                                className="absolute -top-1 right-0 z-10"
                                 title="User is online"
-                              />
+                              >
+                                <span className="text-[8px] font-black tracking-wider animate-pulse" style={{ color: baseColor }}>
+                                  LIVE
+                                </span>
+                              </div>
                             )}
-                            
+
                             {/* Percentage text positioned lower with bigger font - NO PULSING */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center translate-y-1">
                               <span className="text-white font-black text-xl leading-tight">
@@ -2846,18 +2846,18 @@ export default function RectangularDashboard() {
                               </span>
                             </div>
                           </div>
-                          
+
                           {/* Person name */}
                           <div className="mt-2 text-center">
                             <span className="text-white/80 text-xs font-light" style={{ fontFamily: 'Helvetica, system-ui, -apple-system, sans-serif' }}>
                               {member.isCurrentUser ? 'You' : (member.username || 'User')}
                             </span>
                           </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2887,7 +2887,7 @@ export default function RectangularDashboard() {
           <>
             {/* Group Points - Full width block */}
             <div className="relative">
-              <div 
+              <div
                 className="mx-1 mb-1 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
                 style={{
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
@@ -2915,7 +2915,7 @@ export default function RectangularDashboard() {
               <div className="grid grid-cols-2 gap-1 h-auto">
                 {/* Pot Contributors - Vertical 1:2 block */}
                 <div className="relative">
-                  <div 
+                  <div
                     className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl h-full"
                     style={{
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
@@ -2943,7 +2943,7 @@ export default function RectangularDashboard() {
                 <div className="grid grid-rows-2 gap-1 h-full">
                   {/* Birthday Block - Top right square */}
                   <div className="relative">
-                    <div 
+                    <div
                       className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
                       style={{
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
@@ -2968,7 +2968,7 @@ export default function RectangularDashboard() {
 
                   {/* Streak Block - Bottom right square */}
                   <div className="relative">
-                    <div 
+                    <div
                       className="aspect-square bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
                       style={{
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
@@ -3001,7 +3001,7 @@ export default function RectangularDashboard() {
 
             {/* Workout Times - Full width block */}
             <div className="relative">
-              <div 
+              <div
                 className="mx-1 mb-20 bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl"
                 style={{
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)'
