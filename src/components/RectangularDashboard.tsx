@@ -734,13 +734,21 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
     const maxDays = 365
     const progressPercentage = Math.max(0, ((maxDays - daysUntil) / maxDays) * 100)
 
+    // Dynamic orange/red gradient based on days remaining (intensifies as birthday approaches)
+    const getBirthdayGradient = () => {
+      if (daysUntil <= 7) return 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)' // red-600 to red-700
+      if (daysUntil <= 30) return 'linear-gradient(135deg, #ea580c 0%, #dc2626 100%)' // orange-600 to red-600
+      if (daysUntil <= 90) return 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' // orange-500 to orange-600
+      return 'linear-gradient(135deg, #fb923c 0%, #f97316 100%)' // orange-400 to orange-500
+    }
+
     return (
       <div key={index} className={`relative ${layoutClasses} overflow-hidden`}>
         {/* Full rectangle progress background */}
         <div
           className="absolute left-0 top-0 bottom-0 transition-all duration-1000 ease-out"
           style={{
-            background: getGradientStyle('bg-purple-400'),
+            background: getBirthdayGradient(),
             width: `${progressPercentage}%`,
             borderTopLeftRadius: '16px',
             borderBottomLeftRadius: '16px'
@@ -759,14 +767,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
               <span className="text-2xl font-thin ml-1">DAYS</span>
             </div>
 
-            {/* Person name with birthday icon */}
+            {/* Person name without icon */}
             <div className="flex items-center gap-1 text-white">
-              <div className="w-3 h-3 bg-white rounded-full relative">
-                <div
-                  className="absolute top-0.5 left-0.5 w-2 h-1.5 rounded-t-full"
-                  style={{ backgroundColor: '#c084fc' }}
-                ></div>
-              </div>
               <span className="text-sm font-bold">{stat.subtitle}</span>
             </div>
           </div>
