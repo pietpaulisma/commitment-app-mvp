@@ -883,8 +883,8 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
                 </div>
                 {contributor.timeAgo && (
                   <div className={`text-xs flex items-center gap-1 ${contributor.isMostRecent
-                      ? `text-${contributor.userColor}-400`
-                      : 'text-gray-400'
+                    ? `text-${contributor.userColor}-400`
+                    : 'text-gray-400'
                     }`}>
                     <span>{contributor.timeAgo}</span>
                   </div>
@@ -1783,6 +1783,7 @@ export default function RectangularDashboard() {
       })
 
       const totalGroupPoints = dailyTotals.reduce((sum, day) => sum + day.totalPoints, 0)
+      const averagePerPerson = members.length > 0 ? Math.round(totalGroupPoints / members.length) : 0
 
       // 2. Money Pot - load group transaction data (penalties, payments, and donations)
       const { data: groupTransactions, error: transactionError } = await supabase
@@ -2009,7 +2010,7 @@ export default function RectangularDashboard() {
       return {
         groupPoints: {
           title: 'Group Points',
-          subtitle: '30-day total',
+          subtitle: `avg: ${averagePerPerson} per person`,
           value: `${totalGroupPoints} PT`,
           data: dailyTotals.map((day, i) => ({
             day: `D${i + 1}`,
