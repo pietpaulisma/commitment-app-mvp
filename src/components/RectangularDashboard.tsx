@@ -848,7 +848,7 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
 
     return (
       <div key={index} className={`relative ${bgColor} rounded-lg ${layoutClasses} overflow-hidden`}>
-        <div className="p-4 h-full flex flex-col">
+        <div className="p-3 h-full flex flex-col">
           {/* Header */}
           <div className="mb-2">
             <div className="flex items-center justify-between mb-1">
@@ -872,14 +872,14 @@ const ChartComponent = ({ stat, index, getLayoutClasses, userProfile, daysSinceD
           </div>
 
           {/* Contributors List */}
-          <div className="flex-1 flex flex-col gap-1">
+          <div className="flex-1 flex flex-col gap-0.5">
             {contributors.map((contributor: any, i: number) => (
               <div key={i} className="flex flex-col">
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-white font-medium truncate">
                     {contributor.name}
                   </div>
-                  <div className="text-xs text-gray-300 font-bold">
+                  <div className="text-xs text-white font-black">
                     €{contributor.amount}
                   </div>
                 </div>
