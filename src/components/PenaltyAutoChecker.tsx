@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PenaltyResponseModal } from './PenaltyResponseModal'
+import { PenaltyResponseModal } from './modals/PenaltyResponseModal'
 import type { PendingPenalty } from '@/types/penalties'
 import { supabase } from '@/lib/supabase'
 

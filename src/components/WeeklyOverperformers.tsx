@@ -4,8 +4,11 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
-import { TrophyIcon, FireIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import { Flame } from 'lucide-react'
+import { GlassCard } from '@/components/dashboard/v2/GlassCard'
+import { CardHeader } from '@/components/dashboard/v2/CardHeader'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
+import { COLORS } from '@/utils/colors'
 
 interface OverperformerData {
   id: string
@@ -251,7 +254,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           return {
             id: userStat.member.id,
             username: userStat.member.username,
-            personal_color: userStat.member.personal_color || '#ef4444',
+            personal_color: '', // Will be assigned based on rank after sorting
             overperformance_points: totalOverperformance,
             daily_target: 0, // Dynamic, just placeholder
             total_points: userStat.totalPoints,
@@ -261,6 +264,11 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         .filter(user => user.overperformance_points > 0) // Only include users who overperformed
         .sort((a, b) => b.overperformance_points - a.overperformance_points) // Sort by total overperformance
         .slice(0, 5) // Top 5 overperformers
+        .map((user, index) => ({
+          ...user,
+          // Top 3 get orange (matching Time Remaining), 4-5 get opal blue-purple
+          personal_color: index < 3 ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+        }))
 
       // Debug: Log final results with comprehensive validation
       const allUsers = Object.values(userStats).map(u => ({
@@ -354,39 +362,39 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
 
   if (loading) {
     return (
-      <div className={`bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl p-3 ${className}`}>
-        <div className="flex items-center mb-2">
-          <ChartBarIcon className="w-4 h-4 text-white/60 mr-2" />
-          <h3 className="text-xs font-light text-white/80 uppercase tracking-widest">
-            Weekly Overperformers
-          </h3>
-        </div>
-        <div className="space-y-2">
+      <GlassCard noPadding className={className}>
+        <CardHeader
+          title="Weekly Overperformers"
+          icon={Flame}
+          colorClass="text-orange-500"
+          rightContent="Points beyond sane • Resets Monday"
+        />
+        <div className="p-4 space-y-2">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-gray-800/50 rounded-lg h-8"></div>
+              <div className="bg-white/5 rounded-lg h-12"></div>
             </div>
           ))}
         </div>
-      </div>
+      </GlassCard>
     )
   }
 
   if (error || overperformers.length === 0) {
     return (
-      <div className={`bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl p-3 ${className}`}>
-        <div className="flex items-center mb-2">
-          <ChartBarIcon className="w-4 h-4 text-white/60 mr-2" />
-          <h3 className="text-xs font-light text-white/80 uppercase tracking-widest">
-            Weekly Overperformers
-          </h3>
-        </div>
-        <div className="text-center py-4">
-          <p className="text-sm text-white/60">
+      <GlassCard noPadding className={className}>
+        <CardHeader
+          title="Weekly Overperformers"
+          icon={Flame}
+          colorClass="text-orange-500"
+          rightContent="Points beyond sane • Resets Monday"
+        />
+        <div className="text-center py-8">
+          <p className="text-sm text-zinc-500">
             {error ? 'Unable to load data' : 'No overperformers this week yet'}
           </p>
         </div>
-      </div>
+      </GlassCard>
     )
   }
 
@@ -394,60 +402,50 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
   const maxOverperformance = Math.max(...overperformers.map(p => p.overperformance_points))
 
   return (
-    <div
-      className={`bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl p-3 flex flex-col ${className}`}
-      style={{
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
-        aspectRatio: '1 / 2'
-      }}
-    >
-      <div className="flex items-center mb-2">
-        <ChartBarIcon className="w-4 h-4 text-white/60 mr-2" />
-        <h3 className="text-xs font-light text-white/80 uppercase tracking-widest">
-          Weekly Overperformers
-        </h3>
-      </div>
+    <GlassCard noPadding className={className}>
+      <CardHeader
+        title="Weekly Overperformers"
+        icon={Flame}
+        colorClass="text-orange-500"
+        rightContent="Points beyond sane • Resets Monday"
+      />
 
-      <div className="flex-1 overflow-y-auto space-y-1 pr-1" style={{ maxHeight: 'calc(100% - 3rem)' }}>
+      <div className="p-4 space-y-2">
         {overperformers.map((performer, index) => {
           const rank = index + 1
           const isCurrentUser = performer.id === user?.id
           const barPercentage = (performer.overperformance_points / maxOverperformance) * 100
 
+          // Determine gradient based on rank (top 3 = orange, 4-5 = opal)
+          const colorTheme = rank <= 3 ? COLORS.orange : COLORS.opal
+
           return (
             <div
               key={performer.id}
-              className={`relative rounded-lg overflow-hidden transition-all duration-300 ${isCurrentUser
+              className={`relative rounded-xl overflow-hidden transition-all duration-300 ${isCurrentUser
                 ? 'bg-white/10 border border-white/20'
-                : 'bg-gray-900/30 hover:bg-gray-900/50'
+                : 'bg-white/5 hover:bg-white/10'
                 }`}
             >
-              {/* Background bar */}
+              {/* Background bar - solid gradient like Time Remaining */}
               <div
-                className="absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-500"
+                className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${rank <= 3 ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600' : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'}`}
                 style={{
                   width: `${barPercentage}%`,
-                  backgroundColor: performer.personal_color
                 }}
               />
 
               {/* Content */}
-              <div className="relative flex items-center justify-between p-2">
-                <div className="flex items-center space-x-2">
-                  <span className={`text-xs font-bold ${getRankColor(rank)} min-w-[20px]`}>
-                    #{rank}
+              <div className="relative flex items-center justify-between px-4 py-2.5">
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-black ${getRankColor(rank)} min-w-[24px] text-zinc-400`}>
+                    {rank}
                   </span>
 
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: performer.personal_color }}
-                    />
-                    <span className={`text-xs font-medium ${isCurrentUser ? 'text-white' : 'text-white/90'
-                      }`}>
-                      {performer.username}
-                    </span>
-                  </div>
+                  <span className={`text-lg font-black uppercase tracking-tighter ${isCurrentUser ? 'text-white' : 'text-zinc-300'
+                    }`}>
+                    {performer.username.slice(0, 4).toUpperCase()}
+                  </span>
                 </div>
 
                 <div className="text-right">
@@ -461,14 +459,6 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           )
         })}
       </div>
-
-      {overperformers.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-white/10">
-          <p className="text-xs text-white/60 text-center">
-            Points beyond sane • Resets Monday
-          </p>
-        </div>
-      )}
-    </div>
+    </GlassCard>
   )
 }

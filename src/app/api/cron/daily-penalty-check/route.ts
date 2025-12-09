@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Verify cron secret for security
     const authHeader = request.headers.get('authorization')
     const expectedAuth = `Bearer ${process.env.CRON_SECRET}`
-    
+
     if (!authHeader || authHeader !== expectedAuth) {
       console.log('Unauthorized cron request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
     yesterday.setHours(0, 0, 0, 0)
-    
+
     const yesterdayStr = yesterday.toISOString().split('T')[0]
 
     let totalPenaltiesIssued = 0
@@ -80,19 +80,19 @@ export async function GET(request: NextRequest) {
         // Skip if user is in sick mode
         if (profile.is_sick_mode) {
           console.log(`${profile.username}: Skipping penalty - sick mode enabled`)
-          
+
           // Update last penalty check without issuing penalty
           await supabase
             .from('profiles')
             .update({ last_penalty_check: yesterdayStr })
             .eq('id', profile.id)
-            
+
           continue
         }
 
         // Check if yesterday was a rest day
         const dayOfWeek = yesterday.getDay() // 0 = Sunday, 1 = Monday, etc.
-        const group = profile.groups
+        const group = Array.isArray(profile.groups) ? profile.groups[0] : profile.groups
         const isRestDay = dayOfWeek === group.rest_day_1 || dayOfWeek === group.rest_day_2
 
         if (isRestDay) {
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
 
             // Get points from the day before rest day
             const { data: previousDayLogs } = await supabase
-              .from('logs')
+              .from('workout_logs')
               .select('points')
               .eq('user_id', profile.id)
               .eq('date', dayBeforeRestDayStr)
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
 
         // Get user's workout logs for yesterday
         const { data: yesterdayLogs, error: logsError } = await supabase
-          .from('logs')
+          .from('workout_logs')
           .select('points, exercise_id')
           .eq('user_id', profile.id)
           .eq('date', yesterdayStr)
@@ -173,14 +173,14 @@ export async function GET(request: NextRequest) {
         // Calculate actual points earned (with recovery cap applied)
         let totalRecoveryPoints = 0
         let totalNonRecoveryPoints = 0
-        
+
         const recoveryExercises = [
           'recovery_meditation', 'recovery_stretching', 'recovery_blackrolling', 'recovery_yoga',
           'meditation', 'stretching', 'yoga', 'foam rolling', 'blackrolling'
         ]
-        
+
         yesterdayLogs?.forEach(log => {
-          if (recoveryExercises.includes(log.exercise_id)) {
+          if (recoveryExercises.includes(log.exercise_id.toLowerCase())) {
             totalRecoveryPoints += log.points
           } else {
             totalNonRecoveryPoints += log.points
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
         const groupStartDate = new Date(group.start_date)
         const daysSinceStart = Math.floor((yesterday.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
         const dayOfWeekForTarget = yesterday.getDay()
-        
+
         const dailyTarget = calculateDailyTarget({
           daysSinceStart,
           weekMode: profile.week_mode || 'sane',
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
         // Apply recovery cap (25% of daily target)
         const recoveryCapLimit = Math.round(dailyTarget * 0.25)
         const cappedRecoveryPoints = Math.min(totalRecoveryPoints, recoveryCapLimit)
-        
+
         // Check if user failed to meet target (using capped recovery points)
         const actualPoints = totalNonRecoveryPoints + cappedRecoveryPoints
         const missedTarget = actualPoints < dailyTarget
@@ -286,10 +286,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Daily penalty check failed:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Daily penalty check failed',
         details: error instanceof Error ? error.message : String(error)
-      }, 
+      },
       { status: 500 }
     )
   }

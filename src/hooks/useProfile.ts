@@ -28,6 +28,7 @@ export type UserProfile = {
   has_flexible_rest_day?: boolean
   created_at: string
   updated_at: string
+  avatar_url?: string
 }
 
 export function useProfile() {

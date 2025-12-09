@@ -7,6 +7,17 @@ This changelog tracks **PRODUCTION RELEASES ONLY** (not dev deployments).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+- **Dashboard Stats**: Added "Most Popular Exercise" widget showing the most logged exercise of the week for both Group and Personal views
+
+### Technical
+- **Project Cleanup**: Removed 17 orphaned/legacy files (~4,500 lines), reorganized file structure with dedicated folders for modals, scripts, and documentation
+- **File Structure**: Added comprehensive file structure map to CLAUDE.md for easier navigation
+
+---
+
 ## [0.4.45] - 2025-11-26
 
 ### Fixed
@@ -187,9 +198,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Dashboard v2**: Complete redesign of dashboard with glassmorphism aesthetic and modern visual language
+- **Dashboard v2**: New modular component system (GlassCard, CardHeader, SquadMemberRow, etc.)
+- **Dashboard v2**: New bottom navigation bar with prominent "Log Workout" button and chat access
+- **Dashboard v2**: Personal vs Group view toggle for all statistics
+- **Dashboard v2**: Personal overperformance chart showing daily target vs actual points
+- **Dashboard v2**: Peak workout time visualization with hourly distribution chart
+- **Dashboard v2**: Live countdown timer showing time remaining in day
+- **Dashboard v2**: Days Since Start counter (replacing days remaining for clearer progress tracking)
+- **Dashboard v2**: Dynamic squad status with circular progress indicators
+- **Dashboard v2**: Inline pot history and last contribution cards
+- **Dashboard v2**: Yesterday's recap widget with Made It/Pending/Sick status
+- **Dashboard v2**: Integrated Weekly Overperformers and Seasonal Champions widgets
+- **LogWorkoutOverlay**: New full-screen workout logging interface with modern design
+- **LogWorkoutOverlay**: Completed exercise cards showing logged workouts for today
+- **LogWorkoutOverlay**: Standard exercise grid with searchable exercise selection
+
+### Changed
+- **Dashboard Design**: Module 1 - Redesigned top section with time remaining and days counter
+- **Dashboard Design**: Module 2 - Redesigned squad member rows with circular progress and live indicators
+- **Dashboard Design**: Module 3 - Enhanced Group Points card with average points per person
+- **Dashboard Design**: Module 4 - Redesigned birthday countdown component with gradient background
+- **Dashboard Design**: Module 5 - Condensed pot history layout for better space utilization
+- **Typography**: Updated font weights to bold/black for better hierarchy throughout dashboard
+- **Color System**: Replaced gray backgrounds with black + opacity for glassmorphism effect
+- **Borders**: Unified border styling using white/10% opacity across all components
+- **Spacing**: Increased padding and improved visual breathing room (px-5 py-4 standard)
+- **Group Chat UI**: Applied v2 design system with glassmorphism effects to match dashboard aesthetic
+- **Group Chat UI**: Updated header with rounded icon container, backdrop blur, and bold typography
+- **Group Chat UI**: Redesigned input area with rounded pill shape, subtle borders, and enhanced send button with orange gradient glow
+- **Group Chat UI**: Modernized day dividers and all UI elements with semi-transparent black backgrounds and white borders
+- **Group Chat UI**: Completely redesigned message bubbles with 2rem rounded corners, removed traditional tails
+- **Group Chat UI**: Updated message colors - `bg-[#111]` for received, enhanced orange gradient with glow for sent
+- **Group Chat UI**: Improved message spacing, typography, and reaction button styling
+- **Group Chat UI**: Enhanced avatars with borders and increased size for better visibility
+- **Group Chat UI**: Improved overall visual consistency between dashboard and chat interface
+- **Workout Summary**: Redesigned for chat efficiency - strictly shows exercises, quantities, and completion percentage
+- **Workout Summary**: Removed points display and expandable details toggle for cleaner, direct information flow
+- **Workout Summary**: Improved layout alignment and readability within chat bubbles
+- **Group Chat UI**: Replaced emoji avatars with minimal 4-letter name codes (all caps, squad-style)
+- **Group Chat UI**: Removed sender name from inside message bubbles for cleaner look
+- **Group Chat UI**: Simplified avatar area by removing background colors and icons
+- **Group Chat UI**: Increased visibility of avatar name codes (white, bold, drop shadow)
+- **Group Chat UI**: Implemented sticky date headers for easier timeline navigation
+- **Group Chat UI**: Redesigned header to be cleaner, text-only, and all-caps matching dashboard style
+- **Group Chat UI**: Polished message input area with integrated send button and file picker
+- **Workout Summary**: Standardized card styling to match chat bubbles (bg-[#1a1a1a], uniform padding)
+- **Workout Summary**: Added SANE/INSANE intensity labels with distinct color coding (Cyan/Purple vs Orange)
+- **Workout Summary**: Unified fonts for cleaner look and distinguished user's own workouts with subtle background contrast
+
 ### Fixed
+- **Chat Button**: Fixed non-functional chat button in new dashboard (was displaying TODO, now properly opens chat modal)
 - Fixed penalty popup not appearing due to timezone mismatch (UTC vs Local) in Daily Recap
 - Fixed race condition where penalty check ran before penalty creation
+
+### Technical
+- Created reusable v2 component library in `/src/components/dashboard/v2/`
+- Implemented consistent design tokens for glassmorphism effects
+- Standardized component props and interfaces across v2 dashboard
+- Improved component modularity for easier maintenance and updates
 
 ---
 

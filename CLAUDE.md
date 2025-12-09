@@ -20,17 +20,17 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
   - Preventing accidental production deploys
 
 ### Environment Details
-- **DEV**: commitment-app-dev.vercel.app (default for all work)
+- **LOCAL**: Run `npm run dev` for local development (default for development)
+- **DEV**: commitment-app-dev.vercel.app (for testing deployed builds)
 - **PRODUCTION**: commitment-app-mvp.vercel.app (HANDS OFF unless explicitly requested!)
 - **DEV PROJECT NAME**: commitment-app-dev
 - **PRODUCTION PROJECT NAME**: commitment-app-mvp
-- Local development disabled - all changes must be deployed to dev to test
 - **Git Pre-Commit Hook**: A pre-commit hook is installed at `.git/hooks/pre-commit` that prevents accidental commits to `main` branch without explicit confirmation. See `.git/hooks/README.md` for details.
 
-### Deployment Process
+### Development Workflow
 1. Make code changes
-2. Run `./deploy-dev.sh` to deploy to dev
-3. Test on commitment-app-dev.vercel.app
+2. Test locally with `npm run dev` (default workflow)
+3. OPTIONAL: Run `./deploy-dev.sh` to test on commitment-app-dev.vercel.app if needed
 4. ONLY if user explicitly requests production: Run `./deploy-mvp.sh` (requires confirmation prompt)
 
 ## Penalty System - Manual Operation
@@ -45,20 +45,137 @@ Mobile PWA: Built as a mobile web app specifically designed to run in PWA mode -
   - Handles sick mode, rest days, and flex rest days
 - **Cron API routes**: Still exist in `src/app/api/cron/` but are not triggered automatically
 
+## Project File Structure
+
+```
+commitment-app/
+├── docs/                              # Documentation
+│   └── setup-guides/                  # Setup and migration instructions
+│       ├── SETUP_AUTOMATIC_PENALTY_SYSTEM.md
+│       ├── SETUP_DAILY_SUMMARY_CRON.md
+│       └── MIGRATION_INSTRUCTIONS.md
+│
+├── scripts/                           # Utility scripts
+│   └── migrations/                    # One-time database migration scripts
+│       ├── apply-daily-summary-update.js
+│       ├── apply-notification-migration.js
+│       ├── apply-pending-penalties-migration.js
+│       └── ... (other migration scripts)
+│
+├── src/
+│   ├── app/                           # Next.js 15 App Router
+│   │   ├── page.tsx                   # Home page (uses NewDashboard)
+│   │   ├── dashboard/page.tsx         # Dashboard route
+│   │   ├── profile/page.tsx           # Profile/Settings route
+│   │   ├── group-admin/page.tsx       # Group admin panel
+│   │   ├── admin/                     # Supreme admin routes
+│   │   ├── onboarding/                # Onboarding flow
+│   │   ├── api/                       # API routes
+│   │   │   ├── cron/                  # Cron job endpoints (manual trigger only)
+│   │   │   ├── dashboard/             # Dashboard data endpoints
+│   │   │   ├── notifications/         # Push notification endpoints
+│   │   │   └── penalties/             # Penalty management endpoints
+│   │   └── ...
+│   │
+│   ├── components/
+│   │   ├── modals/                    # ⭐ All modal components
+│   │   │   ├── WorkoutModal.tsx       # Workout logging modal
+│   │   │   ├── DailyRecapHistoryModal.tsx
+│   │   │   ├── PenaltyNotificationModal.tsx
+│   │   │   ├── PenaltyResponseModal.tsx
+│   │   │   ├── PotHistoryModal.tsx
+│   │   │   └── SeasonalChampionsHistoryModal.tsx
+│   │   │
+│   │   ├── dashboard/v2/              # Dashboard v2 components
+│   │   │   ├── NewDashboard.tsx       # ⭐ Current active dashboard
+│   │   │   ├── SquadMemberRow.tsx
+│   │   │   ├── GlassCard.tsx
+│   │   │   ├── BottomNavigation.tsx
+│   │   │   └── ... (chart & widget components)
+│   │   │
+│   │   ├── settings/                  # Settings screen sections
+│   │   │   ├── ChatSettingsSection.tsx
+│   │   │   ├── GroupMembersSection.tsx
+│   │   │   ├── GroupSettingsSection.tsx
+│   │   │   └── PotManagementSection.tsx
+│   │   │
+│   │   ├── GroupChat.tsx              # Real-time group messaging
+│   │   ├── MobileWorkoutLogger.tsx    # Workout tracking & points entry
+│   │   ├── NewMobileProfile.tsx       # Profile/Settings screen
+│   │   ├── SystemMessageConfigAdmin.tsx # Supreme admin config
+│   │   ├── WeeklyOverperformers.tsx
+│   │   ├── SeasonalChampionsWidget.tsx
+│   │   └── ... (other shared components)
+│   │
+│   ├── contexts/                      # React contexts
+│   │   ├── AuthContext.tsx
+│   │   └── WeekModeContext.tsx
+│   │
+│   ├── hooks/                         # Custom React hooks
+│   │   ├── useProfile.ts
+│   │   ├── useDashboardData.ts
+│   │   └── useNotifications.ts
+│   │
+│   ├── utils/                         # ⭐ Shared utility functions
+│   │   ├── targetCalculation.ts       # Daily target calculations
+│   │   ├── colorUtils.ts              # Color utilities
+│   │   ├── colors.ts                  # Color constants
+│   │   ├── gradientUtils.ts           # Gradient generation
+│   │   ├── penaltyHelpers.ts          # Penalty logic
+│   │   ├── seasonHelpers.ts           # Season/week calculations
+│   │   ├── supabaseQueries.ts         # Database queries
+│   │   └── pwaUtils.ts                # PWA detection utilities
+│   │
+│   ├── services/                      # Business logic services
+│   │   ├── systemMessages.ts
+│   │   └── systemMessageConfig.ts
+│   │
+│   └── lib/                           # Third-party integrations
+│       └── supabase.ts                # Supabase client
+│
+├── public/                            # Static assets
+│   └── sw.js                          # Service worker (PWA)
+│
+├── CLAUDE.md                          # ⭐ This file - development guide
+├── CHANGELOG.md                       # Production release history
+├── README.md                          # Project documentation
+├── package.json                       # Dependencies & version
+├── deploy-dev.sh                      # Dev deployment script
+└── deploy-mvp.sh                      # Production deployment script
+```
+
 ## Key File Locations
 
 ### Primary Screens
-- **Dashboard**: `src/app/dashboard/page.tsx` (`RectangularDashboard`)
-- **Workout**: `src/app/workout/page.tsx` (`MobileWorkoutLogger`) 
+- **Home/Dashboard**: `src/app/page.tsx` → Uses `NewDashboard` component
+- **Dashboard Route**: `src/app/dashboard/page.tsx` → Also uses `NewDashboard`
+- **Profile/Settings**: `src/app/profile/page.tsx` → Uses `NewMobileProfile`
 - **Group Admin**: `src/app/group-admin/page.tsx`
 - **Supreme Admin**: `src/app/admin/page.tsx`
 - **Onboarding**: `src/app/onboarding/`
 
 ### Core Components
-- `RectangularDashboard` - Main dashboard
-- `MobileWorkoutLogger` - Workout tracking & points entry
-- `GroupChat` - Real-time messaging (embedded in dashboard)
-- `SystemMessageConfigAdmin` - Supreme admin config
+- **NewDashboard** (`src/components/dashboard/v2/NewDashboard.tsx`) - Current active dashboard
+- **WorkoutModal** (`src/components/modals/WorkoutModal.tsx`) - Workout logging modal
+- **GroupChat** (`src/components/GroupChat.tsx`) - Real-time messaging
+- **NewMobileProfile** (`src/components/NewMobileProfile.tsx`) - Profile/Settings screen
+- **MobileWorkoutLogger** (`src/components/MobileWorkoutLogger.tsx`) - Workout tracking
+- **SystemMessageConfigAdmin** (`src/components/SystemMessageConfigAdmin.tsx`) - Supreme admin config
+
+### Important: Where to Find Things
+- **All modals**: `src/components/modals/` (WorkoutModal, PenaltyResponseModal, etc.)
+- **Dashboard components**: `src/components/dashboard/v2/` (NewDashboard, SquadMemberRow, etc.)
+- **Settings sections**: `src/components/settings/` (GroupMembersSection, PotManagementSection, etc.)
+- **Utility functions**: `src/utils/` (targetCalculation, colorUtils, penaltyHelpers, etc.)
+- **Migration scripts**: `scripts/migrations/` (apply-*.js files)
+- **Documentation**: `docs/setup-guides/` (setup and migration guides)
+
+### Data Architecture
+- **Primary workout data table**: `logs` (NOT `workout_logs`)
+- **Squad status**: Uses API route `/api/dashboard/squad-status` with service role key to bypass RLS
+- **Recovery capping**: 25% max recovery points on non-recovery days
+- **Individual targets**: Each user has their own target based on `week_mode` (sane/insane)
+- **Sick mode**: Users in sick mode show "sick" badge, targets adjusted accordingly
 
 ## Coding Standards
 - Functional components with TypeScript

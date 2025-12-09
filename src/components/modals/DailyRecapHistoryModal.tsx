@@ -36,6 +36,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
     const [loading, setLoading] = useState(true)
     const [history, setHistory] = useState<DayStats[]>([])
 
+
+
     useEffect(() => {
         loadHistory()
     }, [groupId])
@@ -87,12 +89,20 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
 
             // 3. Fetch logs for the date range
             const memberIds = members.map(m => m.id)
-            const { data: logs } = await supabase
+            const { data: logs, error: logsError } = await supabase
                 .from('workout_logs')
-                .select('user_id, points, exercise_id, date')
+                .select('user_id, points, exercise_id, date, group_id')
                 .in('user_id', memberIds)
                 .gte('date', startDateStr)
                 .lte('date', endDateStr)
+
+            if (logs) {
+                // Debug info removed
+            }
+
+
+
+
 
             // 4. Fetch penalties for the date range
             const { data: penalties } = await supabase
@@ -244,6 +254,9 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                         <XMarkIcon className="w-6 h-6 text-white" />
                     </button>
                 </div>
+
+
+
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">

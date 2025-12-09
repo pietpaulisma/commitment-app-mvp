@@ -17,10 +17,10 @@ interface PenaltyNotificationModalProps {
   }
 }
 
-export default function PenaltyNotificationModal({ 
-  isOpen, 
-  onClose, 
-  penaltyData 
+function PenaltyNotificationModalBase({
+  isOpen,
+  onClose,
+  penaltyData
 }: PenaltyNotificationModalProps) {
   if (!isOpen) return null
 
@@ -84,7 +84,7 @@ export default function PenaltyNotificationModal({
 
           <div className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4 mb-6">
             <p className="text-orange-200 text-sm">
-              <strong>Remember:</strong> This penalty helps keep everyone committed to their fitness goals. 
+              <strong>Remember:</strong> This penalty helps keep everyone committed to their fitness goals.
               Stay consistent to avoid future penalties!
             </p>
           </div>
@@ -101,6 +101,23 @@ export default function PenaltyNotificationModal({
     </div>
   )
 }
+
+// Wrapper component that manages its own state using the hook
+export function PenaltyNotificationModal() {
+  const { showPenalty, penaltyData, closePenaltyModal } = usePenaltyNotification()
+
+  if (!penaltyData) return null
+
+  return (
+    <PenaltyNotificationModalBase
+      isOpen={showPenalty}
+      onClose={closePenaltyModal}
+      penaltyData={penaltyData}
+    />
+  )
+}
+
+export default PenaltyNotificationModalBase
 
 // Hook to check for new penalties and manage popup state
 export function usePenaltyNotification() {
@@ -131,7 +148,7 @@ export function usePenaltyNotification() {
 
       // Check for penalties from yesterday (including automatic penalties issued today for yesterday's performance)
       const today = new Date().toISOString().split('T')[0]
-      
+
       const { data: penalties, error } = await supabase
         .from('payment_transactions')
         .select('amount, created_at, description')
@@ -148,11 +165,11 @@ export function usePenaltyNotification() {
 
       if (penalties && penalties.length > 0) {
         const penalty = penalties[0]
-        
+
         // Parse the automatic penalty description to extract target/actual points
         let targetPoints = 30 // Default fallback
         let actualPoints = 0
-        
+
         const description = penalty.description || ''
         const targetMatch = description.match(/(\d+)\/(\d+) points/)
         if (targetMatch) {
@@ -174,9 +191,9 @@ export function usePenaltyNotification() {
           targetPoints,
           actualPoints
         })
-        
+
         setShowPenalty(true)
-        
+
         // Mark as shown to prevent showing again
         localStorage.setItem(notificationKey, 'true')
       }

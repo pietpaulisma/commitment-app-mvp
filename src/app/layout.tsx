@@ -67,41 +67,41 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* PWA Primary Meta Tags */}
         <meta name="application-name" content="Commitment" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#f97316" />
-        
+
         {/* iOS Safari Specific Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Commitment" />
         <meta name="apple-touch-fullscreen" content="yes" />
-        
+
         {/* iOS Safari Icon Tags */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        
+
         {/* Android Chrome Specific Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
-        
+
         {/* Favicon and Icons */}
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
         <link rel="shortcut icon" href="/favicon.ico" />
-        
+
         {/* Prevent zooming and ensure fullscreen */}
         <meta name="format-detection" content="telephone=no" />
         <meta name="msapplication-tap-highlight" content="no" />
-        
+
         {/* Windows specific */}
         <meta name="msapplication-TileColor" content="#f97316" />
         <meta name="msapplication-config" content="none" />
-        
+
         {/* Service Worker Registration with PWA support */}
         <script dangerouslySetInnerHTML={{
           __html: `

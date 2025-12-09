@@ -1,16 +1,22 @@
+
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import RectangularNavigation from '@/components/RectangularNavigation'
-import RectangularDashboard from '@/components/RectangularDashboard'
+import { useProfile } from '@/hooks/useProfile'
+import dynamic from 'next/dynamic'
+const NewDashboard = dynamic(() => import('@/components/dashboard/v2/NewDashboard'), { ssr: false })
+import { BottomNavigation } from '@/components/dashboard/v2/BottomNavigation'
 import TimeGradient from '@/components/TimeGradient'
 import { useState } from 'react'
 import { isPWAMode, logPWADebugInfo } from '@/utils/pwaUtils'
+import GroupChat from '@/components/GroupChat'
+import WorkoutModal from '@/components/modals/WorkoutModal'
 
 export default function Home() {
   const { user, loading } = useAuth()
+  const { profile } = useProfile()
   const router = useRouter()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
@@ -21,7 +27,7 @@ export default function Home() {
   useEffect(() => {
     const pwaMode = isPWAMode()
     setIsPWA(pwaMode)
-    
+
     // Debug logging for PWA mode
     if (pwaMode) {
       console.log('PWA mode detected - standalone launch from home screen')
@@ -54,7 +60,7 @@ export default function Home() {
           console.warn('PWA auth recovery failed:', error)
         }
       }
-      
+
       router.push('/login')
     }
   }, [user, loading, router, isPWA])
@@ -70,6 +76,22 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const handleWorkoutOpen = () => {
+    setIsWorkoutModalOpen(true)
+  }
+
+  const handleWorkoutClose = () => {
+    setIsWorkoutModalOpen(false)
+  }
+
+  const handleChatOpen = () => {
+    setIsChatModalOpen(true)
+  }
+
+  const handleChatClose = () => {
+    setIsChatModalOpen(false)
+  }
+
   // If loading or no user, show minimal state
   if (loading) {
     return null // Let the browser handle it instantly
@@ -83,18 +105,35 @@ export default function Home() {
   return (
     <>
       <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" />
-      
-      <div className="relative">
+
+      <div className="relative pb-32">
         <div className="relative z-10">
-          <RectangularNavigation 
-            isScrolled={isScrolled} 
-            onWorkoutModalStateChange={setIsWorkoutModalOpen}
-            onChatModalStateChange={setIsChatModalOpen}
-            hideSettingsIcons={true}
-          />
-          <RectangularDashboard />
+          <NewDashboard />
         </div>
       </div>
+
+      {/* New Bottom Navigation */}
+      <BottomNavigation
+        onWorkoutClick={handleWorkoutOpen}
+        onChatClick={handleChatOpen}
+        groupId={profile?.group_id}
+      />
+
+      {/* Group Chat Modal */}
+      <GroupChat
+        isOpen={isChatModalOpen}
+        onClose={handleChatClose}
+        onCloseStart={handleChatClose}
+      />
+
+      {/* Workout Modal */}
+      <WorkoutModal
+        isOpen={isWorkoutModalOpen}
+        onClose={handleWorkoutClose}
+        onCloseStart={handleWorkoutClose}
+        onWorkoutAdded={() => { }}
+        isAnimating={false}
+      />
     </>
   )
 }

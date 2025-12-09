@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { TrophyIcon } from '@heroicons/react/24/solid'
+import { Trophy } from 'lucide-react'
+import { GlassCard } from '@/components/dashboard/v2/GlassCard'
+import { CardHeader } from '@/components/dashboard/v2/CardHeader'
 import { getCurrentSeason, formatSeasonDisplay, getWeekDates } from '@/utils/seasonHelpers'
 import { calculateDailyTarget } from '@/utils/targetCalculation'
-import { SeasonalChampionsHistoryModal } from './SeasonalChampionsHistoryModal'
+import { SeasonalChampionsHistoryModal } from './modals/SeasonalChampionsHistoryModal'
 
 interface ChampionData {
   userId: string
@@ -199,65 +201,68 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
 
   if (loading) {
     return (
-      <div className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl p-4">
-        <div className="animate-pulse">
-          <div className="h-6 bg-white/10 rounded w-3/4 mb-3"></div>
-          <div className="space-y-2">
-            <div className="h-4 bg-white/5 rounded"></div>
-            <div className="h-4 bg-white/5 rounded"></div>
-          </div>
+      <GlassCard noPadding>
+        <CardHeader
+          title={formatSeasonDisplay(season, year)}
+          icon={Trophy}
+          colorClass="text-yellow-500"
+        />
+        <div className="p-4 space-y-2">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-white/5 rounded-lg h-12"></div>
+            </div>
+          ))}
         </div>
-      </div>
+      </GlassCard>
     )
   }
 
   return (
     <>
-      <div className="bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <TrophyIcon className="w-5 h-5 text-yellow-500" />
-            <h3 className="text-sm font-bold text-white">
-              {formatSeasonDisplay(season, year)}
-            </h3>
-          </div>
-          {champions.length > 0 && (
-            <button
-              onClick={() => setShowHistory(true)}
-              className="text-xs text-white/60 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/10"
-            >
-              History
-            </button>
-          )}
-        </div>
+      <GlassCard noPadding>
+        <CardHeader
+          title={formatSeasonDisplay(season, year)}
+          icon={Trophy}
+          colorClass="text-yellow-500"
+          rightContent={
+            champions.length > 0 ? (
+              <button
+                onClick={() => setShowHistory(true)}
+                className="text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                History
+              </button>
+            ) : undefined
+          }
+        />
 
         {/* Champions List */}
         {champions.length === 0 ? (
-          <div className="text-center py-4">
-            <TrophyIcon className="w-12 h-12 text-white/20 mx-auto mb-2" />
-            <p className="text-xs text-white/40">No weekly winners yet this season</p>
+          <div className="text-center py-8">
+            <Trophy className="w-12 h-12 text-white/10 mx-auto mb-2" />
+            <p className="text-sm text-zinc-500">No weekly winners yet this season</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="p-4 space-y-2">
             {champions.map((champion, index) => (
               <div
                 key={champion.userId}
-                className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-black text-zinc-400 min-w-[24px]">
                     {index === 0 && '🥇'}
                     {index === 1 && '🥈'}
                     {index === 2 && '🥉'}
-                    {index > 2 && `${index + 1}.`}
+                    {index > 2 && `${index + 1}`}
                   </span>
-                  <span className="text-sm font-medium text-white">
+                  <span className="text-sm font-bold text-zinc-300">
                     {champion.username}
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <TrophyIcon className="w-4 h-4 text-yellow-500" />
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-yellow-500" fill="currentColor" />
                   <span className="text-sm font-bold text-yellow-400">
                     {champion.wins}
                   </span>
@@ -266,14 +271,7 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
             ))}
           </div>
         )}
-
-        {/* Footer */}
-        <div className="mt-3 pt-3 border-t border-white/10">
-          <p className="text-xs text-white/40 text-center">
-            Most weekly overperformances
-          </p>
-        </div>
-      </div>
+      </GlassCard>
 
       {/* History Modal */}
       {showHistory && (

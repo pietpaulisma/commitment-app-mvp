@@ -11,27 +11,28 @@ import { useWeekMode } from '@/contexts/WeekModeContext'
 import { usePageState } from '@/hooks/usePageState'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { NotificationService } from '@/services/notificationService'
+import { COLORS } from '@/utils/colors'
 import {
-  XMarkIcon,
-  HeartIcon,
-  FireIcon,
-  MoonIcon,
-  BoltIcon,
-  SparklesIcon,
-  ChevronDownIcon,
-  StarIcon,
-  RectangleStackIcon,
-  FaceSmileIcon,
-  CalendarDaysIcon,
-  TrashIcon,
-  Bars3Icon,
-  ChatBubbleLeftRightIcon,
-  LockClosedIcon,
-  ChevronUpIcon,
-  CheckIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline'
-import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
+  X,
+  Heart,
+  Flame,
+  Moon,
+  Zap,
+  Sparkles,
+  ChevronDown,
+  Star,
+  Activity,
+  Smile,
+  Calendar,
+  Trash2,
+  Menu,
+  MessageCircle,
+  Lock,
+  ChevronUp,
+  Check,
+  Clock,
+  Plus
+} from 'lucide-react'
 
 type Exercise = {
   id: string
@@ -155,124 +156,45 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const router = useRouter()
 
-  // Motivational messages array
-  const motivationalMessages = [
-    "Your future self is already clapping.",
-    "Sweat = progress in liquid form.",
-    "You're lapping everyone still on the couch.",
-    "Every rep is a deposit in the badass bank.",
-    "Stopwatch says GO, not SCROLL.",
-    "You'll be stronger tomorrow because of this second.",
-    "This burn is proof you're alive.",
-    "Future jeans will thank you.",
-    "The timer isn't slowing down — why should you?",
-    "Imagine your favorite song playing for you only.",
-    "Pretend someone's watching. Move cooler.",
-    "If this was Mario Kart, you just hit a speed boost.",
-    "Rival just pulled ahead. Catch them.",
-    "You just unlocked the 'sweat badge.'",
-    "Beat your shadow-self.",
-    "The timer is your opponent — don't let it win.",
-    "Each second = one XP point. Level up.",
-    "Boss fight incoming. Don't drop your guard.",
-    "The leaderboard is watching.",
-    "Final lap. Sprint!",
-    "Your water bottle is judging you.",
-    "Stopwatch tattles if you quit.",
-    "Resting face detected.",
-    "Your mat wants more drama.",
-    "Somewhere, your ex is hoping you give up.",
-    "Your phone thinks you're scrolling right now.",
-    "Push-ups build character. And better selfies.",
-    "Burpees: nature's revenge.",
-    "Don't let gravity win today.",
-    "If you faint, at least do it dramatically.",
-    "Somewhere, a llama is proud of you.",
-    "This second is sponsored by sore muscles.",
-    "Push harder or the toaster rebels.",
-    "Someone in space just flexed for you.",
-    "Imagine broccoli cheering.",
-    "Hamsters think you're fast.",
-    "Sweat is your aura shining.",
-    "Keep going — pigeons demand it.",
-    "A potato just gave up; don't be that potato.",
-    "If aliens are watching, impress them.",
-    "And here we witness… a hero in action.",
-    "Stopwatch approves this effort.",
-    "Muscles negotiating… denied.",
-    "Behold: cardio royalty.",
-    "The prophecy said you wouldn't quit.",
-    "Legend says you never stop here.",
-    "Your rep is trending worldwide.",
-    "Stopwatch whispers: 'Faster.'",
-    "Training montage music intensifies.",
-    "Scene change: victory incoming.",
-    "Don't pause now, your snack isn't ready yet.",
-    "One more rep, one less excuse.",
-    "Sweat stains > couch cushions.",
-    "Stopwatch eats hesitation for breakfast.",
-    "Tired is a side effect of awesome.",
-    "Your sweatband wants more screen time.",
-    "Rest later. Impress now.",
-    "Stopwatch believes in you (slightly).",
-    "This moment = bragging rights later.",
-    "Stopwatch is neutral. You aren't.",
-    "You're literally saving the universe (probably).",
-    "Faster than a deadline approaching.",
-    "Muscles: assemble!",
-    "Timer says you're basically a sidekick.",
-    "Your cape is invisible but powerful.",
-    "Villains take the day off — not you.",
-    "Training montage unlocked.",
-    "Even Batman does squats.",
-    "Stopwatch = super serum drip.",
-    "Today's power-up: sweat.",
-    "10 more seconds of chaos.",
-    "Wheeee — gravity isn't a toy.",
-    "Hold tight, ride's not over.",
-    "That burn? Front-row ticket vibes.",
-    "Endorphins coming up next.",
-    "Warning: epic finish ahead.",
-    "Think of this as a final boss cutscene.",
-    "Stopwatch buckle-up mode engaged.",
-    "Ride ends when you say it does.",
-    "Push now, laugh later.",
-    "Strike like you mean it.",
-    "Stopwatch = dojo master.",
-    "Don't let your inner ninja nap.",
-    "Kick the laziness out.",
-    "Every rep is a silent strike.",
-    "Sweat = warrior ink.",
-    "The floor fears your push-ups.",
-    "Stopwatch bows to your discipline.",
-    "Warrior mode: active.",
-    "Laziness defeated, achievement unlocked.",
-    "Boom. Another second gone.",
-    "Faster. Louder. Stronger.",
-    "Stopwatch doesn't stutter.",
-    "Pain = spice of victory.",
-    "Don't stop — your playlist hates pauses.",
-    "Stopwatch flexed first.",
-    "Laugh now, sore tomorrow.",
-    "More sweat, fewer regrets.",
-    "Stopwatch won't remember, but you will.",
-    "Rep after rep = legend unlocked.",
-    "TEAR THE FLOOR APART WITH YOUR HANDS.",
-    "CRUSH THIS SET LIKE IT OWES YOU MONEY.",
-    "DESTROY EVERY SECOND OR BE DESTROYED.",
-    "RIP THE LAZINESS OUT OF YOUR BODY.",
-    "BREAK LIMITS. BREAK EXCUSES. BREAK EVERYTHING.",
-    "SHATTER THE TIMER WITH YOUR SWEAT.",
-    "SLAUGHTER THE REPS. NO MERCY.",
-    "ANNIHILATE WEAKNESS NOW.",
-    "SMASH THROUGH THIS LIKE A RAMPAGING BULL.",
-    "OBLITERATE THE NEXT 10 SECONDS.",
-    "UNLEASH HELL ON THESE REPS.",
-    "GRIND YOUR LIMITS INTO DUST.",
-    "TURN FATIGUE INTO ASH.",
-    "KILL THE EXCUSES. FEED THE GRIND.",
-    "DESTROY THE CLOCK WITH EVERY REP.",
-    "MAKE THE TIMER BEG FOR MERCY."
+  // Interesting facts and quotes regarding fitness and human body
+  const workoutFacts = [
+    "1. Muscles: Your body has over 600 muscles.",
+    "2. Heart: Your heart pumps about 2,000 gallons of blood daily.",
+    "3. Bones: You are born with 300 bones, but adults have 206.",
+    "4. Sweat: You have 2-4 million sweat glands.",
+    "5. Steps: 10,000 steps burned about 300-400 calories.",
+    "6. Smiling: Uses 17 muscles (frowning uses 43).",
+    "7. Tongue: The strongest muscle based on its weight.",
+    "8. Brain: Uses 20% of your body's oxygen.",
+    "9. Skin: Your largest organ, weighs ~8 lbs.",
+    "10. Water: 60% of your body weight is water.",
+    "11. Blink: You blink ~15-20 times per minute.",
+    "12. Sleep: Muscles grow while you sleep, not while you train.",
+    "13. Taste: You lose taste buds as you age.",
+    "14. Feet: Contains 25% of all your bones.",
+    "15. Hands: Half your hand strength is in your pinky.",
+    "16. Nerves: Impulses travel at 170 mph.",
+    "17. Fat: 1 lb of fat = 3,500 calories.",
+    "18. Music: Can increase workout performance by 15%.",
+    "19. Cold: You burn more calories shivering.",
+    "20. Habits: Takes ~66 days to form a new habit.",
+    "21. Focus: Exercise improves brain plasticity.",
+    "22. Stress: Working out reduces cortisol levels.",
+    "23. Heart: Exercise expands your arteries.",
+    "24. Lungs: Exercise increases lung capacity.",
+    "25. Posture: Strong abs improve your posture.",
+    "26. Mood: Exercise releases endorphins.",
+    "27. Energy: Working out gives you more energy.",
+    "28. Goals: Small progress is still progress.",
+    "29. Form: Quality over quantity, always.",
+    "30. Mind: Your body can stand almost anything.",
+    "31. Push: It’s the mind you have to convince.",
+    "32. Why: Remember why you started.",
+    "33. You: You are your only competition.",
+    "34. Now: The only bad workout is the one that didn't happen.",
+    "35. Grit: Sweat is just fat crying.",
+    "36. Pain: Sore today, strong tomorrow.",
+    "37. Limit: Your limit is you."
   ]
 
   // Fetch Personal Record when exercise is selected or modal opens
@@ -441,8 +363,9 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     if (isStopwatchRunning) {
       const showMessage = () => {
-        const randomMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]
-        setMotivationalMessage(randomMessage)
+        // Randomly pick a fact
+        const randomFact = workoutFacts[Math.floor(Math.random() * workoutFacts.length)]
+        setMotivationalMessage(randomFact)
         setShowMotivationalMessage(true)
 
         // Let CSS animation handle the fade out (4 second duration)
@@ -961,152 +884,140 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
 
   const getExerciseIcon = (exercise: Exercise | undefined) => {
-    if (!exercise) return <FireIcon className="w-5 h-5 text-gray-400" />
+    if (!exercise) return <span className="text-base">💪</span>
     const name = exercise.name.toLowerCase()
 
-    // Exercise-specific icon mappings using Heroicons
+    // Exercise-specific emoji mappings - more fun!
     switch (name) {
       // Strength exercises
       case 'push-ups':
       case 'pushups':
-        return <FireIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">💪</span>
       case 'pull-ups':
       case 'pullups':
-        return <BoltIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🦾</span>
       case 'squats':
-        return <HeartIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🍑</span>
       case 'lunges':
-        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🦵</span>
       case 'sit-ups':
       case 'situps':
-        return <MoonIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🔥</span>
       case 'dips':
-        return <BoltIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">💪</span>
       case 'jumping jacks':
-        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">⚡</span>
 
       // Cardio exercises
       case 'running':
-        return <BoltIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🏃</span>
       case 'cycling':
       case 'biking':
-        return <HeartIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🚴</span>
       case 'swimming':
-        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🏊</span>
       case 'walking':
-        return <FireIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🚶</span>
 
       // Recovery exercises
       case 'stretching':
-        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🧘</span>
       case 'yoga':
-        return <MoonIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🧘</span>
       case 'meditation':
-        return <MoonIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🧘</span>
       case 'foam rolling':
       case 'blackrolling':
-        return <HeartIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🎯</span>
       case 'massage':
-        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">💆</span>
       case 'sauna':
-        return <FireIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🔥</span>
       case 'ice bath':
       case 'cold shower':
-        return <BoltIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🧊</span>
 
       // Sport activities
       case 'tennis':
-        return <BoltIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🎾</span>
       case 'basketball':
-        return <FireIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🏀</span>
       case 'football':
       case 'soccer':
-        return <HeartIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">⚽</span>
       case 'volleyball':
-        return <SparklesIcon className="w-5 h-5 text-gray-400" />
+        return <span className="text-base">🏐</span>
 
       default:
-        // Fallback to type-based icons
+        // Fallback to type-based emojis
         const type = exercise.type?.toLowerCase()
         switch (type) {
           case 'strength':
-            return <FireIcon className="w-5 h-5 text-gray-400" />
+            return <span className="text-base">💪</span>
           case 'cardio':
-            return <HeartIcon className="w-5 h-5 text-gray-400" />
+            return <span className="text-base">❤️</span>
           case 'flexibility':
-            return <SparklesIcon className="w-5 h-5 text-gray-400" />
+            return <span className="text-base">🧘</span>
           case 'recovery':
-            return <MoonIcon className="w-5 h-5 text-gray-400" />
+            return <span className="text-base">🌙</span>
           case 'endurance':
-            return <BoltIcon className="w-5 h-5 text-gray-400" />
+            return <span className="text-base">⚡</span>
           default:
-            return <FireIcon className="w-5 h-5 text-gray-400" />
+            return <span className="text-base">💪</span>
         }
     }
   }
 
   const renderFavoriteExerciseButton = (exercise: ExerciseWithProgress) => {
-    const exerciseProgress = getExerciseProgress(exercise.id)
+    const isRecovery = exercise.type === 'recovery'
+    const progress = getExerciseProgress(exercise.id)
 
     return (
-      <div
+      <button
         key={exercise.id}
-        className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]"
+        onClick={() => quickAddExercise(exercise)}
+        className="w-full relative flex items-center justify-between py-4 px-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors group overflow-hidden"
       >
-        <div className="flex items-center">
-          {/* Main content area with progress bar */}
-          <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-            {/* Liquid gradient progress bar background */}
-            <div
-              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-              style={{
-                width: '100%',
-                background: exerciseProgress.percentage === 0
-                  ? '#000000'
-                  : `linear-gradient(to right, 
-                    ${getCategoryColor(exercise.type, exercise.id)} 0%, 
-                    ${getCategoryColor(exercise.type, exercise.id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
-                    ${getCategoryColor(exercise.type, exercise.id)}dd ${exerciseProgress.percentage}%, 
-                    #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
-              }}
-            />
+        {/* Progress Bar Background */}
+        <div
+          className="absolute inset-y-0 left-0 bg-white/5 transition-all duration-500 ease-out z-0"
+          style={{ width: `${progress.percentage}%` }}
+        />
 
-            {/* Main exercise button */}
-            <button
-              onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative hover:shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {getExerciseIcon(exercise)}
-                  <div>
-                    <div className="font-medium text-white text-left">{exercise.name}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="font-medium text-gray-500">
-                    {exercise.points_per_unit % 1 === 0
-                      ? exercise.points_per_unit
-                      : exercise.points_per_unit.toFixed(2)
-                    }
-                  </span>
-                  <span className="font-thin text-gray-500 ml-1">
-                    {('/' + exercise.unit.replace('minute', 'min').replace('hour', 'h'))}
-                  </span>
-                </div>
-              </div>
-            </button>
+        <div className="relative z-10 flex items-center gap-3">
+          {/* Icon */}
+          <div className="w-10 h-10 rounded-full flex items-center justify-center transition-colors bg-blue-500/10 text-blue-400">
+            {getExerciseIcon(exercise)}
           </div>
 
-          {/* Reorder icon for favorites */}
-          <button
-            className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
-            aria-label="Reorder favorite"
-          >
-            <Bars3Icon className="w-4 h-4" />
-          </button>
+          {/* Name */}
+          <div className="text-left">
+            <div className="text-sm font-bold text-zinc-100 group-hover:text-white transition-colors uppercase tracking-wider">{exercise.name}</div>
+            {isRecovery && (
+              <div className="text-[10px] font-bold text-green-500/60 uppercase tracking-widest mt-0.5">Recovery</div>
+            )}
+          </div>
         </div>
-      </div>
+
+        {/* Right side */}
+        <div className="relative z-10 flex items-center gap-4">
+          <span className="text-sm font-light text-zinc-400 group-hover:text-zinc-300 transition-colors tabular-nums">
+            {exercise.points_per_unit % 1 === 0
+              ? exercise.points_per_unit
+              : exercise.points_per_unit.toFixed(2)
+            } pts
+          </span>
+
+          <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-zinc-500 group-hover:text-white transition-all">
+            <Plus size={18} />
+          </div>
+
+          {/* Drag Handle / Menu */}
+          <div className="text-zinc-600 group-hover:text-zinc-500 cursor-grab active:cursor-grabbing pl-2 border-l border-white/10">
+            <Menu size={16} />
+          </div>
+        </div>
+      </button>
     )
   }
 
@@ -1127,76 +1038,67 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const renderExerciseButton = (exercise: ExerciseWithProgress, showFavorite: boolean = true) => {
     const isFavorite = favoriteExerciseIds.includes(exercise.id)
-    const exerciseProgress = getExerciseProgress(exercise.id)
+    const isRecovery = exercise.type === 'recovery'
+    const progress = getExerciseProgress(exercise.id)
 
     return (
-      <div
+      <button
         key={exercise.id}
-        className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]"
+        onClick={() => quickAddExercise(exercise)}
+        className="w-full relative flex items-center justify-between py-4 px-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors group overflow-hidden"
       >
-        <div className="flex items-center">
-          {/* Main content area with progress bar */}
-          <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-            {/* Liquid gradient progress bar background */}
-            <div
-              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-              style={{
-                width: '100%',
-                background: exerciseProgress.percentage === 0
-                  ? '#000000'
-                  : `linear-gradient(to right, 
-                    ${getCategoryColor(exercise.type, exercise.id)} 0%, 
-                    ${getCategoryColor(exercise.type, exercise.id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
-                    ${getCategoryColor(exercise.type, exercise.id)}dd ${exerciseProgress.percentage}%, 
-                    #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
-              }}
-            />
+        {/* Progress Bar Background */}
+        <div
+          className="absolute inset-y-0 left-0 bg-white/5 transition-all duration-500 ease-out z-0"
+          style={{ width: `${progress.percentage}%` }}
+        />
 
-            {/* Main exercise button */}
-            <button
-              onClick={() => quickAddExercise(exercise)}
-              className="w-full p-3 hover:scale-105 transition-all duration-300 relative hover:shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {getExerciseIcon(exercise)}
-                  <div>
-                    <div className="font-medium text-white text-left">{exercise.name}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="font-medium text-gray-500">
-                    {exercise.points_per_unit % 1 === 0
-                      ? exercise.points_per_unit
-                      : exercise.points_per_unit.toFixed(2)
-                    }
-                  </span>
-                  <span className="font-thin text-gray-500 ml-1">
-                    {('/' + exercise.unit.replace('minute', 'min').replace('hour', 'h'))}
-                  </span>
-                </div>
-              </div>
-            </button>
+        <div className="relative z-10 flex items-center gap-3">
+          {/* Icon */}
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isFavorite
+            ? 'bg-blue-500/10 text-blue-400'
+            : isRecovery
+              ? 'bg-green-500/10 text-green-400'
+              : 'bg-white/5 text-zinc-500 group-hover:bg-white/10 group-hover:text-zinc-300'
+            }`}>
+            {getExerciseIcon(exercise)}
           </div>
 
-          {/* Star icon button */}
-          {showFavorite && (
-            <button
+          {/* Name */}
+          <div className="text-left">
+            <div className="text-sm font-bold text-zinc-100 group-hover:text-white transition-colors uppercase tracking-wider">{exercise.name}</div>
+            {isRecovery && (
+              <div className="text-[10px] font-bold text-green-500/60 uppercase tracking-widest mt-0.5">Recovery</div>
+            )}
+          </div>
+        </div>
+
+        {/* Right side */}
+        <div className="relative z-10 flex items-center gap-4">
+          <span className="text-sm font-light text-zinc-400 group-hover:text-zinc-300 transition-colors tabular-nums">
+            {exercise.points_per_unit % 1 === 0
+              ? exercise.points_per_unit
+              : exercise.points_per_unit.toFixed(2)
+            } pts
+          </span>
+
+          <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-zinc-500 group-hover:text-white transition-all">
+            <Plus size={18} />
+          </div>
+
+          {!isFavorite && (
+            <div
+              className="w-8 h-8 rounded-full hover:bg-yellow-500/10 flex items-center justify-center text-zinc-700 hover:text-yellow-500 transition-all cursor-pointer border-l border-white/5 pl-2 ml-1"
               onClick={(e) => {
                 e.stopPropagation()
                 toggleFavorite(exercise.id)
               }}
-              className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
             >
-              {isFavorite ? (
-                <StarIconSolid className="w-4 h-4 text-yellow-400" />
-              ) : (
-                <StarIcon className="w-4 h-4 text-gray-400 hover:text-yellow-400" />
-              )}
-            </button>
+              <Star size={16} />
+            </div>
           )}
         </div>
-      </div>
+      </button>
     )
   }
 
@@ -1204,46 +1106,38 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     return (
       <div
         key={sportName}
-        className="w-full relative border-b border-white/10 overflow-hidden transition-all duration-300 bg-black/30 backdrop-blur-sm hover:bg-black/40"
+        className="w-full relative border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors group overflow-hidden"
       >
-        <div className="flex items-center gap-2">
-          {/* Main content area with progress bar - matches header layout */}
-          <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-            {/* Gradient background for sports */}
-            <div
-              className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-              style={{
-                width: '100%',
-                background: '#000000'
-              }}
-            />
+        <button
+          onClick={() => {
+            setSelectedSport(sportName)
+            setShowSportSelection(true)
+          }}
+          className="w-full p-4 relative flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            {/* Icon */}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center transition-colors bg-purple-500/10 text-purple-400">
+              {sportEmoji ? (
+                <span className="text-base">{sportEmoji}</span>
+              ) : (
+                <Zap className="w-5 h-5" />
+              )}
+            </div>
 
-            {/* Main sport button */}
-            <button
-              onClick={() => {
-                setSelectedSport(sportName)
-                setShowSportSelection(true)
-              }}
-              className="w-full p-3 hover:scale-105 transition-transform duration-300 relative"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {sportEmoji ? (
-                    <span className="text-2xl">{sportEmoji}</span>
-                  ) : (
-                    <BoltIcon className="w-6 h-6 text-purple-400" />
-                  )}
-                  <div>
-                    <div className="font-medium text-white text-left">{sportName}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <StarIcon className="w-5 h-5 text-gray-500" />
-                </div>
-              </div>
-            </button>
+            {/* Name */}
+            <div className="text-left">
+              <div className="text-sm font-bold text-zinc-100 group-hover:text-white transition-colors uppercase tracking-wider">{sportName}</div>
+            </div>
           </div>
-        </div>
+
+          {/* Right side */}
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-zinc-500 group-hover:text-white transition-all">
+              <Plus size={18} />
+            </div>
+          </div>
+        </button>
       </div>
     )
   }
@@ -1945,249 +1839,182 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         }}
       >
         {/* Time-based gradient background with subtle glass layer effect */}
-        <TimeGradient className="absolute inset-0 z-[-1] pointer-events-none" intensity={0.15} />
-        {/* Header - Reduced height for PWA - Now extends to true top */}
-        <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-          <div className="flex items-center">
-            {/* Progress Bar Section - Extends to fill safe area */}
-            <div className={`flex-1 relative h-16 ${dailyProgress > 0 ? 'bg-gray-900' : 'bg-gray-900'} border-r border-gray-700 overflow-hidden`}>
-              {/* Liquid gradient progress background with subtle animation */}
-              <div
-                className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
-                style={{
-                  width: progressAnimated ? '100%' : '75%',
-                  background: createCumulativeGradient(todayLogs || [], dailyTarget, weekMode),
-                  opacity: isClosing ? 0 : 1
-                }}
-              />
 
-              {/* Button Content */}
-              <div className="relative h-full flex items-center justify-between px-6 text-white">
-                <div className="flex flex-col items-start">
-                  <span className="font-bold text-sm tracking-tight uppercase">
-                    {progressPercentage >= 100 ? 'Complete!' : 'Log Workout'}
-                  </span>
-                  <span className="text-xs opacity-75 font-medium">
-                    {dailyProgress}/{dailyTarget} pts
-                  </span>
+        {/* Header - Wide pill with percentage and integrated close */}
+        <div className="sticky top-0 z-50 flex items-center justify-center py-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
+          {/* Wide pill-shaped progress container */}
+          <div className="relative w-full max-w-[90%] h-12 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl overflow-hidden shadow-2xl flex items-center">
+            {/* Solid gradient progress bar */}
+            <div
+              className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out rounded-full ${weekMode === 'insane'
+                ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
+                : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
+                }`}
+              style={{
+                width: `${Math.min(100, progressPercentage)}%`,
+                boxShadow: weekMode === 'insane'
+                  ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
+                  : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
+              }}
+            />
+
+            {/* Content - percentage and close button */}
+            <div className="relative h-full w-full flex items-center justify-between px-4">
+              <span className="text-2xl font-black tracking-tight text-white">
+                {Math.round(progressPercentage)}%
+              </span>
+
+              {/* Integrated close button with icon morph */}
+              <button
+                onClick={handleClose}
+                onMouseEnter={() => setShowIconTransition(true)}
+                onMouseLeave={() => setShowIconTransition(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                aria-label="Close workout log"
+              >
+                <div className="relative w-5 h-5">
+                  {/* Activity icon - fades out */}
+                  <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${showIconTransition ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
+                    }`}>
+                    <Activity size={16} className="text-white" />
+                  </div>
+                  {/* X icon - fades in */}
+                  <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${showIconTransition ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
+                    }`}>
+                    <X size={16} className="text-white" />
+                  </div>
                 </div>
-
-                <div className="flex flex-col items-end justify-center h-full">
-                  <span className="text-3xl font-black tracking-tight leading-none">
-                    {Math.round(progressPercentage)}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Subtle glow when complete */}
-              {progressPercentage >= 100 && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
-              )}
+              </button>
             </div>
-
-            {/* Chat → X Button Transition - Extends to fill safe area */}
-            <button
-              onClick={handleClose}
-              className="w-16 h-16 bg-gray-900 border-l border-gray-700 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors duration-200 relative overflow-hidden"
-              aria-label="Close workout log"
-            >
-              {/* Chat Icon (slides up and out when modal reaches top) */}
-              <div
-                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
-                style={{
-                  transform: showIconTransition ? 'translateY(-64px)' : 'translateY(0px)'
-                }}
-              >
-                <ChatBubbleLeftRightIcon className="w-6 h-6" />
-              </div>
-
-              {/* X Icon (slides up from below when modal reaches top) */}
-              <div
-                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out"
-                style={{
-                  transform: showIconTransition ? 'translateY(0px)' : 'translateY(64px)'
-                }}
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </div>
-            </button>
           </div>
         </div>
 
-        {/* Completed Exercises Section - positioned outside padded container */}
+        {/* Completed Exercises Section - New design system */}
         {!exercisesLoading && exercises.length > 0 && todaysWorkouts.length > 0 && (
-          <div
-            className="w-full"
-            style={{
-              background: completedExercisesExpanded
-                ? (weekMode === 'insane'
-                  ? 'linear-gradient(180deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%)'
-                  : 'linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)')
-                : 'transparent'
-            }}
-          >
+          <div className="w-full px-4 py-0">
             <button
               onClick={() => setCompletedExercisesExpanded(!completedExercisesExpanded)}
-              className="w-full hover:opacity-80 transition-all duration-200"
-              style={{
-                background: weekMode === 'insane'
-                  ? 'linear-gradient(90deg, #991b1b 0%, #dc2626 50%, #7f1d1d 100%)'
-                  : 'linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e3a8a 100%)',
-                minHeight: '48px',
-                border: 'none',
-                outline: 'none',
-                boxShadow: '0 -2px 4px rgba(0, 0, 0, 0.1), inset 0 -1px 2px rgba(0, 0, 0, 0.1)'
-              }}
+              className="w-full flex items-center justify-between mb-2 px-2 py-0"
             >
-              <div className="flex items-center justify-between px-6 text-white" style={{ minHeight: '48px' }}>
-                <span className="font-bold text-sm tracking-tight uppercase">
-                  Completed Exercises
-                </span>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs opacity-75 font-medium">
-                    ({todaysWorkouts.length})
-                  </span>
-                  <div className={`transform transition-transform duration-200 ${completedExercisesExpanded ? 'rotate-180' : ''}`}>
-                    <ChevronDownIcon className="w-5 h-5 text-gray-300" />
-                  </div>
-                </div>
-              </div>
+              <h3 className="text-xs font-bold uppercase tracking-widest" style={{
+                color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+              }}>
+                Completed Exercises ({todaysWorkouts.length})
+              </h3>
+              <ChevronDown size={14} className={`text-zinc-500 transition-transform ${completedExercisesExpanded ? 'rotate-180' : ''}`} />
             </button>
 
             {todaysWorkouts.length > 0 && completedExercisesExpanded && (
-              <div className="space-y-0 mt-3 p-2">
+              <div className="space-y-2">
                 {getGroupedWorkouts().map((workout: any) => {
-                  const exerciseProgress = getExerciseProgress(workout.exercise_id)
+                  const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
+                  const fillPct = dailyTarget > 0 ? Math.min((effectivePoints / dailyTarget) * 100, 100) : 0
+                  const isRecovery = workout.exercises?.type === 'recovery'
+
                   return (
                     <div
                       key={`${workout.exercise_id}-${workout.weight || 0}`}
-                      className="w-full relative overflow-hidden transition-all duration-300 mb-1"
+                      className="relative w-full rounded-xl overflow-hidden bg-white/5 hover:bg-white/10 transition-all duration-300 flex items-center group cursor-pointer"
+                      onClick={() => {
+                        const workoutKey = `${workout.exercise_id}-${workout.weight || 0}`
+                        setExpandedWorkouts(prev => ({
+                          ...prev,
+                          [workoutKey]: !prev[workoutKey]
+                        }))
+                      }}
                     >
-                      <div className="flex items-center">
-                        {/* Main content area with progress bar - matches header layout */}
-                        <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-                          {/* Liquid gradient progress bar background */}
-                          <div
-                            className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-                            style={{
-                              width: '100%',
-                              background: exerciseProgress.percentage === 0
-                                ? '#000000'
-                                : `linear-gradient(to right, 
-                                    ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} 0%, 
-                                    ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)} ${Math.max(0, exerciseProgress.percentage - 5)}%, 
-                                    ${getCategoryColor(workout.exercises?.type || 'all', workout.exercise_id)}dd ${exerciseProgress.percentage}%, 
-                                    #000000 ${Math.min(100, exerciseProgress.percentage + 3)}%)`
-                            }}
-                          />
+                      {/* Solid gradient background - matching new design system */}
+                      <div
+                        className={`absolute top-0 left-0 h-full transition-all duration-500 ${isRecovery
+                          ? 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-600'
+                          : weekMode === 'insane'
+                            ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
+                            : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
+                          }`}
+                        style={{
+                          width: `${fillPct}%`,
+                          boxShadow: isRecovery
+                            ? '0 0 20px 3px rgba(34, 197, 94, 0.3), 0 0 10px 0px rgba(34, 197, 94, 0.4)'
+                            : weekMode === 'insane'
+                              ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
+                              : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
+                        }}
+                      />
 
-                          {/* Exercise content */}
-                          <div className="relative p-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                {getExerciseIcon(workout.exercises)}
-                                <div>
-                                  <div className="font-medium text-white flex items-center space-x-2">
-                                    <span>{workout.exercises?.name || 'Unknown Exercise'}</span>
-                                    {workout.weight > 0 && (
-                                      <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
-                                        {workout.weight} kg
-                                      </span>
-                                    )}
-                                    {workout.exercises?.type === 'recovery' && (
-                                      <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Recovery</span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                {(() => {
-                                  const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
-                                  const rawPoints = workout.totalPoints
-                                  const isRecoveryWorkout = workout.exercises?.type === 'recovery'
-                                  const isPointsCapped = isRecoveryWorkout && effectivePoints < rawPoints
+                      {/* Content Layer */}
+                      <div className="relative z-10 w-full px-4 py-2.5 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          {/* Icon */}
+                          <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+                            {getExerciseIcon(workout.exercises)}
+                          </div>
 
-                                  return (
-                                    <div>
-                                      <span className="font-medium text-white">
-                                        {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
-                                      </span>
-                                      <span className="font-thin text-white ml-1">pts</span>
-                                    </div>
-                                  )
-                                })()}
-                              </div>
+                          {/* Text Info */}
+                          <div className="flex flex-col justify-center">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-white">{workout.exercises?.name || 'Unknown Exercise'}</span>
+                              {workout.weight > 0 && (
+                                <span className="text-[9px] font-bold bg-black/40 px-1.5 py-0.5 rounded text-zinc-300 border border-white/10">
+                                  {workout.weight}kg
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        {/* Expand/Collapse button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Toggle expand state for this workout
-                            const workoutKey = `${workout.exercise_id}-${workout.weight || 0}`
-                            setExpandedWorkouts(prev => ({
-                              ...prev,
-                              [workoutKey]: !prev[workoutKey]
-                            }))
-                          }}
-                          className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
-                          aria-label="Expand workout details"
-                        >
-                          <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] ? 'rotate-180' : ''
+                        {/* Right Side: Points */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-white tabular-nums">
+                            {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
+                          </span>
+                          <span className="text-xs text-white/60 font-bold">pts</span>
+                          <ChevronDown size={16} className={`text-white/60 transition-transform duration-200 ${expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] ? 'rotate-180' : ''
                             }`} />
-                        </button>
+                        </div>
                       </div>
-
                       {/* Individual sets when expanded */}
                       {expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] && (
-                        <div className="mt-3 space-y-1">
+                        <div className="mt-2 space-y-2 px-4">
                           {workout.logs.map((log: any, index: number) => (
-                            <div key={log.id} className="w-full relative overflow-hidden transition-all duration-300 mb-1 hover:scale-[1.02]">
-                              <div className="flex items-center">
-                                {/* Main content area with progress bar - matches exercise layout */}
-                                <div className="flex-1 relative overflow-hidden rounded-3xl mr-2 shadow-2xl border border-white/10 bg-black/70 backdrop-blur-xl">
-                                  {/* Exercise content */}
-                                  <div className="relative p-3">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center space-x-3">
-                                        <span className="w-6 h-6 rounded-full bg-gray-700 text-gray-300 text-xs flex items-center justify-center font-medium">
-                                          {index + 1}
-                                        </span>
-                                        <div>
-                                          <div className="font-medium text-white flex items-center space-x-2">
-                                            <span>{log.count || log.duration} {workout.exercises?.unit}</span>
-                                            {log.weight > 0 && (
-                                              <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
-                                                {log.weight} kg
-                                              </span>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div className="text-right">
-                                        <span className="font-medium text-white">
-                                          {getEffectivePoints(log)}
-                                        </span>
-                                        <span className="font-thin text-white ml-1">pts</span>
-                                      </div>
-                                    </div>
+                            <div key={log.id} className="relative w-full rounded-xl overflow-hidden bg-white/5 hover:bg-white/10 transition-all duration-300 flex items-center">
+                              {/* Content Layer */}
+                              <div className="relative z-10 w-full px-4 py-2 flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                  {/* Set number */}
+                                  <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+                                    <span className="text-xs font-bold text-white">{index + 1}</span>
+                                  </div>
+
+                                  {/* Text Info */}
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-white">{log.count || log.duration} {workout.exercises?.unit}</span>
+                                    {log.weight > 0 && (
+                                      <span className="text-[9px] font-bold bg-black/40 px-1.5 py-0.5 rounded text-zinc-300 border border-white/10">
+                                        {log.weight}kg
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
 
-                                {/* Delete button */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleDeleteWorkout(log.id)
-                                  }}
-                                  className="w-12 h-12 bg-black/70 backdrop-blur-xl border border-white/10 hover:bg-black/80 flex items-center justify-center text-gray-400 hover:text-gray-300 transition-all duration-200 shadow-lg flex-shrink-0" style={{ borderRadius: '50%' }}
-                                  aria-label="Delete set"
-                                >
-                                  <TrashIcon className="w-4 h-4" />
-                                </button>
+                                {/* Right Side: Points & Delete */}
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-sm font-black text-white tabular-nums">
+                                      {getEffectivePoints(log)}
+                                    </span>
+                                    <span className="text-xs text-white/60 font-bold">pts</span>
+                                  </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDeleteWorkout(log.id)
+                                    }}
+                                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                                    aria-label="Delete set"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -2224,10 +2051,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               <div className="pb-6">
 
                 {todaysWorkouts.length === 0 && (
-                  <div className="px-4">
-                    <div className="text-center py-8 bg-black/30 backdrop-blur-sm rounded-3xl border-2 border-blue-500/50 shadow-2xl">
-                      <p className="text-gray-400 font-medium">No workouts logged yet</p>
-                      <p className="text-gray-500 text-sm mt-1">Select exercises below to get started</p>
+                  <div className="px-4 my-8">
+                    <div className="text-center">
+                      <p className="text-zinc-500 font-bold mb-1">No workouts logged yet</p>
+                      <p className="text-zinc-600 text-xs">Select exercises below to get started</p>
                     </div>
                   </div>
                 )}
@@ -2264,172 +2091,145 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 )}
               </div>
 
-              {/* Favorites Section - Collapsible */}
+              {/* Favorites Section - New design system */}
               {favoriteExercises.length > 0 && (
-                <div className="py-3">
+                <div className="py-0">
                   <button
                     onClick={() => setFavoritesExpanded(!favoritesExpanded)}
-                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                    className="flex items-center justify-between w-full mb-2 px-4"
                   >
-                    <div className="flex items-center space-x-3">
-                      <StarIconSolid className="w-6 h-6 text-yellow-400" />
-                      <h4 className="text-2xl font-bold text-white">Favorites</h4>
+                    <div className="flex items-center gap-4">
+                      <Star size={24} className="text-yellow-400 fill-yellow-400" />
+                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">FAVS</h4>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">({favoriteExercises.length})</span>
-                      <ChevronDownIcon
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${favoritesExpanded ? 'rotate-180' : ''
-                          }`}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-600 font-bold">({favoriteExercises.length})</span>
+                      <ChevronDown
+                        size={14}
+                        className={`text-zinc-500 transition-transform duration-200 ${favoritesExpanded ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </button>
                   {favoritesExpanded && (
-                    <div className="space-y-0 mt-6">
+                    <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
                       {favoriteExercises.map((exercise) => renderFavoriteExerciseButton(exercise))}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* All Main Exercises - Collapsible */}
+              {/* All Exercises Section - New design system */}
               {allExercises.length > 0 && (
-                <div className="py-3">
+                <div className="py-0 mt-8">
                   <button
                     onClick={() => setAllExercisesExpanded(!allExercisesExpanded)}
-                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                    className="flex items-center justify-between w-full mb-2 px-4"
                   >
-                    <div className="flex items-center space-x-3">
-                      <RectangleStackIcon className="w-6 h-6 text-blue-400" />
-                      <h4 className="text-2xl font-bold text-white">All Exercises</h4>
+                    <div className="flex items-center gap-4">
+                      <Activity size={24} className={weekMode === 'insane' ? 'text-orange-500' : 'text-blue-400'} />
+                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">ALL</h4>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">({allExercises.length})</span>
-                      <ChevronDownIcon
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${allExercisesExpanded ? 'rotate-180' : ''
-                          }`}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-600 font-bold">({allExercises.length})</span>
+                      <ChevronDown
+                        size={14}
+                        className={`text-zinc-500 transition-transform duration-200 ${allExercisesExpanded ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </button>
                   {allExercisesExpanded && (
-                    <div className="space-y-0 mt-6">
+                    <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
                       {allExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Recovery Exercises - Collapsible */}
+              {/* Recovery Section - New design system */}
               {recoveryExercises.length > 0 && (
-                <div className="py-3">
+                <div className="py-0 mt-8">
                   <button
                     onClick={() => setRecoveryExpanded(!recoveryExpanded)}
-                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                    className="flex items-center justify-between w-full mb-2 px-4"
                   >
-                    <div className="flex items-center space-x-3">
-                      <FaceSmileIcon className="w-6 h-6 text-green-400" />
-                      <h4 className="text-2xl font-bold text-white">Recovery</h4>
+                    <div className="flex items-center gap-4">
+                      <Smile size={24} className="text-green-400" />
+                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">HEAL</h4>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">({recoveryExercises.length})</span>
-                      <ChevronDownIcon
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${recoveryExpanded ? 'rotate-180' : ''
-                          }`}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-600 font-bold">({recoveryExercises.length})</span>
+                      <ChevronDown
+                        size={14}
+                        className={`text-zinc-500 transition-transform duration-200 ${recoveryExpanded ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </button>
                   {recoveryExpanded && (
-                    <div className="space-y-0 mt-6">
+                    <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
                       {recoveryExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Sports List - Collapsible */}
+              {/* Sports Section - New design system */}
               {sportsExercises.length > 0 && (
-                <div className="py-3">
+                <div className="py-0 mt-8">
                   <button
                     onClick={() => setSportsExpanded(!sportsExpanded)}
-                    className="flex items-center justify-between w-full mb-3 px-4 hover:bg-gray-800/30 rounded-lg transition-colors duration-200"
+                    className="flex items-center justify-between w-full mb-2 px-4"
                   >
-                    <div className="flex items-center space-x-3">
-                      <BoltIcon className="w-6 h-6 text-purple-400" />
-                      <h4 className="text-2xl font-bold text-white">Sports</h4>
+                    <div className="flex items-center gap-4">
+                      <Zap size={24} className="text-purple-400" />
+                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">SPORTS</h4>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-400">({sportsList.length})</span>
-                      <ChevronDownIcon
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${sportsExpanded ? 'rotate-180' : ''
-                          }`}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-600 font-bold">({sportsList.length})</span>
+                      <ChevronDown
+                        size={14}
+                        className={`text-zinc-500 transition-transform duration-200 ${sportsExpanded ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </button>
                   {sportsExpanded && (
-                    <div className="space-y-0 mt-6">
+                    <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
                       {sportsList.map((sport) => renderSportButton(sport.name, sport.emoji))}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Week Mode Toggle - Bottom Section */}
+              {/* Week Mode Toggle - Fun Toggle Design */}
               {isWeekModeAvailable(groupDaysSinceStart) && (
-                <div className="py-6 px-4">
-                  <div className="bg-black/30 backdrop-blur-sm p-4 rounded-lg">
-                    <div className="text-xs text-gray-400 uppercase tracking-wide mb-3">Week Mode</div>
+                <div className="py-6 px-4 mt-8 flex justify-center">
+                  <div className="bg-white/5 p-1 rounded-full border border-white/10 flex items-center relative w-full max-w-xs h-16">
+                    {/* Active Background Pill */}
+                    <div
+                      className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${weekMode === 'sane' ? 'left-1 bg-blue-600 shadow-lg shadow-blue-500/20' : 'left-[calc(50%+4px)] bg-red-600 shadow-lg shadow-red-500/20'
+                        }`}
+                    />
 
-                    {/* Horizontal Toggle */}
-                    <div className="relative bg-gray-800 rounded-full p-1 w-full">
-                      <div
-                        className={`absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-in-out ${weekMode === 'sane' ? 'left-1 right-1/2' : 'left-1/2 right-1'
-                          }`}
-                        style={{
-                          background: weekMode === 'sane'
-                            ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)'
-                            : 'linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%)'
-                        }}
-                      />
+                    <button
+                      onClick={async () => {
+                        await setWeekModeWithSync('sane', user?.id)
+                        await recalculateTargetWithMode('sane')
+                      }}
+                      className={`flex-1 relative z-10 h-full rounded-full font-black text-sm tracking-widest transition-colors duration-300 ${weekMode === 'sane' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+                        }`}
+                    >
+                      SANE
+                    </button>
 
-                      <div className="relative flex bg-gray-800/50 rounded-full p-1">
-                        {/* Animated background slider */}
-                        <div
-                          className={`absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${weekMode === 'sane'
-                            ? 'left-1 bg-blue-600/30'
-                            : 'left-[calc(50%+2px)] bg-red-600/30'
-                            }`}
-                        />
-
-                        <button
-                          onClick={async () => {
-                            await setWeekModeWithSync('sane', user?.id)
-                            // Recalculate target immediately with the new mode
-                            await recalculateTargetWithMode('sane')
-                          }}
-                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${weekMode === 'sane'
-                            ? 'text-white scale-105'
-                            : 'text-gray-400 hover:text-gray-300 scale-100'
-                            }`}
-                        >
-                          <MoonIcon className="w-4 h-4" />
-                          <span className="font-medium">Sane</span>
-                        </button>
-
-                        <button
-                          onClick={async () => {
-                            await setWeekModeWithSync('insane', user?.id)
-                            // Recalculate target immediately with the new mode
-                            await recalculateTargetWithMode('insane')
-                          }}
-                          className={`relative flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-full transition-all duration-300 ${weekMode === 'insane'
-                            ? 'text-white scale-105'
-                            : 'text-red-400 hover:text-red-300 scale-100'
-                            }`}
-                        >
-                          <FireIcon className="w-4 h-4" />
-                          <span className="font-medium">Insane</span>
-                        </button>
-                      </div>
-                    </div>
+                    <button
+                      onClick={async () => {
+                        await setWeekModeWithSync('insane', user?.id)
+                        await recalculateTargetWithMode('insane')
+                      }}
+                      className={`flex-1 relative z-10 h-full rounded-full font-black text-sm tracking-widest transition-colors duration-300 ${weekMode === 'insane' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+                        }`}
+                    >
+                      INSANE
+                    </button>
                   </div>
                 </div>
               )}
@@ -2443,7 +2243,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium shadow-lg ${isUsingFlexibleRestDay ? 'opacity-50 cursor-not-allowed' : ''
                       }`}
                   >
-                    <CalendarDaysIcon className="w-5 h-5" />
+                    <Calendar className="w-5 h-5" />
                     {isUsingFlexibleRestDay ? 'Using Flexible Rest Day...' : 'Use Flexible Rest Day'}
                   </button>
                   <p className="text-xs text-gray-400 text-center mt-2">
@@ -2460,64 +2260,65 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Workout Input Overlay - Fixed Layout */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black text-white z-[110] flex flex-col animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-            {/* Vibrant gradient background */}
-            {/* Time-based gradient background */}
-            <TimeGradient className="absolute inset-0 pointer-events-none" intensity={0.4} />
-
             {/* Header styled like clicked exercise button */}
             <div className="relative mb-2 px-4 pt-6 pb-2">
               <div className="flex justify-between items-start">
-                <div className="flex flex-col gap-2">
-                  <h1 className="text-4xl font-black text-white tracking-tight leading-none">
+                <div className="flex flex-col gap-2 w-full">
+                  <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 tracking-tight leading-none uppercase italic transform -skew-x-6">
                     {selectedWorkoutExercise.name}
                   </h1>
-                  <div className="flex items-center gap-2">
-                    {/* Gradient Pill for Points */}
-                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full px-3 py-1 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-300">
-                      {(() => {
-                        const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                        const remainingPoints = Math.max(0, dailyTarget - (dailyProgress + currentPoints))
+                  <div className="flex items-center justify-between w-full">
 
-                        if (remainingPoints === 0 && dailyTarget > 0) {
-                          return <span className="flex items-center gap-1">🎉 Done!</span>
-                        }
-                        return `${remainingPoints} left`
-                      })()}
+                    {/* Points Pill */}
+                    <div className="flex items-center gap-2">
+                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full px-3 py-1 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-300">
+                        {(() => {
+                          const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                          const remainingPoints = Math.max(0, dailyTarget - (dailyProgress + currentPoints))
+
+                          if (remainingPoints === 0 && dailyTarget > 0) {
+                            return <span className="flex items-center gap-1">🎉 Done!</span>
+                          }
+                          return `${remainingPoints} left`
+                        })()}
+                      </div>
                     </div>
-                    {/* PR Pill */}
-                    <div className="bg-white/10 rounded-full px-3 py-1 text-xs font-medium text-white/70">
-                      {personalRecord !== null ? (
-                        <>PR: {selectedWorkoutExercise.unit === 'hour' ? `${Math.round(personalRecord * 60)}m` : personalRecord}</>
-                      ) : (
-                        <span className="opacity-50">No PR</span>
+
+                    {/* Enhanced PR Pill */}
+                    <div className={`relative px-4 py-1.5 rounded-full border transition-all duration-300 ${personalRecord !== null && workoutCount >= personalRecord
+                        ? 'bg-yellow-500/20 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.3)] animate-pulse'
+                        : 'bg-white/10 border-white/10'
+                      }`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-white/60">PR</span>
+                        <span className={`text-sm font-black tabular-nums ${personalRecord !== null && workoutCount >= personalRecord
+                            ? 'text-yellow-400'
+                            : 'text-white'
+                          }`}>
+                          {personalRecord !== null ? (
+                            selectedWorkoutExercise.unit === 'hour' ? `${Math.round(personalRecord * 60)}m` : personalRecord
+                          ) : (
+                            <span className="opacity-50">-</span>
+                          )}
+                        </span>
+                      </div>
+
+                      {/* "Close to PR" Indicator */}
+                      {personalRecord !== null && workoutCount > 0 && workoutCount < personalRecord && workoutCount >= personalRecord * 0.8 && (
+                        <div className="absolute -top-8 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg animate-bounce whitespace-nowrap shadow-lg">
+                          Almost there! 🔥
+                        </div>
                       )}
+
+                      {/* "New Record" Indicator */}
+                      {personalRecord !== null && workoutCount > personalRecord && (
+                        <div className="absolute -top-8 right-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-1 rounded-lg animate-bounce whitespace-nowrap shadow-lg">
+                          NEW RECORD! 🏆
+                        </div>
+                      )}
+
                     </div>
-                    {/* Debug Button */}
-                    <button
-                      onClick={async () => {
-                        console.log('Debug: Fetching last logs...');
-                        console.log('Debug: Current User ID:', user?.id);
-                        console.log('Debug: Exercise ID:', selectedWorkoutExercise.id);
 
-                        const { data, error } = await supabase
-                          .from('workout_logs')
-                          .select('*')
-                          .eq('user_id', user?.id)
-                          .eq('exercise_id', selectedWorkoutExercise.id)
-                          .order('logged_at', { ascending: false })
-                          .limit(5);
-
-                        if (error) {
-                          alert('Debug Error: ' + error.message);
-                        } else {
-                          console.log('Debug Logs:', data);
-                          alert(`User ID: ${user?.id}\nLogs Found: ${data?.length}\n\n` + JSON.stringify(data, null, 2));
-                        }
-                      }}
-                      className="bg-red-500/20 hover:bg-red-500/30 text-red-200 text-xs px-2 py-1 rounded-full transition-colors"
-                    >
-                      Debug
-                    </button>
                   </div>
                 </div>
 
@@ -2525,7 +2326,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   onClick={() => setWorkoutInputOpen(false)}
                   className="bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
                 >
-                  <XMarkIcon className="w-6 h-6 text-white" />
+                  <X className="w-6 h-6 text-white" />
                 </button>
               </div>
 
@@ -2557,84 +2358,97 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
 
             {/* Stopwatch Section */}
-            <div className="border-b border-white/10 backdrop-blur-sm px-3">
+            <div className="border-b border-white/5 bg-white/5 backdrop-blur-sm px-3 mt-4 mx-4 rounded-xl overflow-hidden shadow-inner">
               <button
                 onClick={() => setIsStopwatchExpanded(!isStopwatchExpanded)}
-                className="w-full py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+                className="w-full py-4 flex items-center justify-between transition-colors group"
               >
-                <div className="flex items-center gap-3">
-                  <ClockIcon className="w-5 h-5" style={{ color: userColor }} />
-                  <span className="font-medium">Stopwatch</span>
-                  <span className="font-sans font-bold" style={{ color: userColor }}>{formatTime(stopwatchTime)}</span>
+                <div className="flex items-center gap-4">
+                  <div className={`p-2 rounded-full ${isStopwatchRunning ? 'bg-green-500/20 text-green-400 animate-pulse' : 'bg-white/10 text-white/60'}`}>
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs font-bold uppercase tracking-wider text-white/40 group-hover:text-white/60 transition-colors">Stopwatch</span>
+                    <span className={`font-mono text-xl font-bold tracking-wider ${isStopwatchRunning ? 'text-white' : 'text-white/60'}`}>
+                      {formatTime(stopwatchTime)}
+                    </span>
+                  </div>
                 </div>
-                {isStopwatchExpanded ? <ChevronUpIcon className="w-5 h-5" /> : <ChevronDownIcon className="w-5 h-5" />}
+
+                {/* Mini visualization if running and collapsed */}
+                {!isStopwatchExpanded && isStopwatchRunning && (
+                  <div className="text-xs text-green-400 font-bold animate-pulse mr-4">RUNNING</div>
+                )}
+
+                <div className="p-1 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                  {isStopwatchExpanded ? <ChevronUp className="w-5 h-5 text-white/60" /> : <ChevronDown className="w-5 h-5 text-white/60" />}
+                </div>
               </button>
 
               {isStopwatchExpanded && (
-                <div className="px-4 pb-4 space-y-6 animate-in slide-in-from-top-2 duration-200">
-                  {/* Motivational message area - above timer */}
-                  <div className="h-12 flex items-center justify-center relative">
-                    {showMotivationalMessage && (
+                <div className="pb-6 pt-2 animate-in slide-in-from-top-2 duration-300">
+
+                  {/* Motivational message area - Enhanced */}
+                  <div className="h-16 flex items-center justify-center relative px-4 mb-4">
+                    {showMotivationalMessage ? (
                       <div
-                        className={`text-center transition-opacity duration-1000 ease-out ${showMotivationalMessage ? 'opacity-100' : 'opacity-0'
-                          }`}
+                        className="text-center transition-all duration-500 ease-out"
                         style={{
-                          animation: showMotivationalMessage ? 'fadeInOut 4s ease-in-out' : 'none'
+                          animation: 'fadeInOut 4s ease-in-out'
                         }}
                       >
-                        <div className="text-sm font-bold text-white whitespace-nowrap" style={{ color: userColor }}>
-                          {motivationalMessage}
+                        <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-lg">
+                          <p className="text-sm font-medium text-white/90 leading-relaxed max-w-[280px]">
+                            {motivationalMessage}
+                          </p>
                         </div>
+                      </div>
+                    ) : (
+                      <div className="text-white/20 text-xs text-center italic">
+                        Stats & facts will appear here...
                       </div>
                     )}
                   </div>
 
                   {/* Large time display */}
-                  <div className="text-center">
-                    <div className="font-sans text-6xl font-bold tracking-wider" style={{ color: userColor }}>
+                  <div className="text-center mb-8 relative">
+                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-24 bg-gradient-to-r from-transparent via-white/5 to-transparent blur-xl pointer-events-none"></div>
+                    <div className="font-mono text-7xl font-black tracking-widest text-white relative z-10 drop-shadow-2xl tabular-nums">
                       {formatTime(stopwatchTime)}
                     </div>
                   </div>
 
-                  {/* Controls */}
-                  <div className="flex justify-center gap-6 mt-8">
-                    <div
-                      className="w-20 h-20 rounded-full overflow-hidden backdrop-blur-xl border-2 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.3),0_12px_40px_rgba(0,0,0,0.8)] active:scale-[0.95] transition-all duration-200 relative"
-                      style={{
-                        background: `radial-gradient(circle at 30% 30%, ${userColor}FF 0%, ${userColor}DD 50%, ${userColor}BB 100%)`,
-                        borderColor: userColor + '60',
-                        boxShadow: `inset 0 2px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px ${userColor}40`
-                      }}
+                  {/* Controls - Modern Pill Design */}
+                  <div className="flex justify-center items-center gap-4">
+
+                    {/* Reset Button */}
+                    <button
+                      onClick={resetStopwatch}
+                      className="w-14 h-14 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-95 border border-white/5"
+                      aria-label="Reset Stopwatch"
                     >
-                      {/* Glass effect overlays */}
-                      <div className="absolute inset-[2px] rounded-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none" />
+                      <div className="w-5 h-5 bg-current rounded-sm opacity-60" />
+                    </button>
 
-                      <button
-                        onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
-                        className="absolute inset-0 w-full h-full bg-transparent border-0 rounded-full font-bold text-white text-sm flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-colors duration-200"
-                      >
-                        {isStopwatchRunning ? 'Pause' : 'Start'}
-                      </button>
-                    </div>
-
-                    <div
-                      className="w-20 h-20 rounded-full overflow-hidden backdrop-blur-xl border-2 border-zinc-500/60 shadow-[inset_0_2px_0_rgba(255,255,255,0.2),0_8px_32px_rgba(0,0,0,0.6)] hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.3),0_12px_40px_rgba(0,0,0,0.8)] active:scale-[0.95] transition-all duration-200 relative bg-gradient-to-br from-zinc-600/80 via-zinc-700/90 to-zinc-800/80 hover:from-zinc-500/80 hover:via-zinc-600/90 hover:to-zinc-700/80"
-                      style={{
-                        boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1)'
-                      }}
+                    {/* Start/Pause Main Button */}
+                    <button
+                      onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
+                      className={`h-20 px-10 rounded-full flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 shadow-xl ${isStopwatchRunning
+                          ? 'bg-amber-500 hover:bg-amber-600 text-black'
+                          : 'bg-green-500 hover:bg-green-600 text-black'
+                        }`}
                     >
-                      {/* Glass effect overlays */}
-                      <div className="absolute inset-[2px] rounded-full bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none" />
+                      {isStopwatchRunning ? (
+                        <>
+                          <span className="text-lg font-black uppercase tracking-wider">Pause</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-lg font-black uppercase tracking-wider">Start</span>
+                        </>
+                      )}
+                    </button>
 
-                      <button
-                        onClick={resetStopwatch}
-                        className="absolute inset-0 w-full h-full bg-transparent border-0 rounded-full font-bold text-white text-sm flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-colors duration-200"
-                      >
-                        Reset
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
@@ -2644,41 +2458,45 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               {/* Interactive Counter Display */}
               {/* Interactive Counter & Quick Add Group */}
-              <div className="rounded-3xl bg-zinc-900/50 border border-white/10 overflow-hidden backdrop-blur-md shadow-lg">
+              <div className="rounded-3xl bg-zinc-900/50 border border-white/5 overflow-hidden backdrop-blur-sm shadow-xl">
                 {/* Number display with interactive click zones */}
-                <div className="relative h-32 flex items-center justify-center border-b border-white/5 bg-gradient-to-b from-zinc-800/50 to-zinc-900/50">
-                  {/* Background glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 blur-xl"></div>
+                <div className="relative h-44 flex items-center justify-center bg-black/20">
 
                   {/* Left click zone (decrement) */}
                   <button
                     onClick={() => {
+                      if (navigator.vibrate) navigator.vibrate(5);
                       const stepAmount = getStepAmount()
                       setWorkoutCount(Math.max(0, parseFloat((workoutCount - stepAmount).toFixed(4))))
                     }}
-                    className="absolute left-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 active:scale-95 touch-manipulation group/left"
+                    className="absolute left-0 top-0 bottom-0 w-24 z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 touch-manipulation group/left"
                   >
-                    <span className="opacity-30 group-hover/left:opacity-100 text-4xl font-bold transition-opacity duration-200">−</span>
+                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover/left:bg-white/10 transition-colors">
+                      <span className="text-white/40 group-hover/left:text-white text-3xl font-light transition-colors">–</span>
+                    </div>
                   </button>
 
                   {/* Right click zone (increment) */}
                   <button
                     onClick={() => {
+                      if (navigator.vibrate) navigator.vibrate(5);
                       const stepAmount = getStepAmount()
                       setWorkoutCount(parseFloat((workoutCount + stepAmount).toFixed(4)))
                     }}
-                    className="absolute right-0 top-0 w-1/3 h-full z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 active:scale-95 touch-manipulation group/right"
+                    className="absolute right-0 top-0 bottom-0 w-24 z-10 flex items-center justify-center hover:bg-white/5 active:bg-white/10 transition-all duration-150 touch-manipulation group/right"
                   >
-                    <span className="opacity-30 group-hover/right:opacity-100 text-4xl font-bold transition-opacity duration-200">+</span>
+                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover/right:bg-white/10 transition-colors">
+                      <span className="text-white/40 group-hover/right:text-white text-3xl font-light transition-colors">+</span>
+                    </div>
                   </button>
 
                   {/* Number display */}
-                  <div className="relative z-0 flex flex-col items-center justify-center">
+                  <div className="relative z-0 flex flex-col items-center justify-center pointer-events-none">
                     <span
-                      className="font-sans font-black tabular-nums text-white leading-none tracking-tight drop-shadow-2xl"
+                      className="font-sans font-black tabular-nums text-white leading-none tracking-tight"
                       style={{
-                        fontSize: '4.5rem',
-                        textShadow: '0 0 30px rgba(255,255,255,0.1)'
+                        fontSize: '6rem',
+                        textShadow: '0 0 40px rgba(255,255,255,0.15)'
                       }}
                     >
                       {(() => {
@@ -2688,7 +2506,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           return (
                             <>
                               {minutes}
-                              <span style={{ fontWeight: '300', fontSize: '0.5em' }}>m</span>
+                              <span className="text-3xl font-medium opacity-40 ml-1">m</span>
                             </>
                           )
                         }
@@ -2696,14 +2514,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       })()}
                     </span>
                     {/* Label inside number display */}
-                    <span className="text-white/40 text-xs font-bold tracking-[0.2em] uppercase mt-1">
-                      {selectedWorkoutExercise.unit === 'hour' ? 'MINUTES' : 'REPS'}
+                    <span className="text-white/30 text-xs font-bold tracking-[0.3em] uppercase mt-2 border border-white/10 px-3 py-1 rounded-full">
+                      {selectedWorkoutExercise.unit === 'hour' ? 'MINUTES' : selectedWorkoutExercise.unit.toUpperCase() + 'S'}
                     </span>
                   </div>
                 </div>
 
                 {/* Quick Add Buttons - Connected below */}
-                <div className="grid grid-cols-4 divide-x divide-white/5 bg-white/5">
+                <div className="grid grid-cols-4 divide-x divide-white/5 bg-white/5 border-t border-white/5">
                   {(() => {
                     const stepAmount = getStepAmount()
                     const isHourBased = selectedWorkoutExercise && selectedWorkoutExercise.unit === 'hour'
@@ -2729,10 +2547,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   })().map((button, index) => (
                     <button
                       key={index}
-                      onClick={button.action}
-                      className="py-4 hover:bg-white/10 active:bg-white/20 transition-colors flex items-center justify-center"
+                      onClick={() => {
+                        if (navigator.vibrate) navigator.vibrate(5);
+                        button.action()
+                      }}
+                      className="py-5 hover:bg-white/10 active:bg-white/20 transition-colors flex items-center justify-center group"
                     >
-                      <span className="text-lg font-bold text-white/80">{button.label}</span>
+                      <span className="text-lg font-bold text-white/40 group-hover:text-white transition-colors">{button.label}</span>
                     </button>
                   ))}
                 </div>
@@ -2804,7 +2625,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         >
                           {isLocked && (
                             <div className="absolute top-1 right-1">
-                              <LockClosedIcon className="w-3 h-3 text-amber-500" />
+                              <Lock className="w-3 h-3 text-amber-500" />
                             </div>
                           )}
                           <span className={`text-lg font-bold ${isLocked ? 'text-amber-500' : isSelected ? 'text-white' : 'text-white/60'}`}>
@@ -2836,7 +2657,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     ? 'bg-amber-400 border-amber-400'
                     : 'border-white/30 bg-transparent'
                     }`}>
-                    {isDecreasedExercise && <CheckIcon className="w-3 h-3 text-black" />}
+                    {isDecreasedExercise && <Check className="w-3 h-3 text-black" />}
                   </div>
                   <span className="font-medium relative z-10 text-center flex-1">
                     {isDecreasedExercise ? 'Decreased (1.5x points)' : 'Regular (1x points)'}
@@ -2996,7 +2817,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                             background: 'linear-gradient(135deg, #a855f740 0%, #a855f720 100%)'
                           }}
                         >
-                          <BoltIcon className="w-6 h-6 text-purple-400" />
+                          <Zap className="w-6 h-6 text-purple-400" />
                         </div>
                         <div>
                           <h3 className="text-xl font-bold text-white mb-1">{selectedSport}</h3>
@@ -3007,7 +2828,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         onClick={() => setShowSportSelection(false)}
                         className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-200 hover:scale-110"
                       >
-                        <XMarkIcon className="w-6 h-6" />
+                        <X className="w-6 h-6" />
                       </button>
                     </div>
                   </div>
@@ -3030,7 +2851,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         className="w-full bg-black/30 backdrop-blur-sm hover:bg-gray-800/40 border border-white/10/50 hover:border-purple-400/50 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between group"
                       >
                         <div className="flex items-center space-x-3">
-                          <BoltIcon className="w-5 h-5 text-purple-400" />
+                          <Zap className="w-5 h-5 text-purple-400" />
                           <div className="text-left">
                             <div className="font-semibold">{exercise.name}</div>
                             <div className="text-sm text-gray-400">{exercise.points_per_unit} pts/{exercise.unit}</div>

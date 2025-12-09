@@ -6,6 +6,7 @@ import { createCumulativeGradient } from '@/utils/gradientUtils'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 import { getUserColor, getUserColorHover } from '@/utils/colorUtils'
+import { COLORS } from '@/utils/colors'
 
 type Exercise = {
   id: string
@@ -629,38 +630,41 @@ export default function MobileWorkoutLogger() {
         }
       `}</style>
       
-      {/* Daily Target Progress Header - With safe-area wrapper like working headers */}
+      {/* Daily Target Progress Header - New design system */}
       {dailyTarget > 0 && (
-        <div className="sticky top-0" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-          <div 
-            className="relative h-16 bg-gray-900 overflow-hidden border-t border-gray-700"
+        <div className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <div
+            className="relative h-16 bg-black overflow-hidden border-b border-white/10"
           >
-            {/* Stacked gradient progress bar background with subtle animation */}
-            <div 
-              className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-out"
-              style={{ 
-                width: progressAnimated ? '100%' : '80%',
-                background: isRecoveryDay 
-                  ? createCumulativeGradient(todaysLogs?.filter(log => log.exercises?.type === 'recovery') || [], dailyTarget)
-                  : createCumulativeGradient(todaysLogs || [], dailyTarget),
-                // Force cache invalidation
-                transform: `translateZ(${Date.now() % 1000}px)`
+            {/* Solid gradient progress bar - matching new design system */}
+            <div
+              className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out ${weekMode === 'insane'
+                ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
+                : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
+                }`}
+              style={{
+                width: `${Math.min(100, (getCappedTotalPoints() / Math.max(1, dailyTarget)) * 100)}%`,
+                boxShadow: weekMode === 'insane'
+                  ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
+                  : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
               }}
             />
-            
+
             {/* Content */}
             <div className="relative h-full flex items-center justify-between px-6 text-white">
               <div className="flex flex-col items-start">
-                <span className="font-bold text-xs tracking-tight uppercase">
+                <span className="font-bold text-xs tracking-widest uppercase" style={{
+                  color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                }}>
                   LOG WORKOUT
                 </span>
-                <span className="text-xs opacity-75 font-medium">
+                <span className="text-xs text-zinc-400 font-bold">
                   {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}/{Math.max(1, dailyTarget)} pts
                 </span>
               </div>
-              
+
               <div className="flex flex-col items-end justify-center">
-                <span className="text-2xl font-black tracking-tight leading-none">
+                <span className="text-3xl font-black tracking-tight leading-none">
                   {Math.round((isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / Math.max(1, dailyTarget) * 100)}%
                 </span>
               </div>
@@ -694,301 +698,325 @@ export default function MobileWorkoutLogger() {
       )}
 
       <div className="space-y-0">
-        {/* Quick Add Section */}
+        {/* Quick Add Section - New design system */}
         <div id="quick-add" className="bg-black">
-          <div className="py-3">
-            <h3 className="text-2xl font-bold text-white mb-3 px-4">Quick Add</h3>
-            
-            <div className="px-1">
-              <div className="grid grid-cols-2 gap-1 mx-1 mb-1">
-                {popularExercises.map((exercise) => (
-                  <button
-                    key={exercise.id}
-                    onClick={() => quickAddExercise(exercise)}
-                    className="bg-gray-900/30 backdrop-blur-xl hover:bg-gray-900/40 text-white p-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-2xl border border-white/5 mb-1"
-                  >
-                    <div className="text-center">
-                      <div className="text-lg font-black mb-1" style={{ color: userColor }}>{exercise.points_per_unit}</div>
-                      <div className="text-sm font-medium mb-1">{exercise.name}</div>
-                      <div className="text-xs text-gray-400 uppercase tracking-wide">per {exercise.unit}</div>
+          <div className="py-4 px-4">
+            <h3 className="text-xl font-black uppercase tracking-tighter text-white mb-4">Quick Add</h3>
+
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {popularExercises.map((exercise) => (
+                <button
+                  key={exercise.id}
+                  onClick={() => quickAddExercise(exercise)}
+                  className="bg-white/5 hover:bg-white/10 text-white p-4 rounded-xl transition-all duration-300 border border-white/5"
+                >
+                  <div className="text-center">
+                    <div className="text-2xl font-black mb-1" style={{
+                      color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                    }}>
+                      {exercise.points_per_unit}
                     </div>
-                  </button>
-                ))}
-              </div>
-
-              {recoveryExercises.length > 0 && (
-                <>
-                  <div className="mb-1">
-                    <span className="text-sm font-medium text-gray-400 uppercase tracking-wide px-3">Recovery Exercises</span>
+                    <div className="text-sm font-bold mb-1 text-white">{exercise.name}</div>
+                    <div className="text-xs text-zinc-500 uppercase tracking-wide font-bold">per {exercise.unit}</div>
                   </div>
-                  <div className="space-y-1">
-                    {recoveryExercises.map((exercise) => (
-                      <button
-                        key={exercise.id}
-                        onClick={() => quickAddExercise(exercise, 5)}
-                        className="w-full bg-gray-900/30 backdrop-blur-xl hover:bg-gray-900/40 text-white p-3 rounded-3xl transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-2xl border border-white/5 mb-1"
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="text-left">
-                            <div className="text-sm font-medium">{exercise.name}</div>
-                            <div className="text-xs text-gray-400">Recovery Exercise</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-black" style={{ color: userColor }}>{exercise.points_per_unit}</div>
-                            <div className="text-xs text-gray-400">per {exercise.unit}</div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+                </button>
+              ))}
             </div>
-          </div>
-        </div>
 
-        {/* Log Workout Section */}
-        <div id="log-workout" className="bg-black">
-          <div className="py-3">
-            <h3 className="text-2xl font-bold text-white mb-3 px-4">Log Workout</h3>
-            
-            <div className="px-1">
-              <form onSubmit={handleSubmit} className="space-y-3">
-                {/* Exercise Selection */}
-                <div>
-                  <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1 px-3">Exercise</label>
-                  <select 
-                    value={selectedExercise?.id || ''} 
-                    onChange={(e) => handleExerciseChange(e.target.value)}
-                    className="w-full px-4 py-3 border border-white/5 rounded-3xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 backdrop-blur-xl text-white mx-1"
-                  >
-                    <option value="">Select an exercise...</option>
-                    <optgroup label="Regular Exercises">
-                      {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
-                        <option key={exercise.id} value={exercise.id}>
-                          {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Recovery Exercises">
-                      {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
-                        <option key={exercise.id} value={exercise.id}>
-                          {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
+            {recoveryExercises.length > 0 && (
+              <>
+                <div className="mb-2">
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Recovery Exercises</span>
                 </div>
-
-                {selectedExercise && (
-                  <>
-                    {/* Exercise Info Card */}
-                    <div className="bg-gray-900/30 backdrop-blur-xl rounded-3xl p-4 shadow-2xl border border-white/5">
+                <div className="space-y-2">
+                  {recoveryExercises.map((exercise) => (
+                    <button
+                      key={exercise.id}
+                      onClick={() => quickAddExercise(exercise, 5)}
+                      className="w-full bg-white/5 hover:bg-white/10 text-white p-4 rounded-xl transition-all duration-300 border border-white/5"
+                    >
                       <div className="flex justify-between items-center">
-                        <div>
-                          <div className="text-sm font-medium text-white">{selectedExercise.name}</div>
-                          <div className="text-xs text-gray-400 uppercase tracking-wide">
-                            {selectedExercise.type} exercise
-                          </div>
+                        <div className="text-left">
+                          <div className="text-sm font-bold text-white">{exercise.name}</div>
+                          <div className="text-xs text-green-500/60 font-bold uppercase tracking-wide">Recovery</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-black" style={{ color: userColor }}>{selectedExercise.points_per_unit}</div>
-                          <div className="text-xs text-gray-400">per {selectedExercise.unit}</div>
+                          <div className="text-xl font-black text-green-500">{exercise.points_per_unit}</div>
+                          <div className="text-xs text-zinc-500 font-bold">per {exercise.unit}</div>
                         </div>
                       </div>
-                      {selectedExercise.type === 'recovery' && (
-                        <div className="text-xs text-gray-500 mt-2 border-t border-white/10 pt-2">
-                          Recovery exercises help with rest and mobility
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Quantity Input */}
-                    <div>
-                      <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1 px-3">
-                        {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} ({selectedExercise.unit})
-                      </label>
-                      <input 
-                        type="number" 
-                        step="any" 
-                        min="0" 
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/5 rounded-3xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 backdrop-blur-xl text-white mx-1"
-                        placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
-                        required
-                      />
-                    </div>
-
-                    {/* Weight Input */}
-                    {selectedExercise.is_weighted && (
-                      <div>
-                        <label className="block text-xs text-gray-400 uppercase tracking-wide mb-1 px-3">Weight (kg)</label>
-                        <input 
-                          type="number" 
-                          step="any" 
-                          min="0" 
-                          value={weight}
-                          onChange={(e) => setWeight(e.target.value)}
-                          className="w-full px-4 py-3 border border-white/5 rounded-3xl focus:outline-none focus:ring-2 focus:ring-2 text-base bg-gray-900/30 backdrop-blur-xl text-white mx-1"
-                          placeholder="Enter weight (optional)"
-                        />
-                      </div>
-                    )}
-
-                    {/* Points Preview - Compact */}
-                    {quantity && (
-                      <div className="bg-gray-900/30 backdrop-blur-xl rounded-2xl p-2 border border-white/5 mx-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-gray-400">Points:</span>
-                          <div className="text-right">
-                            {(() => {
-                              const rawPoints = calculatePoints()
-                              
-                              // Check if this recovery exercise would be capped
-                              if (selectedExercise && selectedExercise.type === 'recovery' && !isRecoveryDay && rawPoints > 0) {
-                                const currentRecoveryPoints = getRecoveryPoints()
-                                const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
-                                const totalRecoveryAfter = currentRecoveryPoints + rawPoints
-                                
-                                if (totalRecoveryAfter > maxRecoveryAllowed) {
-                                  const effectiveRecoveryAdd = Math.max(0, maxRecoveryAllowed - currentRecoveryPoints)
-                                  return (
-                                    <div>
-                                      <span className="text-lg font-bold text-orange-400">{effectiveRecoveryAdd}</span>
-                                      <span className="text-xs text-gray-500 ml-1">/{rawPoints}</span>
-                                      <div className="text-xs text-orange-400 mt-1">25% cap</div>
-                                    </div>
-                                  )
-                                }
-                              }
-                              
-                              return <span className="text-lg font-bold" style={{ color: userColor }}>{rawPoints}</span>
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Submit Button */}
-                    <button 
-                      type="submit"
-                      className="w-full text-black px-4 py-3 rounded-3xl transition-all duration-300 font-black text-lg shadow-2xl hover:scale-105 btn-hover relative overflow-hidden -mx-1"
-                      style={{ 
-                        backgroundColor: userColor,
-                        background: `linear-gradient(135deg, ${userColor}ff 0%, ${userColor}cc 50%, ${userColor}ff 100%)`,
-                        minHeight: '48px'
-                      }}
-                    >
-                      <span className="relative z-10 flex items-center justify-center h-full">LOG WORKOUT</span>
                     </button>
-                  </>
-                )}
-              </form>
-            </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Today's Summary Section */}
-        <div id="todays-summary" className="bg-black">
-          <div className="py-3">
-            <h3 className="text-2xl font-bold text-white mb-3 px-4">Today's Summary</h3>
-            
-            <div className="px-1">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-1 mb-3 mx-1">
-                <div className="bg-gray-900/30 backdrop-blur-xl p-3 border border-white/5 rounded-3xl shadow-2xl">
-                  <div className="text-center">
-                    <div className="text-3xl font-black mb-1" style={{ color: userColor }}>{getTotalPoints()}</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Total Points</div>
+        {/* Log Workout Section - New design system */}
+        <div id="log-workout" className="bg-black">
+          <div className="py-4 px-4">
+            <h3 className="text-xl font-black uppercase tracking-tighter text-white mb-4">Log Workout</h3>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Exercise Selection */}
+              <div>
+                <label className="block text-xs text-zinc-500 uppercase tracking-widest mb-2 font-bold">Exercise</label>
+                <select
+                  value={selectedExercise?.id || ''}
+                  onChange={(e) => handleExerciseChange(e.target.value)}
+                  className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${weekMode === 'insane'
+                    ? 'border-white/10 focus:border-orange-500/50'
+                    : 'border-white/10 focus:border-blue-400/50'
+                    }`}
+                >
+                  <option value="">Select an exercise...</option>
+                  <optgroup label="Regular Exercises">
+                    {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
+                      <option key={exercise.id} value={exercise.id}>
+                        {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Recovery Exercises">
+                    {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
+                      <option key={exercise.id} value={exercise.id}>
+                        {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              {selectedExercise && (
+                <>
+                  {/* Exercise Info Card */}
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-sm font-bold text-white">{selectedExercise.name}</div>
+                        <div className="text-xs text-zinc-500 uppercase tracking-wide font-bold">
+                          {selectedExercise.type} exercise
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-black" style={{
+                          color: selectedExercise.type === 'recovery'
+                            ? '#22c55e'
+                            : weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                        }}>
+                          {selectedExercise.points_per_unit}
+                        </div>
+                        <div className="text-xs text-zinc-500 font-bold">per {selectedExercise.unit}</div>
+                      </div>
+                    </div>
+                    {selectedExercise.type === 'recovery' && (
+                      <div className="text-xs text-zinc-500 mt-2 border-t border-white/10 pt-2 font-bold">
+                        Recovery exercises help with rest and mobility
+                      </div>
+                    )}
                   </div>
+
+                  {/* Quantity Input */}
+                  <div>
+                    <label className="block text-xs text-zinc-500 uppercase tracking-widest mb-2 font-bold">
+                      {selectedExercise.is_time_based ? 'Duration' : 'Quantity'} ({selectedExercise.unit})
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                      className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${weekMode === 'insane'
+                        ? 'border-white/10 focus:border-orange-500/50'
+                        : 'border-white/10 focus:border-blue-400/50'
+                        }`}
+                      placeholder={`Enter ${selectedExercise.is_time_based ? 'duration' : 'quantity'}`}
+                      required
+                    />
+                  </div>
+
+                  {/* Weight Input */}
+                  {selectedExercise.is_weighted && (
+                    <div>
+                      <label className="block text-xs text-zinc-500 uppercase tracking-widest mb-2 font-bold">Weight (kg)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0"
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${weekMode === 'insane'
+                          ? 'border-white/10 focus:border-orange-500/50'
+                          : 'border-white/10 focus:border-blue-400/50'
+                          }`}
+                        placeholder="Enter weight (optional)"
+                      />
+                    </div>
+                  )}
+
+                  {/* Points Preview */}
+                  {quantity && (
+                    <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-zinc-500 font-bold">Points:</span>
+                        <div className="text-right">
+                          {(() => {
+                            const rawPoints = calculatePoints()
+
+                            // Check if this recovery exercise would be capped
+                            if (selectedExercise && selectedExercise.type === 'recovery' && !isRecoveryDay && rawPoints > 0) {
+                              const currentRecoveryPoints = getRecoveryPoints()
+                              const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
+                              const totalRecoveryAfter = currentRecoveryPoints + rawPoints
+
+                              if (totalRecoveryAfter > maxRecoveryAllowed) {
+                                const effectiveRecoveryAdd = Math.max(0, maxRecoveryAllowed - currentRecoveryPoints)
+                                return (
+                                  <div>
+                                    <span className="text-lg font-black text-orange-400">{effectiveRecoveryAdd}</span>
+                                    <span className="text-xs text-zinc-500 ml-1 font-bold">/{rawPoints}</span>
+                                    <div className="text-xs text-orange-400 mt-1 font-bold">25% cap</div>
+                                  </div>
+                                )
+                              }
+                            }
+
+                            return <span className="text-lg font-black" style={{
+                              color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                            }}>{rawPoints}</span>
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submit Button - New design system */}
+                  <button
+                    type="submit"
+                    className={`w-full font-black py-4 rounded-xl transition-all duration-300 ${weekMode === 'insane'
+                      ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 text-white'
+                      : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600 text-white'
+                      }`}
+                    style={{
+                      boxShadow: weekMode === 'insane'
+                        ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
+                        : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
+                    }}
+                  >
+                    LOG WORKOUT
+                  </button>
+                </>
+              )}
+            </form>
+          </div>
+        </div>
+
+        {/* Today's Summary Section - New design system */}
+        <div id="todays-summary" className="bg-black">
+          <div className="py-4 px-4">
+            <h3 className="text-xl font-black uppercase tracking-tighter text-white mb-4">Today's Summary</h3>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="bg-white/5 p-4 border border-white/10 rounded-xl">
+                <div className="text-center">
+                  <div className="text-3xl font-black mb-1" style={{
+                    color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                  }}>
+                    {getTotalPoints()}
+                  </div>
+                  <div className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Total Points</div>
                 </div>
-                <div className="bg-gray-900/30 backdrop-blur-xl p-3 border border-white/5 rounded-3xl shadow-2xl">
-                  <div className="text-center">
-                    <div className="text-3xl font-black mb-1" style={{ color: userColor }}>{getRecoveryPercentage()}%</div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Recovery</div>
+              </div>
+              <div className="bg-white/5 p-4 border border-white/10 rounded-xl">
+                <div className="text-center">
+                  <div className="text-3xl font-black mb-1" style={{
+                    color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                  }}>
+                    {getRecoveryPercentage()}%
+                  </div>
+                  <div className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Recovery</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recovery Warning */}
+            {getRecoveryPercentage() > 25 && (
+              <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-3 mb-4">
+                <div className="text-center">
+                  <div className="text-sm font-black mb-1 text-orange-400">Recovery Notice</div>
+                  <div className="text-xs text-zinc-400 font-bold">
+                    Recovery exercises exceed 25% of your daily total
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Recovery Warning */}
-              {getRecoveryPercentage() > 25 && (
-                <div className="bg-gray-900/30 backdrop-blur-xl border border-white/5 rounded-3xl p-3 mb-3 mx-1">
-                  <div className="text-center">
-                    <div className="text-sm font-medium mb-1" style={{ color: userColor }}>Recovery Notice</div>
-                    <div className="text-xs text-gray-400">
-                      Recovery exercises exceed 25% of your daily total
-                    </div>
-                  </div>
-                </div>
-              )}
+            {/* Today's Workouts */}
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Today's Workouts</h4>
+                <span className="text-xs text-zinc-600 font-bold">({todaysLogs.length})</span>
+              </div>
 
-              {/* Today's Workouts */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-wide">Today's Workouts</h4>
-                  <span className="text-xs text-gray-500">({todaysLogs.length})</span>
+              {todaysLogs.length === 0 ? (
+                <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-zinc-400 font-bold">No workouts logged yet</p>
+                  <p className="text-zinc-500 text-sm mt-1 font-bold">Start your first workout above</p>
                 </div>
-                
-                {todaysLogs.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-900/30 backdrop-blur-xl rounded-3xl">
-                    <p className="text-gray-400 font-medium">No workouts logged yet</p>
-                    <p className="text-gray-500 text-sm mt-1">Start your first workout above</p>
-                  </div>
-                ) : (
-                  <div>
-                    {todaysLogs.slice(0, 5).map(log => {
-                      const exerciseColor = getCategoryColor(log.exercises?.type || 'all', log.exercise_id)
-                      const effectivePoints = getEffectivePoints(log)
-                      const progressPercentage = Math.min(100, (effectivePoints / Math.max(1, dailyTarget)) * 100) // Percentage of daily target this exercise represents
-                      const isRecoveryExercise = log.exercises?.type === 'recovery'
-                      const isPointsCapped = isRecoveryExercise && !isRecoveryDay && effectivePoints < log.points
-                      
-                      return (
-                        <div key={log.id} className="bg-gray-900/30 backdrop-blur-xl relative overflow-hidden rounded-3xl shadow-2xl border border-white/5 hover:shadow-xl transition-all duration-300 mb-1">
-                          {/* Liquid gradient background for logged exercise */}
-                          <div 
-                            className="absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out"
-                            style={{ 
-                              width: '100%',
-                              background: progressPercentage === 0 
-                                ? 'transparent'
-                                : `linear-gradient(to right, 
-                                  ${exerciseColor}80 0%, 
-                                  ${exerciseColor}cc ${Math.max(0, progressPercentage - 15)}%, 
-                                  ${exerciseColor}60 ${progressPercentage}%, 
-                                  rgba(0,0,0,0.3) ${Math.min(100, progressPercentage + 20)}%)`
-                            }}
-                          />
-                          
-                          {/* Content */}
-                          <div className="relative p-3">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <div className="text-sm font-medium text-white">{log.exercises?.name || 'Unknown'}</div>
-                                <div className="text-xs text-gray-400">
-                                  {log.count || log.duration} {log.exercises?.unit || ''}
-                                  {isRecoveryExercise && (
-                                    <span className="ml-2 text-xs text-gray-500">• Recovery</span>
-                                  )}
-                                </div>
+              ) : (
+                <div className="space-y-2">
+                  {todaysLogs.slice(0, 5).map(log => {
+                    const effectivePoints = getEffectivePoints(log)
+                    const progressPercentage = Math.min(100, (effectivePoints / Math.max(1, dailyTarget)) * 100)
+                    const isRecoveryExercise = log.exercises?.type === 'recovery'
+
+                    return (
+                      <div key={log.id} className="bg-white/5 hover:bg-white/10 relative overflow-hidden rounded-xl border border-white/10 transition-all duration-300">
+                        {/* Solid gradient background - matching new design system */}
+                        <div
+                          className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${isRecoveryExercise
+                            ? 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-600'
+                            : weekMode === 'insane'
+                              ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
+                              : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
+                            }`}
+                          style={{
+                            width: `${progressPercentage}%`,
+                            opacity: 0.3
+                          }}
+                        />
+
+                        {/* Content */}
+                        <div className="relative p-3">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="text-sm font-bold text-white">{log.exercises?.name || 'Unknown'}</div>
+                              <div className="text-xs text-zinc-400 font-bold">
+                                {log.count || log.duration} {log.exercises?.unit || ''}
+                                {isRecoveryExercise && (
+                                  <span className="ml-2 text-xs text-green-500/60">• Recovery</span>
+                                )}
                               </div>
-                              <div className="text-right">
-                                <div className="text-lg font-black text-white">
-                                  {effectivePoints}
-                                </div>
-                                <div className="text-xs text-gray-400">pts</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-black text-white">
+                                {effectivePoints}
                               </div>
+                              <div className="text-xs text-zinc-500 font-bold">pts</div>
                             </div>
                           </div>
                         </div>
-                      )
-                    })}
-                    {todaysLogs.length > 5 && (
-                      <div className="text-center text-xs text-gray-500 py-2">
-                        +{todaysLogs.length - 5} more workouts
                       </div>
-                    )}
+                    )
+                  })}
+                  {todaysLogs.length > 5 && (
+                    <div className="text-center text-xs text-zinc-500 py-2 font-bold">
+                      +{todaysLogs.length - 5} more workouts
+                    </div>
+                  )}
                   </div>
                 )}
               </div>

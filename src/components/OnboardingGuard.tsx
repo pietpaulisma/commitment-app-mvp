@@ -20,9 +20,10 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const [hasChecked, setHasChecked] = useState(false)
   const [isCreatingSupremeAdmin, setIsCreatingSupremeAdmin] = useState(false)
   const [shouldRefreshProfile, setShouldRefreshProfile] = useState(false)
+  const [forceComplete, setForceComplete] = useState(false)
   const mountedRef = useRef(false)
   const lastPathnameRef = useRef(pathname)
-  
+
   // Loading stages management
   const { currentStage, setStage, complete, isComplete } = useLoadingStages(AUTH_STAGES)
 
@@ -31,15 +32,28 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const isOnboardingPage = useMemo(() => pathname?.startsWith('/onboarding'), [pathname])
   const isSupremeAdmin = useMemo(() => user?.email === 'klipperdeklip@gmail.com', [user?.email])
   const isLoading = useMemo(() => authLoading || profileLoading || isCreatingSupremeAdmin || shouldRefreshProfile, [authLoading, profileLoading, isCreatingSupremeAdmin, shouldRefreshProfile])
-  
+
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if ((authLoading || profileLoading) && !forceComplete) {
+        console.warn('⚠️ Auth/Profile loading timeout - forcing completion')
+        setForceComplete(true)
+        complete()
+      }
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [authLoading, profileLoading, forceComplete, complete])
+
   // Re-enabled with better supreme admin handling
   const createSupremeAdminProfile = useCallback(async () => {
     if (isCreatingSupremeAdmin) {
       return
     }
-    
+
     setIsCreatingSupremeAdmin(true)
-    
+
     try {
       // First check if profile already exists to preserve existing data like birth_date
       const { data: existingProfile } = await supabase
@@ -47,7 +61,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         .select('birth_date')
         .eq('id', user?.id)
         .single()
-      
+
       const profileData = {
         id: user?.id,
         email: user?.email,
@@ -70,7 +84,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
-      
+
       // Try upsert (insert or update)
       const { data, error } = await supabase
         .from('profiles')
@@ -107,11 +121,11 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   useEffect(() => {
     const wasOnOnboardingPage = lastPathnameRef.current?.startsWith('/onboarding')
     const isNowOnDashboard = pathname === '/dashboard'
-    
+
     if (wasOnOnboardingPage && isNowOnDashboard && user) {
       setShouldRefreshProfile(true)
     }
-    
+
     lastPathnameRef.current = pathname
   }, [pathname, user])
 
@@ -126,7 +140,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
 
   useEffect(() => {
     // Wait for both auth and profile to fully load, and don't process during supreme admin creation or profile refresh
-    if (isLoading) {
+    if (isLoading && !forceComplete) {
       return
     }
 
@@ -174,22 +188,22 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       setHasChecked(true)
       router.replace('/onboarding')
     }
-  }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile])
+  }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile, forceComplete])
 
 
   // Update loading stages based on current state
   useEffect(() => {
-    if (authLoading) {
+    if (authLoading && !forceComplete) {
       setStage('auth')
-    } else if (profileLoading || shouldRefreshProfile) {
+    } else if ((profileLoading || shouldRefreshProfile) && !forceComplete) {
       setStage('profile')
-    } else if (!authLoading && !profileLoading) {
+    } else if ((!authLoading && !profileLoading) || forceComplete) {
       complete()
     }
-  }, [authLoading, profileLoading, shouldRefreshProfile, setStage, complete])
+  }, [authLoading, profileLoading, shouldRefreshProfile, setStage, complete, forceComplete])
 
   // Show loading state while checking onboarding status
-  if ((authLoading || profileLoading) && !isComplete) {
+  if ((authLoading || profileLoading) && !isComplete && !forceComplete) {
     return <BrandedLoader currentStage={currentStage} />
   }
 

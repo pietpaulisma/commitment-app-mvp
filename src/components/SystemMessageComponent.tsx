@@ -1,9 +1,9 @@
 import React from 'react'
 import { SystemMessage, SystemMessageRarity } from '@/types/systemMessages'
-import { 
-  SparklesIcon, 
-  TrophyIcon, 
-  BoltIcon, 
+import {
+  SparklesIcon,
+  TrophyIcon,
+  BoltIcon,
   MegaphoneIcon,
   CalendarDaysIcon,
   CogIcon
@@ -24,42 +24,24 @@ interface SystemMessageComponentProps {
   isLastInGroup?: boolean
 }
 
-export function SystemMessageComponent({ 
-  message, 
+export function SystemMessageComponent({
+  message,
   systemMessageData,
   currentUser,
   onDelete,
   isFirstInGroup = true,
   isLastInGroup = true
 }: SystemMessageComponentProps) {
-  
+
   const getRarityStyles = (rarity: SystemMessageRarity) => {
     switch (rarity) {
       case 'legendary':
-        return {
-          border: 'border-yellow-400/50',
-          bg: 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10',
-          glow: 'shadow-lg shadow-yellow-500/20',
-          icon: 'text-yellow-400',
-          accent: 'text-yellow-300'
-        }
+        return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10'
       case 'rare':
-        return {
-          border: 'border-purple-400/50',
-          bg: 'bg-gradient-to-r from-purple-500/10 to-blue-500/10',
-          glow: 'shadow-lg shadow-purple-500/20',
-          icon: 'text-purple-400',
-          accent: 'text-purple-300'
-        }
+        return 'text-purple-400 border-purple-500/30 bg-purple-500/10'
       case 'common':
       default:
-        return {
-          border: 'border-blue-400/50',
-          bg: 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10',
-          glow: 'shadow-md shadow-blue-500/10',
-          icon: 'text-blue-400',
-          accent: 'text-blue-300'
-        }
+        return 'text-zinc-400 border-white/5 bg-white/5'
     }
   }
 
@@ -119,84 +101,31 @@ export function SystemMessageComponent({
   }
 
   return (
-    <div className={`w-full ${isLastInGroup ? 'mb-4' : 'mb-2'}`}>
-      {/* Timestamp - positioned at top right */}
-      {isFirstInGroup && (
-        <div className="flex justify-end mb-1">
-          <div className="text-xs text-gray-400">
-            {formatTime(message.created_at)}
-          </div>
-        </div>
-      )}
-      
-      {/* System Message Card */}
-      <div 
+    <div className={`w-full flex justify-center my-3 ${isLastInGroup ? 'mb-4' : 'mb-2'}`}>
+      <div
         className={`
-          relative w-full rounded-xl p-4 border transition-all duration-300
-          ${styles.border} ${styles.bg} ${styles.glow}
+          relative flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-sm transition-all duration-300
+          ${styles}
         `}
       >
-        {/* Rarity indicator */}
-        {rarity !== 'common' && (
-          <div className="absolute top-2 right-2">
-            <div className={`
-              flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-              ${rarity === 'legendary' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-purple-500/20 text-purple-300'}
-            `}>
-              <BoltIcon className="w-3 h-3" />
-              {rarity}
-            </div>
-          </div>
-        )}
+        <IconComponent className="w-3 h-3" />
 
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className={`
-            w-10 h-10 rounded-full flex items-center justify-center
-            ${styles.bg} ${styles.border} border
-          `}>
-            <IconComponent className={`w-6 h-6 ${styles.icon}`} />
-          </div>
-          <div className="flex-1">
-            <div className={`font-bold text-sm ${styles.accent}`}>
-              {senderName}
-            </div>
-            <div className="text-xs text-gray-400 uppercase tracking-wide">
-              System Message
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="text-sm text-gray-100 leading-relaxed">
-          {formatMessage(message.message)}
-        </div>
-
-        {/* System message type badge */}
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`
-              text-xs px-2 py-1 rounded-full font-medium
-              ${styles.bg} ${styles.border} border
-            `}>
-              {messageType.replace('_', ' ').toUpperCase()}
-            </div>
-          </div>
-          
-          {/* Delete button for admins */}
-          {onDelete && systemMessageData && (
-            <button
-              onClick={() => onDelete(systemMessageData.id)}
-              className="text-xs text-gray-500 hover:text-red-400 transition-colors"
-            >
-              Delete
-            </button>
+        <div className="text-[10px] font-bold uppercase tracking-wider">
+          {messageType === 'developer_note' ? (
+            <span><span className="opacity-70">{senderName}:</span> {message.message}</span>
+          ) : (
+            <span>{message.message}</span>
           )}
         </div>
 
-        {/* Animated border for legendary messages */}
-        {rarity === 'legendary' && (
-          <div className="absolute inset-0 rounded-xl border border-yellow-400/30 animate-pulse pointer-events-none" />
+        {/* Delete button for admins (only if hovering or always visible if important? kept hidden for minimal look for now) */}
+        {onDelete && systemMessageData && (
+          <button
+            onClick={() => onDelete(systemMessageData.id)}
+            className="ml-2 text-white/20 hover:text-red-400 transition-colors"
+          >
+            ×
+          </button>
         )}
       </div>
     </div>

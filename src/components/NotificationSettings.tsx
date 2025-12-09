@@ -4,16 +4,20 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { NotificationService, NotificationPreferences } from '@/services/notificationService'
 import { Button } from './ui/button'
-import { 
-  BellIcon, 
-  BellSlashIcon, 
-  ChatBubbleLeftRightIcon,
-  TrophyIcon,
-  StarIcon,
-  MoonIcon,
-  CheckCircleIcon,
-  XCircleIcon
-} from '@heroicons/react/24/outline'
+import {
+  Bell,
+  BellOff,
+  MessageCircle,
+  Trophy,
+  Star,
+  Moon,
+  CheckCircle,
+  XCircle,
+  X,
+  Loader2
+} from 'lucide-react'
+import { GlassCard } from './dashboard/v2/GlassCard'
+import { CardHeader } from './dashboard/v2/CardHeader'
 
 interface NotificationSettingsProps {
   onClose?: () => void
@@ -90,7 +94,7 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
         setIsSubscribed(true)
         setPermissionStatus('granted')
         console.log('✅ UI state updated: notifications enabled')
-        
+
         // Force a small delay to ensure state is updated
         await new Promise(resolve => setTimeout(resolve, 100))
       } else {
@@ -146,13 +150,13 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
       setError(null)
 
       await NotificationService.updatePreferences(user.id, preferences)
-      
+
       // Show success feedback
       const successDiv = document.createElement('div')
       successDiv.className = 'fixed top-4 right-4 bg-green-600 text-white p-3 rounded-lg z-50'
       successDiv.textContent = 'Preferences saved!'
       document.body.appendChild(successDiv)
-      
+
       setTimeout(() => {
         document.body.removeChild(successDiv)
       }, 3000)
@@ -210,7 +214,7 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
           </div>
         `
         document.body.appendChild(successDiv)
-        
+
         setTimeout(() => {
           if (document.body.contains(successDiv)) {
             document.body.removeChild(successDiv)
@@ -229,11 +233,11 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
 
   const getNotificationStatusIcon = () => {
     if (permissionStatus === 'granted' && isSubscribed) {
-      return <CheckCircleIcon className="w-6 h-6 text-green-400" />
+      return <CheckCircle className="w-6 h-6 text-green-400" />
     } else if (permissionStatus === 'denied') {
-      return <XCircleIcon className="w-6 h-6 text-red-400" />
+      return <XCircle className="w-6 h-6 text-red-400" />
     } else {
-      return <BellSlashIcon className="w-6 h-6 text-gray-400" />
+      return <BellOff className="w-6 h-6 text-gray-400" />
     }
   }
 
@@ -251,227 +255,203 @@ export default function NotificationSettings({ onClose }: NotificationSettingsPr
 
   if (loading) {
     return (
-      <div className="bg-gray-900 rounded-lg p-6 max-w-md mx-auto">
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-700 rounded mb-4"></div>
-          <div className="space-y-3">
-            <div className="h-4 bg-gray-700 rounded"></div>
-            <div className="h-4 bg-gray-700 rounded"></div>
-            <div className="h-4 bg-gray-700 rounded"></div>
-          </div>
+      <GlassCard className="w-full max-w-md mx-auto">
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-zinc-500 animate-spin mb-4" />
+          <span className="text-zinc-500 text-sm">Loading settings...</span>
         </div>
-      </div>
+      </GlassCard>
     )
   }
 
   return (
-    <div className="bg-gray-900 rounded-lg p-6 max-w-md mx-auto text-white">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          <BellIcon className="w-6 h-6" />
-          Notification Settings
-        </h2>
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-gray-400 hover:text-white"
-          >
-            <XCircleIcon className="w-5 h-5" />
-          </Button>
-        )}
-      </div>
-
-      {error && (
-        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4">
-          <p className="text-red-400 text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Notification Status */}
-      <div className="mb-6 p-4 bg-gray-800 rounded-lg">
-        <div className="flex items-center gap-3 mb-3">
-          {getNotificationStatusIcon()}
-          <div>
-            <h3 className="font-medium text-white">Push Notifications</h3>
-            <p className="text-sm text-gray-400">{getNotificationStatusText()}</p>
-          </div>
-        </div>
-        
-        {permissionStatus !== 'granted' || !isSubscribed ? (
-          <Button
-            onClick={handleEnableNotifications}
-            disabled={saving || permissionStatus === 'denied'}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            {saving ? 'Enabling...' : 'Enable Notifications'}
-          </Button>
-        ) : (
-          <div className="space-y-3">
-            <Button
-              onClick={handleDisableNotifications}
-              disabled={saving}
-              variant="outline"
-              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+    <div className="w-full max-w-md mx-auto relative">
+      <GlassCard noPadding className="w-full overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-white/5">
+          <h2 className="text-xl font-black italic tracking-tighter text-white flex items-center gap-2">
+            <Bell className="w-5 h-5 text-zinc-400" />
+            NOTIFICATION SETTINGS
+          </h2>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="text-zinc-500 hover:text-white transition-colors"
             >
-              {saving ? 'Disabling...' : 'Disable Notifications'}
-            </Button>
-            
-            <Button
-              onClick={handleTestNotification}
-              disabled={testingNotification || saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {testingNotification ? 'Sending Test...' : '🧪 Send Test Notification'}
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {/* Notification Types */}
-      {isSubscribed && (
-        <div className="space-y-4 mb-6">
-          <h3 className="font-medium text-white mb-3">Notification Types</h3>
-          
-          {/* Chat Messages */}
-          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <ChatBubbleLeftRightIcon className="w-5 h-5 text-blue-400" />
-              <div>
-                <p className="font-medium text-white">Chat Messages</p>
-                <p className="text-xs text-gray-400">When someone sends a message</p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.chat_messages}
-                onChange={(e) => handlePreferenceChange('chat_messages', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
-          {/* Workout Completions */}
-          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <TrophyIcon className="w-5 h-5 text-yellow-400" />
-              <div>
-                <p className="font-medium text-white">Workout Completions</p>
-                <p className="text-xs text-gray-400">When members finish workouts</p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.workout_completions}
-                onChange={(e) => handlePreferenceChange('workout_completions', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
-            </label>
-          </div>
-
-          {/* System Messages */}
-          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <StarIcon className="w-5 h-5 text-purple-400" />
-              <div>
-                <p className="font-medium text-white">System Messages</p>
-                <p className="text-xs text-gray-400">Daily summaries, challenges, and updates</p>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={preferences.system_messages}
-                onChange={(e) => handlePreferenceChange('system_messages', e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-            </label>
-          </div>
+              <X className="w-6 h-6" />
+            </button>
+          )}
         </div>
-      )}
 
-      {/* Quiet Hours */}
-      {isSubscribed && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <MoonIcon className="w-5 h-5 text-indigo-400" />
+        <div className="p-6 space-y-6">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3">
+              <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Notification Status */}
+          <div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5">
+            <div className="flex items-center gap-3 mb-4">
+              {getNotificationStatusIcon()}
               <div>
-                <p className="font-medium text-white">Quiet Hours</p>
-                <p className="text-xs text-gray-400">Pause notifications during these hours</p>
+                <h3 className="font-bold text-white text-sm">Push Notifications</h3>
+                <p className="text-xs text-zinc-500">{getNotificationStatusText()}</p>
               </div>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
+
+            {permissionStatus !== 'granted' || !isSubscribed ? (
+              <Button
+                onClick={handleEnableNotifications}
+                disabled={saving || permissionStatus === 'denied'}
+                className="w-full bg-green-600 hover:bg-green-500 text-white font-bold"
+              >
+                {saving ? 'Enabling...' : 'Enable Notifications'}
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={handleTestNotification}
+                    disabled={testingNotification || saving}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs"
+                  >
+                    {testingNotification ? 'Sending...' : 'Test Notification'}
+                  </Button>
+                  <Button
+                    onClick={handleDisableNotifications}
+                    disabled={saving}
+                    variant="outline"
+                    className="bg-transparent border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 font-bold text-xs"
+                  >
+                    {saving ? 'Disabling...' : 'Disable'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Notification Types */}
+          {isSubscribed && (
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-1">Notification Types</h3>
+
+              <div className="space-y-2">
+                <ToggleOption
+                  icon={MessageCircle}
+                  iconColor="text-blue-400"
+                  title="Chat Messages"
+                  description="When someone sends a message"
+                  checked={preferences.chat_messages}
+                  onChange={(val) => handlePreferenceChange('chat_messages', val)}
+                />
+                <ToggleOption
+                  icon={Trophy}
+                  iconColor="text-yellow-400"
+                  title="Workout Completions"
+                  description="When members finish workouts"
+                  checked={preferences.workout_completions}
+                  onChange={(val) => handlePreferenceChange('workout_completions', val)}
+                />
+                <ToggleOption
+                  icon={Star}
+                  iconColor="text-purple-400"
+                  title="System Messages"
+                  description="Daily summaries and updates"
+                  checked={preferences.system_messages}
+                  onChange={(val) => handlePreferenceChange('system_messages', val)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Quiet Hours */}
+          {isSubscribed && (
+            <div className="space-y-4">
+              <ToggleOption
+                icon={Moon}
+                iconColor="text-indigo-400"
+                title="Quiet Hours"
+                description="Pause notifications during these hours"
                 checked={preferences.quiet_hours_enabled}
-                onChange={(e) => handlePreferenceChange('quiet_hours_enabled', e.target.checked)}
-                className="sr-only peer"
+                onChange={(val) => handlePreferenceChange('quiet_hours_enabled', val)}
               />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-            </label>
-          </div>
 
-          {preferences.quiet_hours_enabled && (
-            <div className="p-3 bg-gray-800 rounded-lg space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Start Time</label>
-                  <input
-                    type="time"
-                    value={preferences.quiet_hours_start}
-                    onChange={(e) => handlePreferenceChange('quiet_hours_start', e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  />
+              {preferences.quiet_hours_enabled && (
+                <div className="bg-zinc-900/30 rounded-xl p-4 border border-white/5 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase">Start Time</label>
+                    <input
+                      type="time"
+                      value={preferences.quiet_hours_start}
+                      onChange={(e) => handlePreferenceChange('quiet_hours_start', e.target.value)}
+                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase">End Time</label>
+                    <input
+                      type="time"
+                      value={preferences.quiet_hours_end}
+                      onChange={(e) => handlePreferenceChange('quiet_hours_end', e.target.value)}
+                      className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">End Time</label>
-                  <input
-                    type="time"
-                    value={preferences.quiet_hours_end}
-                    onChange={(e) => handlePreferenceChange('quiet_hours_end', e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-              </div>
-              <p className="text-xs text-gray-400">
-                No notifications will be sent between {preferences.quiet_hours_start} and {preferences.quiet_hours_end}
+              )}
+            </div>
+          )}
+
+          {/* Save Button */}
+          {isSubscribed && (
+            <div className="pt-2">
+              <Button
+                onClick={handleSavePreferences}
+                disabled={saving}
+                className="w-full bg-white text-black hover:bg-zinc-200 font-black h-12 rounded-xl"
+              >
+                {saving ? 'SAVING...' : 'SAVE PREFERENCES'}
+              </Button>
+            </div>
+          )}
+
+          {/* Browser Settings Help */}
+          {permissionStatus === 'denied' && (
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+              <p className="text-yellow-400 text-sm mb-2 font-bold">Need to enable notifications?</p>
+              <p className="text-yellow-500/80 text-xs leading-relaxed">
+                1. Click the lock icon in your address bar<br />
+                2. Change notifications from "Block" to "Allow"<br />
+                3. Reload the page and try again
               </p>
             </div>
           )}
         </div>
-      )}
+      </GlassCard>
+    </div>
+  )
+}
 
-      {/* Save Button */}
-      {isSubscribed && (
-        <div className="mt-6 pt-4 border-t border-gray-700">
-          <Button
-            onClick={handleSavePreferences}
-            disabled={saving}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            {saving ? 'Saving...' : 'Save Preferences'}
-          </Button>
+function ToggleOption({ icon: Icon, iconColor, title, description, checked, onChange }: any) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+      <div className="flex items-center gap-3">
+        <Icon className={`w-5 h-5 ${iconColor}`} />
+        <div>
+          <p className="font-bold text-sm text-white">{title}</p>
+          <p className="text-[10px] text-zinc-500">{description}</p>
         </div>
-      )}
-
-      {/* Browser Settings Help */}
-      {permissionStatus === 'denied' && (
-        <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-          <p className="text-yellow-400 text-sm mb-2 font-medium">Need to enable notifications?</p>
-          <p className="text-yellow-300 text-xs">
-            1. Click the lock icon in your address bar<br/>
-            2. Change notifications from "Block" to "Allow"<br/>
-            3. Reload the page and try again
-          </p>
-        </div>
-      )}
+      </div>
+      <button
+        onClick={() => onChange(!checked)}
+        className={`relative w-11 h-6 rounded-full transition-all duration-300 ${checked ? 'bg-green-500' : 'bg-zinc-700'
+          }`}
+      >
+        <div
+          className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${checked ? 'translate-x-5' : 'translate-x-0'
+            }`}
+        />
+      </button>
     </div>
   )
 }

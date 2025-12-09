@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { formatDateShort, getReasonLabel } from '@/utils/penaltyHelpers'
-import { DailyRecapHistoryModal } from './DailyRecapHistoryModal'
+import { DailyRecapHistoryModal } from './modals/DailyRecapHistoryModal'
 import { calculateDailyTarget } from '@/utils/targetCalculation'
 import { supabase } from '@/lib/supabase'
 
@@ -446,11 +446,11 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
 
           {/* Sick Mode */}
           {sickMembers.length > 0 && (
-            <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-2">
-              <div className="text-xs text-purple-300 font-medium mb-1">
+            <div className="bg-gray-800/40 border border-gray-600/30 rounded-lg p-2">
+              <div className="text-xs text-gray-300 font-medium mb-1">
                 🤒 Sick Mode
               </div>
-              <div className="text-xs text-purple-200/60 space-y-0.5">
+              <div className="text-xs text-gray-400/60 space-y-0.5">
                 {sickMembers.map((username, idx) => (
                   <div key={idx}>{username}</div>
                 ))}
@@ -514,11 +514,11 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
             </div>
           </div>
         ) : userStatus?.isSick ? (
-          <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-2">
-            <div className="text-xs text-purple-300 font-medium">
+          <div className="bg-gray-800/40 border border-gray-600/30 rounded-lg p-2">
+            <div className="text-xs text-gray-300 font-medium">
               🤒 Sick Mode
             </div>
-            <div className="text-xs text-purple-200/60 mt-0.5">
+            <div className="text-xs text-gray-400/60 mt-0.5">
               Take care and get well soon!
             </div>
           </div>

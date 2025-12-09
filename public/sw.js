@@ -8,7 +8,7 @@ const urlsToCache = [
   '/',
   '/dashboard',
   '/targets',
-  '/leaderboard', 
+  '/leaderboard',
   '/profile',
   '/admin',
   '/login',
@@ -72,10 +72,15 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
-  
+
   // Skip cross-origin requests
   if (url.origin !== location.origin) return
-  
+
+  // DEV MODE BYPASS: Do not cache or serve from cache on localhost
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    return
+  }
+
   // Handle navigation requests (app pages) - simplified for PWA reliability
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -107,7 +112,7 @@ self.addEventListener('fetch', (event) => {
     )
     return
   }
-  
+
   // Handle API and other requests
   if (request.method === 'GET') {
     event.respondWith(
@@ -126,12 +131,12 @@ self.addEventListener('fetch', (event) => {
             return cachedResponse || new Response('Offline', { status: 503 })
           })
         }
-        
+
         // For static assets, use cache-first strategy
         if (cachedResponse) {
           return cachedResponse
         }
-        
+
         return fetch(request).then((response) => {
           if (response.ok) {
             const responseClone = response.clone()
@@ -150,7 +155,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   const isIOS = /iPhone|iPad/.test(navigator.userAgent)
   const isMobile = navigator.userAgent.includes('Mobile')
-  
+
   console.log('🔔 Push event received on:', isMobile ? 'Mobile' : 'Desktop')
   console.log('🔔 Event details:', {
     hasData: !!event.data,
@@ -159,7 +164,7 @@ self.addEventListener('push', (event) => {
     isIOS: isIOS,
     userAgent: navigator.userAgent
   })
-  
+
   if (isIOS) {
     console.log('🍎 iOS push event - checking iOS-specific requirements')
   }
@@ -184,7 +189,7 @@ self.addEventListener('push', (event) => {
     console.log('📋 Push data parsed:', data)
 
     const title = data.title || 'Commitment App'
-    
+
     // iOS-specific notification options (very minimal for compatibility)
     const options = {
       body: data.body || 'New notification',
@@ -193,13 +198,13 @@ self.addEventListener('push', (event) => {
       tag: data.tag || 'general',
       silent: false
     }
-    
+
     // Add minimal additional options for non-iOS
     if (!isIOS) {
       options.data = data.data || {}
       options.requireInteraction = false
       options.vibrate = [200, 100, 200]
-      
+
       // Desktop gets more features
       if (!isMobile) {
         options.actions = generateActions(data)
@@ -229,7 +234,7 @@ self.addEventListener('push', (event) => {
     )
   } catch (error) {
     console.error('❌ Error handling push event:', error)
-    
+
     // Fallback notification with minimal options
     event.waitUntil(
       self.registration.showNotification('Commitment App', {
@@ -253,7 +258,7 @@ self.addEventListener('notificationclick', (event) => {
 
   const notification = event.notification
   const data = notification.data || {}
-  
+
   // Close the notification
   notification.close()
 
@@ -265,14 +270,14 @@ self.addEventListener('notificationclick', (event) => {
 
   // Default click behavior - open the app
   const urlToOpen = getUrlFromNotification(data)
-  
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // Check if app is already open
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i]
         const clientUrl = new URL(client.url)
-        
+
         if (clientUrl.origin === location.origin) {
           // App is already open, focus it and navigate if needed
           if (urlToOpen && urlToOpen !== '/') {
@@ -285,7 +290,7 @@ self.addEventListener('notificationclick', (event) => {
           return client.focus()
         }
       }
-      
+
       // App is not open, open it
       return clients.openWindow(urlToOpen)
     })
@@ -295,7 +300,7 @@ self.addEventListener('notificationclick', (event) => {
 // Notification close handler
 self.addEventListener('notificationclose', (event) => {
   console.log('Notification closed:', event.notification.tag)
-  
+
   // Track notification close events if needed
   const data = event.notification.data || {}
   if (data.trackClose) {
@@ -307,7 +312,7 @@ self.addEventListener('notificationclose', (event) => {
 // Helper function to generate notification actions based on type
 function generateActions(data) {
   const actions = []
-  
+
   if (data.type === 'chat_message') {
     actions.push(
       { action: 'reply', title: '💬 Reply', icon: '/icon-192.png' },
@@ -323,7 +328,7 @@ function generateActions(data) {
       { action: 'view_dashboard', title: '📊 View Dashboard', icon: '/icon-192.png' }
     )
   }
-  
+
   return actions.slice(0, 2) // Maximum 2 actions on most platforms
 }
 
@@ -346,7 +351,7 @@ function getUrlFromNotification(data) {
 // Handle notification action clicks
 function handleNotificationAction(action, data) {
   console.log('Notification action clicked:', action, data)
-  
+
   switch (action) {
     case 'reply':
       // Open chat with reply context
@@ -360,7 +365,7 @@ function handleNotificationAction(action, data) {
         }
       })
       break
-      
+
     case 'view_chat':
       clients.openWindow('/dashboard').then((client) => {
         if (client) {
@@ -371,7 +376,7 @@ function handleNotificationAction(action, data) {
         }
       })
       break
-      
+
     case 'view_workout':
       clients.openWindow('/dashboard').then((client) => {
         if (client) {
@@ -383,7 +388,7 @@ function handleNotificationAction(action, data) {
         }
       })
       break
-      
+
     case 'add_reaction':
       // Could open a quick reaction interface or auto-add a default reaction
       clients.matchAll({ type: 'window' }).then((clientList) => {
@@ -396,11 +401,11 @@ function handleNotificationAction(action, data) {
         }
       })
       break
-      
+
     case 'view_dashboard':
       clients.openWindow('/dashboard')
       break
-      
+
     default:
       console.log('Unknown notification action:', action)
   }
@@ -409,7 +414,7 @@ function handleNotificationAction(action, data) {
 // Background sync for offline notification handling
 self.addEventListener('sync', (event) => {
   console.log('Background sync:', event.tag)
-  
+
   if (event.tag === 'notification-queue') {
     event.waitUntil(processNotificationQueue())
   }
@@ -420,12 +425,12 @@ async function processNotificationQueue() {
   try {
     // Get queued notifications from IndexedDB or cache
     const queuedNotifications = await getQueuedNotifications()
-    
+
     for (const notification of queuedNotifications) {
       await self.registration.showNotification(notification.title, notification.options)
       await removeFromQueue(notification.id)
     }
-    
+
     console.log(`Processed ${queuedNotifications.length} queued notifications`)
   } catch (error) {
     console.error('Error processing notification queue:', error)
