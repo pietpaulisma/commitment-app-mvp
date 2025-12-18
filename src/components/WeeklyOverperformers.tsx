@@ -203,11 +203,6 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           const cappedRecoveryPoints = Math.min(totalRecoveryPoints, recoveryCapLimit)
           const totalDayPoints = totalNonRecoveryPoints + cappedRecoveryPoints
 
-          // Debug log for significant recovery caps
-          if (totalRecoveryPoints > recoveryCapLimit) {
-            console.log(`WeeklyOverperformers: Applied recovery cap for ${userStats[userId].member.username} on ${date}: ${totalRecoveryPoints} → ${cappedRecoveryPoints} (limit: ${recoveryCapLimit}, target: ${dailyTarget})`)
-          }
-
           // Store the capped daily total
           if (!userStats[userId].dailyPoints[date]) {
             userStats[userId].dailyPoints[date] = 0
@@ -266,8 +261,8 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         .slice(0, 5) // Top 5 overperformers
         .map((user, index) => ({
           ...user,
-          // Top 3 get orange (matching Time Remaining), 4-5 get opal blue-purple
-          personal_color: index < 3 ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+          // >50 points get orange, <=50 get opal blue
+          personal_color: user.overperformance_points > 50 ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
         }))
 
       // Debug: Log final results with comprehensive validation
@@ -320,21 +315,14 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
             table: 'logs'
           },
           (payload) => {
-            console.log('WeeklyOverperformers: Real-time logs change detected:', payload)
             // Debounced reload - wait for rapid changes to settle
             if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current)
             debounceTimeoutRef.current = setTimeout(() => {
-              console.log('WeeklyOverperformers: Reloading data due to logs change')
               fetchWeeklyOverperformers()
             }, 1000) // 1 second debounce
           }
         )
-        .subscribe((status) => {
-          console.log('WeeklyOverperformers: Subscription status:', status)
-          if (status === 'CHANNEL_ERROR') {
-            console.error('WeeklyOverperformers: Subscription failed, falling back to polling only')
-          }
-        })
+        .subscribe()
 
       // Refresh data every 1 minute as fallback (reduced from 5 minutes)
       const interval = setInterval(fetchWeeklyOverperformers, 1 * 60 * 1000)
@@ -367,7 +355,11 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           title="Weekly Overperformers"
           icon={Flame}
           colorClass="text-orange-500"
-          rightContent="Points beyond sane • Resets Monday"
+          rightContent={
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">
+              Points beyond sane • Resets Monday
+            </span>
+          }
         />
         <div className="p-4 space-y-2">
           {[...Array(3)].map((_, i) => (
@@ -387,7 +379,11 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           title="Weekly Overperformers"
           icon={Flame}
           colorClass="text-orange-500"
-          rightContent="Points beyond sane • Resets Monday"
+          rightContent={
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">
+              Points beyond sane • Resets Monday
+            </span>
+          }
         />
         <div className="text-center py-8">
           <p className="text-sm text-zinc-500">
@@ -416,8 +412,8 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
           const isCurrentUser = performer.id === user?.id
           const barPercentage = (performer.overperformance_points / maxOverperformance) * 100
 
-          // Determine gradient based on rank (top 3 = orange, 4-5 = opal)
-          const colorTheme = rank <= 3 ? COLORS.orange : COLORS.opal
+          // Determine gradient based on score (>50 = orange, <=50 = opal blue)
+          const isOrange = performer.overperformance_points > 50
 
           return (
             <div
@@ -429,7 +425,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
             >
               {/* Background bar - solid gradient like Time Remaining */}
               <div
-                className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${rank <= 3 ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600' : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'}`}
+                className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${isOrange ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600' : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'}`}
                 style={{
                   width: `${barPercentage}%`,
                 }}

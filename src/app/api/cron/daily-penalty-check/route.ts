@@ -81,6 +81,18 @@ export async function GET(request: NextRequest) {
         if (profile.is_sick_mode) {
           console.log(`${profile.username}: Skipping penalty - sick mode enabled`)
 
+          // Log this sick day in the database for historical tracking
+          const { error: sickLogError } = await supabase
+            .from('sick_mode')
+            .upsert(
+              { user_id: profile.id, date: yesterdayStr },
+              { onConflict: 'user_id, date' }
+            )
+
+          if (sickLogError) {
+            console.error(`Error logging sick day for ${profile.username}:`, sickLogError)
+          }
+
           // Update last penalty check without issuing penalty
           await supabase
             .from('profiles')

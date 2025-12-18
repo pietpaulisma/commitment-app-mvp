@@ -45,10 +45,21 @@ export async function GET(request: Request) {
     console.log('API - Recent log dates in DB:', uniqueDates.slice(0, 5))
     console.log('API - Looking for date:', today)
 
+    // Fetch exercises to identify recovery types (manual join to be safe)
+    const { data: exercisesData, error: exercisesError } = await supabaseAdmin
+      .from('exercises')
+      .select('id, type')
+
+    if (exercisesError) {
+      console.error('Error fetching exercises:', exercisesError)
+    }
+
+    const exerciseTypeMap = new Map(exercisesData?.map(e => [e.id, e.type]) || [])
+
     // Fetch logs for today to calculate points
     const { data: todayLogs, error: logsError } = await supabaseAdmin
       .from('logs')
-      .select('user_id, points, exercise_id, exercises(type)')
+      .select('user_id, points, exercise_id')
       .eq('date', today)
       .in('user_id', groupUsers.map(u => u.id))
 
@@ -70,8 +81,10 @@ export async function GET(request: Request) {
     const restDays = groupSettings?.rest_days || [1]
     const recoveryDays = groupSettings?.recovery_days || [5]
 
-    // Check if today is a recovery day
-    const currentDayOfWeek = new Date().getDay()
+    // Check if today (requested date) is a recovery day
+    // We must use the requested date 'today' to determine the day of week, not server time
+    const todayDateObj = new Date(today)
+    const currentDayOfWeek = todayDateObj.getDay()
     const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
 
     // Get group start date for target calculation
@@ -88,7 +101,8 @@ export async function GET(request: Request) {
       daysSinceStart,
       weekMode: 'insane',
       restDays,
-      recoveryDays
+      recoveryDays,
+      currentDayOfWeek // Pass the correct day of week
     })
 
     // Process logs with recovery capping (same logic as RectangularDashboard)
@@ -99,7 +113,9 @@ export async function GET(request: Request) {
       }
 
       const current = memberPointsMap.get(log.user_id)
-      if (log.exercises?.type === 'recovery') {
+      const type = exerciseTypeMap.get(log.exercise_id)
+
+      if (type === 'recovery') {
         current.recovery += log.points
       } else {
         current.regular += log.points
@@ -144,7 +160,8 @@ export async function GET(request: Request) {
         daysSinceStart,
         weekMode: memberWeekMode || 'insane', // Default to insane if null
         restDays,
-        recoveryDays
+        recoveryDays,
+        currentDayOfWeek
       })
 
       const pct = Math.round((points / memberDailyTarget) * 100)

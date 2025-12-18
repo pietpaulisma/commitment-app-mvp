@@ -6,7 +6,9 @@ import {
   BoltIcon,
   MegaphoneIcon,
   CalendarDaysIcon,
-  CogIcon
+  CogIcon,
+  ExclamationTriangleIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline'
 
 interface SystemMessageComponentProps {
@@ -45,7 +47,15 @@ export function SystemMessageComponent({
     }
   }
 
-  const getMessageTypeIcon = (messageType: string) => {
+  const getMessageTypeIcon = (messageType: string, messageText: string = '') => {
+    // Check for specific message patterns
+    if (messageText.includes('penalty') || messageText.includes('fine')) {
+      return ExclamationTriangleIcon
+    }
+    if (messageText.includes('sick mode')) {
+      return HeartIcon
+    }
+
     switch (messageType) {
       case 'daily_summary':
         return CalendarDaysIcon
@@ -73,7 +83,7 @@ export function SystemMessageComponent({
   const messageType = systemMessageData?.message_type || 'developer_note'
   const senderName = systemMessageData?.sender_name || 'Barry'
   const styles = getRarityStyles(rarity)
-  const IconComponent = getMessageTypeIcon(messageType)
+  const IconComponent = getMessageTypeIcon(messageType, message.message)
 
   // Parse message content to handle markdown-style formatting
   const formatMessage = (content: string) => {

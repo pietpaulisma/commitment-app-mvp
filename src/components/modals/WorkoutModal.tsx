@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient, getExerciseTypeGradient, getButtonGradient, getButtonShadow } from '@/utils/gradientUtils'
-import TimeGradient from './TimeGradient'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
@@ -31,7 +30,9 @@ import {
   ChevronUp,
   Check,
   Clock,
-  Plus
+  Plus,
+  Trophy,
+  Award
 } from 'lucide-react'
 
 type Exercise = {
@@ -102,6 +103,30 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }
 
+  // Get exercise type colors for workout input
+  const getExerciseTypeColors = (exerciseType: string) => {
+    switch (exerciseType) {
+      case 'recovery':
+        return {
+          gradient: 'from-green-600 to-emerald-600',
+          progressBar: 'bg-green-500',
+          currentBar: 'bg-emerald-500'
+        }
+      case 'sports':
+        return {
+          gradient: 'from-purple-600 to-violet-600',
+          progressBar: 'bg-purple-500',
+          currentBar: 'bg-violet-500'
+        }
+      default: // 'all' or other types
+        return {
+          gradient: 'from-blue-600 to-indigo-600',
+          progressBar: 'bg-blue-500',
+          currentBar: 'bg-indigo-500'
+        }
+    }
+  }
+
   const userColor = getModeColor()
   const [exercises, setExercises] = useState<ExerciseWithProgress[]>([])
   const [loading, setLoading] = useState(false)
@@ -148,11 +173,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [isUsingFlexibleRestDay, setIsUsingFlexibleRestDay] = useState(false)
   const [hasPostedToday, setHasPostedToday] = useState(false)
   const [checkingPostStatus, setCheckingPostStatus] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState('')
   const [sportsList, setSportsList] = useState<Array<{ id: string, name: string, emoji: string }>>([])
   const [isDragging, setIsDragging] = useState(false)
   const [sliderPosition, setSliderPosition] = useState(0)
   const [isSliderComplete, setIsSliderComplete] = useState(false)
   const [personalRecord, setPersonalRecord] = useState<number | null>(null)
+  const [personalRecordDate, setPersonalRecordDate] = useState<string | null>(null)
+  const [groupRecord, setGroupRecord] = useState<number | null>(null)
+  const [groupRecordUser, setGroupRecordUser] = useState<string | null>(null)
 
   const router = useRouter()
 
@@ -197,51 +226,85 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     "37. Limit: Your limit is you."
   ]
 
-  // Fetch Personal Record when exercise is selected or modal opens
+  // Fetch Personal Record and Group Record when exercise is selected or modal opens
   useEffect(() => {
-    async function fetchPR() {
-      if (!selectedWorkoutExercise || !user || !workoutInputOpen) return
-
-      console.log('Fetching PR for:', selectedWorkoutExercise.name, selectedWorkoutExercise.id)
+    async function fetchRecords() {
+      if (!selectedWorkoutExercise || !user || !workoutInputOpen || !profile?.group_id) return
 
       // Determine which field to query based on exercise type
-      // Use 'duration' for time-based exercises, 'count' for others
-      // We check unit === 'hour' or is_time_based flag if available
       const isTimeBased = selectedWorkoutExercise.unit === 'hour' || selectedWorkoutExercise.unit === 'min' || selectedWorkoutExercise.is_time_based
       const field = isTimeBased ? 'duration' : 'count'
 
-      const { data, error } = await supabase
-        .from('workout_logs')
-        .select(field)
+      // Fetch personal record with date
+      const { data: prData, error: prError } = await supabase
+        .from('logs')
+        .select(`${field}, date`)
         .eq('user_id', user.id)
         .eq('exercise_id', selectedWorkoutExercise.id)
         .order(field, { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
-      if (error) {
-        // It's normal to have no rows if no PR exists yet
-        if (error.code !== 'PGRST116') {
-          console.error('Error fetching PR:', error)
-        }
+      if (prError && prError.code !== 'PGRST116') {
+        console.error('Error fetching PR:', prError)
         setPersonalRecord(null)
-      } else if (data) {
-        const prValue = data[field as keyof typeof data]
-        console.log('PR found:', prValue)
-        setPersonalRecord(prValue)
+        setPersonalRecordDate(null)
+      } else if (prData) {
+        setPersonalRecord(prData[field as keyof typeof prData] as number)
+        setPersonalRecordDate(prData.date)
       } else {
         setPersonalRecord(null)
+        setPersonalRecordDate(null)
+      }
+
+      // Fetch group record with username
+      const { data: groupMembers } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .eq('group_id', profile.group_id)
+
+      if (groupMembers && groupMembers.length > 0) {
+        const memberIds = groupMembers.map(m => m.id)
+        const memberMap = new Map(groupMembers.map(m => [m.id, m.username]))
+        
+        const { data: grData, error: grError } = await supabase
+          .from('logs')
+          .select(`${field}, user_id`)
+          .in('user_id', memberIds)
+          .eq('exercise_id', selectedWorkoutExercise.id)
+          .order(field, { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (grError && grError.code !== 'PGRST116') {
+          console.error('Error fetching group record:', grError)
+          setGroupRecord(null)
+          setGroupRecordUser(null)
+        } else if (grData) {
+          const recordValue = grData[field as keyof typeof grData] as number
+          setGroupRecord(recordValue)
+          // Get username from our member map
+          const recordUsername = memberMap.get(grData.user_id) || null
+          setGroupRecordUser(recordUsername)
+        } else {
+          // No record exists in the group yet for this exercise
+          setGroupRecord(null)
+          setGroupRecordUser(null)
+        }
       }
     }
-    fetchPR()
-  }, [selectedWorkoutExercise, user, workoutInputOpen])
+    fetchRecords()
+  }, [selectedWorkoutExercise, user, workoutInputOpen, profile?.group_id])
 
-  // Debug daily target
+  // Auto-stop stopwatch when exercise changes or workout is submitted
   useEffect(() => {
-    console.log('Daily Target:', dailyTarget)
-    console.log('Daily Progress:', dailyProgress)
-    console.log('Remaining:', Math.max(0, dailyTarget - dailyProgress))
-  }, [dailyTarget, dailyProgress])
+    if (!workoutInputOpen || !selectedWorkoutExercise) {
+      if (isStopwatchRunning) {
+        pauseStopwatch()
+      }
+    }
+  }, [workoutInputOpen, selectedWorkoutExercise])
+
 
   // localStorage functions for locked weights
   const saveLockedWeightsToStorage = (weights: Record<string, number>) => {
@@ -573,16 +636,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
       // Log the flexible rest day points automatically
       const { error: logError } = await supabase
-        .from('workout_logs')
+        .from('logs')
         .insert({
           user_id: user.id,
           exercise_id: 'flexible_rest_day', // Special case for flexible rest day
-          exercise_name: 'Flexible Rest Day',
           points: targetPoints,
           date: getLocalDateString(),
           count: 1,
           weight: 0,
-          duration: 0
+          duration: 0,
+          timestamp: Date.now()
         })
 
       if (logError) throw logError
@@ -662,7 +725,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         if (!error) {
           setHasFlexibleRestDay(true)
-          console.log('🎉 Flexible rest day earned!')
 
           // Optional: Show notification
           alert('🎉 Congratulations! You earned a flexible rest day by completing your double Monday target!')
@@ -682,7 +744,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Load points and recovery days, optionally load target data if not provided
       const loadPromises: any[] = [
         supabase
-          .from('workout_logs')
+          .from('logs')
           .select(`
             points,
             exercise_id,
@@ -764,20 +826,15 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     try {
       const today = new Date().toISOString().split('T')[0]
 
+      // Fetch workouts with exercise data using a join
       const { data: workouts } = await supabase
-        .from('workout_logs')
-        .select('*')
+        .from('logs')
+        .select('*, exercises(*)')
         .eq('user_id', user.id)
         .eq('date', today)
         .order('points', { ascending: false })
 
-      // Map exercises to workouts
-      const workoutsWithExercises = workouts?.map(workout => ({
-        ...workout,
-        exercises: exercises.find(e => e.id === workout.exercise_id)
-      })) || []
-
-      setTodaysWorkouts(workoutsWithExercises)
+      setTodaysWorkouts(workouts || [])
     } catch (error) {
       console.error('Error loading today\'s workouts:', error)
     }
@@ -969,8 +1026,26 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   }
 
   const renderFavoriteExerciseButton = (exercise: ExerciseWithProgress) => {
+    const isFavorite = favoriteExerciseIds.includes(exercise.id)
     const isRecovery = exercise.type === 'recovery'
+    const isSports = exercise.type === 'sports'
     const progress = getExerciseProgress(exercise.id)
+
+    // Get gradient and glow based on exercise type
+    const progressBarStyle = isSports
+      ? {
+          background: 'linear-gradient(90deg, rgba(168, 85, 247, 0.4) 0%, rgba(147, 51, 234, 0.3) 100%)',
+          boxShadow: '0 0 20px rgba(168, 85, 247, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+        }
+      : isRecovery
+        ? {
+            background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 100%)',
+            boxShadow: '0 0 20px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+          }
+        : {
+            background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 100%)',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+          }
 
     return (
       <button
@@ -980,8 +1055,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       >
         {/* Progress Bar Background */}
         <div
-          className="absolute inset-y-0 left-0 bg-white/5 transition-all duration-500 ease-out z-0"
-          style={{ width: `${progress.percentage}%` }}
+          className="absolute inset-y-0 left-0 transition-all duration-500 ease-out z-0"
+          style={{
+            width: `${progress.percentage}%`,
+            ...progressBarStyle
+          }}
         />
 
         <div className="relative z-10 flex items-center gap-3">
@@ -993,28 +1071,30 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           {/* Name */}
           <div className="text-left">
             <div className="text-sm font-bold text-zinc-100 group-hover:text-white transition-colors uppercase tracking-wider">{exercise.name}</div>
-            {isRecovery && (
-              <div className="text-[10px] font-bold text-green-500/60 uppercase tracking-widest mt-0.5">Recovery</div>
-            )}
           </div>
         </div>
 
         {/* Right side */}
-        <div className="relative z-10 flex items-center gap-4">
+        <div className="relative z-10 flex items-center gap-3">
           <span className="text-sm font-light text-zinc-400 group-hover:text-zinc-300 transition-colors tabular-nums">
             {exercise.points_per_unit % 1 === 0
               ? exercise.points_per_unit
               : exercise.points_per_unit.toFixed(2)
-            } pts
+            } pts/{exercise.unit}
           </span>
 
-          <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-zinc-500 group-hover:text-white transition-all">
-            <Plus size={18} />
-          </div>
-
-          {/* Drag Handle / Menu */}
-          <div className="text-zinc-600 group-hover:text-zinc-500 cursor-grab active:cursor-grabbing pl-2 border-l border-white/10">
-            <Menu size={16} />
+          {/* Star - always visible, filled if favorite */}
+          <div
+            className="w-8 h-8 rounded-full hover:bg-yellow-500/10 flex items-center justify-center transition-all cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleFavorite(exercise.id)
+            }}
+          >
+            <Star
+              size={16}
+              className={isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-zinc-600 hover:text-yellow-500'}
+            />
           </div>
         </div>
       </button>
@@ -1039,7 +1119,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const renderExerciseButton = (exercise: ExerciseWithProgress, showFavorite: boolean = true) => {
     const isFavorite = favoriteExerciseIds.includes(exercise.id)
     const isRecovery = exercise.type === 'recovery'
+    const isSports = exercise.type === 'sports'
     const progress = getExerciseProgress(exercise.id)
+
+    // Get gradient and glow based on exercise type
+    const progressBarStyle = isSports
+      ? {
+          background: 'linear-gradient(90deg, rgba(168, 85, 247, 0.4) 0%, rgba(147, 51, 234, 0.3) 100%)',
+          boxShadow: '0 0 20px rgba(168, 85, 247, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+        }
+      : isRecovery
+        ? {
+            background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 100%)',
+            boxShadow: '0 0 20px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+          }
+        : {
+            background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 100%)',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+          }
 
     return (
       <button
@@ -1049,8 +1146,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       >
         {/* Progress Bar Background */}
         <div
-          className="absolute inset-y-0 left-0 bg-white/5 transition-all duration-500 ease-out z-0"
-          style={{ width: `${progress.percentage}%` }}
+          className="absolute inset-y-0 left-0 transition-all duration-500 ease-out z-0"
+          style={{
+            width: `${progress.percentage}%`,
+            ...progressBarStyle
+          }}
         />
 
         <div className="relative z-10 flex items-center gap-3">
@@ -1067,36 +1167,31 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           {/* Name */}
           <div className="text-left">
             <div className="text-sm font-bold text-zinc-100 group-hover:text-white transition-colors uppercase tracking-wider">{exercise.name}</div>
-            {isRecovery && (
-              <div className="text-[10px] font-bold text-green-500/60 uppercase tracking-widest mt-0.5">Recovery</div>
-            )}
           </div>
         </div>
 
         {/* Right side */}
-        <div className="relative z-10 flex items-center gap-4">
+        <div className="relative z-10 flex items-center gap-3">
           <span className="text-sm font-light text-zinc-400 group-hover:text-zinc-300 transition-colors tabular-nums">
             {exercise.points_per_unit % 1 === 0
               ? exercise.points_per_unit
               : exercise.points_per_unit.toFixed(2)
-            } pts
+            } pts/{exercise.unit}
           </span>
 
-          <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-zinc-500 group-hover:text-white transition-all">
-            <Plus size={18} />
+          {/* Star - always visible, filled if favorite */}
+          <div
+            className="w-8 h-8 rounded-full hover:bg-yellow-500/10 flex items-center justify-center transition-all cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleFavorite(exercise.id)
+            }}
+          >
+            <Star
+              size={16}
+              className={isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-zinc-600 hover:text-yellow-500'}
+            />
           </div>
-
-          {!isFavorite && (
-            <div
-              className="w-8 h-8 rounded-full hover:bg-yellow-500/10 flex items-center justify-center text-zinc-700 hover:text-yellow-500 transition-all cursor-pointer border-l border-white/5 pl-2 ml-1"
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleFavorite(exercise.id)
-              }}
-            >
-              <Star size={16} />
-            </div>
-          )}
         </div>
       </button>
     )
@@ -1282,7 +1377,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       let todayLogs: any[] = []
       try {
         const { data } = await supabase
-          .from('workout_logs')
+          .from('logs')
           .select('exercise_id, count, duration')
           .eq('user_id', user.id)
           .eq('date', today)
@@ -1295,7 +1390,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       let yesterdayLogs = []
       try {
         const { data } = await supabase
-          .from('workout_logs')
+          .from('logs')
           .select('exercise_id')
           .eq('user_id', user.id)
           .eq('date', yesterday)
@@ -1376,14 +1471,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const handleSubmitToGroup = async () => {
     // Submitting workout to group
-    console.log('Submitting workout to group:', {
-      user_id: user?.id,
-      user_email: user?.email,
-      profile_group_id: profile?.group_id,
-      dailyProgress,
-      todayLogs: todayLogs?.length
-    });
-
     if (!user || !profile?.group_id || dailyProgress <= 0) {
       console.error('Workout submission blocked:', {
         hasUser: !!user,
@@ -1439,19 +1526,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Insert into chat as a special workout completion message
       // Store workout data as JSON in the message field
       const messageWithData = JSON.stringify({
-        text: `🎯 Workout completed! ${totalPoints} points achieved`,
+        text: submitMessage.trim()
+          ? `🎯 Workout completed! ${totalPoints} points achieved\n\n${submitMessage.trim()}`
+          : `🎯 Workout completed! ${totalPoints} points achieved`,
         workout_data: workoutData
       })
 
       // Inserting workout message
-      console.log('Inserting workout message:', {
-        user_id: user.id,
-        group_id: profile.group_id,
-        message_length: messageWithData.length,
-        message_type: 'workout_completion',
-        workoutData: JSON.stringify(workoutData, null, 2)
-      });
-
       const { data, error } = await supabase
         .from('chat_messages')
         .insert({
@@ -1533,7 +1614,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               'workout_completions'
             )
 
-            console.log(`Workout completion notification sent to ${memberIds.length} group members`)
           }
         } catch (notificationError) {
           console.error('Error sending workout completion notification:', notificationError)
@@ -1548,7 +1628,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             // If user met/exceeded insane target while in sane mode, switch to insane
             if (totalPoints >= insaneTargetForToday) {
               await setWeekModeWithSync('insane', user?.id)
-              console.log(`Auto-switched to insane mode! Points: ${totalPoints}, Insane target: ${insaneTargetForToday}`)
 
               // Recalculate target with new mode
               await recalculateTargetWithMode('insane')
@@ -1576,15 +1655,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
         // Update state to reflect successful posting
         setHasPostedToday(true)
+        setSubmitMessage('') // Clear the message input
 
-        // Clear workout state since it's complete
-        clearWorkoutInProgress()
-
-        // Close modal and redirect to chat after submission
-        setTimeout(() => {
-          onClose()
-          router.push('/dashboard?tab=chat')
-        }, 1000)
+        // Refresh workout data to show updated progress
+        loadDailyProgress()
+        loadTodaysWorkouts()
       }
     } catch (error) {
       console.error('Error submitting workout:', error)
@@ -1601,7 +1676,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       setLoading(true)
 
       const { error } = await supabase
-        .from('workout_logs')
+        .from('logs')
         .delete()
         .eq('id', workoutId)
         .eq('user_id', user.id) // Security check
@@ -1714,19 +1789,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
 
         const { error } = await supabase
-          .from('workout_logs')
+          .from('logs')
           .insert({
             user_id: user.id,
-            group_id: profile?.group_id,
             exercise_id: selectedWorkoutExercise.id,
-            exercise_name: selectedWorkoutExercise.name,
             count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
             weight: selectedWeight,
             duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
             points: points,
             date: getLocalDateString(),
-            timestamp: Date.now(),
-            is_decreased: isDecreasedExercise
+            timestamp: Date.now()
           })
 
         if (error) {
@@ -1754,6 +1826,11 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           // Haptic feedback
           if (navigator.vibrate) {
             navigator.vibrate(100)
+          }
+
+          // Call onClose to trigger dashboard reload
+          if (onClose) {
+            onClose();
           }
         }
       } catch (error) {
@@ -1840,48 +1917,68 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       >
         {/* Time-based gradient background with subtle glass layer effect */}
 
-        {/* Header - Wide pill with percentage and integrated close */}
-        <div className="sticky top-0 z-50 flex items-center justify-center py-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
-          {/* Wide pill-shaped progress container */}
-          <div className="relative w-full max-w-[90%] h-12 rounded-full bg-black/50 border border-white/10 backdrop-blur-xl overflow-hidden shadow-2xl flex items-center">
-            {/* Solid gradient progress bar */}
-            <div
-              className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out rounded-full ${weekMode === 'insane'
-                ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
-                : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
-                }`}
-              style={{
-                width: `${Math.min(100, progressPercentage)}%`,
-                boxShadow: weekMode === 'insane'
-                  ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
-                  : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
-              }}
-            />
+        {/* Header - Button-style design matching dashboard */}
+        <div className="sticky top-0 z-50 px-4 py-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
+          <div className="max-w-2xl mx-auto">
+            {/* Container with grey outline matching bottom nav */}
+            <div className="bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-2 shadow-2xl flex items-center gap-3 pr-2">
+              {/* Main workout log button */}
+              <button
+                className="relative flex-1 h-16 rounded-[2rem] flex items-center justify-between px-8 overflow-hidden"
+              >
+                {/* Background - White base */}
+                <div className="absolute inset-0 bg-white rounded-[2rem]" />
 
-            {/* Content - percentage and close button */}
-            <div className="relative h-full w-full flex items-center justify-between px-4">
-              <span className="text-2xl font-black tracking-tight text-white">
-                {Math.round(progressPercentage)}%
-              </span>
+                {/* Progress bar - Blue gradient from left */}
+                <div
+                  className="absolute top-0 left-0 bottom-0 transition-all duration-500 ease-out rounded-l-[2rem]"
+                  style={{
+                    width: `${progressPercentage}%`,
+                    background: weekMode === 'insane'
+                      ? 'linear-gradient(90deg, rgb(234, 88, 12) 0%, rgb(249, 115, 22) 40%, rgb(251, 146, 60) 100%)'
+                      : 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
+                    boxShadow: progressPercentage > 0
+                      ? weekMode === 'insane'
+                        ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(234, 88, 12, 0.6), 4px 0 20px rgba(249, 115, 22, 0.5), 8px 0 30px rgba(251, 146, 60, 0.3)'
+                        : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
+                      : 'none'
+                  }}
+                />
 
-              {/* Integrated close button with icon morph */}
+                {/* Content */}
+                <div className="relative flex flex-col items-start">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black mb-0.5">
+                    Today's Goal
+                  </span>
+                  <span className="text-xl font-black tracking-tight leading-none text-black">
+                    WORKOUT LOG
+                  </span>
+                </div>
+
+                {/* Percentage */}
+                <div className="relative">
+                  <span className="text-sm font-black text-black tabular-nums">
+                    {Math.round(progressPercentage)}%
+                  </span>
+                </div>
+              </button>
+
+              {/* Close button - styled like chat button */}
               <button
                 onClick={handleClose}
-                onMouseEnter={() => setShowIconTransition(true)}
-                onMouseLeave={() => setShowIconTransition(false)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                className="w-16 h-16 rounded-[2rem] flex items-center justify-center transition-all bg-[#111] hover:bg-[#222] text-white border border-white/10"
                 aria-label="Close workout log"
               >
-                <div className="relative w-5 h-5">
-                  {/* Activity icon - fades out */}
+                <div className="relative w-6 h-6">
+                  {/* MessageCircle icon - fades out */}
                   <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${showIconTransition ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'
                     }`}>
-                    <Activity size={16} className="text-white" />
+                    <MessageCircle size={26} className="text-white" />
                   </div>
                   {/* X icon - fades in */}
                   <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${showIconTransition ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'
                     }`}>
-                    <X size={16} className="text-white" />
+                    <X size={26} className="text-white" />
                   </div>
                 </div>
               </button>
@@ -1889,142 +1986,168 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           </div>
         </div>
 
-        {/* Completed Exercises Section - New design system */}
+        {/* Subtle hint when target is reached */}
+        {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && !hasPostedToday && (
+          <div className="px-4 pb-3">
+            <div className="bg-green-600/10 rounded-lg px-4 py-2.5 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs font-bold text-green-400">Target Complete</span>
+            </div>
+          </div>
+        )}
+
+        {/* Completed Exercises Section - Redesigned */}
         {!exercisesLoading && exercises.length > 0 && todaysWorkouts.length > 0 && (
-          <div className="w-full px-4 py-0">
-            <button
-              onClick={() => setCompletedExercisesExpanded(!completedExercisesExpanded)}
-              className="w-full flex items-center justify-between mb-2 px-2 py-0"
-            >
-              <h3 className="text-xs font-bold uppercase tracking-widest" style={{
-                color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
-              }}>
-                Completed Exercises ({todaysWorkouts.length})
-              </h3>
-              <ChevronDown size={14} className={`text-zinc-500 transition-transform ${completedExercisesExpanded ? 'rotate-180' : ''}`} />
-            </button>
+          <div className="w-full px-4 py-0 mb-4">
+            {/* Unified container with border */}
+            <div className={`bg-white/5 border border-white/10 rounded-xl overflow-hidden transition-all duration-200 ${completedExercisesExpanded ? 'bg-black/60 backdrop-blur-xl' : 'hover:bg-white/10'}`}>
+              <button
+                onClick={() => setCompletedExercisesExpanded(!completedExercisesExpanded)}
+                className="w-full flex items-center justify-between px-4 py-3 transition-all duration-200"
+              >
+                <h3 className="text-xs font-bold uppercase tracking-widest text-white">
+                  Completed Exercises ({todaysWorkouts.length})
+                </h3>
+                <ChevronDown size={16} className={`text-white/60 transition-transform duration-200 ${completedExercisesExpanded ? 'rotate-180' : ''}`} />
+              </button>
 
-            {todaysWorkouts.length > 0 && completedExercisesExpanded && (
-              <div className="space-y-2">
-                {getGroupedWorkouts().map((workout: any) => {
-                  const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
-                  const fillPct = dailyTarget > 0 ? Math.min((effectivePoints / dailyTarget) * 100, 100) : 0
-                  const isRecovery = workout.exercises?.type === 'recovery'
+              {todaysWorkouts.length > 0 && completedExercisesExpanded && (
+                <div className="px-3 pb-3 space-y-2">
+                  {getGroupedWorkouts().map((workout: any) => {
+                    const effectivePoints = workout.logs?.reduce((sum: number, log: any) => sum + getEffectivePoints(log), 0) || 0
+                    const isRecovery = workout.exercises?.type === 'recovery'
+                    const isSports = workout.exercises?.type === 'sports'
+                    const workoutKey = `${workout.exercise_id}-${workout.weight || 0}`
+                    const isExpanded = expandedWorkouts[workoutKey]
 
-                  return (
-                    <div
-                      key={`${workout.exercise_id}-${workout.weight || 0}`}
-                      className="relative w-full rounded-xl overflow-hidden bg-white/5 hover:bg-white/10 transition-all duration-300 flex items-center group cursor-pointer"
-                      onClick={() => {
-                        const workoutKey = `${workout.exercise_id}-${workout.weight || 0}`
-                        setExpandedWorkouts(prev => ({
-                          ...prev,
-                          [workoutKey]: !prev[workoutKey]
-                        }))
-                      }}
-                    >
-                      {/* Solid gradient background - matching new design system */}
-                      <div
-                        className={`absolute top-0 left-0 h-full transition-all duration-500 ${isRecovery
-                          ? 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-600'
-                          : weekMode === 'insane'
-                            ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
-                            : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
-                          }`}
-                        style={{
-                          width: `${fillPct}%`,
-                          boxShadow: isRecovery
-                            ? '0 0 20px 3px rgba(34, 197, 94, 0.3), 0 0 10px 0px rgba(34, 197, 94, 0.4)'
-                            : weekMode === 'insane'
-                              ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
-                              : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
-                        }}
-                      />
+                    // Get color based on exercise type
+                    const colors = isSports
+                      ? {
+                          bg: 'bg-purple-500/20',
+                          gradient: 'linear-gradient(90deg, rgba(168, 85, 247, 0.3) 0%, rgba(147, 51, 234, 0.2) 100%)',
+                          glow: '0 0 15px rgba(168, 85, 247, 0.25)',
+                          icon: 'bg-purple-500/20 text-purple-400'
+                        }
+                      : isRecovery
+                        ? {
+                            bg: 'bg-green-500/20',
+                            gradient: 'linear-gradient(90deg, rgba(34, 197, 94, 0.3) 0%, rgba(22, 163, 74, 0.2) 100%)',
+                            glow: '0 0 15px rgba(34, 197, 94, 0.25)',
+                            icon: 'bg-green-500/20 text-green-400'
+                          }
+                        : {
+                            bg: 'bg-blue-500/20',
+                            gradient: 'linear-gradient(90deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%)',
+                            glow: '0 0 15px rgba(59, 130, 246, 0.25)',
+                            icon: 'bg-blue-500/20 text-blue-400'
+                          }
 
-                      {/* Content Layer */}
-                      <div className="relative z-10 w-full px-4 py-2.5 flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          {/* Icon */}
-                          <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-                            {getExerciseIcon(workout.exercises)}
-                          </div>
+                    return (
+                      <div key={workoutKey} className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setExpandedWorkouts(prev => ({
+                              ...prev,
+                              [workoutKey]: !prev[workoutKey]
+                            }))
+                          }}
+                          className="relative w-full rounded-xl overflow-hidden hover:bg-white/5 transition-all duration-300 flex flex-col"
+                        >
+                          {/* Gradient background */}
+                          <div
+                            className="absolute inset-0 transition-all duration-500"
+                            style={{
+                              background: colors.gradient,
+                              boxShadow: colors.glow
+                            }}
+                          />
 
-                          {/* Text Info */}
-                          <div className="flex flex-col justify-center">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-white">{workout.exercises?.name || 'Unknown Exercise'}</span>
-                              {workout.weight > 0 && (
-                                <span className="text-[9px] font-bold bg-black/40 px-1.5 py-0.5 rounded text-zinc-300 border border-white/10">
-                                  {workout.weight}kg
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                          {/* Content Layer */}
+                          <div className="relative z-10 w-full px-4 py-3 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              {/* Icon */}
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colors.icon}`}>
+                                {getExerciseIcon(workout.exercises)}
+                              </div>
 
-                        {/* Right Side: Points */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-white tabular-nums">
-                            {effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(2)}
-                          </span>
-                          <span className="text-xs text-white/60 font-bold">pts</span>
-                          <ChevronDown size={16} className={`text-white/60 transition-transform duration-200 ${expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] ? 'rotate-180' : ''
-                            }`} />
-                        </div>
-                      </div>
-                      {/* Individual sets when expanded */}
-                      {expandedWorkouts[`${workout.exercise_id}-${workout.weight || 0}`] && (
-                        <div className="mt-2 space-y-2 px-4">
-                          {workout.logs.map((log: any, index: number) => (
-                            <div key={log.id} className="relative w-full rounded-xl overflow-hidden bg-white/5 hover:bg-white/10 transition-all duration-300 flex items-center">
-                              {/* Content Layer */}
-                              <div className="relative z-10 w-full px-4 py-2 flex justify-between items-center">
-                                <div className="flex items-center gap-3">
-                                  {/* Set number */}
-                                  <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-                                    <span className="text-xs font-bold text-white">{index + 1}</span>
-                                  </div>
-
-                                  {/* Text Info */}
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-bold text-white">{log.count || log.duration} {workout.exercises?.unit}</span>
-                                    {log.weight > 0 && (
-                                      <span className="text-[9px] font-bold bg-black/40 px-1.5 py-0.5 rounded text-zinc-300 border border-white/10">
-                                        {log.weight}kg
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Right Side: Points & Delete */}
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-sm font-black text-white tabular-nums">
-                                      {getEffectivePoints(log)}
+                              {/* Text Info */}
+                              <div className="flex flex-col items-start gap-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-white uppercase tracking-wide">{workout.exercises?.name || 'Unknown'}</span>
+                                  {workout.weight > 0 && (
+                                    <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-white border border-white/20">
+                                      {workout.weight}kg
                                     </span>
-                                    <span className="text-xs text-white/60 font-bold">pts</span>
-                                  </div>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleDeleteWorkout(log.id)
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-red-500/20 hover:text-red-400 transition-all"
-                                    aria-label="Delete set"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-white/60">
+                                  <span>{workout.logs.length} {workout.logs.length === 1 ? 'set' : 'sets'}</span>
+                                  <span>•</span>
+                                  <span className="font-bold">{effectivePoints % 1 === 0 ? effectivePoints : effectivePoints.toFixed(1)} pts</span>
                                 </div>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+
+                            {/* Right Side: Chevron */}
+                            <div className="flex items-center">
+                              <ChevronDown size={18} className={`text-white/60 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+                        </button>
+
+                        {/* Individual sets when expanded */}
+                        {isExpanded && (
+                          <div className="ml-6 space-y-1.5 animate-in slide-in-from-top-2 duration-300">
+                            {workout.logs.map((log: any, index: number) => (
+                              <div key={log.id} className="relative w-full rounded-xl overflow-hidden bg-white/5 hover:bg-white/10 transition-all duration-200">
+                                {/* Content Layer */}
+                                <div className="relative z-10 w-full px-4 py-2.5 flex justify-between items-center">
+                                  <div className="flex items-center gap-3">
+                                    {/* Set number */}
+                                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
+                                      <span className="text-xs font-bold text-white">{index + 1}</span>
+                                    </div>
+
+                                    {/* Text Info */}
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-white">
+                                        {log.count || log.duration} <span className="text-white/60">{workout.exercises?.unit}</span>
+                                      </span>
+                                      {log.weight > 0 && (
+                                        <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-white border border-white/20">
+                                          {log.weight}kg
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Right Side: Points & Delete */}
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-sm font-bold text-white/80 tabular-nums">
+                                      {getEffectivePoints(log)} <span className="text-xs text-white/50">pts</span>
+                                    </span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDeleteWorkout(log.id)
+                                      }}
+                                      className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                                      aria-label="Delete set"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -2058,37 +2181,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   </div>
                 )}
-
-                {/* Submit to Group Button - appears when target is reached */}
-                {dailyProgress >= dailyTarget && dailyTarget > 0 && profile?.group_id && (
-                  <div className="px-4 py-6 mt-6">
-                    <button
-                      onClick={handleSubmitToGroup}
-                      disabled={hasPostedToday || checkingPostStatus || loading}
-                      className={`w-full py-4 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${hasPostedToday
-                        ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                        : checkingPostStatus || loading
-                          ? 'bg-gray-500 text-gray-300 cursor-wait'
-                          : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white'
-                        }`}
-                    >
-                      {checkingPostStatus
-                        ? '⏳ Checking...'
-                        : hasPostedToday
-                          ? '✅ Already Posted Today'
-                          : loading
-                            ? '⏳ Posting...'
-                            : '🎉 Submit to Group Chat'
-                      }
-                    </button>
-                    <p className="text-center text-sm text-gray-400 mt-2">
-                      {hasPostedToday
-                        ? 'You can only post your workout once per day'
-                        : 'Share your completed workout with the group!'
-                      }
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Favorites Section - New design system */}
@@ -2118,7 +2210,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               )}
 
-              {/* All Exercises Section - New design system */}
+              {/* Reps Exercises Section - New design system */}
               {allExercises.length > 0 && (
                 <div className="py-0 mt-8">
                   <button
@@ -2127,7 +2219,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   >
                     <div className="flex items-center gap-4">
                       <Activity size={24} className={weekMode === 'insane' ? 'text-orange-500' : 'text-blue-400'} />
-                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">ALL</h4>
+                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">REPS</h4>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-zinc-600 font-bold">({allExercises.length})</span>
@@ -2199,40 +2291,120 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               )}
 
-              {/* Week Mode Toggle - Fun Toggle Design */}
-              {isWeekModeAvailable(groupDaysSinceStart) && (
-                <div className="py-6 px-4 mt-8 flex justify-center">
-                  <div className="bg-white/5 p-1 rounded-full border border-white/10 flex items-center relative w-full max-w-xs h-16">
-                    {/* Active Background Pill */}
-                    <div
-                      className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full transition-all duration-300 ease-out ${weekMode === 'sane' ? 'left-1 bg-blue-600 shadow-lg shadow-blue-500/20' : 'left-[calc(50%+4px)] bg-red-600 shadow-lg shadow-red-500/20'
-                        }`}
-                    />
+              {/* Bottom Actions Section - Unified Component */}
+              <div className="px-4 pb-6 mt-8">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-4">
+                  {/* Week Mode Toggle - Compact */}
+                  {isWeekModeAvailable(groupDaysSinceStart) && (
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mode</span>
+                      <div className="bg-black/40 p-0.5 rounded-full border border-white/10 flex items-center relative h-10 w-40">
+                        {/* Active Background Pill */}
+                        <div
+                          className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full transition-all duration-300 ease-out ${weekMode === 'sane' ? 'left-0.5 bg-blue-600' : 'left-[calc(50%+2px)] bg-red-600'
+                            }`}
+                        />
 
-                    <button
-                      onClick={async () => {
-                        await setWeekModeWithSync('sane', user?.id)
-                        await recalculateTargetWithMode('sane')
-                      }}
-                      className={`flex-1 relative z-10 h-full rounded-full font-black text-sm tracking-widest transition-colors duration-300 ${weekMode === 'sane' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
-                        }`}
-                    >
-                      SANE
-                    </button>
+                        <button
+                          onClick={async () => {
+                            await setWeekModeWithSync('sane', user?.id)
+                            await recalculateTargetWithMode('sane')
+                          }}
+                          className={`flex-1 relative z-10 h-full rounded-full font-black text-xs tracking-widest transition-colors duration-300 ${weekMode === 'sane' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+                            }`}
+                        >
+                          SANE
+                        </button>
 
-                    <button
-                      onClick={async () => {
-                        await setWeekModeWithSync('insane', user?.id)
-                        await recalculateTargetWithMode('insane')
-                      }}
-                      className={`flex-1 relative z-10 h-full rounded-full font-black text-sm tracking-widest transition-colors duration-300 ${weekMode === 'insane' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
-                        }`}
-                    >
-                      INSANE
-                    </button>
-                  </div>
+                        <button
+                          onClick={async () => {
+                            await setWeekModeWithSync('insane', user?.id)
+                            await recalculateTargetWithMode('insane')
+                          }}
+                          className={`flex-1 relative z-10 h-full rounded-full font-black text-xs tracking-widest transition-colors duration-300 ${weekMode === 'insane' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
+                            }`}
+                        >
+                          INSANE
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  {isWeekModeAvailable(groupDaysSinceStart) && profile?.group_id && (
+                    <div className="border-t border-white/10" />
+                  )}
+
+                  {/* Submit to Group Section */}
+                  {profile?.group_id && (
+                    <div className="space-y-3">
+                      {/* Optional message input */}
+                      {!hasPostedToday && (
+                        <div>
+                          <input
+                            type="text"
+                            value={submitMessage}
+                            onChange={(e) => setSubmitMessage(e.target.value)}
+                            placeholder="Add a message (optional)"
+                            maxLength={200}
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white/20 transition-colors"
+                          />
+                        </div>
+                      )}
+
+                      {/* Submit button */}
+                      <button
+                        onClick={handleSubmitToGroup}
+                        disabled={hasPostedToday || checkingPostStatus || loading || dailyProgress < dailyTarget}
+                        className="relative w-full h-14 rounded-xl flex items-center justify-center overflow-hidden transition-all"
+                      >
+                        {/* Background */}
+                        <div className={`absolute inset-0 transition-all ${
+                          hasPostedToday
+                            ? 'bg-zinc-700'
+                            : checkingPostStatus || loading
+                              ? 'bg-zinc-700'
+                              : dailyProgress < dailyTarget
+                                ? 'bg-zinc-800'
+                                : 'bg-green-600'
+                        }`} />
+
+                        {/* Content */}
+                        <div className="relative flex items-center gap-2.5">
+                          {checkingPostStatus ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              <span className="text-sm font-black text-white uppercase tracking-wide">Checking...</span>
+                            </>
+                          ) : hasPostedToday ? (
+                            <>
+                              <span className="text-base">✅</span>
+                              <span className="text-sm font-black text-zinc-300 uppercase tracking-wide">Posted Today</span>
+                            </>
+                          ) : loading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              <span className="text-sm font-black text-white uppercase tracking-wide">Posting...</span>
+                            </>
+                          ) : dailyProgress < dailyTarget ? (
+                            <>
+                              <span className="text-base">🎯</span>
+                              <span className="text-sm font-black text-zinc-400 uppercase tracking-wide">
+                                {dailyProgress}/{dailyTarget} pts
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-base">🎉</span>
+                              <span className="text-sm font-black text-white uppercase tracking-wide">Submit to Group</span>
+                            </>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Flexible Rest Day Button */}
               {hasFlexibleRestDay && (
@@ -2260,198 +2432,148 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         {/* Workout Input Overlay - Fixed Layout */}
         {workoutInputOpen && selectedWorkoutExercise && (
           <div className="fixed inset-0 bg-black text-white z-[110] flex flex-col animate-in zoom-in-95 duration-300 ease-out" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-            {/* Header styled like clicked exercise button */}
-            <div className="relative mb-2 px-4 pt-6 pb-2">
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col gap-2 w-full">
-                  <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 tracking-tight leading-none uppercase italic transform -skew-x-6">
-                    {selectedWorkoutExercise.name}
-                  </h1>
-                  <div className="flex items-center justify-between w-full">
-
-                    {/* Points Pill */}
-                    <div className="flex items-center gap-2">
-                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-full px-3 py-1 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all duration-300">
+            {/* Header styled like exercise button with gray background and fill behind */}
+            <div className="relative border-b border-white/5 bg-white/5">
+              <div className="relative w-full flex items-center justify-between py-4 px-4 overflow-hidden">
+                {/* Progress Fill - Behind the button */}
                         {(() => {
+                  // Calculate progress including current input
                           const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                          const remainingPoints = Math.max(0, dailyTarget - (dailyProgress + currentPoints))
-
-                          if (remainingPoints === 0 && dailyTarget > 0) {
-                            return <span className="flex items-center gap-1">🎉 Done!</span>
-                          }
-                          return `${remainingPoints} left`
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* Enhanced PR Pill */}
-                    <div className={`relative px-4 py-1.5 rounded-full border transition-all duration-300 ${personalRecord !== null && workoutCount >= personalRecord
-                        ? 'bg-yellow-500/20 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.3)] animate-pulse'
-                        : 'bg-white/10 border-white/10'
-                      }`}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black uppercase tracking-wider text-white/60">PR</span>
-                        <span className={`text-sm font-black tabular-nums ${personalRecord !== null && workoutCount >= personalRecord
-                            ? 'text-yellow-400'
-                            : 'text-white'
-                          }`}>
-                          {personalRecord !== null ? (
-                            selectedWorkoutExercise.unit === 'hour' ? `${Math.round(personalRecord * 60)}m` : personalRecord
-                          ) : (
-                            <span className="opacity-50">-</span>
-                          )}
-                        </span>
-                      </div>
-
-                      {/* "Close to PR" Indicator */}
-                      {personalRecord !== null && workoutCount > 0 && workoutCount < personalRecord && workoutCount >= personalRecord * 0.8 && (
-                        <div className="absolute -top-8 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg animate-bounce whitespace-nowrap shadow-lg">
-                          Almost there! 🔥
-                        </div>
-                      )}
-
-                      {/* "New Record" Indicator */}
-                      {personalRecord !== null && workoutCount > personalRecord && (
-                        <div className="absolute -top-8 right-0 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-1 rounded-lg animate-bounce whitespace-nowrap shadow-lg">
-                          NEW RECORD! 🏆
-                        </div>
-                      )}
-
-                    </div>
-
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setWorkoutInputOpen(false)}
-                  className="bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
-                >
-                  <X className="w-6 h-6 text-white" />
-                </button>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mt-2 h-2 bg-white/10 rounded-full overflow-hidden flex">
-                {(() => {
-                  const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                  const progressPercent = Math.min(100, (dailyProgress / Math.max(1, dailyTarget)) * 100)
-                  const currentPercent = Math.min(100 - progressPercent, (currentPoints / Math.max(1, dailyTarget)) * 100)
+                  const totalPointsWithInput = dailyProgress + currentPoints
+                  const progressPercentage = dailyTarget > 0 ? Math.min(100, (totalPointsWithInput / dailyTarget) * 100) : 0
+                  
+                  const isRecovery = selectedWorkoutExercise.type === 'recovery'
+                  const isSports = selectedWorkoutExercise.type === 'sports'
+                  
+                  const progressBarStyle = isSports
+                    ? {
+                        background: 'linear-gradient(90deg, rgba(168, 85, 247, 0.4) 0%, rgba(147, 51, 234, 0.3) 100%)',
+                        boxShadow: '0 0 20px rgba(168, 85, 247, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+                      }
+                    : isRecovery
+                      ? {
+                          background: 'linear-gradient(90deg, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 100%)',
+                          boxShadow: '0 0 20px rgba(34, 197, 94, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+                        }
+                      : {
+                          background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 100%)',
+                          boxShadow: '0 0 20px rgba(59, 130, 246, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.2)'
+                        }
 
                   return (
-                    <>
-                      {/* Already Done */}
-                      <div
-                        className="h-full bg-blue-500 transition-all duration-500 ease-out"
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                      {/* Current Input (Pulsing) */}
-                      {currentPercent > 0 && (
-                        <div
-                          className="h-full bg-purple-500 animate-pulse transition-all duration-300 ease-out"
-                          style={{ width: `${currentPercent}%` }}
-                        />
-                      )}
-                    </>
+                    <div
+                      className="absolute inset-y-0 left-0 transition-all duration-500 ease-out z-0"
+                      style={{
+                        width: `${progressPercentage}%`,
+                        ...progressBarStyle
+                      }}
+                    />
                   )
+                        })()}
+
+                {/* Left side - Icon and Name */}
+                <div className="relative z-10 flex items-center gap-3 flex-1 min-w-0">
+                  {/* Icon Circle */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shrink-0 ${
+                    selectedWorkoutExercise.type === 'recovery'
+                      ? 'bg-green-500/10 text-green-400'
+                      : selectedWorkoutExercise.type === 'sports'
+                        ? 'bg-purple-500/10 text-purple-400'
+                        : 'bg-white/5 text-zinc-500'
+                  }`}>
+                    {getExerciseIcon(selectedWorkoutExercise)}
+                      </div>
+
+                  {/* Name and Points Remaining */}
+                  <div className="text-left min-w-0 flex-1">
+                    <div className="text-sm font-bold text-zinc-100 uppercase tracking-wider truncate">
+                      {selectedWorkoutExercise.name}
+                        </div>
+                    <span className="text-xs text-zinc-500 font-medium">
+                {(() => {
+                  const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                        const remainingPoints = Math.max(0, dailyTarget - (dailyProgress + currentPoints))
+                        return remainingPoints === 0 && dailyTarget > 0 ? '✓ Done!' : `${remainingPoints} pts left`
                 })()}
+                    </span>
               </div>
             </div>
 
-            {/* Stopwatch Section */}
-            <div className="border-b border-white/5 bg-white/5 backdrop-blur-sm px-3 mt-4 mx-4 rounded-xl overflow-hidden shadow-inner">
+                {/* Right side - X button */}
+                <div className="relative z-10 shrink-0">
               <button
-                onClick={() => setIsStopwatchExpanded(!isStopwatchExpanded)}
-                className="w-full py-4 flex items-center justify-between transition-colors group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-full ${isStopwatchRunning ? 'bg-green-500/20 text-green-400 animate-pulse' : 'bg-white/10 text-white/60'}`}>
-                    <Clock className="w-5 h-5" />
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setWorkoutInputOpen(false)
+                    }}
+                    className="w-12 h-12 rounded-full hover:bg-white/10 flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <X size={26} className="text-zinc-400 hover:text-white" />
+                  </button>
                   </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs font-bold uppercase tracking-wider text-white/40 group-hover:text-white/60 transition-colors">Stopwatch</span>
-                    <span className={`font-mono text-xl font-bold tracking-wider ${isStopwatchRunning ? 'text-white' : 'text-white/60'}`}>
-                      {formatTime(stopwatchTime)}
+                  </div>
+                </div>
+
+            {/* Records bar - PR and Group Record side by side */}
+            <div className="mx-3 mb-2 grid grid-cols-2 gap-2">
+              {/* Personal Record */}
+              <div className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all ${
+                personalRecord !== null && workoutCount > personalRecord
+                  ? 'bg-yellow-500/20 border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.3)]'
+                  : 'bg-white/5 border border-white/10'
+              }`}>
+                <Trophy className={`w-5 h-5 shrink-0 ${
+                  personalRecord !== null && workoutCount > personalRecord
+                    ? 'text-yellow-400 animate-pulse'
+                    : 'text-zinc-500'
+                }`} />
+                <div className="flex flex-col items-start min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-lg font-black tabular-nums ${
+                      personalRecord !== null && workoutCount > personalRecord
+                        ? 'text-yellow-400'
+                        : 'text-white'
+                    }`}>
+                      {personalRecord !== null ? (
+                        selectedWorkoutExercise.unit === 'hour' ? `${Math.round(personalRecord * 60)}m` : personalRecord
+                      ) : '-'}
                     </span>
-                  </div>
+                    {personalRecord !== null && workoutCount > personalRecord && (
+                      <span className="text-[9px] font-black bg-yellow-400 text-black px-1.5 py-0.5 rounded-full animate-pulse">
+                        NEW!
+                      </span>
+                    )}
                 </div>
-
-                {/* Mini visualization if running and collapsed */}
-                {!isStopwatchExpanded && isStopwatchRunning && (
-                  <div className="text-xs text-green-400 font-bold animate-pulse mr-4">RUNNING</div>
-                )}
-
-                <div className="p-1 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                  {isStopwatchExpanded ? <ChevronUp className="w-5 h-5 text-white/60" /> : <ChevronDown className="w-5 h-5 text-white/60" />}
-                </div>
-              </button>
-
-              {isStopwatchExpanded && (
-                <div className="pb-6 pt-2 animate-in slide-in-from-top-2 duration-300">
-
-                  {/* Motivational message area - Enhanced */}
-                  <div className="h-16 flex items-center justify-center relative px-4 mb-4">
-                    {showMotivationalMessage ? (
-                      <div
-                        className="text-center transition-all duration-500 ease-out"
-                        style={{
-                          animation: 'fadeInOut 4s ease-in-out'
-                        }}
-                      >
-                        <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-lg">
-                          <p className="text-sm font-medium text-white/90 leading-relaxed max-w-[280px]">
-                            {motivationalMessage}
-                          </p>
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Personal</span>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-white/20 text-xs text-center italic">
-                        Stats & facts will appear here...
-                      </div>
+                  </div>
+
+              {/* Group Record */}
+              <div className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10">
+                <Award className="w-5 h-5 shrink-0 text-zinc-500" />
+                <div className="flex flex-col items-start min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-lg font-black tabular-nums text-white">
+                      {groupRecord !== null ? (
+                        selectedWorkoutExercise.unit === 'hour' ? `${Math.round(groupRecord * 60)}m` : groupRecord
+                      ) : '-'}
+                    </span>
+                    {groupRecord !== null && groupRecordUser && (
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">
+                        {groupRecordUser === profile?.username ? 'YOU' : (() => {
+                          // Get initials from username
+                          const parts = groupRecordUser.split(/[\s_-]+/)
+                          if (parts.length >= 2) {
+                            return (parts[0][0] + parts[1][0]).toUpperCase()
+                          }
+                          return groupRecordUser.slice(0, 2).toUpperCase()
+                        })()}
+                      </span>
                     )}
                   </div>
-
-                  {/* Large time display */}
-                  <div className="text-center mb-8 relative">
-                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-24 bg-gradient-to-r from-transparent via-white/5 to-transparent blur-xl pointer-events-none"></div>
-                    <div className="font-mono text-7xl font-black tracking-widest text-white relative z-10 drop-shadow-2xl tabular-nums">
-                      {formatTime(stopwatchTime)}
-                    </div>
-                  </div>
-
-                  {/* Controls - Modern Pill Design */}
-                  <div className="flex justify-center items-center gap-4">
-
-                    {/* Reset Button */}
-                    <button
-                      onClick={resetStopwatch}
-                      className="w-14 h-14 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-95 border border-white/5"
-                      aria-label="Reset Stopwatch"
-                    >
-                      <div className="w-5 h-5 bg-current rounded-sm opacity-60" />
-                    </button>
-
-                    {/* Start/Pause Main Button */}
-                    <button
-                      onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
-                      className={`h-20 px-10 rounded-full flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 shadow-xl ${isStopwatchRunning
-                          ? 'bg-amber-500 hover:bg-amber-600 text-black'
-                          : 'bg-green-500 hover:bg-green-600 text-black'
-                        }`}
-                    >
-                      {isStopwatchRunning ? (
-                        <>
-                          <span className="text-lg font-black uppercase tracking-wider">Pause</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-lg font-black uppercase tracking-wider">Start</span>
-                        </>
-                      )}
-                    </button>
-
-                  </div>
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Group</span>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Main scrollable content area - Dynamic content with inputs */}
@@ -2459,8 +2581,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* Interactive Counter Display */}
               {/* Interactive Counter & Quick Add Group */}
               <div className="rounded-3xl bg-zinc-900/50 border border-white/5 overflow-hidden backdrop-blur-sm shadow-xl">
-                {/* Number display with interactive click zones */}
-                <div className="relative h-44 flex items-center justify-center bg-black/20">
+                {/* Number display with interactive click zones - Reduced height */}
+                <div className="relative h-32 flex items-center justify-center bg-black/20">
 
                   {/* Left click zone (decrement) */}
                   <button
@@ -2495,7 +2617,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     <span
                       className="font-sans font-black tabular-nums text-white leading-none tracking-tight"
                       style={{
-                        fontSize: '6rem',
+                        fontSize: '4.5rem',
                         textShadow: '0 0 40px rgba(255,255,255,0.15)'
                       }}
                     >
@@ -2604,22 +2726,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                           key={index}
                           onClick={() => {
                             if (!selectedWorkoutExercise) return
-
-                            if (isSelected && !isLocked) {
-                              setLockedWeights(prev => ({
-                                ...prev,
-                                [selectedWorkoutExercise.id]: button.value
-                              }))
-                            } else if (isLocked) {
-                              setLockedWeights(prev => {
-                                const newLocked = { ...prev }
-                                delete newLocked[selectedWorkoutExercise.id]
-                                return newLocked
-                              })
-                              setSelectedWeight(0)
-                            } else {
-                              setSelectedWeight(button.value)
-                            }
+                            handleWeightClick(button.value)
                           }}
                           className={buttonClass}
                         >
@@ -2640,101 +2747,111 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Bottom section with calculation and submit - Fixed at bottom */}
-            <div className="flex-shrink-0 px-3 py-3 space-y-2 border-t border-white/10 backdrop-blur-sm">
-              {/* Decreased/Regular toggle */}
+              {/* Decreased/Regular toggle - Separate */}
               {selectedWorkoutExercise.supports_decreased && (
+                <div className="px-3 py-2">
                 <button
                   onClick={() => setIsDecreasedExercise(!isDecreasedExercise)}
-                  className={`w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl transition-all duration-200 backdrop-blur-sm relative overflow-hidden ${isDecreasedExercise
-                    ? 'bg-gradient-to-b from-amber-600/40 via-amber-700/40 to-amber-800/40 border border-amber-500/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/5 before:to-transparent before:pointer-events-none'
-                    : 'bg-gradient-to-b from-zinc-800/30 via-zinc-900/30 to-black/30 border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:from-zinc-800/40 hover:via-zinc-900/40 hover:to-black/40 before:absolute before:inset-[1px] before:rounded-[inherit] before:bg-gradient-to-b before:from-white/3 before:to-transparent before:pointer-events-none'
-                    }`}
-                >
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all relative z-10 ${isDecreasedExercise
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 ${isDecreasedExercise
+                      ? 'bg-amber-500/20 border border-amber-500/30'
+                      : 'bg-white/5 border border-white/10'
+                      }`}
+                  >
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${isDecreasedExercise
                     ? 'bg-amber-400 border-amber-400'
                     : 'border-white/30 bg-transparent'
                     }`}>
-                    {isDecreasedExercise && <Check className="w-3 h-3 text-black" />}
+                      {isDecreasedExercise && <Check className="w-2.5 h-2.5 text-black" />}
                   </div>
-                  <span className="font-medium relative z-10 text-center flex-1">
+                    <span className="text-sm font-medium">
                     {isDecreasedExercise ? 'Decreased (1.5x points)' : 'Regular (1x points)'}
                   </span>
                 </button>
-              )}
-
-              {/* Calculation breakdown - Inline */}
-              <div className="text-center">
-                <div className="text-xs text-white/40 font-sans">
-                  {(() => {
-                    // Calculate the weight multiplier
-                    let weightMultiplier = 1
-                    if (selectedWorkoutExercise.is_weighted && selectedWeight > 0) {
-                      if (selectedWeight >= 10 && selectedWeight < 15) weightMultiplier = 1.5
-                      else if (selectedWeight >= 15 && selectedWeight < 20) weightMultiplier = 2
-                      else if (selectedWeight >= 20 && selectedWeight < 25) weightMultiplier = 2.5
-                      else if (selectedWeight >= 25 && selectedWeight < 30) weightMultiplier = 3
-                      else if (selectedWeight >= 30 && selectedWeight < 35) weightMultiplier = 3.5
-                      else if (selectedWeight >= 35 && selectedWeight < 40) weightMultiplier = 4
-                      else if (selectedWeight >= 40) weightMultiplier = 4.5
-                    }
-
-                    const rawPoints = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                    const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-
-                    let calculation = ""
-                    if (selectedWeight === 0) {
-                      calculation = `${workoutCount} reps = ${rawPoints} pts`
-                    } else {
-                      calculation = `${workoutCount} × ${weightMultiplier}x = ${rawPoints} pts`
-                    }
-
-                    if (selectedWorkoutExercise.type === 'recovery' && effectivePoints < rawPoints) {
-                      calculation += ` → ${effectivePoints} pts (25% cap)`
-                    }
-
-                    return calculation
-                  })()}
                 </div>
+              )}
+            </div>
+
+            {/* Bottom section - Stopwatch and Submit */}
+            <div className="flex-shrink-0 px-3 pt-3 pb-4 border-t border-white/10 bg-black/50 backdrop-blur-sm space-y-3" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+              
+              {/* Stopwatch row */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsStopwatchExpanded(!isStopwatchExpanded)}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition-all ${
+                    isStopwatchRunning 
+                      ? 'bg-green-500/20 border border-green-500/30 text-green-400' 
+                      : 'bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10'
+                  }`}
+                >
+                  <Clock className={`w-4 h-4 ${isStopwatchRunning ? 'animate-pulse' : ''}`} />
+                  <span className="text-sm font-black tabular-nums">{formatTime(stopwatchTime)}</span>
+                  {isStopwatchExpanded ? <ChevronUp className="w-3.5 h-3.5 text-zinc-500" /> : <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />}
+                </button>
               </div>
 
-              {/* Submit button - Always at bottom */}
-              <div style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              {/* Stopwatch expanded controls */}
+              {isStopwatchExpanded && (
+                <div className="p-3 bg-white/5 rounded-xl border border-white/10 animate-in slide-in-from-top-2 duration-200">
+                  <div className="text-center mb-2">
+                    <div className="text-3xl font-black tracking-tight text-white tabular-nums" style={{
+                      fontFamily: 'system-ui, -apple-system, sans-serif',
+                      letterSpacing: '0.05em'
+                    }}>
+                      {formatTime(stopwatchTime)}
+                </div>
+              </div>
+                  <div className="flex justify-center items-center gap-3">
+                    <button
+                      onClick={resetStopwatch}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all active:scale-95 border border-white/5"
+                      aria-label="Reset"
+                    >
+                      <div className="w-3.5 h-3.5 bg-current rounded-sm opacity-60" />
+                    </button>
+                    <button
+                      onClick={isStopwatchRunning ? pauseStopwatch : startStopwatch}
+                      className={`h-10 px-5 rounded-full flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 ${
+                        isStopwatchRunning
+                          ? 'bg-amber-500 hover:bg-amber-600 text-black'
+                          : 'bg-green-500 hover:bg-green-600 text-black'
+                      }`}
+                    >
+                      <span className="text-xs font-black uppercase tracking-wider">
+                        {isStopwatchRunning ? 'Pause' : 'Start'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit button - More breathing room */}
                 <button
                   onClick={async () => {
                     if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
+
+                  // Stop stopwatch if running
+                  if (isStopwatchRunning) {
+                    pauseStopwatch()
+                  }
 
                     setLoading(true)
                     try {
                       const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
 
-                      console.log('Submitting workout payload:', {
-                        user_id: user.id,
-                        group_id: profile?.group_id,
-                        exercise_id: selectedWorkoutExercise.id,
-                        count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
-                        weight: selectedWeight,
-                        duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
-                        points: points,
-                        is_decreased: isDecreasedExercise
-                      })
-
                       const { error } = await supabase
-                        .from('workout_logs')
+                        .from('logs')
                         .insert({
                           user_id: user.id,
-                          group_id: profile?.group_id,
                           exercise_id: selectedWorkoutExercise.id,
-                          exercise_name: selectedWorkoutExercise.name,
+                          sport_name: selectedWorkoutExercise.type === 'sport' ? selectedSport : null,
                           count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
                           weight: selectedWeight,
                           duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
                           points: points,
                           date: getLocalDateString(),
-                          timestamp: Date.now(),
-                          is_decreased: isDecreasedExercise
+                          timestamp: Date.now()
                         })
 
                       if (error) {
@@ -2751,7 +2868,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         // Check for automatic mode switching after exercise submission
                         await checkAutomaticModeSwitch()
 
-                        // Reset and close
+                        // Reset workout input
                         setWorkoutInputOpen(false)
                         setWorkoutCount(0)
                         setSelectedWeight(selectedWorkoutExercise ? (lockedWeights[selectedWorkoutExercise.id] || 0) : 0)
@@ -2770,25 +2887,40 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     }
                   }}
                   disabled={loading || workoutCount <= 0}
-                  className={`w-full relative overflow-hidden shadow-xl hover:scale-[1.02] active:scale-95 py-6 rounded-3xl font-bold text-xl transition-all duration-200 touch-manipulation before:absolute before:inset-0 before:rounded-[inherit] before:bg-gradient-to-t before:from-transparent before:to-white/10 before:pointer-events-none ${calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise) > 0
-                    ? (weekMode === 'insane' ? 'bg-gradient-to-r from-red-600 via-red-500 to-red-600 border border-red-400/50 text-white shadow-red-500/50' : 'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 border border-blue-400/50 text-white shadow-blue-500/50')
-                    : 'border border-white/10 bg-black/70 backdrop-blur-xl text-white/40'
-                    }`}
-                >
-                  <span className="relative z-10">
+                className={`w-full relative overflow-hidden hover:scale-[1.01] active:scale-95 py-4 rounded-xl font-black transition-all duration-200 touch-manipulation disabled:opacity-50 disabled:scale-100 ${
+                  (() => {
+                    const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    const remainingPoints = Math.max(0, dailyTarget - (dailyProgress + currentPoints))
+                    const isComplete = remainingPoints === 0 && dailyTarget > 0
+                    
+                    if (isComplete) {
+                      return 'bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-lg shadow-green-500/30'
+                    }
+                    
+                    return weekMode === 'insane'
+                      ? 'bg-gradient-to-r from-orange-600 to-red-500 text-white shadow-lg shadow-orange-500/30'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/30'
+                  })()
+                }`}
+              >
+                <div className="relative z-10 flex items-center justify-center gap-3">
+                  <span className="text-base uppercase tracking-wider">
                     {(() => {
-                      const rawPoints = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
-                      const effectivePoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                      const currentPoints = getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                      const remainingPoints = Math.max(0, dailyTarget - (dailyProgress + currentPoints))
 
-                      if (selectedWorkoutExercise.type === 'recovery' && effectivePoints < rawPoints) {
-                        return `SUBMIT • ${effectivePoints}/${rawPoints} pts (25% cap)`
+                      if (remainingPoints === 0 && dailyTarget > 0) {
+                        return '🎉 SUBMIT • COMPLETE!'
                       }
 
-                      return `SUBMIT • ${effectivePoints} pts`
+                      return 'SUBMIT'
                     })()}
                   </span>
+                  <span className="text-sm opacity-90 bg-white/20 px-2 py-0.5 rounded-full">
+                    +{getEffectiveWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)} pts
+                  </span>
+                </div>
                 </button>
-              </div>
             </div>
           </div >
         )

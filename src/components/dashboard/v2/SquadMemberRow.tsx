@@ -12,16 +12,20 @@ export const SquadMemberRow = ({ name, pct, mode, isLive }: SquadMemberRowProps)
     const isInsane = mode === "insane";
     const isZero = pct === 0;
     const displayName = name.slice(0, 4).toUpperCase();
-    const barGradient = isInsane ? "bg-gradient-to-r from-orange-500 via-orange-600 to-red-600" : "bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600";
+    // Pure blue gradient (no purple) for sane mode
+    const barGradient = isInsane ? "bg-gradient-to-r from-orange-500 via-orange-600 to-red-600" : "bg-gradient-to-r from-blue-500 to-blue-600";
     // Smaller glow for compact squad status bars
     const shadowStyle = isZero ? {} : {
         boxShadow: isInsane
             ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
-            : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
+            : '0 0 20px 3px rgba(37, 99, 235, 0.3), 0 0 10px 0px rgba(59, 130, 246, 0.4)'
     };
     const baseHeight = 24;
     const scaleFactor = Math.max(1, pct / 100);
     const dynamicHeight = Math.min(baseHeight * 3, baseHeight * scaleFactor);
+
+    // Ensure minimum width for low percentages to prevent cutoff
+    const barWidth = Math.max(pct, 12); // Minimum 12% width to show text
 
     return (
         <div className="flex items-center gap-3 group transition-all duration-500 my-1">
@@ -48,7 +52,7 @@ export const SquadMemberRow = ({ name, pct, mode, isLive }: SquadMemberRowProps)
                     {isZero && <span className="absolute left-2 text-xs font-black text-zinc-700 select-none">0%</span>}
                     {!isZero && (
                         <div className={`absolute left-0 rounded-md ${barGradient} transition-all duration-1000 ease-out z-10 flex items-center justify-end px-2 overflow-hidden`}
-                            style={{ width: `${Math.min(pct, 100)}%`, height: `${dynamicHeight}px`, zIndex: pct > 100 ? 20 : 10, ...shadowStyle }}>
+                            style={{ width: `${Math.min(barWidth, 100)}%`, height: `${dynamicHeight}px`, zIndex: pct > 100 ? 20 : 10, ...shadowStyle }}>
                             {pct > 100 && <div className="absolute top-[-50%] bottom-[-50%] left-[-50%] right-[-50%] bg-white/20 animate-[shimmer_0.8s_infinite] skew-x-12 origin-center mix-blend-overlay" />}
                             <span className={`relative z-20 text-xs font-black tracking-tight mix-blend-multiply ${isInsane ? 'text-black' : 'text-black/70'}`}>{pct}%</span>
                         </div>

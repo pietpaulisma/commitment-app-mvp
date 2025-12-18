@@ -482,28 +482,37 @@ export default function MobileWorkoutLogger() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedExercise || !quantity || !user) return
+    if (!selectedExercise || !quantity || !user) {
+      console.log('[WorkoutLogger] Submission blocked:', { selectedExercise: !!selectedExercise, quantity, user: !!user });
+      return;
+    }
 
     const points = calculatePoints()
     const weightValue = parseFloat(weight) || 0
 
+    const logData = {
+      user_id: user.id,
+      exercise_id: selectedExercise.id,
+      count: selectedExercise.unit === 'rep' ? Math.floor(parseFloat(quantity)) : 0,
+      weight: weightValue,
+      duration: selectedExercise.is_time_based ? Math.floor(parseFloat(quantity)) : 0,
+      points: Math.floor(points),
+      date: new Date().toISOString().split('T')[0],
+      timestamp: Date.now()
+    };
+
+    console.log('[WorkoutLogger] Submitting workout:', logData);
+
     try {
       const { error } = await supabase
         .from('logs')
-        .insert({
-          user_id: user.id,
-          exercise_id: selectedExercise.id,
-          count: selectedExercise.unit === 'rep' ? Math.floor(parseFloat(quantity)) : 0,
-          weight: weightValue,
-          duration: selectedExercise.is_time_based ? Math.floor(parseFloat(quantity)) : 0,
-          points: Math.floor(points),
-          date: new Date().toISOString().split('T')[0],
-          timestamp: Date.now()
-        })
+        .insert(logData)
 
       if (error) {
+        console.error('[WorkoutLogger] Insert error:', error);
         alert('Error logging workout: ' + error.message)
       } else {
+        console.log('[WorkoutLogger] Workout logged successfully!');
         setQuantity('')
         setWeight('')
         setSelectedExercise(null)

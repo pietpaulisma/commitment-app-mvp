@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { Trophy } from 'lucide-react'
 import { GlassCard } from '@/components/dashboard/v2/GlassCard'
 import { CardHeader } from '@/components/dashboard/v2/CardHeader'
-import { getCurrentSeason, formatSeasonDisplay, getWeekDates } from '@/utils/seasonHelpers'
+import { getCurrentSeason, formatSeasonDisplay, getWeekDates, getWeekNumber, formatWeekDisplay } from '@/utils/seasonHelpers'
 import { calculateDailyTarget } from '@/utils/targetCalculation'
 import { SeasonalChampionsHistoryModal } from './modals/SeasonalChampionsHistoryModal'
 
@@ -14,6 +14,7 @@ interface ChampionData {
   username: string
   wins: number
   personalColor: string
+  weekNumbers: number[]
 }
 
 interface SeasonalChampionsWidgetProps {
@@ -25,6 +26,12 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
   const [champions, setChampions] = useState<ChampionData[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const { season, year } = getCurrentSeason()
+
+  // Get current week info
+  const now = new Date()
+  const { start: weekStart, end: weekEnd } = getWeekDates(now)
+  const weekNumber = getWeekNumber(now)
+  const weekDisplay = formatWeekDisplay(weekStart, weekEnd)
 
   useEffect(() => {
     if (groupId) {
@@ -100,7 +107,7 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
         .lte('date', seasonEndDate.toISOString().split('T')[0])
 
       // Calculate weekly winners
-      const weeklyWinners = new Map<string, string>() // week key -> user_id
+      const weeklyWinners = new Map<string, { userId: string, weekNumber: number }>() // week key -> { userId, weekNumber }
 
       let currentWeek = new Date(seasonStartDate)
       while (currentWeek <= seasonEndDate) {
@@ -109,6 +116,7 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
         // Only calculate if week has ended
         if (weekEnd < now) {
           const weekKey = weekStart.toISOString().split('T')[0]
+          const weekNum = getWeekNumber(weekStart)
 
           // Calculate each member's performance for this week
           const memberPerformance = new Map<string, { totalPoints: number, targetPoints: number }>()
@@ -159,7 +167,7 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
           }
 
           if (weekWinner) {
-            weeklyWinners.set(weekKey, weekWinner.userId)
+            weeklyWinners.set(weekKey, { userId: weekWinner.userId, weekNumber: weekNum })
           }
         }
 
@@ -167,20 +175,23 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
         currentWeek.setDate(currentWeek.getDate() + 7)
       }
 
-      // Count wins per user
+      // Count wins per user and track week numbers
       const winCounts = new Map<string, ChampionData>()
 
-      for (const userId of weeklyWinners.values()) {
+      for (const { userId, weekNumber } of weeklyWinners.values()) {
         const member = members.find(m => m.id === userId)
         if (member) {
           if (winCounts.has(userId)) {
-            winCounts.get(userId)!.wins++
+            const existing = winCounts.get(userId)!
+            existing.wins++
+            existing.weekNumbers.push(weekNumber)
           } else {
             winCounts.set(userId, {
               userId,
               username: member.username,
               wins: 1,
-              personalColor: member.personal_color || 'gray'
+              personalColor: member.personal_color || 'gray',
+              weekNumbers: [weekNumber]
             })
           }
         }
@@ -203,9 +214,10 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
     return (
       <GlassCard noPadding>
         <CardHeader
-          title={formatSeasonDisplay(season, year)}
+          title={`SEASON WINNERS ${year}`}
           icon={Trophy}
           colorClass="text-yellow-500"
+          rightContent={`W${weekNumber} • ${weekDisplay}`}
         />
         <div className="p-4 space-y-2">
           {[...Array(3)].map((_, i) => (
@@ -222,18 +234,23 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
     <>
       <GlassCard noPadding>
         <CardHeader
-          title={formatSeasonDisplay(season, year)}
+          title={`SEASON WINNERS ${year}`}
           icon={Trophy}
           colorClass="text-yellow-500"
           rightContent={
             champions.length > 0 ? (
-              <button
-                onClick={() => setShowHistory(true)}
-                className="text-zinc-600 hover:text-zinc-400 transition-colors"
-              >
-                History
-              </button>
-            ) : undefined
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-zinc-600">W{weekNumber} • {weekDisplay}</span>
+                <button
+                  onClick={() => setShowHistory(true)}
+                  className="text-zinc-600 hover:text-zinc-400 transition-colors text-xs"
+                >
+                  History
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs text-zinc-600">W{weekNumber} • {weekDisplay}</span>
+            )
           }
         />
 
@@ -244,28 +261,41 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
             <p className="text-sm text-zinc-500">No weekly winners yet this season</p>
           </div>
         ) : (
-          <div className="p-4 space-y-2">
+          <div className="p-4 space-y-2.5">
             {champions.map((champion, index) => (
               <div
                 key={champion.userId}
-                className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-black text-zinc-400 min-w-[24px]">
-                    {index === 0 && '🥇'}
-                    {index === 1 && '🥈'}
-                    {index === 2 && '🥉'}
-                    {index > 2 && `${index + 1}`}
-                  </span>
-                  <span className="text-sm font-bold text-zinc-300">
-                    {champion.username}
-                  </span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-sm font-black text-zinc-400 min-w-[24px]">
+                      {index === 0 && '🥇'}
+                      {index === 1 && '🥈'}
+                      {index === 2 && '🥉'}
+                      {index > 2 && `${index + 1}`}
+                    </span>
+                    <span className="text-sm font-bold text-zinc-300">
+                      {champion.username.slice(0, 4).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-yellow-500" fill="currentColor" />
+                    <span className="text-sm font-bold text-yellow-400">
+                      {champion.wins}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-yellow-500" fill="currentColor" />
-                  <span className="text-sm font-bold text-yellow-400">
-                    {champion.wins}
-                  </span>
+                {/* Week numbers */}
+                <div className="ml-[32px] flex flex-wrap gap-1">
+                  {champion.weekNumbers.sort((a, b) => a - b).map((weekNum, i) => (
+                    <span
+                      key={i}
+                      className="text-[10px] font-bold text-zinc-500 bg-white/5 px-1.5 py-0.5 rounded"
+                    >
+                      W{weekNum}
+                    </span>
+                  ))}
                 </div>
               </div>
             ))}

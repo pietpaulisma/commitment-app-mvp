@@ -1,15 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Trophy, Calendar, CheckCircle2, ChevronRight, Zap, Flame, Clock, CircleDollarSign, Gift, TrendingUp, AlertCircle, Menu, Star, Dumbbell, Moon, Heart } from 'lucide-react';
+import { MessageCircle, Trophy, Calendar, CheckCircle2, ChevronRight, Zap, Flame, Clock, CircleDollarSign, TrendingUp, AlertCircle, Menu, Star, Dumbbell, Moon, History, Coins } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeekMode } from '@/contexts/WeekModeContext';
 import { GlassCard } from './GlassCard';
 import { CardHeader } from './CardHeader';
 import { SquadMemberRow } from './SquadMemberRow';
-import { BarChart } from './BarChart';
 import { PersonalOverperformChart } from './PersonalOverperformChart';
+import { GroupOverperformanceChart } from './GroupOverperformanceChart';
 import { PeakWorkoutTimeChart } from './PeakWorkoutTimeChart';
 import { PopularExerciseWidget } from './PopularExerciseWidget';
 import WorkoutModal from '@/components/modals/WorkoutModal';
@@ -19,6 +19,11 @@ import WeeklyOverperformers from '@/components/WeeklyOverperformers';
 import { SeasonalChampionsWidget } from '@/components/SeasonalChampionsWidget';
 import { COLORS } from '@/utils/colors';
 import GroupChat from '@/components/GroupChat';
+import { PotHistoryModal } from '@/components/modals/PotHistoryModal';
+import { DailyRecapHistoryModal } from '@/components/modals/DailyRecapHistoryModal';
+import { PenaltyResponseModal } from '@/components/modals/PenaltyResponseModal';
+import type { PendingPenalty } from '@/types/penalties';
+import { formatTimeRemaining } from '@/utils/penaltyHelpers';
 
 export default function NewDashboard() {
     const { user } = useAuth();
@@ -27,22 +32,42 @@ export default function NewDashboard() {
     const [viewMode, setViewMode] = useState<"group" | "personal">("group");
     const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isPotHistoryOpen, setIsPotHistoryOpen] = useState(false);
+    const [isRecapHistoryOpen, setIsRecapHistoryOpen] = useState(false);
+    const [isPenaltyModalOpen, setIsPenaltyModalOpen] = useState(false);
+    const [pendingPenalties, setPendingPenalties] = useState<PendingPenalty[]>([]);
     const [userProfile, setUserProfile] = useState<any>(null);
     const [squadData, setSquadData] = useState<any[]>([]);
     const [potHistory, setPotHistory] = useState<any[]>([]);
     const [daysRemaining, setDaysRemaining] = useState(999); // Default 999 to debug if calculation works
     const [totalPot, setTotalPot] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [totalGroupPoints, setTotalGroupPoints] = useState(0);
+    const [groupOverperformance, setGroupOverperformance] = useState({
+        totalOverperformance: 0,
+        totalTarget: 0,
+        totalActual: 0
+    });
+    const [groupDailyData, setGroupDailyData] = useState<Array<{
+        date: string;
+        target: number;
+        actual: number;
+        overperformance: number;
+        recovery: number;
+        sickPlaceholder: number;
+    }>>([]);
     const [peakWorkoutTime, setPeakWorkoutTime] = useState('--:--');
     const [recapData, setRecapData] = useState<{
         completedMembers: string[];
         pendingMembers: Array<{ username: string; actual: number; target: number }>;
+        paidMembers: Array<{ username: string; actual: number; target: number }>;
+        disputedMembers: Array<{ username: string; actual: number; target: number }>;
         sickMembers: string[];
         yesterdayDate: string;
     }>({
         completedMembers: [],
         pendingMembers: [],
+        paidMembers: [],
+        disputedMembers: [],
         sickMembers: [],
         yesterdayDate: ''
     });
@@ -51,19 +76,36 @@ export default function NewDashboard() {
         baseTarget: 0,
         overperformance: 0
     });
-    const [lastContribution, setLastContribution] = useState<{
+    const [userContributions, setUserContributions] = useState<Array<{
         amount: number;
-        daysAgo: number;
+        days: number;
+        name: string;
         date: string;
-    } | null>(null);
+    }>>([]);
     const [personalDailyData, setPersonalDailyData] = useState<Array<{
         date: string;
         actual: number;
         target: number;
+        overperformance: number;
+        recovery: number;
+        sickPlaceholder: number;
     }>>([]);
     const [hourlyWorkoutData, setHourlyWorkoutData] = useState<number[]>(new Array(24).fill(0));
-    const [popularExerciseGroup, setPopularExerciseGroup] = useState<{ name: string; count: number }>({ name: '', count: 0 });
-    const [popularExercisePersonal, setPopularExercisePersonal] = useState<{ name: string; count: number }>({ name: '', count: 0 });
+    const [popularExercisesGroup, setPopularExercisesGroup] = useState<Array<{ name: string; count: number; contributors?: string[] }>>([]);
+    const [popularExercisesPersonal, setPopularExercisesPersonal] = useState<Array<{ name: string; count: number }>>([]);
+    const [yearlyExercisesPersonal, setYearlyExercisesPersonal] = useState<Array<{ name: string; count: number }>>([]);
+    const [upcomingBirthdays, setUpcomingBirthdays] = useState<Array<{
+        username: string;
+        daysUntil: number;
+        date: string;
+        isCurrentUser: boolean;
+        dailyTarget: number;
+    }>>([]);
+    const [todayProgress, setTodayProgress] = useState({
+        actual: 0,
+        target: 0,
+        percentage: 0
+    });
 
     useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
@@ -78,9 +120,7 @@ export default function NewDashboard() {
 
     const loadDashboardData = async () => {
         if (!user) return;
-        setLoading(true);
-        console.log('[NewDashboard] Starting loadDashboardData for user:', user.id);
-        try {
+        setLoading(true);        try {
             // 1. Get User Profile & Group
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
@@ -91,13 +131,10 @@ export default function NewDashboard() {
             if (profileError) {
                 console.error('[NewDashboard] Error fetching profile:', profileError);
             }
-            console.log('[NewDashboard] User profile:', profile);
-            console.log('[NewDashboard] Profile has group_id:', profile?.group_id);
             setUserProfile(profile);
 
             if (profile?.group_id) {
                 // 2. Get Group Data (Start Date, etc.)
-                console.log('[NewDashboard] Fetching group data for group_id:', profile.group_id);
                 const { data: group, error: groupError } = await supabase
                     .from('groups')
                     .select('*')
@@ -107,19 +144,11 @@ export default function NewDashboard() {
                 if (groupError) {
                     console.error('[NewDashboard] Error fetching group:', groupError);
                 }
-                console.log('[NewDashboard] Group data:', group);
-                console.log('[NewDashboard] Group start_date:', group?.start_date);
-
                 if (group && group.start_date) {
                     // Calculate days SINCE start (counting up, not down)
                     const start = new Date(group.start_date);
                     const now = new Date();
                     const daysSinceStart = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-
-                    console.log('[NewDashboard] Days calculation:', {
-                        start_date: group.start_date,
-                        days_since_start: daysSinceStart
-                    });
                     setDaysRemaining(daysSinceStart);
                 } else {
                     console.error('[NewDashboard] Group or start_date missing:', { group });
@@ -127,8 +156,6 @@ export default function NewDashboard() {
 
                 // 3. Get Squad Data (Leaderboard) - Use API to bypass RLS
                 const today = new Date().toISOString().split('T')[0];
-                console.log('Fetching squad status for date:', today);
-
                 try {
                     const response = await fetch(`/api/dashboard/squad-status?groupId=${profile.group_id}&date=${today}`);
                     const data = await response.json();
@@ -136,8 +163,6 @@ export default function NewDashboard() {
                     if (data.error) {
                         console.error('Error from squad-status API:', data.error);
                     } else {
-                        console.log('Squad data from API:', data.squad);
-
                         const squad = data.squad.map((u: any) => ({
                             name: u.id === user.id ? "You" : u.username || "User",
                             pct: u.is_sick_mode ? u.pct : u.pct, // Percentage already calculated correctly
@@ -168,8 +193,6 @@ export default function NewDashboard() {
                     if (transError) {
                         console.error('[NewDashboard] Error loading transactions:', transError);
                     } else {
-                        console.log('[NewDashboard] Transactions loaded:', transactions?.length);
-
                         // Calculate net amounts per user (penalties - payments)
                         const userNetMap = new Map();
                         transactions?.forEach(t => {
@@ -211,20 +234,18 @@ export default function NewDashboard() {
 
                         setPotHistory(history);
 
-                        // Get user's last contribution for personal view
+                        // Get user's contribution history for personal view
                         const userTransactions = transactions?.filter(t => t.user_id === user.id) || [];
-                        if (userTransactions.length > 0) {
-                            const lastTrans = userTransactions[0]; // Already sorted by created_at desc
-                            const userNetAmount = userNetMap.get(user.id) || 0;
-                            if (userNetAmount > 0) {
-                                const daysAgo = Math.floor((Date.now() - new Date(lastTrans.created_at).getTime()) / (1000 * 60 * 60 * 24));
-                                setLastContribution({
-                                    amount: userNetAmount,
-                                    daysAgo,
-                                    date: new Date(lastTrans.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                });
-                            }
-                        }
+                        const userHistory = userTransactions.slice(0, 8).map(t => {
+                            const days = Math.floor((Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                            return {
+                                amount: Math.abs(t.amount),
+                                days,
+                                name: profile?.username || 'You',
+                                date: new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                            };
+                        });
+                        setUserContributions(userHistory);
                     }
                 } catch (error) {
                     console.error('[NewDashboard] Error in pot history:', error);
@@ -236,9 +257,6 @@ export default function NewDashboard() {
                     yesterday.setDate(yesterday.getDate() - 1);
                     const yesterdayStr = yesterday.toISOString().split('T')[0];
                     const yesterdayDayOfWeek = yesterday.getDay();
-
-                    console.log('[NewDashboard] Loading recap for:', yesterdayStr);
-
                     // Get group settings
                     const { data: groupSettings } = await supabase
                         .from('group_settings')
@@ -257,7 +275,6 @@ export default function NewDashboard() {
                         .eq('group_id', profile.group_id);
 
                     if (!members || members.length === 0) {
-                        console.log('[NewDashboard] No members found for recap');
                         return;
                     }
 
@@ -290,6 +307,8 @@ export default function NewDashboard() {
 
                     const completedList: string[] = [];
                     const pendingList: Array<{ username: string; actual: number; target: number }> = [];
+                    const paidList: Array<{ username: string; actual: number; target: number }> = [];
+                    const disputedList: Array<{ username: string; actual: number; target: number }> = [];
                     const sickList: string[] = [];
 
                     // Process each member
@@ -338,40 +357,68 @@ export default function NewDashboard() {
 
                         if (metTarget) {
                             completedList.push(member.username);
-                        } else if (penalty && penalty.status === 'pending') {
-                            pendingList.push({
-                                username: member.username,
-                                actual: actualPoints,
-                                target: dailyTarget
-                            });
+                        } else {
+                            // Didn't meet target - categorize by penalty status
+                            if (penalty) {
+                                if (penalty.status === 'pending') {
+                                    pendingList.push({
+                                        username: member.username,
+                                        actual: actualPoints,
+                                        target: dailyTarget
+                                    });
+                                } else if (penalty.status === 'accepted') {
+                                    paidList.push({
+                                        username: member.username,
+                                        actual: actualPoints,
+                                        target: dailyTarget
+                                    });
+                                } else if (penalty.status === 'disputed') {
+                                    disputedList.push({
+                                        username: member.username,
+                                        actual: actualPoints,
+                                        target: dailyTarget
+                                    });
+                                }
+                                // Note: rejected penalties are not shown
+                            } else {
+                                // No penalty exists yet - show in Pending section (penalty check hasn't run yet)
+                                pendingList.push({
+                                    username: member.username,
+                                    actual: actualPoints,
+                                    target: dailyTarget
+                                });
+                            }
                         }
                     }
 
                     setRecapData({
                         completedMembers: completedList,
                         pendingMembers: pendingList,
+                        paidMembers: paidList,
+                        disputedMembers: disputedList,
                         sickMembers: sickList,
                         yesterdayDate: yesterdayStr
                     });
-
-                    console.log('[NewDashboard] Recap loaded:', {
-                        completed: completedList.length,
-                        pending: pendingList.length,
-                        sick: sickList.length
-                    });
-
                 } catch (error) {
                     console.error('[NewDashboard] Error loading recap:', error);
                 }
 
-                // 6. Calculate Group Points (last 30 days)
+                // 6. Calculate Group Performance (last 20 days) - excluding sick days
                 try {
-                    console.log('[NewDashboard] Calculating group points...');
+                    // Get group settings for rest/recovery days
+                    const { data: groupSettings } = await supabase
+                        .from('group_settings')
+                        .select('rest_days, recovery_days')
+                        .eq('group_id', profile.group_id)
+                        .maybeSingle();
 
-                    // Get all group members
+                    const groupRestDays = groupSettings?.rest_days || [1];
+                    const groupRecoveryDays = groupSettings?.recovery_days || [5];
+
+                    // Get all group members with their week modes
                     const { data: members } = await supabase
                         .from('profiles')
-                        .select('id')
+                        .select('id, week_mode')
                         .eq('group_id', profile.group_id);
 
                     if (members && members.length > 0) {
@@ -387,24 +434,152 @@ export default function NewDashboard() {
                         // Get logs for all members in last 30 days
                         const { data: logs } = await supabase
                             .from('logs')
-                            .select('date, points')
+                            .select('user_id, date, points, exercise_id')
                             .in('user_id', memberIds)
                             .in('date', past30Days);
 
-                        // Calculate total points
-                        const totalPoints = logs?.reduce((sum, log) => sum + log.points, 0) || 0;
-                        setTotalGroupPoints(totalPoints);
+                        // Note: Sick mode is now tracked via profiles.is_sick_mode boolean
+                        // If a user is in sick mode, all their days are considered sick days
+                        // For now, we'll skip the sick day logic since it's not being used in calculations below
+                        const sickDaySet = new Set<string>();
 
-                        console.log('[NewDashboard] Group points calculated:', totalPoints);
+                        const participatingUserIds = new Set<string>();
+
+                        logs?.forEach(log => participatingUserIds.add(log.user_id));
+
+
+                        // Get exercises for recovery capping
+                        const { data: exercises } = await supabase
+                            .from('exercises')
+                            .select('id, type');
+
+                        const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || []);
+
+                        // Group logs by user and date
+                        const logsByUserAndDate = new Map<string, Map<string, any[]>>();
+                        logs?.forEach(log => {
+                            if (!logsByUserAndDate.has(log.user_id)) {
+                                logsByUserAndDate.set(log.user_id, new Map());
+                            }
+                            const userDateMap = logsByUserAndDate.get(log.user_id)!;
+                            if (!userDateMap.has(log.date)) {
+                                userDateMap.set(log.date, []);
+                            }
+                            userDateMap.get(log.date)!.push(log);
+                        });
+
+                        // Calculate total actual points and total targets with recovery capping
+                        let totalActualPoints = 0;
+                        let totalTargetPoints = 0;
+                        const dailyData: Array<{ date: string; target: number; actual: number; overperformance: number; recovery: number; sickPlaceholder: number }> = [];
+
+                        // Calculate normalized baseline target (for consistent target line visualization)
+
+
+
+                        for (const dateStr of past30Days) {
+                            let dayTotalActual = 0;
+                            let dayTotalRecovery = 0;
+                            let dayTotalOverperformance = 0;
+
+                            const dateObj = new Date(dateStr);
+                            const dayOfWeek = dateObj.getDay();
+                            const daysSinceStart = Math.floor((dateObj.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
+
+                            // Calculate sane baseline target per person (ignoring rest/recovery days for clean visualization)
+                            const saneBaselineTarget = calculateDailyTarget({
+                                daysSinceStart,
+                                weekMode: 'sane',
+                                restDays: [], // Ignore rest days for visual baseline
+                                recoveryDays: [], // Ignore recovery days for visual baseline
+                                currentDayOfWeek: dayOfWeek
+                            });
+
+                            let activeMemberCount = 0; // Count non-sick members for this day
+                            let dayTotalSickPlaceholder = 0;
+
+                            for (const member of members) {
+                                // Skip this member if they were sick on this day
+                                const sickDayKey = `${member.id}_${dateStr}`;
+                                if (sickDaySet.has(sickDayKey)) {
+                                    // If sick, add a placeholder value equal to the target
+                                    // This fills the gap so the group total mimics a "fair" contribution
+                                    dayTotalSickPlaceholder += saneBaselineTarget;
+                                    continue;
+                                }
+
+                                activeMemberCount++; // Count this member as active
+
+                                const userLogs = logsByUserAndDate.get(member.id);
+                                const dayLogs = userLogs?.get(dateStr);
+
+                                // Calculate daily target for this member (for recovery capping only)
+                                const dailyTarget = calculateDailyTarget({
+                                    daysSinceStart,
+                                    weekMode: member.week_mode || 'sane',
+                                    restDays: groupRestDays,
+                                    recoveryDays: groupRecoveryDays,
+                                    currentDayOfWeek: dayOfWeek
+                                });
+
+                                totalTargetPoints += dailyTarget;
+
+                                // Calculate actual points with recovery capping
+                                if (dayLogs) {
+                                    const recoveryCapLimit = Math.round(dailyTarget * 0.25);
+                                    let totalRecovery = 0;
+                                    let totalNonRecovery = 0;
+
+                                    dayLogs.forEach(log => {
+                                        const exerciseType = exerciseTypeMap.get(log.exercise_id);
+                                        if (exerciseType === 'recovery') {
+                                            totalRecovery += log.points;
+                                        } else {
+                                            totalNonRecovery += log.points;
+                                        }
+                                    });
+
+                                    const cappedRecovery = Math.min(totalRecovery, recoveryCapLimit);
+                                    const userActual = totalNonRecovery + cappedRecovery;
+
+                                    dayTotalActual += userActual;
+                                    dayTotalRecovery += cappedRecovery;
+                                    totalActualPoints += userActual;
+
+                                    // Calculate individual overperformance (points above sane baseline)
+                                    const userOverperformance = Math.max(0, userActual - saneBaselineTarget);
+                                    dayTotalOverperformance += userOverperformance;
+                                }
+                            }
+
+                            // Target line REMOVED per user request
+                            // const dayTargetLine = saneBaselineTarget * medianActiveCount;
+
+                            dailyData.push({
+                                date: dateStr,
+                                target: 0, // Target removed
+                                actual: dayTotalActual,
+                                overperformance: dayTotalOverperformance,
+                                recovery: dayTotalRecovery,
+                                sickPlaceholder: dayTotalSickPlaceholder
+                            });
+                        }
+
+                        const totalOverperformance = Math.max(0, totalActualPoints - totalTargetPoints);
+
+                        setGroupOverperformance({
+                            totalOverperformance,
+                            totalTarget: totalTargetPoints,
+                            totalActual: totalActualPoints
+                        });
+                        setGroupDailyData(dailyData);
                     }
                 } catch (error) {
-                    console.error('[NewDashboard] Error calculating group points:', error);
+                    console.error('[NewDashboard] Error calculating group performance:', error);
                 }
 
                 // 6.5. Calculate Personal Points (last 30 days) - user's base target + overperformance
                 try {
-                    console.log('[NewDashboard] Calculating personal points...');
-
                     // Get group settings and start date
                     const { data: groupSettings } = await supabase
                         .from('group_settings')
@@ -437,10 +612,12 @@ export default function NewDashboard() {
 
                     const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || []);
 
-                    // Group logs by date and apply recovery capping
-                    const dailyPointsMap = new Map<string, number>();
-                    const logsByDate = new Map<string, any[]>();
+                    // Note: Sick mode is tracked via profiles.is_sick_mode boolean
+                    // Not using sick days tracking for personal performance calculation
+                    const sickDaySet = new Set<string>();
 
+                    // Group logs by date
+                    const logsByDate = new Map<string, any[]>();
                     userLogs?.forEach(log => {
                         if (!logsByDate.has(log.date)) {
                             logsByDate.set(log.date, []);
@@ -448,55 +625,24 @@ export default function NewDashboard() {
                         logsByDate.get(log.date)!.push(log);
                     });
 
-                    // Process each day with recovery capping
-                    logsByDate.forEach((dayLogs, date) => {
-                        const dateObj = new Date(date);
-                        const dayOfWeek = dateObj.getDay();
-                        const daysSinceStart = Math.floor((dateObj.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24));
-
-                        // Calculate daily target for recovery cap
-                        const dailyTarget = calculateDailyTarget({
-                            daysSinceStart,
-                            weekMode: profile.week_mode || 'sane',
-                            restDays,
-                            recoveryDays,
-                            currentDayOfWeek: dayOfWeek
-                        });
-
-                        const recoveryCapLimit = Math.round(dailyTarget * 0.25);
-
-                        // Separate recovery and non-recovery points
-                        let totalRecoveryPoints = 0;
-                        let totalNonRecoveryPoints = 0;
-
-                        dayLogs.forEach(log => {
-                            const exerciseType = exerciseTypeMap.get(log.exercise_id);
-                            if (exerciseType === 'recovery') {
-                                totalRecoveryPoints += log.points;
-                            } else {
-                                totalNonRecoveryPoints += log.points;
-                            }
-                        });
-
-                        // Apply recovery cap
-                        const cappedRecoveryPoints = Math.min(totalRecoveryPoints, recoveryCapLimit);
-                        const totalDayPoints = totalNonRecoveryPoints + cappedRecoveryPoints;
-
-                        dailyPointsMap.set(date, totalDayPoints);
-                    });
-
-                    // Calculate total actual points
-                    const totalActualPoints = Array.from(dailyPointsMap.values()).reduce((sum, pts) => sum + pts, 0);
-
-                    // Calculate base target for the 30 days AND build daily data array for chart
+                    // Calculate total actual points AND build daily data array for chart
+                    let totalActualPoints = 0;
                     let totalBaseTarget = 0;
-                    const dailyDataArray: Array<{ date: string; actual: number; target: number }> = [];
+                    const dailyDataArray: Array<{
+                        date: string;
+                        actual: number;
+                        target: number;
+                        overperformance: number;
+                        recovery: number;
+                        sickPlaceholder: number;
+                    }> = [];
 
-                    past30Days.forEach(dateStr => {
+                    for (const dateStr of past30Days) {
                         const dateObj = new Date(dateStr);
                         const dayOfWeek = dateObj.getDay();
                         const daysSinceStart = Math.floor((dateObj.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24));
 
+                        // Calculate daily target
                         const dailyTarget = calculateDailyTarget({
                             daysSinceStart,
                             weekMode: profile.week_mode || 'sane',
@@ -507,13 +653,51 @@ export default function NewDashboard() {
 
                         totalBaseTarget += dailyTarget;
 
-                        // Add to daily data array for chart
+                        let dayActual = 0;
+                        let dayRecovery = 0;
+                        let dayOverperformance = 0;
+                        let daySickPlaceholder = 0;
+
+                        // Check if user was sick on this day
+                        if (sickDaySet.has(dateStr)) {
+                            // Add sick placeholder equal to target
+                            daySickPlaceholder = dailyTarget;
+                        } else {
+                            // Calculate actual points with recovery capping
+                            const dayLogs = logsByDate.get(dateStr);
+                            if (dayLogs) {
+                                const recoveryCapLimit = Math.round(dailyTarget * 0.25);
+                                let totalRecovery = 0;
+                                let totalNonRecovery = 0;
+
+                                dayLogs.forEach(log => {
+                                    const exerciseType = exerciseTypeMap.get(log.exercise_id);
+                                    if (exerciseType === 'recovery') {
+                                        totalRecovery += log.points;
+                                    } else {
+                                        totalNonRecovery += log.points;
+                                    }
+                                });
+
+                                const cappedRecovery = Math.min(totalRecovery, recoveryCapLimit);
+                                dayActual = totalNonRecovery + cappedRecovery;
+                                dayRecovery = cappedRecovery;
+                                totalActualPoints += dayActual;
+
+                                // Calculate overperformance (points above target)
+                                dayOverperformance = Math.max(0, dayActual - dailyTarget);
+                            }
+                        }
+
                         dailyDataArray.push({
                             date: dateStr,
-                            actual: dailyPointsMap.get(dateStr) || 0,
-                            target: dailyTarget
+                            actual: dayActual,
+                            target: dailyTarget,
+                            overperformance: dayOverperformance,
+                            recovery: dayRecovery,
+                            sickPlaceholder: daySickPlaceholder
                         });
-                    });
+                    }
 
                     // Calculate overperformance (total - base target, but only if positive)
                     const overperformance = Math.max(0, totalActualPoints - totalBaseTarget);
@@ -525,21 +709,12 @@ export default function NewDashboard() {
                     });
 
                     setPersonalDailyData(dailyDataArray);
-
-                    console.log('[NewDashboard] Personal points calculated:', {
-                        total: totalActualPoints,
-                        baseTarget: totalBaseTarget,
-                        overperformance
-                    });
-
                 } catch (error) {
                     console.error('[NewDashboard] Error calculating personal points:', error);
                 }
 
                 // 7. Calculate Peak Workout Time
                 try {
-                    console.log('[NewDashboard] Calculating peak workout time...');
-
                     const { data: members } = await supabase
                         .from('profiles')
                         .select('id')
@@ -554,28 +729,33 @@ export default function NewDashboard() {
                             .select('created_at')
                             .in('user_id', memberIds);
 
-                        // Count workouts by hour
+                        // Count workouts by hour (using local timezone)
                         const hourCounts = new Array(24).fill(0);
                         timeLogs?.forEach(log => {
-                            const hour = new Date(log.created_at).getHours();
+                            // Convert UTC timestamp to local time
+                            const localDate = new Date(log.created_at);
+                            const hour = localDate.getHours();
                             hourCounts[hour]++;
                         });
 
-                        const mostPopularHour = hourCounts.indexOf(Math.max(...hourCounts));
-                        const peakTime = `${String(mostPopularHour).padStart(2, '0')}:00`;
+                        const maxCount = Math.max(...hourCounts);
+                        const mostPopularHour = hourCounts.indexOf(maxCount);
+
+                        // Format peak time with AM/PM
+                        const peakTime = mostPopularHour === 0 ? '12AM' :
+                                        mostPopularHour < 12 ? `${mostPopularHour}AM` :
+                                        mostPopularHour === 12 ? '12PM' :
+                                        `${mostPopularHour - 12}PM`;
+
                         setPeakWorkoutTime(peakTime);
                         setHourlyWorkoutData(hourCounts);
-
-                        console.log('[NewDashboard] Peak workout time:', peakTime);
                     }
                 } catch (error) {
                     console.error('[NewDashboard] Error calculating peak workout time:', error);
                 }
 
-                // 8. Calculate Most Popular Exercise (Group - This Week)
+                // 8. Calculate Top 5 Popular Exercises (Group - THIS WEEK)
                 try {
-                    console.log('[NewDashboard] Calculating group popular exercise...');
-
                     const { data: members } = await supabase
                         .from('profiles')
                         .select('id')
@@ -584,98 +764,389 @@ export default function NewDashboard() {
                     if (members && members.length > 0) {
                         const memberIds = members.map(m => m.id);
 
-                        // Get Monday of current week
-                        const today = new Date();
-                        const currentDay = today.getDay();
-                        const mondayOffset = currentDay === 0 ? 6 : currentDay - 1;
-                        const monday = new Date(today);
-                        monday.setDate(today.getDate() - mondayOffset);
+                        // Get start of current week (Monday) - using LOCAL date not UTC
+                        const now = new Date();
+                        const day = now.getDay();
+                        const diff = day === 0 ? -6 : 1 - day; // Days to get to Monday
+                        const monday = new Date(now);
+                        monday.setDate(now.getDate() + diff);
                         monday.setHours(0, 0, 0, 0);
-                        const mondayStr = monday.toISOString().split('T')[0];
+                        // Use local date format to avoid UTC conversion shifting the date
+                        const year = monday.getFullYear();
+                        const month = String(monday.getMonth() + 1).padStart(2, '0');
+                        const dayOfMonth = String(monday.getDate()).padStart(2, '0');
+                        const mondayStr = `${year}-${month}-${dayOfMonth}`; // Format: YYYY-MM-DD
 
-                        // Get logs for current week
-                        const { data: weekLogs } = await supabase
+                        // Get logs for this week with exercise details via join
+                        const { data: weekLogs, error: logsError } = await supabase
                             .from('logs')
-                            .select('exercise_id, exercises(name)')
+                            .select('exercise_id, points, sport_name, date, user_id, exercises(name)')
                             .in('user_id', memberIds)
                             .gte('date', mondayStr);
 
-                        // Count exercises
-                        const exerciseCount = new Map<string, { name: string; count: number }>();
-                        weekLogs?.forEach(log => {
-                            const exerciseName = log.exercises?.name || 'Unknown';
-                            const current = exerciseCount.get(log.exercise_id);
-                            if (current) {
-                                current.count++;
+                        if (logsError) console.error('[NewDashboard] Group Popular - Error:', logsError);
+
+                        // Get all member profiles to map user_id to username
+                        const { data: allMembers } = await supabase
+                            .from('profiles')
+                            .select('id, username')
+                            .in('id', memberIds);
+
+                        const userIdToUsername = new Map(allMembers?.map(m => [m.id, m.username]) || []);
+
+                        // Sum points per exercise (group sports by sport_name, regular exercises by exercise_id)
+                        const exerciseCount = new Map<string, { name: string; count: number; contributors: Set<string> }>();
+                        weekLogs?.forEach((log: any) => {
+                            let displayName: string;
+                            let groupKey: string;
+
+                            // Get exercise name from joined data
+                            const exerciseName = log.exercises?.name;
+
+                            if (log.sport_name) {
+                                // Has sport_name: use it and group all intensities together
+                                displayName = log.sport_name;
+                                groupKey = `sport:${log.sport_name}`;
+                            } else if (exerciseName && exerciseName !== 'Intense Sport') {
+                                // Regular exercise (not "Intense Sport"): use exercise name from join
+                                displayName = exerciseName;
+                                groupKey = `exercise:${log.exercise_id}`;
                             } else {
-                                exerciseCount.set(log.exercise_id, { name: exerciseName, count: 1 });
+                                // Skip generic "Intense Sport" entries without sport_name
+                                return;
+                            }
+
+                            const username = userIdToUsername.get(log.user_id);
+                            if (!username) return;
+
+                            const current = exerciseCount.get(groupKey);
+                            if (current) {
+                                current.count += log.points;
+                                current.contributors.add(username);
+                            } else {
+                                exerciseCount.set(groupKey, {
+                                    name: displayName,
+                                    count: log.points,
+                                    contributors: new Set([username])
+                                });
                             }
                         });
 
-                        // Find most popular
-                        let mostPopular = { name: '', count: 0 };
-                        exerciseCount.forEach(exercise => {
-                            if (exercise.count > mostPopular.count) {
-                                mostPopular = exercise;
-                            }
-                        });
+                        // Get top 5 exercises sorted by total points, convert Set to array
+                        const topExercises = Array.from(exerciseCount.values())
+                            .map(exercise => ({
+                                name: exercise.name,
+                                count: exercise.count,
+                                contributors: Array.from(exercise.contributors)
+                            }))
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 5);
 
-                        setPopularExerciseGroup(mostPopular);
-                        console.log('[NewDashboard] Group popular exercise:', mostPopular);
+                        setPopularExercisesGroup(topExercises);
                     }
                 } catch (error) {
-                    console.error('[NewDashboard] Error calculating group popular exercise:', error);
+                    console.error('[NewDashboard] Error calculating group popular exercises:', error);
+                    console.error('[NewDashboard] Error details:', error instanceof Error ? error.message : String(error));
                 }
 
-                // 9. Calculate Most Popular Exercise (Personal - This Week)
+                // 9. Calculate Top 5 Popular Exercises (Personal - THIS WEEK)
                 try {
-                    console.log('[NewDashboard] Calculating personal popular exercise...');
-
-                    // Get Monday of current week
-                    const today = new Date();
-                    const currentDay = today.getDay();
-                    const mondayOffset = currentDay === 0 ? 6 : currentDay - 1;
-                    const monday = new Date(today);
-                    monday.setDate(today.getDate() - mondayOffset);
+                    // Get start of current week (Monday) - using LOCAL date not UTC
+                    const now = new Date();
+                    const day = now.getDay();
+                    const diff = day === 0 ? -6 : 1 - day; // Days to get to Monday
+                    const monday = new Date(now);
+                    monday.setDate(now.getDate() + diff);
                     monday.setHours(0, 0, 0, 0);
-                    const mondayStr = monday.toISOString().split('T')[0];
+                    // Use local date format to avoid UTC conversion shifting the date
+                    const year = monday.getFullYear();
+                    const month = String(monday.getMonth() + 1).padStart(2, '0');
+                    const dayOfMonth = String(monday.getDate()).padStart(2, '0');
+                    const mondayStr = `${year}-${month}-${dayOfMonth}`; // Format: YYYY-MM-DD
 
-                    // Get user's logs for current week
+                    // Get user's logs for this week with exercise details via join
                     const { data: weekLogs } = await supabase
                         .from('logs')
-                        .select('exercise_id, exercises(name)')
-                        .eq('user_id', user.id)
+                        .select('exercise_id, points, sport_name, date, exercises(name)')
+                        .eq('user_id', user!.id)
                         .gte('date', mondayStr);
 
-                    // Count exercises
+                    // Sum points per exercise (group sports by sport_name, regular exercises by exercise_id)
                     const exerciseCount = new Map<string, { name: string; count: number }>();
-                    weekLogs?.forEach(log => {
-                        const exerciseName = log.exercises?.name || 'Unknown';
-                        const current = exerciseCount.get(log.exercise_id);
-                        if (current) {
-                            current.count++;
+                    weekLogs?.forEach((log: any) => {
+                        let displayName: string;
+                        let groupKey: string;
+
+                        // Get exercise name from joined data
+                        const exerciseName = log.exercises?.name;
+
+                        if (log.sport_name) {
+                            // Has sport_name: use it and group all intensities together
+                            displayName = log.sport_name;
+                            groupKey = `sport:${log.sport_name}`;
+                        } else if (exerciseName && exerciseName !== 'Intense Sport') {
+                            // Regular exercise (not "Intense Sport"): use exercise name from join
+                            displayName = exerciseName;
+                            groupKey = `exercise:${log.exercise_id}`;
                         } else {
-                            exerciseCount.set(log.exercise_id, { name: exerciseName, count: 1 });
+                            // Skip generic "Intense Sport" entries without sport_name
+                            return;
+                        }
+
+                        const current = exerciseCount.get(groupKey);
+                        if (current) {
+                            current.count += log.points;
+                        } else {
+                            exerciseCount.set(groupKey, { name: displayName, count: log.points });
                         }
                     });
 
-                    // Find most popular
-                    let mostPopular = { name: '', count: 0 };
-                    exerciseCount.forEach(exercise => {
-                        if (exercise.count > mostPopular.count) {
-                            mostPopular = exercise;
-                        }
-                    });
+                    // Get top 5 exercises sorted by total points
+                    const topExercises = Array.from(exerciseCount.values())
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 5);
 
-                    setPopularExercisePersonal(mostPopular);
-                    console.log('[NewDashboard] Personal popular exercise:', mostPopular);
+                    setPopularExercisesPersonal(topExercises);
                 } catch (error) {
-                    console.error('[NewDashboard] Error calculating personal popular exercise:', error);
+                    console.error('[NewDashboard] Error calculating personal popular exercises:', error);
                 }
+
+                // 9b. Calculate Top 5 Popular Exercises (Personal - THIS YEAR)
+                try {
+                    // Get start of current year (January 1st)
+                    const now = new Date();
+                    const yearStart = new Date(now.getFullYear(), 0, 1); // January 1st of current year
+                    yearStart.setHours(0, 0, 0, 0);
+                    const yearStartStr = `${yearStart.getFullYear()}-01-01`;
+
+                    // Get user's logs for this year with exercise details via join
+                    const { data: yearLogs } = await supabase
+                        .from('logs')
+                        .select('exercise_id, points, sport_name, date, exercises(name)')
+                        .eq('user_id', user!.id)
+                        .gte('date', yearStartStr);
+
+                    // Sum points per exercise (group sports by sport_name, regular exercises by exercise_id)
+                    const yearExerciseCount = new Map<string, { name: string; count: number }>();
+                    yearLogs?.forEach((log: any) => {
+                        let displayName: string;
+                        let groupKey: string;
+
+                        const exerciseName = log.exercises?.name;
+
+                        if (log.sport_name) {
+                            displayName = log.sport_name;
+                            groupKey = `sport:${log.sport_name}`;
+                        } else if (exerciseName && exerciseName !== 'Intense Sport') {
+                            displayName = exerciseName;
+                            groupKey = `exercise:${log.exercise_id}`;
+                        } else {
+                            return;
+                        }
+
+                        const current = yearExerciseCount.get(groupKey);
+                        if (current) {
+                            current.count += log.points;
+                        } else {
+                            yearExerciseCount.set(groupKey, { name: displayName, count: log.points });
+                        }
+                    });
+
+                    // Get top 5 exercises sorted by total points
+                    const topYearlyExercises = Array.from(yearExerciseCount.values())
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 5);
+
+                    setYearlyExercisesPersonal(topYearlyExercises);
+                } catch (error) {
+                    console.error('[NewDashboard] Error calculating yearly popular exercises:', error);
+                }
+
+                // Fetch upcoming birthdays for the group
+                try {
+                    const { data: groupMembers } = await supabase
+                        .from('profiles')
+                        .select('id, username, birth_date, week_mode')
+                        .eq('group_id', profile.group_id)
+                        .not('birth_date', 'is', null);
+
+                    // Get group settings for rest/recovery days
+                    const { data: groupSettings } = await supabase
+                        .from('group_settings')
+                        .select('rest_days, recovery_days')
+                        .eq('group_id', profile.group_id)
+                        .maybeSingle();
+
+                    const restDays = groupSettings?.rest_days || [1];
+                    const recoveryDays = groupSettings?.recovery_days || [5];
+
+                    if (groupMembers && groupMembers.length > 0) {
+                        const today = new Date();
+                        const currentYear = today.getFullYear();
+
+                        const birthdaysWithDays = groupMembers.map(member => {
+                            const birthDate = new Date(member.birth_date!);
+
+                            // Create this year's birthday
+                            let nextBirthday = new Date(currentYear, birthDate.getMonth(), birthDate.getDate());
+
+                            // If birthday has passed this year, use next year
+                            if (nextBirthday < today) {
+                                nextBirthday = new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate());
+                            }
+
+                            const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+                            // Calculate their typical daily target for today
+                            const daysSinceStart = Math.floor((today.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
+                            const dayOfWeek = today.getDay();
+
+                            const dailyTarget = calculateDailyTarget({
+                                daysSinceStart,
+                                weekMode: member.week_mode || 'sane',
+                                restDays,
+                                recoveryDays,
+                                currentDayOfWeek: dayOfWeek
+                            });
+
+                            return {
+                                username: member.username || 'Unknown',
+                                daysUntil,
+                                date: member.birth_date!,
+                                isCurrentUser: member.id === user!.id,
+                                dailyTarget
+                            };
+                        });
+
+                        // Sort by days until birthday and take top 2
+                        const upcomingTwo = birthdaysWithDays
+                            .sort((a, b) => a.daysUntil - b.daysUntil)
+                            .slice(0, 2);
+
+                        setUpcomingBirthdays(upcomingTwo);
+                    } else {
+                        setUpcomingBirthdays([]);
+                    }
+                } catch (error) {
+                    console.error('[NewDashboard] Error fetching birthdays:', error);
+                }
+
+                // Also check current user's birthday for personal view (even if no group)
+                if (profile?.birth_date) {
+                    const today = new Date();
+                    const currentYear = today.getFullYear();
+                    const birthDate = new Date(profile.birth_date);
+
+                    let nextBirthday = new Date(currentYear, birthDate.getMonth(), birthDate.getDate());
+                    if (nextBirthday < today) {
+                        nextBirthday = new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate());
+                    }
+
+                    const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+                    // Add to upcomingBirthdays if not already there
+                    setUpcomingBirthdays(prev => {
+                        const hasCurrentUser = prev.find(b => b.isCurrentUser);
+                        if (!hasCurrentUser) {
+                            return [{
+                                username: profile.username || 'You',
+                                daysUntil,
+                                date: profile.birth_date!,
+                                isCurrentUser: true,
+                                dailyTarget: 0
+                            }, ...prev];
+                        }
+                        return prev;
+                    });
+                }
+
+                // 10. Calculate Today's Progress
+                try {
+                    const today = new Date().toISOString().split('T')[0];
+                    const todayDayOfWeek = new Date().getDay();
+
+                    // Get group settings
+                    const { data: groupSettings } = await supabase
+                        .from('group_settings')
+                        .select('rest_days, recovery_days')
+                        .eq('group_id', profile.group_id)
+                        .maybeSingle();
+
+                    const restDays = groupSettings?.rest_days || [1];
+                    const recoveryDays = groupSettings?.recovery_days || [5];
+
+                    // Calculate today's target
+                    const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
+                    const dailyTarget = calculateDailyTarget({
+                        daysSinceStart,
+                        weekMode: profile.week_mode || 'sane',
+                        restDays,
+                        recoveryDays,
+                        currentDayOfWeek: todayDayOfWeek
+                    });
+
+                    // Get today's logs for current user
+                    const { data: todayLogs } = await supabase
+                        .from('logs')
+                        .select('points, exercise_id')
+                        .eq('user_id', user.id)
+                        .eq('date', today);
+
+                    // Get exercises for recovery capping
+                    const { data: exercises } = await supabase
+                        .from('exercises')
+                        .select('id, type');
+
+                    const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || []);
+
+                    // Calculate actual points with recovery capping
+                    let totalRecovery = 0;
+                    let totalNonRecovery = 0;
+
+                    todayLogs?.forEach(log => {
+                        const exerciseType = exerciseTypeMap.get(log.exercise_id);
+                        if (exerciseType === 'recovery') {
+                            totalRecovery += log.points;
+                        } else {
+                            totalNonRecovery += log.points;
+                        }
+                    });
+
+                    const recoveryCapLimit = Math.round(dailyTarget * 0.25);
+                    const cappedRecovery = Math.min(totalRecovery, recoveryCapLimit);
+                    const actualPoints = totalNonRecovery + cappedRecovery;
+
+                    const percentage = dailyTarget > 0 ? Math.min(100, Math.round((actualPoints / dailyTarget) * 100)) : 0;
+
+                    setTodayProgress({
+                        actual: actualPoints,
+                        target: dailyTarget,
+                        percentage
+                    });
+                } catch (error) {
+                    console.error('[NewDashboard] Error calculating today progress:', error);
+                }
+
+            }
+
+            // 13. Fetch Pending Penalties
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    const response = await fetch('/api/penalties/my-pending', {
+                        headers: {
+                            'Authorization': `Bearer ${session.access_token}`
+                        }
+                    });
+                    const data = await response.json();
+                    setPendingPenalties(data.penalties || []);
+                }
+            } catch (error) {
+                console.error('[NewDashboard] Error fetching pending penalties:', error);
             }
 
         } catch (error) {
-            console.error("Error loading dashboard:", error);
+            console.error('[NewDashboard] Error loading dashboard:', error);
         } finally {
             setLoading(false);
         }
@@ -712,16 +1183,18 @@ export default function NewDashboard() {
         return Math.round((remaining / totalDay) * 100);
     };
 
+    const getHoursRemaining = (date: Date) => {
+        const now = date.getTime();
+        const midnight = new Date(date);
+        midnight.setHours(24, 0, 0, 0);
+        const remaining = midnight.getTime() - now;
+        return Math.floor(remaining / (1000 * 60 * 60));
+    };
+
     const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
     return (
         <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500/30 selection:text-blue-100 overflow-x-hidden relative">
-
-            {/* Background Ambience */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] bg-blue-900/10 rounded-full blur-[140px] opacity-20" />
-                <div className="absolute bottom-[10%] right-[-10%] w-[500px] h-[500px] bg-orange-900/10 rounded-full blur-[140px] opacity-20" />
-            </div>
 
             <div className="relative z-10 max-w-md mx-auto min-h-screen flex flex-col pb-28">
 
@@ -731,13 +1204,6 @@ export default function NewDashboard() {
                         <h1 className="text-xl font-black italic tracking-tighter text-white mb-1">THE COMMITMENT</h1>
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-bold text-zinc-500 uppercase tracking-[0.2em]">{dayName}</span>
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-orange-500/10 rounded-full border border-orange-500/20">
-                                <span className="relative flex h-1.5 w-1.5">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-600"></span>
-                                </span>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-orange-500">Live</span>
-                            </div>
                         </div>
                     </div>
 
@@ -762,7 +1228,7 @@ export default function NewDashboard() {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Time Remaining</span>
                         </div>
                         <div className="h-20 w-full bg-[#050505] rounded-full border border-zinc-800 p-1.5 shadow-[0_0_0_1px_rgba(0,0,0,1)] relative group">
-                            <div className="h-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 relative flex items-center px-6 transition-all duration-1000"
+                            <div className="h-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 relative transition-all duration-1000"
                                 style={{
                                     width: `${time ? getTimeRemainingPercentage(time) : 0}%`,
                                     boxShadow: COLORS.orange.boxShadow
@@ -770,9 +1236,12 @@ export default function NewDashboard() {
                                 <div className="absolute inset-0 rounded-full overflow-hidden z-0">
                                     <div className="absolute top-[-50%] bottom-[-50%] left-[-50%] right-[-50%] bg-white/20 skew-x-12 animate-[shimmer_2s_infinite] mix-blend-overlay" />
                                 </div>
-                                <span className="relative z-10 text-3xl font-black tracking-tight text-white tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{time ? getTimeRemaining(time) : '--:--:--'}</span>
                             </div>
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-700"><Clock size={24} /></div>
+                            {time && (
+                                <div className="absolute right-6 top-1/2 -translate-y-1/2 z-10">
+                                    <span className="text-3xl font-black tracking-tight text-white tabular-nums drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{getTimeRemaining(time)}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -784,6 +1253,39 @@ export default function NewDashboard() {
                                 {squadData.length === 0 && <div className="text-zinc-500 text-center py-4">Loading squad...</div>}
                             </div>
                         </GlassCard>
+
+                        {/* Pending Penalty Alert - Only show if penalties exist */}
+                        {pendingPenalties.length > 0 && (
+                            <div className="mt-4">
+                                <button
+                                    onClick={() => setIsPenaltyModalOpen(true)}
+                                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 rounded-2xl p-4 border-2 border-orange-500/50 shadow-lg hover:shadow-orange-500/25 transition-all active:scale-[0.98]"
+                                    style={{
+                                        boxShadow: pendingPenalties[0]?.hours_remaining && pendingPenalties[0].hours_remaining < 6
+                                            ? '0 0 30px rgba(249, 115, 22, 0.5), 0 0 60px rgba(249, 115, 22, 0.3)'
+                                            : '0 0 30px rgba(249, 115, 22, 0.3)'
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                                <AlertCircle className="w-6 h-6 text-white" />
+                                            </div>
+                                            <div className="text-left">
+                                                <div className="text-white font-black text-sm">
+                                                    PENALTY RESPONSE REQUIRED
+                                                </div>
+                                                <div className="text-white/80 text-xs">
+                                                    {pendingPenalties.length === 1 ? '1 penalty' : `${pendingPenalties.length} penalties`} waiting • {pendingPenalties[0]?.hours_remaining ? formatTimeRemaining(pendingPenalties[0].hours_remaining) : 'Time limited'} left
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-5 h-5 text-white/60" />
+                                    </div>
+                                </button>
+                            </div>
+                        )}
+
                         <div className="flex justify-center mt-6">
                             <div className="bg-zinc-900 rounded-full p-1 flex items-center gap-1 border border-white/5 shadow-lg">
                                 <button onClick={() => setViewMode("group")} className={`px-8 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${viewMode === 'group' ? 'bg-zinc-800 text-white shadow-md border border-white/5' : 'text-zinc-500 hover:text-zinc-300'}`}>Group</button>
@@ -795,233 +1297,425 @@ export default function NewDashboard() {
 
                 {/* --- STATS GRID --- */}
                 <section className="px-5 grid grid-cols-2 gap-4">
+                    {/* Performance Recap - Group view only, shown first */}
+                    {viewMode === "group" && (
+                        <GlassCard noPadding className="col-span-2">
+                            <CardHeader
+                                title={`Performance Recap: ${recapData.yesterdayDate ? new Date(recapData.yesterdayDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Yesterday'}`}
+                                icon={AlertCircle}
+                                colorClass="text-orange-500"
+                            />
+                            <div className="p-4 grid grid-cols-2 gap-3">
+                                {/* Made It - using opal colors */}
+                                {recapData.completedMembers.length > 0 && (
+                                    <div className="rounded-xl p-3 border" style={{
+                                        background: 'linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(79, 70, 229, 0.15) 100%)',
+                                        borderColor: 'rgba(96, 165, 250, 0.2)'
+                                    }}>
+                                        <div className="flex items-center gap-2 mb-2" style={{ color: 'rgb(96, 165, 250)' }}>
+                                            <CheckCircle2 size={16} />
+                                            <span className="text-xs font-black uppercase tracking-wide">Made It</span>
+                                        </div>
+                                        <div className="text-xs font-bold text-zinc-300 space-y-0.5">
+                                            {recapData.completedMembers.map((username, idx) => (
+                                                <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Right column: Pending, Paid, Disputed, and Sick stacked */}
+                                <div className="flex flex-col gap-2">
+                                    {/* Pending - orange colors */}
+                                    {recapData.pendingMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%)',
+                                            borderColor: 'rgba(251, 146, 60, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(251, 146, 60)' }}>
+                                                <Clock size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Pending</span>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                {recapData.pendingMembers.map((m, idx) => (
+                                                    <div key={idx} className="flex justify-between text-xs font-bold text-zinc-300">
+                                                        <span>{m.username.slice(0, 4).toUpperCase()}</span>
+                                                        <span className="font-mono text-[9px]">{m.actual}/{m.target}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Paid - red colors */}
+                                    {recapData.paidMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(185, 28, 28, 0.15) 100%)',
+                                            borderColor: 'rgba(239, 68, 68, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(239, 68, 68)' }}>
+                                                <AlertCircle size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Paid</span>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                {recapData.paidMembers.map((m, idx) => (
+                                                    <div key={idx} className="flex justify-between text-xs font-bold text-zinc-300">
+                                                        <span>{m.username.slice(0, 4).toUpperCase()}</span>
+                                                        <span className="font-mono text-[9px]">{m.actual}/{m.target}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Disputed - blue colors */}
+                                    {recapData.disputedMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%)',
+                                            borderColor: 'rgba(59, 130, 246, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(59, 130, 246)' }}>
+                                                <AlertCircle size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Disputed</span>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                {recapData.disputedMembers.map((m, idx) => (
+                                                    <div key={idx} className="flex justify-between text-xs font-bold text-zinc-300">
+                                                        <span>{m.username.slice(0, 4).toUpperCase()}</span>
+                                                        <span className="font-mono text-[9px]">{m.actual}/{m.target}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Sick Mode - gray colors */}
+                                    {recapData.sickMembers.length > 0 && (
+                                        <div className="bg-gray-800/40 rounded-xl p-2.5 border border-gray-600/30">
+                                            <div className="flex items-center gap-2 mb-1.5 text-gray-400">
+                                                <Moon size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Sick</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-gray-400 space-y-0.5">
+                                                {recapData.sickMembers.map((username, idx) => (
+                                                    <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            {/* View Full History Button */}
+                            <div className="px-4 pb-4">
+                                <button
+                                    onClick={() => setIsRecapHistoryOpen(true)}
+                                    className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-white/5 hover:border-white/10 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    View Full History
+                                </button>
+                            </div>
+                        </GlassCard>
+                    )}
+
                     {viewMode === "group" ? (
                         <GlassCard noPadding className="col-span-2">
-                            <CardHeader title="Group Points" icon={TrendingUp} colorClass="text-blue-400" rightContent="LAST 30D" />
+                            <CardHeader title="Group Performance" icon={TrendingUp} colorClass="text-orange-500" rightContent="LAST 30D" />
                             <div className="p-6 pt-2">
-                                <div className="flex items-baseline gap-2 mb-2"><span className="text-5xl font-black text-white tracking-tighter">{totalGroupPoints.toLocaleString()}</span><span className="text-sm font-bold text-zinc-500">PTS</span></div>
-                                <BarChart />
+                                <GroupOverperformanceChart dailyData={groupDailyData} />
                             </div>
                         </GlassCard>
                     ) : (
                         <GlassCard noPadding className="col-span-2">
-                            <CardHeader title="Personal Points" icon={TrendingUp} colorClass="text-blue-400" rightContent="LAST 30D" />
+                            <CardHeader title="Performance" icon={TrendingUp} colorClass="text-blue-400" rightContent="LAST 30D" />
                             <div className="p-6 pt-2">
-                                <div className="flex items-baseline gap-2 mb-2">
-                                    <span className="text-5xl font-black text-white tracking-tighter">{personalPoints.total.toLocaleString()}</span>
-                                    <span className="text-sm font-bold text-zinc-500">PTS</span>
-                                </div>
-                                <div className="text-xs text-zinc-500 mb-3 space-y-1">
-                                    <div className="flex justify-between">
-                                        <span>Base Target:</span>
-                                        <span className="font-bold text-zinc-400">{personalPoints.baseTarget.toLocaleString()} pts</span>
-                                    </div>
-                                    {personalPoints.overperformance > 0 && (
-                                        <div className="flex justify-between">
-                                            <span>Overperformance:</span>
-                                            <span className="font-bold text-orange-400">+{personalPoints.overperformance.toLocaleString()} pts</span>
-                                        </div>
-                                    )}
-                                </div>
                                 <PersonalOverperformChart dailyData={personalDailyData} />
                             </div>
                         </GlassCard>
                     )}
+
                     {viewMode === "group" ? (
-                        <GlassCard noPadding className="row-span-2 h-full min-h-[320px]">
-                            <CardHeader title="Pot History" icon={CircleDollarSign} colorClass="text-white" />
-                            <div className="flex flex-col h-full">
-                                <div className="px-5 py-4 border-b border-white/5 bg-white/[0.01]"><div className="text-3xl font-black">€{totalPot}</div></div>
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                                    {potHistory.map((c, i) => (<div key={i} className="flex justify-between items-start text-xs group"><div><div className="font-bold text-zinc-300 group-hover:text-white transition-colors">{c.name}</div><div className="text-zinc-600 text-[10px]">{c.days} days ago</div></div><div className="font-mono font-bold text-zinc-400">€{c.amt}</div></div>))}
+                        <GlassCard noPadding className="row-span-2 h-full min-h-[320px] flex flex-col">
+                            <CardHeader
+                                title="Pot History"
+                                icon={Coins}
+                                colorClass="text-yellow-500"
+                            />
+                            <div className="flex flex-col flex-1 min-h-0">
+                                {/* Main Content Area */}
+                                <div className="flex-1 overflow-hidden px-3 pt-3">
+                                    <div className="flex flex-col gap-0.5">
+                                        {potHistory.slice(0, 8).map((c, i) => (
+                                            <div
+                                                key={i}
+                                                className={`grid grid-cols-[1fr_auto_auto] gap-2 items-center text-[10px] px-1 py-1 ${c.days === 0 ? 'text-orange-500 font-bold' : 'text-zinc-400'}`}
+                                            >
+                                                {/* Name Column */}
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`font-bold tracking-wider ${c.days === 0 ? 'text-orange-500' : 'text-zinc-300'}`}>
+                                                        {c.name.slice(0, 4).toUpperCase()}
+                                                    </div>
+                                                    {c.days === 0 && <div className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />}
+                                                </div>
+
+                                                {/* Amount Column */}
+                                                <div className="text-sm font-black text-white tabular-nums">
+                                                    €{c.amt}
+                                                </div>
+
+                                                {/* Time Column */}
+                                                <div className={`font-medium text-[9px] uppercase tracking-wide text-right min-w-[3rem] ${c.days === 0 ? 'text-orange-500/80' : 'text-zinc-600'}`}>
+                                                    {c.days === 0 ? 'Today' : `${c.days}d ago`}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="p-3 mt-auto">
+                                    <button
+                                        onClick={() => setIsPotHistoryOpen(true)}
+                                        className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-white transition-all py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-white/5 hover:border-white/10 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        View Full History
+                                    </button>
                                 </div>
                             </div>
                         </GlassCard>
                     ) : (
-                        <GlassCard noPadding className="row-span-2 h-full min-h-[320px]">
-                            <CardHeader title="Last Contribution" icon={CircleDollarSign} colorClass="text-white" />
-                            <div className="flex flex-col h-full justify-center items-center p-6">
-                                {lastContribution ? (
+                        <GlassCard noPadding className="row-span-2 h-full min-h-[320px] flex flex-col">
+                            <CardHeader title="Contributions" icon={CircleDollarSign} colorClass="text-green-500" />
+                            <div className="flex flex-col flex-1 min-h-0">
+                                {userContributions.length > 0 ? (
                                     <>
-                                        <div className="text-5xl font-black text-white mb-4">€{lastContribution.amount}</div>
-                                        <div className="text-sm text-zinc-500 mb-1">{lastContribution.date}</div>
-                                        <div className="text-xs text-zinc-600">{lastContribution.daysAgo} days ago</div>
+                                        {/* Main Content Area */}
+                                        <div className="flex-1 overflow-hidden px-3 pt-3">
+                                            <div className="flex flex-col gap-0.5">
+                                                {userContributions.map((c, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className={`grid grid-cols-[1fr_auto_auto] gap-2 items-center text-[10px] px-1 py-1 ${c.days === 0 ? 'text-green-500 font-bold' : 'text-zinc-400'}`}
+                                                    >
+                                                        {/* Date Column */}
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={`font-bold tracking-wider ${c.days === 0 ? 'text-green-500' : 'text-zinc-300'}`}>
+                                                                {c.date}
+                                                            </div>
+                                                            {c.days === 0 && <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />}
+                                                        </div>
+
+                                                        {/* Amount Column */}
+                                                        <div className="text-sm font-black text-white tabular-nums">
+                                                            €{c.amount}
+                                                        </div>
+
+                                                        {/* Time Column */}
+                                                        <div className={`font-medium text-[9px] uppercase tracking-wide text-right min-w-[3rem] ${c.days === 0 ? 'text-green-500/80' : 'text-zinc-600'}`}>
+                                                            {c.days === 0 ? 'Today' : `${c.days}d ago`}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </>
                                 ) : (
-                                    <div className="text-center">
-                                        <div className="text-5xl font-black text-zinc-700 mb-4">€0</div>
-                                        <div className="text-xs text-zinc-600">No contributions yet</div>
+                                    <div className="flex flex-col h-full justify-center items-center p-6">
+                                        <div className="text-center">
+                                            <div className="text-5xl font-black text-zinc-700 mb-4">€0</div>
+                                            <div className="text-xs text-zinc-600">No contributions yet</div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </GlassCard>
                     )}
                     {viewMode === "group" ? (
-                        <div className="relative bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 rounded-3xl p-5 flex flex-col justify-between overflow-hidden shadow-2xl h-[160px]">
-                            <div className="absolute top-0 right-0 p-4 opacity-30 mix-blend-overlay"><Gift size={80} className="text-white rotate-12" /></div>
-                            <div><span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Next Birthday</span><div className="flex items-baseline gap-1 mt-1"><span className="text-5xl font-black text-white tracking-tighter">14</span><span className="text-sm font-bold text-white/80">DAYS</span></div></div>
-                            <div className="flex items-center gap-2 mt-2"><div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"><Calendar size={12} className="text-white" /></div><span className="font-bold text-white text-sm">Matthijs</span></div>
-                        </div>
-                    ) : (
-                        <div className="relative bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 rounded-3xl p-5 flex flex-col justify-between overflow-hidden shadow-2xl h-[160px]">
-                            <div className="absolute top-0 right-0 p-4 opacity-30 mix-blend-overlay"><Gift size={80} className="text-white rotate-12" /></div>
-                            <div><span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Your Birthday</span><div className="flex items-baseline gap-1 mt-1"><span className="text-2xl font-black text-white tracking-tighter">Coming Soon</span></div></div>
-                            <div className="flex items-center gap-2 mt-2"><div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"><Heart size={12} className="text-white" /></div><span className="font-bold text-white/60 text-xs">Set in profile settings</span></div>
-                        </div>
-                    )}
-                    <GlassCard className="flex flex-col justify-center h-[160px] relative overflow-hidden group">
-                        <div className="absolute right-0 top-0 w-32 h-32 bg-blue-900/20 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-800/20 transition-all" />
-                        <div className="mb-4"><div className="flex justify-between items-end mb-1"><h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Streak</h4><span className="text-[9px] font-bold text-zinc-600">REC: 44</span></div><div className="flex items-baseline gap-1"><span className="text-3xl font-black text-white leading-none">0</span><span className="text-xs text-zinc-500">days</span></div></div>
-                        <div className="w-full h-px bg-white/10 mb-4" />
-                        <div><div className="flex justify-between items-end mb-1"><h4 className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Insane</h4><span className="text-[9px] font-bold text-zinc-600">REC: 4</span></div><div className="flex items-baseline gap-1"><span className="text-3xl font-black text-white leading-none">0</span><span className="text-xs text-zinc-500">days</span></div></div>
-                    </GlassCard>
-                    {viewMode === "group" ? (
-                        <PopularExerciseWidget
-                            exerciseName={popularExerciseGroup.name}
-                            count={popularExerciseGroup.count}
-                            isPersonal={false}
-                        />
-                    ) : (
-                        <PopularExerciseWidget
-                            exerciseName={popularExercisePersonal.name}
-                            count={popularExercisePersonal.count}
-                            isPersonal={true}
-                        />
-                    )}
-                    {viewMode === "group" && (
-                        <GlassCard noPadding className="col-span-2">
-                            <CardHeader
-                                title={`Recap: ${recapData.yesterdayDate ? new Date(recapData.yesterdayDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Yesterday'}`}
-                                icon={AlertCircle}
-                                colorClass="text-orange-500"
-                            />
-                            <div className="p-4 grid grid-cols-2 gap-4">
-                                {/* Made It - using opal colors */}
-                                <div className="rounded-xl p-3 border" style={{
-                                    background: 'linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(79, 70, 229, 0.15) 100%)',
-                                    borderColor: 'rgba(96, 165, 250, 0.2)'
-                                }}>
-                                    <div className="flex items-center gap-2 mb-2" style={{ color: 'rgb(96, 165, 250)' }}>
-                                        <CheckCircle2 size={16} />
-                                        <span className="text-xs font-black uppercase tracking-wide">Made It</span>
-                                    </div>
-                                    <div className="text-xs font-bold text-zinc-300 space-y-1">
-                                        {recapData.completedMembers.length > 0 ? (
-                                            recapData.completedMembers.map((username, idx) => (
-                                                <div key={idx}>{username}</div>
-                                            ))
-                                        ) : (
-                                            <div className="text-zinc-500">None</div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Right column: Pending and Sick stacked */}
-                                <div className="flex flex-col gap-3">
-                                    {/* Pending - orange/red colors */}
-                                    <div className="rounded-xl p-3 border" style={{
-                                        background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%)',
-                                        borderColor: 'rgba(251, 146, 60, 0.2)'
-                                    }}>
-                                        <div className="flex items-center gap-2 mb-2" style={{ color: 'rgb(251, 146, 60)' }}>
-                                            <Clock size={16} />
-                                            <span className="text-xs font-black uppercase tracking-wide">Pending</span>
-                                        </div>
-                                        <div className="space-y-1">
-                                            {recapData.pendingMembers.length > 0 ? (
-                                                recapData.pendingMembers.map((m, idx) => (
-                                                    <div key={idx} className="flex justify-between text-[10px] font-medium text-zinc-300">
-                                                        <span>{m.username}</span>
-                                                        <span className="font-mono">{m.actual}/{m.target}</span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="text-xs text-zinc-500">None</div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Sick Mode - gray colors */}
-                                    <div className="bg-gray-800/40 rounded-xl p-3 border border-gray-600/30">
-                                        <div className="flex items-center gap-2 mb-2 text-gray-400">
-                                            <Moon size={16} />
-                                            <span className="text-xs font-black uppercase tracking-wide">Sick</span>
-                                        </div>
-                                        <div className="text-xs font-bold text-gray-400 space-y-1">
-                                            {recapData.sickMembers.length > 0 ? (
-                                                recapData.sickMembers.map((username, idx) => (
-                                                    <div key={idx}>{username}</div>
-                                                ))
-                                            ) : (
-                                                <div className="text-zinc-500">None</div>
-                                            )}
-                                        </div>
-                                    </div>
+                        <GlassCard noPadding className="aspect-square flex flex-col">
+                            <CardHeader title="Total Pot" icon={CircleDollarSign} colorClass="text-green-500" />
+                            <div className="p-4 pt-2 flex flex-col justify-center items-center flex-1">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-5xl font-black text-white tracking-tighter">€{totalPot}</span>
                                 </div>
                             </div>
                         </GlassCard>
+                    ) : (
+                        // Personal view: User's own birthday
+                        upcomingBirthdays.find(b => b.isCurrentUser) ? (
+                            <GlassCard noPadding className="h-[160px]">
+                                <CardHeader title="Your Birthday" icon={Calendar} colorClass="text-purple-500" />
+                                <div className="p-4 pt-2 flex flex-col justify-center h-[calc(100%-48px)]">
+                                    <div className="flex items-baseline gap-2 mb-2">
+                                        <span className="text-5xl font-black text-white tracking-tighter">
+                                            {upcomingBirthdays.find(b => b.isCurrentUser)!.daysUntil}
+                                        </span>
+                                        <span className="text-sm font-bold text-zinc-500">DAYS</span>
+                                    </div>
+                                    <div className="text-xs text-zinc-500">
+                                        {new Date(upcomingBirthdays.find(b => b.isCurrentUser)!.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                                    </div>
+                                </div>
+                            </GlassCard>
+                        ) : (
+                            <GlassCard noPadding className="h-[160px]">
+                                <CardHeader title="Your Birthday" icon={Calendar} colorClass="text-purple-500" />
+                                <div className="p-4 pt-2 flex flex-col justify-center h-[calc(100%-48px)]">
+                                    <div className="text-center">
+                                        <div className="text-2xl font-black text-zinc-500 mb-2">Not Set</div>
+                                        <div className="text-xs text-zinc-600">Add in profile settings</div>
+                                    </div>
+                                </div>
+                            </GlassCard>
+                        )
                     )}
-                </section>
+
+                    {viewMode === "group" && upcomingBirthdays.length > 0 ? (
+                        <GlassCard noPadding className="aspect-square flex flex-col">
+                            <CardHeader title="Upcoming Bdays" icon={Calendar} colorClass="text-orange-500" />
+                            <div className="p-3 space-y-2.5 flex-1 flex flex-col justify-center">
+                                {upcomingBirthdays.slice(0, 2).map((birthday, index) => {
+                                    // Logic: Next (index 1) is reference (100%). Upcoming (index 0) scales relative to it.
+                                    const nextBirthday = upcomingBirthdays[1];
+                                    const referenceDays = nextBirthday ? nextBirthday.daysUntil : 60; // Default scale if only 1
+
+                                    // If index 1 (Next): Blue, Full Bar
+                                    // If index 0 (Upcoming): Orange, Proportional Bar (Small if days is small)
+                                    // Formula: (days / reference) * 100
+                                    const isNext = index === 1;
+                                    const percentage = isNext
+                                        ? 100
+                                        : Math.max(5, (birthday.daysUntil / referenceDays) * 100);
+
+                                    const shadowStyle = {
+                                        boxShadow: isNext
+                                            ? '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
+                                            : '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
+                                    };
+
+                                    return (
+                                        <div key={index} className="relative">
+                                            {/* Name Label */}
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-[10px] font-black text-zinc-300 tracking-wider">
+                                                    {birthday.isCurrentUser ? 'YOU' : birthday.username.slice(0, 4).toUpperCase()}
+                                                </span>
+                                            </div>
+
+                                            {/* Thicker Bar with Text Inside */}
+                                            <div className="h-7 w-full bg-zinc-800/50 rounded-lg overflow-hidden relative border border-white/5">
+                                                {/* Progress Bar */}
+                                                <div
+                                                    className={`h-full transition-all duration-1000 flex items-center justify-end px-2.5 ${isNext
+                                                        ? 'bg-gradient-to-r from-blue-500 to-blue-600'
+                                                        : 'bg-gradient-to-r from-orange-500 to-orange-600'
+                                                        }`}
+                                                    style={{ width: `${percentage}%`, ...shadowStyle }}
+                                                >
+                                                </div>
+
+                                                {/* Text Overlay (Absolute to ensure visibility if bar is small) */}
+                                                <div className="absolute inset-0 flex items-center justify-end px-2.5 pointer-events-none">
+                                                    <span className="text-[10px] font-black text-white drop-shadow-md z-10">
+                                                        {birthday.daysUntil} {birthday.daysUntil === 1 ? 'DAY' : 'DAYS'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </GlassCard>
+                    ) : viewMode === "group" ? (
+                        <GlassCard noPadding className="aspect-square flex flex-col">
+                            <CardHeader title="Upcoming Bdays" icon={Calendar} colorClass="text-purple-500" />
+                            <div className="p-4 flex-1 flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="text-sm text-zinc-500">No birthdays set</div>
+                                    <div className="text-xs text-zinc-600 mt-1">Members can add birthdays in profile settings</div>
+                                </div>
+                            </div>
+                        </GlassCard>
+                    ) : null
+                    }
+                    <PopularExerciseWidget
+                        exercises={viewMode === "group" ? popularExercisesGroup : popularExercisesPersonal}
+                        isPersonal={viewMode === "personal"}
+                    />
+
+                    {/* Personal view only: Top Exercise This Year */}
+                    {viewMode === "personal" && (
+                        <PopularExerciseWidget
+                            exercises={yearlyExercisesPersonal}
+                            isPersonal={true}
+                            customTitle="Top Exercise This Year"
+                            customRightContent="2025"
+                        />
+                    )}
+                </section >
 
                 {/* --- NEW COMPONENTS SECTION --- */}
-                {viewMode === "group" ? (
-                    <section className="px-5 grid grid-cols-2 gap-4 mt-8">
-                        {/* Weekly Overperformers - Full width */}
-                        <div className="col-span-2">
-                            <WeeklyOverperformers />
-                        </div>
-
-                        {/* Seasonal Champions */}
-                        {userProfile?.group_id && (
+                {
+                    viewMode === "group" ? (
+                        <section className="px-5 grid grid-cols-2 gap-4 mt-8">
+                            {/* Weekly Overperformers - Full width */}
                             <div className="col-span-2">
-                                <SeasonalChampionsWidget groupId={userProfile.group_id} />
+                                <WeeklyOverperformers />
                             </div>
-                        )}
 
-                        {/* Peak Workout Time - Group */}
-                        <GlassCard noPadding className="col-span-2">
-                            <CardHeader title="Peak Workout Time" icon={Zap} colorClass="text-yellow-500" />
-                            <div className="p-6 pt-2 flex flex-col items-center justify-center">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Group Most Active</div>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-6xl font-black text-white tracking-tighter">{peakWorkoutTime}</span>
+                            {/* Seasonal Champions */}
+                            {userProfile?.group_id && (
+                                <div className="col-span-2">
+                                    <SeasonalChampionsWidget groupId={userProfile.group_id} />
                                 </div>
-                                <div className="text-xs text-zinc-500 mt-2">When the squad hits hardest</div>
-                            </div>
-                        </GlassCard>
-                    </section>
-                ) : (
-                    <section className="px-5 grid grid-cols-2 gap-4 mt-8">
-                        {/* Peak Workout Time - Personal (hourly visualization) */}
-                        <GlassCard noPadding className="col-span-2">
-                            <CardHeader title="Peak Workout Time" icon={Zap} colorClass="text-yellow-500" rightContent={peakWorkoutTime} />
-                            <div className="p-6 pt-2">
-                                <div className="text-xs text-zinc-500 mb-4">Workout distribution by time of day</div>
-                                <PeakWorkoutTimeChart hourlyData={hourlyWorkoutData} />
-                            </div>
-                        </GlassCard>
-                    </section>
-                )}
+                            )}
 
-            </div>
+                            {/* Peak Workout Time - Group (with visualization) */}
+                            <GlassCard noPadding className="col-span-2">
+                                <CardHeader
+                                    title="Peak Workout Time"
+                                    icon={Zap}
+                                    colorClass="text-yellow-500"
+                                    rightContent={peakWorkoutTime}
+                                />
+                                <div className="p-6 pt-2">
+                                    <div className="text-xs text-zinc-500 mb-4">Group workout distribution by time of day</div>
+                                    <PeakWorkoutTimeChart hourlyData={hourlyWorkoutData} />
+                                </div>
+                            </GlassCard>
+                        </section>
+                    ) : (
+                        <section className="px-5 grid grid-cols-2 gap-4 mt-8">
+                            {/* Peak Workout Time - Personal (hourly visualization) */}
+                            <GlassCard noPadding className="col-span-2">
+                                <CardHeader title="Peak Workout Time" icon={Zap} colorClass="text-yellow-500" rightContent={peakWorkoutTime} />
+                                <div className="p-6 pt-2">
+                                    <div className="text-xs text-zinc-500 mb-4">Workout distribution by time of day</div>
+                                    <PeakWorkoutTimeChart hourlyData={hourlyWorkoutData} />
+                                </div>
+                            </GlassCard>
+                        </section>
+                    )
+                }
+
+            </div >
 
             {/* --- BOTTOM NAVIGATION --- */}
-            <BottomNavigation
+            < BottomNavigation
                 onWorkoutClick={() => setIsWorkoutModalOpen(true)}
                 onChatClick={() => setIsChatOpen(true)}
                 groupId={userProfile?.group_id}
+                progressPercentage={todayProgress.percentage}
             />
 
             {/* --- WORKOUT MODAL --- */}
-            {user && (
-                <WorkoutModal
-                    isOpen={isWorkoutModalOpen}
-                    onClose={() => {
-                        setIsWorkoutModalOpen(false);
-                        loadDashboardData(); // Reload dashboard data after workout logged
-                    }}
-                />
-            )}
+            {
+                user && (
+                    <WorkoutModal
+                        isOpen={isWorkoutModalOpen}
+                        onClose={() => {
+                            setIsWorkoutModalOpen(false);
+                            loadDashboardData(); // Reload dashboard data after workout logged
+                        }}
+                    />
+                )
+            }
 
             {/* --- CHAT MODAL --- */}
             <GroupChat
@@ -1030,11 +1724,43 @@ export default function NewDashboard() {
                 onCloseStart={() => setIsChatOpen(false)}
             />
 
+            {/* --- POT HISTORY MODAL --- */}
+            {
+                isPotHistoryOpen && userProfile?.group_id && (
+                    <PotHistoryModal
+                        groupId={userProfile.group_id}
+                        onClose={() => setIsPotHistoryOpen(false)}
+                    />
+                )
+            }
+
+            {/* --- DAILY RECAP HISTORY MODAL --- */}
+            {
+                isRecapHistoryOpen && userProfile?.group_id && (
+                    <DailyRecapHistoryModal
+                        groupId={userProfile.group_id}
+                        onClose={() => setIsRecapHistoryOpen(false)}
+                    />
+                )
+            }
+
+            {/* --- PENALTY RESPONSE MODAL --- */}
+            {isPenaltyModalOpen && pendingPenalties.length > 0 && (
+                <PenaltyResponseModal
+                    penalties={pendingPenalties}
+                    onComplete={() => {
+                        setIsPenaltyModalOpen(false);
+                        loadDashboardData(); // Refresh to update penalty count
+                    }}
+                    onDismiss={() => setIsPenaltyModalOpen(false)}
+                />
+            )}
+
             <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
       `}</style>
-        </div>
+        </div >
     );
 }

@@ -4,19 +4,22 @@ import { useState, useEffect } from 'react'
 import { PenaltyResponseModal } from './modals/PenaltyResponseModal'
 import type { PendingPenalty } from '@/types/penalties'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface PenaltyAutoCheckerProps {
-  userId: string
   onComplete?: () => void
 }
 
-export function PenaltyAutoChecker({ userId, onComplete }: PenaltyAutoCheckerProps) {
+export function PenaltyAutoChecker({ onComplete }: PenaltyAutoCheckerProps) {
+  const { user } = useAuth()
   const [activePenalties, setActivePenalties] = useState<PendingPenalty[]>([])
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    checkPenalties()
-  }, [userId])
+    if (user) {
+      checkPenalties()
+    }
+  }, [user])
 
   const checkPenalties = async () => {
     try {
@@ -132,8 +135,8 @@ export function PenaltyAutoChecker({ userId, onComplete }: PenaltyAutoCheckerPro
     }
   }
 
-  // Don't render anything while checking
-  if (isChecking) {
+  // Don't render anything if no user or while checking
+  if (!user || isChecking) {
     return null
   }
 
@@ -143,6 +146,7 @@ export function PenaltyAutoChecker({ userId, onComplete }: PenaltyAutoCheckerPro
       <PenaltyResponseModal
         penalties={activePenalties}
         onComplete={handleComplete}
+        onDismiss={() => setActivePenalties([])}
       />
     )
   }

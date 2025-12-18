@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WeekModeProvider } from "@/contexts/WeekModeContext";
 import OnboardingGuard from "@/components/OnboardingGuard";
+import { PenaltyAutoChecker } from "@/components/PenaltyAutoChecker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,7 +59,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#f97316"
+  themeColor: "#000000"
 };
 
 export default function RootLayout({
@@ -72,7 +73,7 @@ export default function RootLayout({
         {/* PWA Primary Meta Tags */}
         <meta name="application-name" content="Commitment" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#f97316" />
+        <meta name="theme-color" content="#000000" />
 
         {/* iOS Safari Specific Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -99,7 +100,7 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
 
         {/* Windows specific */}
-        <meta name="msapplication-TileColor" content="#f97316" />
+        <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-config" content="none" />
 
         {/* Service Worker Registration with PWA support */}
@@ -167,6 +168,7 @@ export default function RootLayout({
             <OnboardingGuard>
               {children}
             </OnboardingGuard>
+            <PenaltyAutoChecker />
           </WeekModeProvider>
         </AuthProvider>
       </body>

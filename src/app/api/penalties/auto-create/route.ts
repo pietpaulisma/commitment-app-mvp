@@ -238,22 +238,36 @@ export async function POST(request: NextRequest) {
 
     // Send push notification to user
     try {
-      const { data: subscriptions } = await supabase
+      console.log('[auto-create] Attempting to send push notification to user:', user.id)
+
+      const { data: subscriptions, error: subError } = await supabase
         .from('push_subscriptions')
         .select('subscription')
         .eq('user_id', user.id)
 
+      if (subError) {
+        console.error('[auto-create] Error fetching subscriptions:', subError)
+      }
+
+      console.log('[auto-create] Found subscriptions:', subscriptions?.length || 0)
+
       if (subscriptions && subscriptions.length > 0) {
         const payload = JSON.stringify({
-          title: 'Penalty Alert',
-          body: `You missed yesterday's target (${actualPoints}/${dailyTarget} pts). Respond within 24h.`,
+          title: 'Penalty Alert ⚠️',
+          body: `You missed yesterday's target (${actualPoints}/${dailyTarget} pts). Respond within 24h or penalty auto-accepts.`,
           icon: '/icon-192x192.png',
           badge: '/icon-192x192.png',
+          tag: 'penalty',
+          requireInteraction: true,
           data: {
+            type: 'penalty',
             url: '/dashboard',
             penaltyId: newPenalty.id
           }
         })
+
+        let successCount = 0
+        let failCount = 0
 
         for (const sub of subscriptions) {
           try {
@@ -261,13 +275,21 @@ export async function POST(request: NextRequest) {
               TTL: 3600,
               urgency: 'high'
             })
+            successCount++
+            console.log('[auto-create] ✅ Notification sent successfully')
           } catch (error) {
-            console.error('Failed to send notification:', error)
+            failCount++
+            console.error('[auto-create] ❌ Failed to send notification:', error)
           }
         }
+
+        console.log(`[auto-create] Notification results: ${successCount} success, ${failCount} failed`)
+      } else {
+        console.log('[auto-create] ⚠️ No push subscriptions found for user')
       }
     } catch (error) {
-      console.error('Error sending push notification:', error)
+      console.error('[auto-create] ❌ Push notification error:', error)
+      // Continue execution - don't fail penalty creation due to notification error
     }
 
     return NextResponse.json({

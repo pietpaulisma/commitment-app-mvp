@@ -97,6 +97,23 @@ export default function NewMobileProfile() {
       }
 
       setIsSickMode(newSickMode)
+
+      // Post system message to group chat
+      if (profile?.group_id && profile?.username) {
+        const message = newSickMode
+          ? `${profile.username} enabled sick mode 🤒`
+          : `${profile.username} disabled sick mode ✅`
+
+        await supabase
+          .from('chat_messages')
+          .insert({
+            group_id: profile.group_id,
+            user_id: null,
+            message,
+            message_type: 'text',
+            is_system_message: true
+          })
+      }
     } catch (error) {
       console.error('Error toggling sick mode:', error)
     } finally {

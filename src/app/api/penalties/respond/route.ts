@@ -108,14 +108,20 @@ export async function POST(request: NextRequest) {
         .update({ total_penalty_owed: newTotal })
         .eq('id', user.id)
 
-      // 4. Post to group chat
-      const { data: messageId } = await supabase.rpc('insert_chat_message', {
-        p_group_id: penalty.group_id,
-        p_user_id: user.id,
-        p_message: `${profile.username} accepted penalty: €${penalty.penalty_amount} added to pot`
-      })
+      // 4. Post to group chat as system message
+      const { data: chatData } = await supabase
+        .from('chat_messages')
+        .insert({
+          group_id: penalty.group_id,
+          user_id: null,
+          message: `${profile.username} accepted penalty: €${penalty.penalty_amount} added to pot`,
+          message_type: 'text',
+          is_system_message: true
+        })
+        .select('id')
+        .single()
 
-      chatMessageId = messageId || ''
+      chatMessageId = chatData?.id || ''
 
       const response: RespondToPenaltyResponse = {
         success: true,
@@ -145,15 +151,21 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', penalty_id)
 
-      // 2. Post to group chat
+      // 2. Post to group chat as system message
       const reasonLabel = getReasonLabel(reason_category)
-      const { data: messageId } = await supabase.rpc('insert_chat_message', {
-        p_group_id: penalty.group_id,
-        p_user_id: user.id,
-        p_message: `${profile.username} disputed penalty (${reasonLabel}): "${reason_message.trim()}"`
-      })
+      const { data: chatData } = await supabase
+        .from('chat_messages')
+        .insert({
+          group_id: penalty.group_id,
+          user_id: null,
+          message: `${profile.username} disputed penalty (${reasonLabel}): "${reason_message.trim()}"`,
+          message_type: 'text',
+          is_system_message: true
+        })
+        .select('id')
+        .single()
 
-      chatMessageId = messageId || ''
+      chatMessageId = chatData?.id || ''
 
       const response: RespondToPenaltyResponse = {
         success: true,

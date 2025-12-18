@@ -8,7 +8,6 @@ import { useProfile } from '@/hooks/useProfile'
 import dynamic from 'next/dynamic'
 const NewDashboard = dynamic(() => import('@/components/dashboard/v2/NewDashboard'), { ssr: false })
 import { BottomNavigation } from '@/components/dashboard/v2/BottomNavigation'
-import TimeGradient from '@/components/TimeGradient'
 import { useState } from 'react'
 import { isPWAMode, logPWADebugInfo } from '@/utils/pwaUtils'
 import GroupChat from '@/components/GroupChat'
@@ -104,8 +103,6 @@ export default function Home() {
   // If we have a user, render the dashboard directly
   return (
     <>
-      <TimeGradient className="fixed inset-0 z-[-1] pointer-events-none" />
-
       <div className="relative pb-32">
         <div className="relative z-10">
           <NewDashboard />

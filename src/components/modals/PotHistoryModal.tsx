@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { XMarkIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { X, History } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface PotHistoryModalProps {
@@ -60,106 +60,106 @@ export function PotHistoryModal({ groupId, onClose }: PotHistoryModalProps) {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleString('en-US', {
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return `${diffDays}d ago`
+
+    return date.toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+      day: 'numeric'
+    })
+  }
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     })
   }
 
-  const getTransactionIcon = (type: string) => {
-    switch (type) {
-      case 'penalty':
-        return '⚠️'
-      case 'payment':
-        return '💰'
-      default:
-        return '📝'
-    }
-  }
-
-  const getTransactionColor = (type: string) => {
-    switch (type) {
-      case 'penalty':
-        return 'text-red-400 bg-red-900/20 border-red-600/30'
-      case 'payment':
-        return 'text-green-400 bg-green-900/20 border-green-600/30'
-      default:
-        return 'text-blue-400 bg-blue-900/20 border-blue-600/30'
-    }
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
+      {/* Modal */}
       <div
-        className="relative bg-black/70 backdrop-blur-xl border border-white/5 shadow-2xl rounded-2xl max-w-2xl w-full"
+        className="relative bg-zinc-950/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl max-w-2xl w-full"
         style={{
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
           maxHeight: '85vh',
           display: 'flex',
           flexDirection: 'column'
         }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
+        {/* Header - Modern glass design */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <ClockIcon className="w-6 h-6 text-white" />
-            <h2 className="text-2xl font-bold text-white">Pot History</h2>
+            <History className="w-5 h-5 text-green-500" />
+            <h2 className="text-xl font-black text-white uppercase tracking-tight">Pot History</h2>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
-            <XMarkIcon className="w-6 h-6 text-white" />
+            <X className="w-5 h-5 text-zinc-400" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Content - Condensed, modern styling */}
+        <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
             <div className="text-center py-12">
-              <div className="animate-spin h-8 w-8 border-2 border-white/20 border-t-white mx-auto mb-4"></div>
-              <p className="text-white/60">Loading transaction history...</p>
+              <div className="animate-spin h-8 w-8 border-2 border-white/20 border-t-white rounded-full mx-auto mb-4"></div>
+              <p className="text-sm text-zinc-500">Loading history...</p>
             </div>
           ) : transactions.length === 0 ? (
             <div className="text-center py-12">
-              <ClockIcon className="w-16 h-16 text-white/20 mx-auto mb-4" />
-              <p className="text-white/60">No transactions yet</p>
+              <History className="w-12 h-12 text-white/10 mx-auto mb-3" />
+              <p className="text-sm text-zinc-500">No transactions yet</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               {transactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-colors"
+                  className="group px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className="text-2xl">{getTransactionIcon(tx.transaction_type)}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-white font-medium">{tx.username}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-md border ${getTransactionColor(tx.transaction_type)}`}>
-                            {tx.transaction_type}
-                          </span>
-                        </div>
-                        {tx.description && (
-                          <p className="text-sm text-white/60 mb-2">{tx.description}</p>
-                        )}
-                        <p className="text-xs text-white/40">
-                          {formatDate(tx.created_at)}
-                        </p>
+                  <div className="flex items-center justify-between">
+                    {/* Left side - User and type */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-zinc-300 truncate">
+                          {tx.username}
+                        </span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          tx.transaction_type === 'penalty'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-green-500/20 text-green-400'
+                        }`}>
+                          {tx.transaction_type === 'penalty' ? 'PENALTY' : 'PAID'}
+                        </span>
+                      </div>
+                      {tx.description && (
+                        <p className="text-xs text-zinc-600 mb-1 truncate">{tx.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 text-[10px] text-zinc-600">
+                        <span>{formatDate(tx.created_at)}</span>
+                        <span>•</span>
+                        <span>{formatTime(tx.created_at)}</span>
                       </div>
                     </div>
-                    <div className="text-right ml-4">
-                      <div className={`text-lg font-bold ${
+
+                    {/* Right side - Amount */}
+                    <div className="text-right ml-4 flex-shrink-0">
+                      <div className={`text-lg font-black ${
                         tx.transaction_type === 'penalty' ? 'text-red-400' : 'text-green-400'
                       }`}>
-                        {tx.transaction_type === 'penalty' ? '+' : '-'}€{tx.amount.toFixed(2)}
+                        {tx.transaction_type === 'penalty' ? '+' : '-'}€{tx.amount.toFixed(0)}
                       </div>
                     </div>
                   </div>
@@ -169,10 +169,10 @@ export function PotHistoryModal({ groupId, onClose }: PotHistoryModalProps) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-white/10">
-          <p className="text-xs text-white/40 text-center">
-            Showing last {transactions.length} transactions
+        {/* Footer - Condensed */}
+        <div className="px-6 py-3 border-t border-white/10">
+          <p className="text-[10px] text-zinc-600 text-center uppercase tracking-wider font-bold">
+            {transactions.length} {transactions.length === 1 ? 'transaction' : 'transactions'}
           </p>
         </div>
       </div>

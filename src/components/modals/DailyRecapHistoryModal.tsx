@@ -90,8 +90,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
             // 3. Fetch logs for the date range
             const memberIds = members.map(m => m.id)
             const { data: logs, error: logsError } = await supabase
-                .from('workout_logs')
-                .select('user_id, points, exercise_id, date, group_id')
+                .from('logs')
+                .select('user_id, points, exercise_id, date')
                 .in('user_id', memberIds)
                 .gte('date', startDateStr)
                 .lte('date', endDateStr)
@@ -321,11 +321,11 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                                         </div>
                                     )}
 
-                                    {/* Failed */}
+                                    {/* Paid */}
                                     {day.failedMembers.length > 0 && (
                                         <div>
                                             <div className="text-xs font-medium text-red-400 mb-2 uppercase tracking-wider">
-                                                ❌ Missed
+                                                💰 Paid
                                             </div>
                                             <div className="space-y-1">
                                                 {day.failedMembers.map(m => (

@@ -1,8 +1,8 @@
-const CACHE_NAME = 'commitment-app-v15-notification-fix'
-const STATIC_CACHE = 'commitment-static-v15-notification-fix'
-const RUNTIME_CACHE = 'commitment-runtime-v15-notification-fix'
+const CACHE_NAME = 'commitment-app-v16-theme-fix'
+const STATIC_CACHE = 'commitment-static-v16-theme-fix'
+const RUNTIME_CACHE = 'commitment-runtime-v16-theme-fix'
 
-console.log('🔧 Service Worker v15 - Notification Fix - Loading...')
+console.log('🔧 Service Worker v16 - Theme Fix - Loading...')
 
 const urlsToCache = [
   '/',
@@ -21,7 +21,7 @@ const urlsToCache = [
 
 // Install service worker and cache resources
 self.addEventListener('install', (event) => {
-  console.log('🔧 Service Worker v14 - Installing with iOS debug')
+  console.log('🔧 Service Worker v16 - Installing with theme fix')
   // Force skipWaiting to ensure immediate update
   self.skipWaiting()
   event.waitUntil(
@@ -52,7 +52,7 @@ self.addEventListener('install', (event) => {
 
 // Activate service worker and clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('🔧 Service Worker v14 - Activating and claiming clients')
+  console.log('🔧 Service Worker v16 - Activating and claiming clients')
   // Claim all clients immediately to force update
   self.clients.claim()
   event.waitUntil(
