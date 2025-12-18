@@ -4,6 +4,7 @@ import React from 'react';
 import { Dumbbell, Flame, Heart, Moon, Zap } from 'lucide-react';
 import { GlassCard } from './GlassCard';
 import { CardHeader } from './CardHeader';
+import { TimePeriod, TIME_PERIOD_LABELS, getNextTimePeriod } from '@/utils/timePeriodHelpers';
 
 interface Exercise {
     name: string;
@@ -17,12 +18,21 @@ interface PopularExerciseWidgetProps {
     isPersonal?: boolean;
     customTitle?: string;
     customRightContent?: string;
+    timePeriod?: TimePeriod;
+    onTimePeriodChange?: (newPeriod: TimePeriod) => void;
 }
 
-export function PopularExerciseWidget({ exercises, isPersonal = false, customTitle, customRightContent }: PopularExerciseWidgetProps) {
+export function PopularExerciseWidget({ exercises, isPersonal = false, customTitle, customRightContent, timePeriod, onTimePeriodChange }: PopularExerciseWidgetProps) {
     const title = customTitle || (isPersonal ? "Your Top Exercise" : "Group Favorite");
-    const rightContent = customRightContent || "THIS WEEK";
+    // Use time period label if provided, otherwise fall back to customRightContent or default
+    const rightContent = timePeriod ? TIME_PERIOD_LABELS[timePeriod] : (customRightContent || "THIS WEEK");
     const maxCount = Math.max(...exercises.map(e => e.count), 1);
+    
+    const handleTimePeriodClick = () => {
+        if (timePeriod && onTimePeriodChange) {
+            onTimePeriodChange(getNextTimePeriod(timePeriod));
+        }
+    };
 
     // Helper to convert points to quantity and get unit
     // NOTE: This is a fallback for when we don't have exercise metadata
@@ -108,6 +118,7 @@ export function PopularExerciseWidget({ exercises, isPersonal = false, customTit
                     icon={Dumbbell}
                     colorClass={maxCount > 500 ? "text-orange-500" : "text-blue-500"}
                     rightContent={rightContent}
+                    onRightContentClick={timePeriod && onTimePeriodChange ? handleTimePeriodClick : undefined}
                 />
                 <div className="p-4 space-y-3">
                     {exercises.slice(0, 5).map((exercise, index) => {

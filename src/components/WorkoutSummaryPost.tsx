@@ -111,8 +111,12 @@ export function WorkoutSummaryPost({ workoutData, user, compact, isCurrentUser, 
   const intensity = getIntensityLabel(data.percentage, data.points, workoutData.week_mode);
   const isInsane = intensity === "INSANE";
 
-  // Use slightly lighter background for user's own workouts to distinguish them
-  const bgClass = isCurrentUser ? 'bg-[#222]' : 'bg-[#1a1a1a]';
+  // Use distinctive styling for user's own workouts
+  const bgClass = isCurrentUser 
+    ? isInsane 
+      ? 'bg-[#1a1a1a] border border-orange-500/40 shadow-[0_0_15px_rgba(249,115,22,0.15)]' 
+      : 'bg-[#1a1a1a] border border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.15)]'
+    : 'bg-[#1a1a1a]';
 
   return (
     <div className={`${bgClass} rounded-[1.5rem] p-4 text-white min-w-[280px] ${isLastInGroup

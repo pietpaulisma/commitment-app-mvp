@@ -24,6 +24,7 @@ import { DailyRecapHistoryModal } from '@/components/modals/DailyRecapHistoryMod
 import { PenaltyResponseModal } from '@/components/modals/PenaltyResponseModal';
 import type { PendingPenalty } from '@/types/penalties';
 import { formatTimeRemaining } from '@/utils/penaltyHelpers';
+import { TimePeriod, TIME_PERIOD_LABELS, getNextTimePeriod, getDateRangeForPeriod, getTimestampRangeForPeriod } from '@/utils/timePeriodHelpers';
 
 export default function NewDashboard() {
     const { user } = useAuth();
@@ -106,6 +107,13 @@ export default function NewDashboard() {
         target: 0,
         percentage: 0
     });
+    
+    // Time period states for stats widgets
+    const [favoriteTimePeriod, setFavoriteTimePeriod] = useState<TimePeriod>('today');
+    const [peakTimeTimePeriod, setPeakTimeTimePeriod] = useState<TimePeriod>('today');
+    
+    // Unread messages tracking
+    const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
     useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
@@ -117,6 +125,73 @@ export default function NewDashboard() {
             loadDashboardData();
         }
     }, [user]);
+
+    // Check for unread messages
+    const checkUnreadMessages = async (groupId: string) => {
+        try {
+            const lastChatVisit = localStorage.getItem(`lastChatVisit_${groupId}`);
+            const lastVisitTime = lastChatVisit ? new Date(lastChatVisit) : new Date(0);
+
+            // Get the most recent message in the group (excluding current user's messages)
+            const { data: recentMessages, error } = await supabase
+                .from('chat_messages')
+                .select('created_at, user_id')
+                .eq('group_id', groupId)
+                .neq('user_id', user?.id || '')
+                .gt('created_at', lastVisitTime.toISOString())
+                .limit(1);
+
+            if (error) {
+                console.error('[NewDashboard] Error checking unread messages:', error);
+                return;
+            }
+
+            setHasUnreadMessages(recentMessages && recentMessages.length > 0);
+        } catch (error) {
+            console.error('[NewDashboard] Error checking unread messages:', error);
+        }
+    };
+
+    // Mark chat as read when opened
+    const handleChatOpen = () => {
+        if (userProfile?.group_id) {
+            localStorage.setItem(`lastChatVisit_${userProfile.group_id}`, new Date().toISOString());
+            setHasUnreadMessages(false);
+        }
+        setIsChatOpen(true);
+    };
+
+    // Subscribe to new messages for unread indicator
+    useEffect(() => {
+        if (!userProfile?.group_id) return;
+
+        // Initial check
+        checkUnreadMessages(userProfile.group_id);
+
+        // Subscribe to new messages
+        const subscription = supabase
+            .channel(`unread-messages-${userProfile.group_id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'chat_messages',
+                    filter: `group_id=eq.${userProfile.group_id}`
+                },
+                (payload) => {
+                    // Only set unread if message is from someone else and chat is closed
+                    if (payload.new && (payload.new as any).user_id !== user?.id && !isChatOpen) {
+                        setHasUnreadMessages(true);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, [userProfile?.group_id, user?.id, isChatOpen]);
 
     const loadDashboardData = async () => {
         if (!user) return;
@@ -176,6 +251,15 @@ export default function NewDashboard() {
                             ...squad.filter(u => u.name !== "You").sort((a, b) => b.pct - a.pct)
                         ];
                         setSquadData(sortedSquad);
+                        
+                        // Sync todayProgress from squad data for the current user
+                        const currentUserData = data.squad.find((u: any) => u.id === user.id);
+                        if (currentUserData) {
+                            setTodayProgress(prev => ({
+                                ...prev,
+                                percentage: currentUserData.pct || 0
+                            }));
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching squad status:', error);
@@ -1116,7 +1200,7 @@ export default function NewDashboard() {
                     const cappedRecovery = Math.min(totalRecovery, recoveryCapLimit);
                     const actualPoints = totalNonRecovery + cappedRecovery;
 
-                    const percentage = dailyTarget > 0 ? Math.min(100, Math.round((actualPoints / dailyTarget) * 100)) : 0;
+                    const percentage = dailyTarget > 0 ? Math.round((actualPoints / dailyTarget) * 100) : 0;
 
                     setTodayProgress({
                         actual: actualPoints,
@@ -1151,6 +1235,192 @@ export default function NewDashboard() {
             setLoading(false);
         }
     };
+
+    // Fetch popular exercises for a specific time period
+    const fetchPopularExercisesByPeriod = async (period: TimePeriod, isGroup: boolean) => {
+        if (!user || !userProfile?.group_id) return;
+
+        try {
+            const { startDate, endDate } = getDateRangeForPeriod(period);
+
+            if (isGroup) {
+                const { data: members } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('group_id', userProfile.group_id);
+
+                if (members && members.length > 0) {
+                    const memberIds = members.map(m => m.id);
+
+                    const { data: periodLogs, error: logsError } = await supabase
+                        .from('logs')
+                        .select('exercise_id, points, sport_name, date, user_id, exercises(name)')
+                        .in('user_id', memberIds)
+                        .gte('date', startDate)
+                        .lte('date', endDate);
+
+                    if (logsError) {
+                        console.error('[NewDashboard] Group Popular - Error:', logsError);
+                        return;
+                    }
+
+                    const { data: allMembers } = await supabase
+                        .from('profiles')
+                        .select('id, username')
+                        .in('id', memberIds);
+
+                    const userIdToUsername = new Map(allMembers?.map(m => [m.id, m.username]) || []);
+
+                    const exerciseCount = new Map<string, { name: string; count: number; contributors: Set<string> }>();
+                    periodLogs?.forEach((log: any) => {
+                        let displayName: string;
+                        let groupKey: string;
+
+                        const exerciseName = log.exercises?.name;
+
+                        if (log.sport_name) {
+                            displayName = log.sport_name;
+                            groupKey = `sport:${log.sport_name}`;
+                        } else if (exerciseName && exerciseName !== 'Intense Sport') {
+                            displayName = exerciseName;
+                            groupKey = `exercise:${log.exercise_id}`;
+                        } else {
+                            return;
+                        }
+
+                        const username = userIdToUsername.get(log.user_id);
+                        if (!username) return;
+
+                        const current = exerciseCount.get(groupKey);
+                        if (current) {
+                            current.count += log.points;
+                            current.contributors.add(username);
+                        } else {
+                            exerciseCount.set(groupKey, {
+                                name: displayName,
+                                count: log.points,
+                                contributors: new Set([username])
+                            });
+                        }
+                    });
+
+                    const topExercises = Array.from(exerciseCount.values())
+                        .map(exercise => ({
+                            name: exercise.name,
+                            count: exercise.count,
+                            contributors: Array.from(exercise.contributors)
+                        }))
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 5);
+
+                    setPopularExercisesGroup(topExercises);
+                }
+            } else {
+                const { data: periodLogs } = await supabase
+                    .from('logs')
+                    .select('exercise_id, points, sport_name, date, exercises(name)')
+                    .eq('user_id', user.id)
+                    .gte('date', startDate)
+                    .lte('date', endDate);
+
+                const exerciseCount = new Map<string, { name: string; count: number }>();
+                periodLogs?.forEach((log: any) => {
+                    let displayName: string;
+                    let groupKey: string;
+
+                    const exerciseName = log.exercises?.name;
+
+                    if (log.sport_name) {
+                        displayName = log.sport_name;
+                        groupKey = `sport:${log.sport_name}`;
+                    } else if (exerciseName && exerciseName !== 'Intense Sport') {
+                        displayName = exerciseName;
+                        groupKey = `exercise:${log.exercise_id}`;
+                    } else {
+                        return;
+                    }
+
+                    const current = exerciseCount.get(groupKey);
+                    if (current) {
+                        current.count += log.points;
+                    } else {
+                        exerciseCount.set(groupKey, { name: displayName, count: log.points });
+                    }
+                });
+
+                const topExercises = Array.from(exerciseCount.values())
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 5);
+
+                setPopularExercisesPersonal(topExercises);
+            }
+        } catch (error) {
+            console.error('[NewDashboard] Error fetching popular exercises by period:', error);
+        }
+    };
+
+    // Fetch peak workout time for a specific time period
+    const fetchPeakWorkoutTimeByPeriod = async (period: TimePeriod) => {
+        if (!user || !userProfile?.group_id) return;
+
+        try {
+            const { startTimestamp, endTimestamp } = getTimestampRangeForPeriod(period);
+
+            const { data: members } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('group_id', userProfile.group_id);
+
+            if (members && members.length > 0) {
+                const memberIds = members.map(m => m.id);
+
+                const { data: timeLogs } = await supabase
+                    .from('logs')
+                    .select('created_at')
+                    .in('user_id', memberIds)
+                    .gte('created_at', startTimestamp)
+                    .lt('created_at', endTimestamp);
+
+                const hourCounts = new Array(24).fill(0);
+                timeLogs?.forEach(log => {
+                    const localDate = new Date(log.created_at);
+                    const hour = localDate.getHours();
+                    hourCounts[hour]++;
+                });
+
+                const maxCount = Math.max(...hourCounts);
+                if (maxCount > 0) {
+                    const mostPopularHour = hourCounts.indexOf(maxCount);
+
+                    const peakTime = mostPopularHour === 0 ? '12AM' :
+                                    mostPopularHour < 12 ? `${mostPopularHour}AM` :
+                                    mostPopularHour === 12 ? '12PM' :
+                                    `${mostPopularHour - 12}PM`;
+
+                    setPeakWorkoutTime(peakTime);
+                } else {
+                    setPeakWorkoutTime('--:--');
+                }
+                setHourlyWorkoutData(hourCounts);
+            }
+        } catch (error) {
+            console.error('[NewDashboard] Error fetching peak workout time by period:', error);
+        }
+    };
+
+    // Effect to update data when favorite exercise time period changes
+    useEffect(() => {
+        if (userProfile?.group_id) {
+            fetchPopularExercisesByPeriod(favoriteTimePeriod, viewMode === 'group');
+        }
+    }, [favoriteTimePeriod, viewMode, userProfile?.group_id]);
+
+    // Effect to update data when peak time period changes
+    useEffect(() => {
+        if (userProfile?.group_id) {
+            fetchPeakWorkoutTimeByPeriod(peakTimeTimePeriod);
+        }
+    }, [peakTimeTimePeriod, userProfile?.group_id]);
 
     const formatTime = (date: Date) => {
         return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1228,10 +1498,12 @@ export default function NewDashboard() {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Time Remaining</span>
                         </div>
                         <div className="h-20 w-full bg-[#050505] rounded-full border border-zinc-800 p-1.5 shadow-[0_0_0_1px_rgba(0,0,0,1)] relative group">
-                            <div className="h-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 relative transition-all duration-1000"
+                            <div className="h-full bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 relative transition-all duration-1000"
                                 style={{
-                                    width: `${time ? getTimeRemainingPercentage(time) : 0}%`,
-                                    boxShadow: COLORS.orange.boxShadow
+                                    width: `${time ? Math.max(10, getTimeRemainingPercentage(time)) : 0}%`,
+                                    minWidth: '68px',
+                                    boxShadow: COLORS.orange.boxShadow,
+                                    borderRadius: '9999px'
                                 }}>
                                 <div className="absolute inset-0 rounded-full overflow-hidden z-0">
                                     <div className="absolute top-[-50%] bottom-[-50%] left-[-50%] right-[-50%] bg-white/20 skew-x-12 animate-[shimmer_2s_infinite] mix-blend-overlay" />
@@ -1637,17 +1909,9 @@ export default function NewDashboard() {
                     <PopularExerciseWidget
                         exercises={viewMode === "group" ? popularExercisesGroup : popularExercisesPersonal}
                         isPersonal={viewMode === "personal"}
+                        timePeriod={favoriteTimePeriod}
+                        onTimePeriodChange={setFavoriteTimePeriod}
                     />
-
-                    {/* Personal view only: Top Exercise This Year */}
-                    {viewMode === "personal" && (
-                        <PopularExerciseWidget
-                            exercises={yearlyExercisesPersonal}
-                            isPersonal={true}
-                            customTitle="Top Exercise This Year"
-                            customRightContent="2025"
-                        />
-                    )}
                 </section >
 
                 {/* --- NEW COMPONENTS SECTION --- */}
@@ -1669,10 +1933,11 @@ export default function NewDashboard() {
                             {/* Peak Workout Time - Group (with visualization) */}
                             <GlassCard noPadding className="col-span-2">
                                 <CardHeader
-                                    title="Peak Workout Time"
+                                    title="Peak Time"
                                     icon={Zap}
                                     colorClass="text-yellow-500"
-                                    rightContent={peakWorkoutTime}
+                                    rightContent={TIME_PERIOD_LABELS[peakTimeTimePeriod]}
+                                    onRightContentClick={() => setPeakTimeTimePeriod(getNextTimePeriod(peakTimeTimePeriod))}
                                 />
                                 <div className="p-6 pt-2">
                                     <div className="text-xs text-zinc-500 mb-4">Group workout distribution by time of day</div>
@@ -1684,7 +1949,13 @@ export default function NewDashboard() {
                         <section className="px-5 grid grid-cols-2 gap-4 mt-8">
                             {/* Peak Workout Time - Personal (hourly visualization) */}
                             <GlassCard noPadding className="col-span-2">
-                                <CardHeader title="Peak Workout Time" icon={Zap} colorClass="text-yellow-500" rightContent={peakWorkoutTime} />
+                                <CardHeader 
+                                    title="Peak Time"
+                                    icon={Zap} 
+                                    colorClass="text-yellow-500" 
+                                    rightContent={TIME_PERIOD_LABELS[peakTimeTimePeriod]}
+                                    onRightContentClick={() => setPeakTimeTimePeriod(getNextTimePeriod(peakTimeTimePeriod))}
+                                />
                                 <div className="p-6 pt-2">
                                     <div className="text-xs text-zinc-500 mb-4">Workout distribution by time of day</div>
                                     <PeakWorkoutTimeChart hourlyData={hourlyWorkoutData} />
@@ -1699,9 +1970,10 @@ export default function NewDashboard() {
             {/* --- BOTTOM NAVIGATION --- */}
             < BottomNavigation
                 onWorkoutClick={() => setIsWorkoutModalOpen(true)}
-                onChatClick={() => setIsChatOpen(true)}
+                onChatClick={handleChatOpen}
                 groupId={userProfile?.group_id}
-                progressPercentage={todayProgress.percentage}
+                progressPercentage={squadData.find(u => u.name === "You")?.pct || todayProgress.percentage}
+                hasUnreadMessages={hasUnreadMessages}
             />
 
             {/* --- WORKOUT MODAL --- */}
@@ -1712,6 +1984,10 @@ export default function NewDashboard() {
                         onClose={() => {
                             setIsWorkoutModalOpen(false);
                             loadDashboardData(); // Reload dashboard data after workout logged
+                        }}
+                        onOpenChat={() => {
+                            setIsWorkoutModalOpen(false);
+                            handleChatOpen();
                         }}
                     />
                 )

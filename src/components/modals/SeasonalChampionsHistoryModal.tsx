@@ -185,12 +185,13 @@ export function SeasonalChampionsHistoryModal({ groupId, onClose }: SeasonalCham
         }
       }
 
-      // Sort champions within each season and sort seasons
+      // Sort champions within each season, filter out seasons with no champions, and sort seasons
       const sortedSeasons = Array.from(seasonMap.values())
         .map(season => ({
           ...season,
           champions: season.champions.sort((a, b) => b.wins - a.wins).slice(0, 5)
         }))
+        .filter(season => season.champions.length > 0) // Only show seasons with actual data
         .sort((a, b) => {
           if (b.year !== a.year) return b.year - a.year
           const seasonOrder = { 'Winter': 4, 'Fall': 3, 'Summer': 2, 'Spring': 1 }
@@ -234,7 +235,10 @@ export function SeasonalChampionsHistoryModal({ groupId, onClose }: SeasonalCham
         </div>
 
         {/* Content - Condensed, modern styling */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4" style={{ 
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch'
+        }}>
           {loading ? (
             <div className="space-y-6">
               {[1, 2, 3].map(i => (
@@ -253,42 +257,43 @@ export function SeasonalChampionsHistoryModal({ groupId, onClose }: SeasonalCham
               <p className="text-sm text-zinc-500">No seasonal data yet</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {seasonHistory.map((season) => (
-                <div key={`${season.year}-${season.season}`}>
-                  {/* Season Header - More prominent */}
-                  <div className="flex items-center gap-2 mb-3 px-2">
-                    <h3 className="text-base font-black text-white uppercase tracking-tight">
+                <div key={`${season.year}-${season.season}`} className="bg-white/[0.02] rounded-xl border border-white/5 overflow-hidden">
+                  {/* Season Header */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-white/[0.03] border-b border-white/5">
+                    <Trophy className="w-4 h-4 text-yellow-500" />
+                    <h3 className="text-sm font-black text-white uppercase tracking-tight">
                       {formatSeasonDisplay(season.season, season.year)}
                     </h3>
-                    <div className="flex-1 h-px bg-white/10"></div>
+                    <span className="ml-auto text-xs text-zinc-500 font-bold">
+                      {season.champions.reduce((sum, c) => sum + c.wins, 0)} weeks
+                    </span>
                   </div>
 
-                  {/* Champions List - Condensed */}
-                  <div className="space-y-1.5">
+                  {/* Champions List */}
+                  <div className="p-3 space-y-1.5">
                     {season.champions.map((champion, index) => (
                       <div
                         key={champion.userId}
-                        className="group px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                        className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-sm font-black text-zinc-400 min-w-[24px]">
-                              {index === 0 && '🥇'}
-                              {index === 1 && '🥈'}
-                              {index === 2 && '🥉'}
-                              {index > 2 && `${index + 1}`}
-                            </span>
-                            <span className="text-sm font-bold text-zinc-300">
-                              {champion.username}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Trophy className="w-4 h-4 text-yellow-500" fill="currentColor" />
-                            <span className="text-sm font-bold text-yellow-400">
-                              {champion.wins}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-sm font-black text-zinc-400 min-w-[24px]">
+                            {index === 0 && '🥇'}
+                            {index === 1 && '🥈'}
+                            {index === 2 && '🥉'}
+                            {index > 2 && `${index + 1}`}
+                          </span>
+                          <span className="text-sm font-bold text-zinc-300">
+                            {champion.username}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Trophy className="w-3.5 h-3.5 text-yellow-500" fill="currentColor" />
+                          <span className="text-sm font-bold text-yellow-400">
+                            {champion.wins}
+                          </span>
                         </div>
                       </div>
                     ))}

@@ -1,25 +1,15 @@
-
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { useProfile } from '@/hooks/useProfile'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 const NewDashboard = dynamic(() => import('@/components/dashboard/v2/NewDashboard'), { ssr: false })
-import { BottomNavigation } from '@/components/dashboard/v2/BottomNavigation'
-import { useState } from 'react'
 import { isPWAMode, logPWADebugInfo } from '@/utils/pwaUtils'
-import GroupChat from '@/components/GroupChat'
-import WorkoutModal from '@/components/modals/WorkoutModal'
 
 export default function Home() {
   const { user, loading } = useAuth()
-  const { profile } = useProfile()
   const router = useRouter()
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
   const [isPWA, setIsPWA] = useState(false)
 
   // Detect PWA mode and setup debug logging
@@ -64,33 +54,6 @@ export default function Home() {
     }
   }, [user, loading, router, isPWA])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const threshold = window.innerHeight * 0.3
-      setIsScrolled(currentScrollY > threshold)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const handleWorkoutOpen = () => {
-    setIsWorkoutModalOpen(true)
-  }
-
-  const handleWorkoutClose = () => {
-    setIsWorkoutModalOpen(false)
-  }
-
-  const handleChatOpen = () => {
-    setIsChatModalOpen(true)
-  }
-
-  const handleChatClose = () => {
-    setIsChatModalOpen(false)
-  }
-
   // If loading or no user, show minimal state
   if (loading) {
     return null // Let the browser handle it instantly
@@ -101,36 +64,12 @@ export default function Home() {
   }
 
   // If we have a user, render the dashboard directly
+  // NewDashboard handles its own BottomNavigation, WorkoutModal, and GroupChat
   return (
-    <>
-      <div className="relative pb-32">
-        <div className="relative z-10">
-          <NewDashboard />
-        </div>
+    <div className="relative pb-32">
+      <div className="relative z-10">
+        <NewDashboard />
       </div>
-
-      {/* New Bottom Navigation */}
-      <BottomNavigation
-        onWorkoutClick={handleWorkoutOpen}
-        onChatClick={handleChatOpen}
-        groupId={profile?.group_id}
-      />
-
-      {/* Group Chat Modal */}
-      <GroupChat
-        isOpen={isChatModalOpen}
-        onClose={handleChatClose}
-        onCloseStart={handleChatClose}
-      />
-
-      {/* Workout Modal */}
-      <WorkoutModal
-        isOpen={isWorkoutModalOpen}
-        onClose={handleWorkoutClose}
-        onCloseStart={handleWorkoutClose}
-        onWorkoutAdded={() => { }}
-        isAnimating={false}
-      />
-    </>
+    </div>
   )
 }

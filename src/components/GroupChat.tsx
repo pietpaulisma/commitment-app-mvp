@@ -213,6 +213,11 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
   // System message states
   const [systemMessages, setSystemMessages] = useState<{ [messageId: string]: SystemMessage }>({})
 
+  // Floating day indicator state
+  const [currentVisibleDay, setCurrentVisibleDay] = useState<string | null>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const daySectionRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+
   // Available emoji reactions
   const emojiOptions: EmojiOption[] = [
     { emoji: '❤️', label: 'heart', icon: HeartIcon, solidIcon: HeartIconSolid },
@@ -274,7 +279,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             filter: `group_id=eq.${profile.group_id}`
           },
           async (payload) => {
-            console.log('Real-time message received:', payload)
             // Skip if this is our own message (already added optimistically) and it's not a system message
             if (payload.new && (payload.new.user_id !== user?.id || payload.new.is_system_message)) {
               try {
@@ -361,7 +365,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                         'chat_messages'
                       )
 
-                      console.log(`Chat notification sent to ${memberIds.length} members`)
                     }
                   } catch (notificationError) {
                     console.error('Error sending chat notification:', notificationError)
@@ -386,7 +389,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             table: 'message_reactions'
           },
           async (payload) => {
-            console.log('Real-time reaction update:', payload)
 
             if (payload.eventType === 'INSERT') {
               // Get user info for the new reaction
@@ -420,9 +422,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             }
           }
         )
-        .subscribe((status) => {
-          console.log('Subscription status:', status)
-        })
+        .subscribe()
 
       return () => {
         supabase.removeChannel(channel)
@@ -554,15 +554,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         reactions: []
       })).reverse() || [] // Reverse to get chronological order after descending query
 
-      // Debug: Check for workout completion messages
-      const workoutMessages = formattedMessages.filter(m => m.message_type === 'workout_completion')
-      console.log('Loaded workout completion messages:', workoutMessages.map(m => ({
-        id: m.id,
-        user_email: m.user_email,
-        message_type: m.message_type,
-        created_at: m.created_at,
-        message_preview: m.message?.substring(0, 100)
-      })))
 
       // Load system message data for system messages
       await loadSystemMessages(formattedMessages.filter(m => m.is_system_message && m.system_message_id).map(m => m.system_message_id!))
@@ -764,7 +755,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
               'chat_messages' // notification preference type
             )
 
-            console.log(`📱 Chat notification sent to ${memberIds.length} group members`)
           }
         } catch (notificationError) {
           console.error('Error sending chat notification:', notificationError)
@@ -772,7 +762,6 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
         }
       }
 
-      console.log('Message sent successfully:', data)
     } catch (error) {
       console.error('Unexpected error sending message:', error)
       // Remove the optimistic message on error
@@ -801,13 +790,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     try {
       const { data: reactionsData, error } = await supabase
         .from('message_reactions')
-        .select(`
-          id,
-          message_id,
-          user_id,
-          emoji,
-          profiles (email)
-        `)
+        .select('id, message_id, user_id, emoji')
         .in('message_id', messageIds)
 
       if (error) throw error
@@ -821,8 +804,7 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           id: reaction.id,
           message_id: reaction.message_id,
           user_id: reaction.user_id,
-          emoji: reaction.emoji,
-          user_email: (reaction.profiles as any)?.email || 'Unknown'
+          emoji: reaction.emoji
         })
       })
 
@@ -1118,6 +1100,75 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
     return () => clearInterval(interval);
   }, [isOpen, profile?.group_id]);
 
+  // Set the current visible day when messages load
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Get the day label for the first message
+      const firstMessageDate = new Date(messages[0].created_at);
+      setCurrentVisibleDay(getDayLabel(firstMessageDate));
+    }
+  }, [messages]);
+
+  // Track which day section is visible for the floating indicator
+  useEffect(() => {
+    if (!isOpen || !messagesContainerRef.current || messages.length === 0) return;
+
+    const container = messagesContainerRef.current;
+    
+    const updateVisibleDay = () => {
+      // Get all messages with their positions
+      const messagesByDay = groupMessagesByDay();
+      const containerRect = container.getBoundingClientRect();
+      const scrollTop = container.scrollTop;
+      
+      // Find which day section is currently visible at the top
+      let currentDay: string | null = null;
+      
+      for (const item of messagesByDay) {
+        if (item.type === 'divider') {
+          const dayLabel = item.day;
+          const dayElement = daySectionRefs.current.get(dayLabel);
+          
+          if (dayElement) {
+            const rect = dayElement.getBoundingClientRect();
+            const relativeTop = rect.top - containerRect.top;
+            
+            // If this divider is above the viewport top + some buffer, this is the current day
+            if (relativeTop <= 80) {
+              currentDay = dayLabel;
+            }
+          }
+        }
+      }
+      
+      if (currentDay) {
+        setCurrentVisibleDay(currentDay);
+      }
+    };
+
+    // Throttle scroll events
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateVisibleDay();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check after a delay to ensure refs are set
+    const timeoutId = setTimeout(updateVisibleDay, 500);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [isOpen, messages]);
+
   if (!isOpen) return null
 
   if (!profile?.group_id) {
@@ -1171,14 +1222,13 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
 
       {/* Messages - Updated background */}
       <div
-        className="flex-1 overflow-y-auto px-5 py-4"
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-5 py-4 relative"
         style={{
           WebkitOverflowScrolling: 'touch',
           touchAction: 'manipulation',
           overscrollBehavior: 'contain',
           scrollBehavior: 'smooth',
-          position: 'relative',
-          zIndex: 1,
           background: '#000',
           // PWA performance optimizations
           willChange: 'scroll-position',
@@ -1186,6 +1236,14 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
           backfaceVisibility: 'hidden'
         }}
       >
+        {/* Floating day indicator - single element that updates based on scroll */}
+        {!loading && messages.length > 0 && currentVisibleDay && (
+          <div className="sticky top-4 z-20 flex justify-center pointer-events-none mb-2" style={{ marginTop: '-0.5rem' }}>
+            <div className="bg-black/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border border-white/20 shadow-xl">
+              {currentVisibleDay}
+            </div>
+          </div>
+        )}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin h-8 w-8 border-2 border-gray-700 border-t-blue-400 rounded-full mx-auto"></div>
@@ -1198,14 +1256,30 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
             <p className="text-gray-500 text-sm mt-1">Be the first to say hello!</p>
           </div>
         ) : (
-          groupMessagesByDay().map((item, index) => (
-            item.type === 'divider' ? (
-              <div key={`divider-${index}`} className="sticky top-4 z-10 flex justify-center my-4 pointer-events-none">
-                <div className="bg-black/60 backdrop-blur-md text-white/80 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
-                  {item.day}
-                </div>
-              </div>
-            ) : item.message.is_system_message ? (
+          (() => {
+            let dividerCount = 0
+            return groupMessagesByDay().map((item, index) => {
+              if (item.type === 'divider') {
+                dividerCount++
+                const dayLabel = item.day
+                
+                return (
+                  <div 
+                    key={`divider-${index}`}
+                    ref={(el) => {
+                      if (el) {
+                        daySectionRefs.current.set(dayLabel, el)
+                      }
+                    }}
+                    className="flex justify-center my-4 pointer-events-none"
+                  >
+                    <div className="bg-black/40 text-white/50 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/5">
+                      {dayLabel}
+                    </div>
+                  </div>
+                )
+              }
+              return item.message.is_system_message ? (
               <SystemMessageComponent
                 key={item.message.id}
                 // @ts-ignore - fixing type mismatch for is_system_message
@@ -1238,7 +1312,8 @@ export default function GroupChat({ isOpen, onClose, onCloseStart }: GroupChatPr
                 isLastInGroup={'isLastInGroup' in item ? item.isLastInGroup : true}
               />
             )
-          ))
+          })
+          })()
         )}
         <div ref={messagesEndRef} />
       </div>

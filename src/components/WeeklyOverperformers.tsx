@@ -9,6 +9,7 @@ import { GlassCard } from '@/components/dashboard/v2/GlassCard'
 import { CardHeader } from '@/components/dashboard/v2/CardHeader'
 import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
 import { COLORS } from '@/utils/colors'
+import { TimePeriod, TIME_PERIOD_LABELS, getNextTimePeriod, getDateRangeForPeriod } from '@/utils/timePeriodHelpers'
 
 interface OverperformerData {
   id: string
@@ -28,13 +29,18 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
   const [overperformers, setOverperformers] = useState<OverperformerData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('week')
   const { user } = useAuth()
   const { profile } = useProfile()
 
   // Debounce timeout for real-time updates
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const handleTimePeriodClick = () => {
+    setTimePeriod(getNextTimePeriod(timePeriod))
+  }
 
-  const fetchWeeklyOverperformers = async () => {
+  const fetchOverperformers = async () => {
     if (!user || !profile?.group_id) {
       return
     }
@@ -42,27 +48,8 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
     try {
       setLoading(true)
 
-      // Get the start of current week (Monday) - using local date strings to avoid timezone issues
-      const now = new Date()
-      const currentDay = now.getDay()
-      const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1 // Convert Sunday (0) to 6
-
-      // Calculate Monday's date in local time
-      const mondayDate = new Date(now)
-      mondayDate.setDate(now.getDate() - daysFromMonday)
-
-      // Calculate Sunday's date in local time  
-      const sundayDate = new Date(mondayDate)
-      sundayDate.setDate(mondayDate.getDate() + 6)
-
-      // Format as YYYY-MM-DD strings in local timezone
-      const startDateStr = mondayDate.getFullYear() + '-' +
-        String(mondayDate.getMonth() + 1).padStart(2, '0') + '-' +
-        String(mondayDate.getDate()).padStart(2, '0')
-
-      const endDateStr = sundayDate.getFullYear() + '-' +
-        String(sundayDate.getMonth() + 1).padStart(2, '0') + '-' +
-        String(sundayDate.getDate()).padStart(2, '0')
+      // Get date range based on selected time period
+      const { startDate: startDateStr, endDate: endDateStr } = getDateRangeForPeriod(timePeriod)
 
 
 
@@ -301,7 +288,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
   }
 
   useEffect(() => {
-    fetchWeeklyOverperformers()
+    fetchOverperformers()
 
     if (user && profile?.group_id) {
       // Set up real-time subscription to logs table
@@ -318,14 +305,14 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
             // Debounced reload - wait for rapid changes to settle
             if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current)
             debounceTimeoutRef.current = setTimeout(() => {
-              fetchWeeklyOverperformers()
+              fetchOverperformers()
             }, 1000) // 1 second debounce
           }
         )
         .subscribe()
 
       // Refresh data every 1 minute as fallback (reduced from 5 minutes)
-      const interval = setInterval(fetchWeeklyOverperformers, 1 * 60 * 1000)
+      const interval = setInterval(fetchOverperformers, 1 * 60 * 1000)
 
       return () => {
         clearInterval(interval)
@@ -333,7 +320,7 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
         supabase.removeChannel(logsSubscription)
       }
     }
-  }, [user?.id, profile?.group_id])
+  }, [user?.id, profile?.group_id, timePeriod])
 
   const getRankColor = (rank: number) => {
     switch (rank) {
@@ -348,18 +335,18 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
     }
   }
 
+  // Title is just "Overperformers" - time period shown on the right
+  const getTitle = () => 'Overperformers'
+
   if (loading) {
     return (
       <GlassCard noPadding className={className}>
         <CardHeader
-          title="Weekly Overperformers"
+          title={getTitle()}
           icon={Flame}
           colorClass="text-orange-500"
-          rightContent={
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">
-              Points beyond sane • Resets Monday
-            </span>
-          }
+          rightContent={TIME_PERIOD_LABELS[timePeriod]}
+          onRightContentClick={handleTimePeriodClick}
         />
         <div className="p-4 space-y-2">
           {[...Array(3)].map((_, i) => (
@@ -376,18 +363,15 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
     return (
       <GlassCard noPadding className={className}>
         <CardHeader
-          title="Weekly Overperformers"
+          title={getTitle()}
           icon={Flame}
           colorClass="text-orange-500"
-          rightContent={
-            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">
-              Points beyond sane • Resets Monday
-            </span>
-          }
+          rightContent={TIME_PERIOD_LABELS[timePeriod]}
+          onRightContentClick={handleTimePeriodClick}
         />
         <div className="text-center py-8">
           <p className="text-sm text-zinc-500">
-            {error ? 'Unable to load data' : 'No overperformers this week yet'}
+            {error ? 'Unable to load data' : `No overperformers ${timePeriod === 'today' ? 'today' : `this ${timePeriod}`} yet`}
           </p>
         </div>
       </GlassCard>
@@ -400,10 +384,11 @@ export default function WeeklyOverperformers({ className = '' }: WeeklyOverperfo
   return (
     <GlassCard noPadding className={className}>
       <CardHeader
-        title="Weekly Overperformers"
+        title={getTitle()}
         icon={Flame}
         colorClass="text-orange-500"
-        rightContent="Points beyond sane • Resets Monday"
+        rightContent={TIME_PERIOD_LABELS[timePeriod]}
+        onRightContentClick={handleTimePeriodClick}
       />
 
       <div className="p-4 space-y-2">

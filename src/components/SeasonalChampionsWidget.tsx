@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { Trophy } from 'lucide-react'
 import { GlassCard } from '@/components/dashboard/v2/GlassCard'
 import { CardHeader } from '@/components/dashboard/v2/CardHeader'
-import { getCurrentSeason, formatSeasonDisplay, getWeekDates, getWeekNumber, formatWeekDisplay } from '@/utils/seasonHelpers'
+import { getCurrentSeason, getWeekDates, getWeekNumber } from '@/utils/seasonHelpers'
 import { calculateDailyTarget } from '@/utils/targetCalculation'
 import { SeasonalChampionsHistoryModal } from './modals/SeasonalChampionsHistoryModal'
 
@@ -26,12 +26,6 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
   const [champions, setChampions] = useState<ChampionData[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const { season, year } = getCurrentSeason()
-
-  // Get current week info
-  const now = new Date()
-  const { start: weekStart, end: weekEnd } = getWeekDates(now)
-  const weekNumber = getWeekNumber(now)
-  const weekDisplay = formatWeekDisplay(weekStart, weekEnd)
 
   useEffect(() => {
     if (groupId) {
@@ -214,10 +208,9 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
     return (
       <GlassCard noPadding>
         <CardHeader
-          title={`SEASON WINNERS ${year}`}
+          title="Season Champions"
           icon={Trophy}
           colorClass="text-yellow-500"
-          rightContent={`W${weekNumber} • ${weekDisplay}`}
         />
         <div className="p-4 space-y-2">
           {[...Array(3)].map((_, i) => (
@@ -234,23 +227,16 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
     <>
       <GlassCard noPadding>
         <CardHeader
-          title={`SEASON WINNERS ${year}`}
+          title="Season Champions"
           icon={Trophy}
           colorClass="text-yellow-500"
           rightContent={
-            champions.length > 0 ? (
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-zinc-600">W{weekNumber} • {weekDisplay}</span>
-                <button
-                  onClick={() => setShowHistory(true)}
-                  className="text-zinc-600 hover:text-zinc-400 transition-colors text-xs"
-                >
-                  History
-                </button>
-              </div>
-            ) : (
-              <span className="text-xs text-zinc-600">W{weekNumber} • {weekDisplay}</span>
-            )
+            <button
+              onClick={() => setShowHistory(true)}
+              className="cursor-pointer text-zinc-400 hover:text-zinc-200 active:scale-95 transition-all select-none px-2 py-1 rounded border border-zinc-700 hover:border-zinc-500 bg-zinc-800/50 text-[10px] font-bold uppercase tracking-widest"
+            >
+              History
+            </button>
           }
         />
 

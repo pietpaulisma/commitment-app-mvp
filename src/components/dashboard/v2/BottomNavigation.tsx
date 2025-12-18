@@ -1,18 +1,16 @@
 'use client'
 
 import { MessageCircle, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
 
 interface BottomNavigationProps {
     onWorkoutClick: () => void
     onChatClick: () => void
     groupId?: string | null
     progressPercentage?: number
+    hasUnreadMessages?: boolean
 }
 
-export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progressPercentage = 0 }: BottomNavigationProps) => {
-    const [hasUnreadMessages, setHasUnreadMessages] = useState(true) // This would be dynamic in production
-
+export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progressPercentage = 0, hasUnreadMessages = false }: BottomNavigationProps) => {
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-4 pointer-events-none">
             <div className="max-w-2xl mx-auto pointer-events-auto">
@@ -23,36 +21,47 @@ export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progres
                         onClick={onWorkoutClick}
                         className="relative flex-1 h-16 rounded-[2rem] flex items-center justify-between px-8 transition-all group overflow-hidden"
                     >
-                        {/* Background - White base */}
-                        <div className="absolute inset-0 bg-white group-hover:bg-zinc-200 transition-colors rounded-[2rem]" />
-
-                        {/* Progress bar - Vibrant blue gradient from left */}
-                        <div
-                            className="absolute top-0 left-0 bottom-0 transition-all duration-500 ease-out rounded-l-[2rem]"
+                        {/* Background - Changes based on completion */}
+                        <div 
+                            className={`absolute inset-0 rounded-[2rem] transition-all duration-500 ${
+                                progressPercentage >= 100 
+                                    ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500'
+                                    : 'bg-white group-hover:bg-zinc-200'
+                            }`}
                             style={{
-                                width: `${progressPercentage}%`,
-                                background: 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
-                                boxShadow: progressPercentage > 0
-                                    ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
+                                boxShadow: progressPercentage >= 100
+                                    ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6)'
                                     : 'none'
                             }}
                         />
 
+                        {/* Progress bar - Only show when not complete */}
+                        {progressPercentage < 100 && progressPercentage > 0 && (
+                            <div
+                                className="absolute top-0 left-0 bottom-0 transition-all duration-500 ease-out rounded-l-[2rem]"
+                                style={{
+                                    width: `${progressPercentage}%`,
+                                    background: 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
+                                    boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
+                                }}
+                            />
+                        )}
+
                         {/* Content */}
-                        <div className="relative flex flex-col items-start">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black mb-0.5">
+                        <div className="relative z-10 flex flex-col items-start">
+                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ${progressPercentage >= 100 ? 'text-white/80' : 'text-black'}`}>
                                 Today's Goal
                             </span>
-                            <span className="text-xl font-black tracking-tight leading-none text-black">
+                            <span className={`text-xl font-black tracking-tight leading-none ${progressPercentage >= 100 ? 'text-white' : 'text-black'}`}>
                                 LOG WORKOUT
                             </span>
                         </div>
 
                         {/* Percentage or Arrow */}
-                        <div className="relative">
+                        <div className="relative z-10">
                             {progressPercentage > 0 ? (
-                                <span className="text-sm font-black text-black tabular-nums">
-                                    {progressPercentage}%
+                                <span className={`text-sm font-black tabular-nums ${progressPercentage >= 100 ? 'text-white' : 'text-black'}`}>
+                                    {Math.round(progressPercentage)}%
                                 </span>
                             ) : (
                                 <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform text-black" />
@@ -68,12 +77,16 @@ export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progres
                             ? 'bg-[#111] hover:bg-[#222] text-white border border-white/10'
                             : 'bg-[#111]/50 text-zinc-500 border border-white/5 cursor-not-allowed opacity-50'
                             }`}
+                        style={groupId && hasUnreadMessages ? {
+                            boxShadow: '0 0 20px 4px rgba(34, 197, 94, 0.4), 0 0 40px 8px rgba(34, 197, 94, 0.2), inset 0 0 20px rgba(34, 197, 94, 0.1)',
+                            borderColor: 'rgba(34, 197, 94, 0.5)'
+                        } : undefined}
                     >
-                        <MessageCircle size={26} className={groupId ? '' : 'text-zinc-600'} />
+                        <MessageCircle size={26} className={groupId && hasUnreadMessages ? 'text-green-400' : groupId ? '' : 'text-zinc-600'} />
 
-                        {/* Unread indicator */}
+                        {/* Unread dot indicator */}
                         {groupId && hasUnreadMessages && (
-                            <span className="absolute top-4 right-4 w-2.5 h-2.5 bg-green-500 border-2 border-zinc-900 rounded-full animate-pulse" />
+                            <span className="absolute top-3 right-3 w-3 h-3 bg-green-500 rounded-full shadow-[0_0_8px_2px_rgba(34,197,94,0.6)]" />
                         )}
                     </button>
                 </div>

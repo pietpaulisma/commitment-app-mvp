@@ -259,7 +259,10 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
 
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4" style={{ 
+                  overscrollBehavior: 'contain',
+                  WebkitOverflowScrolling: 'touch'
+                }}>
                     {loading ? (
                         <div className="text-center py-12">
                             <div className="animate-spin h-8 w-8 border-2 border-white/20 border-t-white mx-auto mb-4"></div>

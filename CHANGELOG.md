@@ -11,10 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Dashboard Stats**: Added "Most Popular Exercise" widget showing the most logged exercise of the week for both Group and Personal views
+- **Time Period Selectors**: Added clickable time period cycling (TODAY → THIS WEEK → THIS MONTH → THIS YEAR) for:
+  - Group Favorite / Your Top Exercise widget (default: TODAY)
+  - Overperformers widget (default: THIS WEEK)
+  - Peak Time widget (default: TODAY)
+- **Season Champions History**: Added History button with improved modal showing only seasons with actual data
+
+### Fixed
+- **Chat Unread Indicator**: Fixed always-green pulsing indicator - now properly tracks unread messages using localStorage
+- **Chat Unread Indicator**: Changed from pulsing dot to subtle green glow on the entire chat button for better visibility
+- **Chat Unread Indicator**: Indicator now correctly disappears after opening and viewing the chat
+
+### Changed
+- **Overperformers Widget**: Renamed from "Weekly Overperformers" to just "Overperformers" (time period shown on right)
+- **Peak Time Widget**: Simplified title from "Peak Time: 9PM" to just "Peak Time"
+- **Season Champions Widget**: Renamed from "SEASON WINNERS 2025" to "Season Champions"
+- **Clickable Indicators**: Added subtle border/background styling to all clickable time period selectors for better affordance
 
 ### Technical
 - **Project Cleanup**: Removed 17 orphaned/legacy files (~4,500 lines), reorganized file structure with dedicated folders for modals, scripts, and documentation
 - **File Structure**: Added comprehensive file structure map to CLAUDE.md for easier navigation
+- **Time Period Utilities**: Created `src/utils/timePeriodHelpers.ts` with reusable date range calculations
 
 ---
 
