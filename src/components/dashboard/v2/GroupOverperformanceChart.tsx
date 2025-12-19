@@ -8,6 +8,7 @@ interface GroupOverperformanceChartProps {
         overperformance: number;
         recovery: number;
         sickPlaceholder: number;
+        recoveryDayCount?: number; // Number of users on recovery day for this date
     }>;
 }
 
@@ -66,6 +67,7 @@ export const GroupOverperformanceChart = ({ dailyData }: GroupOverperformanceCha
 
                     {dailyData.map((day, index) => {
                         const isToday = day.date === today;
+                        const hasRecoveryDays = (day.recoveryDayCount || 0) > 0;
 
                         // Normalize all bars based on maxScale
                         // Component pixel heights
@@ -152,6 +154,9 @@ export const GroupOverperformanceChart = ({ dailyData }: GroupOverperformanceCha
                                         {day.sickPlaceholder > 0 && (
                                             <div className="text-zinc-500">Sick: {day.sickPlaceholder}</div>
                                         )}
+                                        {hasRecoveryDays && (
+                                            <div className="text-green-400">🧘 {day.recoveryDayCount} on rest</div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -165,13 +170,20 @@ export const GroupOverperformanceChart = ({ dailyData }: GroupOverperformanceCha
                         const dayOfWeek = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
                         const firstLetter = dayOfWeek.charAt(0);
                         const isToday = day.date === today;
+                        const hasRecoveryDays = (day.recoveryDayCount || 0) > 0;
 
                         return (
                             <div
                                 key={index}
                                 className="flex-1"
                             >
-                                <span className={`text-[8px] font-bold ${isToday ? 'text-white' : 'text-zinc-600'}`}>
+                                <span className={`text-[8px] font-bold ${
+                                    hasRecoveryDays && !isToday 
+                                        ? 'text-green-600' 
+                                        : isToday 
+                                            ? 'text-white' 
+                                            : 'text-zinc-600'
+                                }`}>
                                     {firstLetter}
                                 </span>
                             </div>

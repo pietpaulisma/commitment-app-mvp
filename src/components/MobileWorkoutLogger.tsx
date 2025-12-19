@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient } from '@/utils/gradientUtils'
-import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
+import { calculateDailyTarget, getDaysSinceStart, canUseRecoveryDayToday, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
+import { hasUsedRecoveryDayThisWeek, getActiveRecoveryDay, activateRecoveryDay, updateRecoveryDayProgress, cancelRecoveryDay, type UserRecoveryDay } from '@/utils/recoveryDayHelpers'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 import { getUserColor, getUserColorHover } from '@/utils/colorUtils'
 import { COLORS } from '@/utils/colors'
@@ -44,28 +45,117 @@ export default function MobileWorkoutLogger() {
   const [weekStartDate, setWeekStartDate] = useState<Date | null>(null)
   const [progressAnimated, setProgressAnimated] = useState(false)
   const [isRecoveryDay, setIsRecoveryDay] = useState(false)
+  const [recoveryDayData, setRecoveryDayData] = useState<UserRecoveryDay | null>(null)
+  const [canUseRecoveryDay, setCanUseRecoveryDay] = useState(false)
+  const [isActivatingRecoveryDay, setIsActivatingRecoveryDay] = useState(false)
+  const [isCancellingRecoveryDay, setIsCancellingRecoveryDay] = useState(false)
 
-  // Helper function to check if today is a recovery day
+  // Helper function to check if user has active recovery day today
   const checkIfRecoveryDay = async () => {
-    if (!userProfile?.group_id) return false
+    if (!user) return false
     
     try {
-      const { data: groupSettings } = await supabase
-        .from('group_settings')
-        .select('recovery_days')
-        .eq('group_id', userProfile.group_id)
-        .maybeSingle()
+      // Check if user has an active recovery day today
+      const activeRecoveryDay = await getActiveRecoveryDay(user.id)
       
-      const today = new Date()
-      const currentDayOfWeek = today.getDay()
-      const recoveryDays = groupSettings?.recovery_days || [5]
-      const isRecovery = recoveryDays.includes(currentDayOfWeek)
-      
-      setIsRecoveryDay(isRecovery)
-      return isRecovery
+      if (activeRecoveryDay) {
+        setIsRecoveryDay(true)
+        setRecoveryDayData(activeRecoveryDay)
+        setCanUseRecoveryDay(false)
+        setDailyTarget(RECOVERY_DAY_TARGET_MINUTES)
+        return true
+      } else {
+        setIsRecoveryDay(false)
+        setRecoveryDayData(null)
+        
+        // Check if recovery day is available this week
+        const canUseToday = canUseRecoveryDayToday()
+        if (canUseToday) {
+          const alreadyUsed = await hasUsedRecoveryDayThisWeek(user.id)
+          setCanUseRecoveryDay(!alreadyUsed)
+        } else {
+          setCanUseRecoveryDay(false)
+        }
+        return false
+      }
     } catch (error) {
       console.error('Error checking recovery day:', error)
       return false
+    }
+  }
+  
+  // Activate recovery day for today
+  const handleActivateRecoveryDay = async () => {
+    if (!user || isActivatingRecoveryDay) return
+    
+    setIsActivatingRecoveryDay(true)
+    try {
+      const newRecoveryDay = await activateRecoveryDay(user.id)
+      
+      if (newRecoveryDay) {
+        setIsRecoveryDay(true)
+        setRecoveryDayData(newRecoveryDay)
+        setCanUseRecoveryDay(false)
+        setDailyTarget(RECOVERY_DAY_TARGET_MINUTES)
+        
+        // Post to group chat if in a group
+        if (userProfile?.group_id) {
+          await supabase
+            .from('chat_messages')
+            .insert({
+              group_id: userProfile.group_id,
+              user_id: user.id,
+              message: `🧘 ${userProfile.username} is taking their weekly recovery day! Target: ${RECOVERY_DAY_TARGET_MINUTES} min of recovery.`,
+              message_type: 'system',
+              created_at: new Date().toISOString()
+            })
+        }
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100])
+        }
+      } else {
+        alert('Could not activate recovery day. The database table may not exist yet - please run the migration first.')
+      }
+    } catch (error) {
+      console.error('Error activating recovery day:', error)
+      alert('Error activating recovery day. The database table may not exist yet - please run the migration.')
+    } finally {
+      setIsActivatingRecoveryDay(false)
+    }
+  }
+  
+  // Cancel/undo recovery day
+  const handleCancelRecoveryDay = async () => {
+    if (!user || isCancellingRecoveryDay) return
+    
+    setIsCancellingRecoveryDay(true)
+    try {
+      const success = await cancelRecoveryDay(user.id)
+      
+      if (success) {
+        setIsRecoveryDay(false)
+        setRecoveryDayData(null)
+        setCanUseRecoveryDay(true)
+        
+        // Reload normal target
+        if (userProfile) {
+          await loadDailyTarget(user.id, userProfile)
+        }
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50)
+        }
+      } else {
+        alert('Could not cancel recovery day. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error cancelling recovery day:', error)
+      alert('Error cancelling recovery day. Please try again.')
+    } finally {
+      setIsCancellingRecoveryDay(false)
     }
   }
 
@@ -285,6 +375,15 @@ export default function MobileWorkoutLogger() {
 
   async function loadDailyTarget(userId: string, profile: any) {
     try {
+      // Check if user has active recovery day first
+      const activeRecoveryDay = await getActiveRecoveryDay(userId)
+      if (activeRecoveryDay) {
+        setIsRecoveryDay(true)
+        setRecoveryDayData(activeRecoveryDay)
+        setDailyTarget(RECOVERY_DAY_TARGET_MINUTES)
+        return // Skip normal target calculation for recovery day
+      }
+      
       // Get group start date first
       const { data: group } = await supabase
         .from('groups')
@@ -293,10 +392,10 @@ export default function MobileWorkoutLogger() {
         .single()
 
       if (group?.start_date) {
-        // Get group settings for recovery/rest days and week mode
+        // Get group settings for rest days
         const { data: groupSettings } = await supabase
           .from('group_settings')
-          .select('*')
+          .select('rest_days, penalty_amount')
           .eq('group_id', profile.group_id)
           .maybeSingle()
 
@@ -306,7 +405,7 @@ export default function MobileWorkoutLogger() {
           daysSinceStart,
           weekMode: weekMode, // Use individual user's mode from context
           restDays: groupSettings?.rest_days || [1],
-          recoveryDays: groupSettings?.recovery_days || [5]
+          isUserRecoveryDay: false
         })
         
         setDailyTarget(target)
@@ -364,40 +463,33 @@ export default function MobileWorkoutLogger() {
     }
   }
 
-  async function updateDailyCheckin() {
+async function updateDailyCheckin() {
     if (!user || !userProfile?.group_id) return
 
     try {
       const todayString = new Date().toISOString().split('T')[0]
       const totalPoints = getCappedTotalPoints()
       const recoveryPoints = getRecoveryPoints()
-      
-      // Get group settings to check if today is a recovery day
-      const { data: groupSettings } = await supabase
-        .from('group_settings')
-        .select('recovery_days')
-        .eq('group_id', userProfile.group_id)
-        .maybeSingle()
-      
-      const today = new Date()
-      const currentDayOfWeek = today.getDay()
-      const recoveryDays = groupSettings?.recovery_days || [5]
-      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
-      
-      // On recovery days, only recovery points count towards completion
-      const isComplete = isRecoveryDay 
-        ? recoveryPoints >= dailyTarget 
+
+      // On user recovery days, only recovery minutes count towards completion
+      const isComplete = isRecoveryDay
+        ? recoveryPoints >= RECOVERY_DAY_TARGET_MINUTES
         : totalPoints >= dailyTarget
 
       await supabase
         .from('daily_checkins')
         .update({
-          total_points: totalPoints,
+          total_points: isRecoveryDay ? recoveryPoints : totalPoints,
           recovery_points: recoveryPoints,
           is_complete: isComplete
         })
         .eq('user_id', user.id)
         .eq('date', todayString)
+      
+      // Update recovery day progress if on recovery day
+      if (isRecoveryDay && recoveryDayData) {
+        await updateRecoveryDayProgress(user.id, recoveryPoints)
+      }
     } catch (error) {
       console.error('Error updating daily checkin:', error)
     }
@@ -647,15 +739,20 @@ export default function MobileWorkoutLogger() {
           >
             {/* Solid gradient progress bar - matching new design system */}
             <div
-              className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out ${weekMode === 'insane'
-                ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
-                : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
-                }`}
+              className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out ${
+                isRecoveryDay
+                  ? 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-600'
+                  : weekMode === 'insane'
+                    ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
+                    : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
+              }`}
               style={{
-                width: `${Math.min(100, (getCappedTotalPoints() / Math.max(1, dailyTarget)) * 100)}%`,
-                boxShadow: weekMode === 'insane'
-                  ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
-                  : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
+                width: `${Math.min(100, (isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / Math.max(1, dailyTarget) * 100)}%`,
+                boxShadow: isRecoveryDay
+                  ? '0 0 20px 3px rgba(34, 197, 94, 0.3), 0 0 10px 0px rgba(34, 197, 94, 0.4)'
+                  : weekMode === 'insane'
+                    ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
+                    : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
               }}
             />
 
@@ -663,12 +760,15 @@ export default function MobileWorkoutLogger() {
             <div className="relative h-full flex items-center justify-between px-6 text-white">
               <div className="flex flex-col items-start">
                 <span className="font-bold text-xs tracking-widest uppercase" style={{
-                  color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                  color: isRecoveryDay ? '#22c55e' : weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
                 }}>
-                  LOG WORKOUT
+                  {isRecoveryDay ? '🧘 RECOVERY DAY' : 'LOG WORKOUT'}
                 </span>
                 <span className="text-xs text-zinc-400 font-bold">
-                  {isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()}/{Math.max(1, dailyTarget)} pts
+                  {isRecoveryDay 
+                    ? `${getRecoveryPoints()}/${RECOVERY_DAY_TARGET_MINUTES} min`
+                    : `${getCappedTotalPoints()}/${Math.max(1, dailyTarget)} pts`
+                  }
                 </span>
               </div>
 
@@ -684,6 +784,64 @@ export default function MobileWorkoutLogger() {
 
       <div className="min-h-screen bg-black pb-20">
 
+{/* Recovery Day Active Banner */}
+      {isRecoveryDay && (
+        <div className="bg-black border-t border-white/10">
+          <div className="px-4 py-4">
+            <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🧘</span>
+                  <div>
+                    <div className="text-lg font-black text-green-400 uppercase tracking-wider">Recovery Day Active</div>
+                    <div className="text-sm text-green-400/70">
+                      Complete {RECOVERY_DAY_TARGET_MINUTES} minutes of recovery exercise
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={handleCancelRecoveryDay}
+                  disabled={isCancellingRecoveryDay}
+                  className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {isCancellingRecoveryDay ? 'Cancelling...' : 'Cancel'}
+                </button>
+              </div>
+              <div className="bg-black/20 rounded-full h-3 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-500"
+                  style={{ width: `${Math.min(100, (getRecoveryPoints() / RECOVERY_DAY_TARGET_MINUTES) * 100)}%` }}
+                />
+              </div>
+              <div className="mt-2 text-center text-sm font-bold text-green-400">
+                {getRecoveryPoints() >= RECOVERY_DAY_TARGET_MINUTES
+                  ? '✅ Recovery complete!'
+                  : `${getRecoveryPoints()} / ${RECOVERY_DAY_TARGET_MINUTES} min`}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Use Recovery Day Button - Only show when available and not already active */}
+      {!isRecoveryDay && canUseRecoveryDay && (
+        <div className="bg-black border-t border-white/10">
+          <div className="px-4 py-4">
+            <button
+              onClick={handleActivateRecoveryDay}
+              disabled={isActivatingRecoveryDay}
+              className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-black shadow-lg shadow-green-500/20 ${isActivatingRecoveryDay ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <span className="text-xl">🧘</span>
+              {isActivatingRecoveryDay ? 'Activating...' : 'USE RECOVERY DAY'}
+            </button>
+            <p className="text-xs text-zinc-500 text-center mt-2">
+              Take your weekly recovery day. Complete {RECOVERY_DAY_TARGET_MINUTES} min of recovery exercise.
+            </p>
+          </div>
+        </div>
+      )}
+      
       {/* Flexible Rest Day Section */}
       {hasFlexibleRestDay && (
         <div className="bg-black border-t border-white/10">
@@ -710,39 +868,51 @@ export default function MobileWorkoutLogger() {
         {/* Quick Add Section - New design system */}
         <div id="quick-add" className="bg-black">
           <div className="py-4 px-4">
-            <h3 className="text-xl font-black uppercase tracking-tighter text-white mb-4">Quick Add</h3>
+            <h3 className="text-xl font-black uppercase tracking-tighter text-white mb-4">
+              {isRecoveryDay ? 'Recovery Exercises' : 'Quick Add'}
+            </h3>
 
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {popularExercises.map((exercise) => (
-                <button
-                  key={exercise.id}
-                  onClick={() => quickAddExercise(exercise)}
-                  className="bg-white/5 hover:bg-white/10 text-white p-4 rounded-xl transition-all duration-300 border border-white/5"
-                >
-                  <div className="text-center">
-                    <div className="text-2xl font-black mb-1" style={{
-                      color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
-                    }}>
-                      {exercise.points_per_unit}
+            {/* Regular exercises - hidden on recovery day */}
+            {!isRecoveryDay && (
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {popularExercises.map((exercise) => (
+                  <button
+                    key={exercise.id}
+                    onClick={() => quickAddExercise(exercise)}
+                    className="bg-white/5 hover:bg-white/10 text-white p-4 rounded-xl transition-all duration-300 border border-white/5"
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl font-black mb-1" style={{
+                        color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                      }}>
+                        {exercise.points_per_unit}
+                      </div>
+                      <div className="text-sm font-bold mb-1 text-white">{exercise.name}</div>
+                      <div className="text-xs text-zinc-500 uppercase tracking-wide font-bold">per {exercise.unit}</div>
                     </div>
-                    <div className="text-sm font-bold mb-1 text-white">{exercise.name}</div>
-                    <div className="text-xs text-zinc-500 uppercase tracking-wide font-bold">per {exercise.unit}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </button>
+                ))}
+              </div>
+            )}
 
+            {/* Recovery exercises - always visible, prominent on recovery day */}
             {recoveryExercises.length > 0 && (
               <>
-                <div className="mb-2">
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Recovery Exercises</span>
-                </div>
+                {!isRecoveryDay && (
+                  <div className="mb-2">
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Recovery Exercises</span>
+                  </div>
+                )}
                 <div className="space-y-2">
                   {recoveryExercises.map((exercise) => (
                     <button
                       key={exercise.id}
-                      onClick={() => quickAddExercise(exercise, 5)}
-                      className="w-full bg-white/5 hover:bg-white/10 text-white p-4 rounded-xl transition-all duration-300 border border-white/5"
+                      onClick={() => quickAddExercise(exercise, isRecoveryDay ? 15 : 5)}
+                      className={`w-full text-white p-4 rounded-xl transition-all duration-300 border ${
+                        isRecoveryDay 
+                          ? 'bg-green-500/10 hover:bg-green-500/20 border-green-500/30'
+                          : 'bg-white/5 hover:bg-white/10 border-white/5'
+                      }`}
                     >
                       <div className="flex justify-between items-center">
                         <div className="text-left">
@@ -774,26 +944,42 @@ export default function MobileWorkoutLogger() {
                 <select
                   value={selectedExercise?.id || ''}
                   onChange={(e) => handleExerciseChange(e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${weekMode === 'insane'
-                    ? 'border-white/10 focus:border-orange-500/50'
-                    : 'border-white/10 focus:border-blue-400/50'
-                    }`}
+                  className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${
+                    isRecoveryDay
+                      ? 'border-green-500/30 focus:border-green-500/50'
+                      : weekMode === 'insane'
+                        ? 'border-white/10 focus:border-orange-500/50'
+                        : 'border-white/10 focus:border-blue-400/50'
+                  }`}
                 >
                   <option value="">Select an exercise...</option>
-                  <optgroup label="Regular Exercises">
-                    {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
-                      <option key={exercise.id} value={exercise.id}>
-                        {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Recovery Exercises">
-                    {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
-                      <option key={exercise.id} value={exercise.id}>
-                        {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
-                      </option>
-                    ))}
-                  </optgroup>
+                  {/* Only show recovery exercises on recovery day */}
+                  {isRecoveryDay ? (
+                    <optgroup label="Recovery Exercises">
+                      {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
+                        <option key={exercise.id} value={exercise.id}>
+                          {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    <>
+                      <optgroup label="Regular Exercises">
+                        {exercises.filter(ex => ex.type !== 'recovery').map(exercise => (
+                          <option key={exercise.id} value={exercise.id}>
+                            {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Recovery Exercises">
+                        {exercises.filter(ex => ex.type === 'recovery').map(exercise => (
+                          <option key={exercise.id} value={exercise.id}>
+                            {exercise.name} ({exercise.points_per_unit} pts/{exercise.unit})
+                          </option>
+                        ))}
+                      </optgroup>
+                    </>
+                  )}
                 </select>
               </div>
 

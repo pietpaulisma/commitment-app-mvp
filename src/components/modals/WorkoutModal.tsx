@@ -8,7 +8,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 import { usePageState } from '@/hooks/usePageState'
-import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
+import { calculateDailyTarget, getDaysSinceStart, canUseRecoveryDayToday, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
+import { hasUsedRecoveryDayThisWeek, getActiveRecoveryDay, activateRecoveryDay, updateRecoveryDayProgress, cancelRecoveryDay, type UserRecoveryDay } from '@/utils/recoveryDayHelpers'
 import { NotificationService } from '@/services/notificationService'
 import { COLORS } from '@/utils/colors'
 import {
@@ -184,6 +185,13 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [personalRecordDate, setPersonalRecordDate] = useState<string | null>(null)
   const [groupRecord, setGroupRecord] = useState<number | null>(null)
   const [groupRecordUser, setGroupRecordUser] = useState<string | null>(null)
+  
+  // Recovery Day state
+  const [isRecoveryDayActive, setIsRecoveryDayActive] = useState(false)
+  const [recoveryDayData, setRecoveryDayData] = useState<UserRecoveryDay | null>(null)
+  const [canUseRecoveryDay, setCanUseRecoveryDay] = useState(false)
+  const [isActivatingRecoveryDay, setIsActivatingRecoveryDay] = useState(false)
+  const [isCancellingRecoveryDay, setIsCancellingRecoveryDay] = useState(false)
 
   const router = useRouter()
 
@@ -550,7 +558,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           .single(),
         supabase
           .from('group_settings')
-          .select('rest_days, recovery_days')
+          .select('rest_days')
           .eq('group_id', profile.group_id)
           .maybeSingle()
       ])
@@ -558,7 +566,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       if (groupResult.data?.start_date) {
         const daysSinceStart = getDaysSinceStart(groupResult.data.start_date)
         const restDays = settingsResult.data?.rest_days || [1]
-        const recoveryDays = settingsResult.data?.recovery_days || [5]
 
         // Use override mode if provided, otherwise use current context mode
         const targetMode = modeOverride || weekMode
@@ -567,7 +574,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           daysSinceStart,
           weekMode: targetMode,
           restDays,
-          recoveryDays
+          isUserRecoveryDay: isRecoveryDayActive
         })
 
         return { target, daysSinceStart }
@@ -581,12 +588,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
   const recalculateTargetWithMode = async (newMode: 'sane' | 'insane') => {
     // Just recalculate the target locally without reloading data
+    // Skip if on recovery day (target is fixed at 15 min)
+    if (isRecoveryDayActive) return
+    
     if (groupDaysSinceStart > 0) {
       const newTarget = calculateDailyTarget({
         daysSinceStart: groupDaysSinceStart,
         weekMode: newMode,
-        restDays: [1], // Default rest days
-        recoveryDays: [5] // Default recovery days  
+        restDays: [1] // Default rest days
       })
       setDailyTarget(newTarget)
     }
@@ -743,7 +752,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     try {
       const today = new Date().toISOString().split('T')[0]
 
-      // Load points and recovery days, optionally load target data if not provided
+      // Load points, optionally load target data if not provided
       const loadPromises: any[] = [
         supabase
           .from('logs')
@@ -755,30 +764,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             exercises(id, name, unit, is_time_based, type)
           `)
           .eq('user_id', user.id)
-          .eq('date', today),
-        profile?.group_id ? supabase
-          .from('group_settings')
-          .select('recovery_days')
-          .eq('group_id', profile.group_id)
-          .maybeSingle() : null
+          .eq('date', today)
       ]
 
       // Only load target data if not provided as override
       if (!targetOverride) {
-        loadPromises.splice(1, 0, loadGroupDataAndCalculateTarget())
+        loadPromises.push(loadGroupDataAndCalculateTarget())
       }
 
       const results = await Promise.all(loadPromises)
       const pointsResult = results[0] as any
-      let targetData: any, groupSettings: any
-
-      if (targetOverride) {
-        targetData = { target: targetOverride, daysSinceStart: 0 }
-        groupSettings = results[1]
-      } else {
-        targetData = results[1]
-        groupSettings = results[2]
-      }
+      const targetData = targetOverride 
+        ? { target: targetOverride, daysSinceStart: 0 }
+        : results[1]
 
       // Calculate regular and recovery points separately
       const regularPoints = pointsResult.data
@@ -796,22 +794,20 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         })
         ?.reduce((sum: number, log: any) => sum + log.points, 0) || 0
 
-      // Check if today is a recovery day
-      const currentDayOfWeek = new Date().getDay()
-      const recoveryDays = groupSettings?.data?.recovery_days || [5]
-      const isRecoveryDay = recoveryDays.includes(currentDayOfWeek)
-
-      // Calculate daily progress with recovery cap (except on recovery days)
+      // Calculate daily progress with recovery cap (recovery day status checked separately)
       let effectiveRecoveryPoints = recoveryPoints
-      if (!isRecoveryDay && recoveryPoints > 0) {
+      if (recoveryPoints > 0 && !isRecoveryDayActive) {
         const maxRecoveryAllowed = Math.floor(targetData.target * 0.25)
         effectiveRecoveryPoints = Math.min(recoveryPoints, maxRecoveryAllowed)
       }
 
       const cappedTotalPoints = regularPoints + effectiveRecoveryPoints
 
-      setDailyProgress(cappedTotalPoints)
-      setDailyTarget(targetData.target)
+      // Don't override if recovery day is active (recovery day handles its own progress)
+      if (!isRecoveryDayActive) {
+        setDailyProgress(cappedTotalPoints)
+        setDailyTarget(targetData.target)
+      }
       setGroupDaysSinceStart(targetData.daysSinceStart)
       setRecoveryProgress(recoveryPoints) // Keep full recovery points for display
       setTodayLogs(pointsResult.data || [])
@@ -821,6 +817,135 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
     // Check if user earned a flexible rest day
     await checkFlexibleRestDayEarned()
+    
+    // Check recovery day status
+    await checkRecoveryDayStatus()
+  }
+
+  // Check and load recovery day status
+  const checkRecoveryDayStatus = async () => {
+    if (!user) return
+    
+    try {
+      // Check if user has an active recovery day today
+      const activeRecoveryDay = await getActiveRecoveryDay(user.id)
+      
+      if (activeRecoveryDay) {
+        setIsRecoveryDayActive(true)
+        setRecoveryDayData(activeRecoveryDay)
+        setCanUseRecoveryDay(false)
+        
+        // On recovery day, target is 15 minutes
+        setDailyTarget(RECOVERY_DAY_TARGET_MINUTES)
+        
+        // Calculate recovery minutes from today's logs
+        const today = new Date().toISOString().split('T')[0]
+        const { data: todayLogs } = await supabase
+          .from('logs')
+          .select('duration, exercises(type)')
+          .eq('user_id', user.id)
+          .eq('date', today)
+        
+        const recoveryMinutes = todayLogs
+          ?.filter((log: any) => log.exercises?.type === 'recovery')
+          ?.reduce((sum: number, log: any) => sum + (log.duration || 0), 0) || 0
+        
+        setDailyProgress(recoveryMinutes)
+        
+        // Update progress in database if needed
+        if (recoveryMinutes !== activeRecoveryDay.recovery_minutes) {
+          await updateRecoveryDayProgress(user.id, recoveryMinutes)
+        }
+      } else {
+        setIsRecoveryDayActive(false)
+        setRecoveryDayData(null)
+        
+        // Check if recovery day is available this week
+        const canUseToday = canUseRecoveryDayToday()
+        if (canUseToday) {
+          const alreadyUsed = await hasUsedRecoveryDayThisWeek(user.id)
+          setCanUseRecoveryDay(!alreadyUsed)
+        } else {
+          setCanUseRecoveryDay(false)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking recovery day status:', error)
+    }
+  }
+  
+  // Activate recovery day for today
+  const handleActivateRecoveryDay = async () => {
+    if (!user || isActivatingRecoveryDay) return
+    
+    setIsActivatingRecoveryDay(true)
+    try {
+      const newRecoveryDay = await activateRecoveryDay(user.id)
+      
+      if (newRecoveryDay) {
+        setIsRecoveryDayActive(true)
+        setRecoveryDayData(newRecoveryDay)
+        setCanUseRecoveryDay(false)
+        setDailyTarget(RECOVERY_DAY_TARGET_MINUTES)
+        setDailyProgress(0)
+        
+        // Post to group chat if in a group
+        if (profile?.group_id) {
+          await supabase
+            .from('chat_messages')
+            .insert({
+              group_id: profile.group_id,
+              user_id: user.id,
+              message: `🧘 ${profile.username} is taking their weekly recovery day! Target: ${RECOVERY_DAY_TARGET_MINUTES} min of recovery.`,
+              message_type: 'system',
+              created_at: new Date().toISOString()
+            })
+        }
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate([100, 50, 100])
+        }
+      } else {
+        alert('Could not activate recovery day. The database table may not exist yet - please run the migration first.')
+      }
+    } catch (error) {
+      console.error('Error activating recovery day:', error)
+      alert('Error activating recovery day. The database table may not exist yet - please run the migration.')
+    } finally {
+      setIsActivatingRecoveryDay(false)
+    }
+  }
+  
+  // Cancel/undo recovery day
+  const handleCancelRecoveryDay = async () => {
+    if (!user || isCancellingRecoveryDay) return
+    
+    setIsCancellingRecoveryDay(true)
+    try {
+      const success = await cancelRecoveryDay(user.id)
+      
+      if (success) {
+        setIsRecoveryDayActive(false)
+        setRecoveryDayData(null)
+        setCanUseRecoveryDay(true)
+        
+        // Reload normal target
+        await loadDailyProgress()
+        
+        // Haptic feedback
+        if (navigator.vibrate) {
+          navigator.vibrate(50)
+        }
+      } else {
+        alert('Could not cancel recovery day. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error cancelling recovery day:', error)
+      alert('Error cancelling recovery day. Please try again.')
+    } finally {
+      setIsCancellingRecoveryDay(false)
+    }
   }
 
   const loadTodaysWorkouts = async () => {
@@ -1835,8 +1960,17 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
           loadDailyProgress()
           loadTodaysWorkouts()
 
-          // Check for automatic mode switching after exercise submission
-          await checkAutomaticModeSwitch()
+          // Update recovery day progress if on recovery day and this was a recovery exercise
+          if (isRecoveryDayActive && selectedWorkoutExercise.type === 'recovery' && selectedWorkoutExercise.is_time_based) {
+            const newMinutes = dailyProgress + Math.floor(workoutCount)
+            await updateRecoveryDayProgress(user.id, newMinutes)
+            setDailyProgress(newMinutes)
+          }
+
+          // Check for automatic mode switching after exercise submission (skip on recovery day)
+          if (!isRecoveryDayActive) {
+            await checkAutomaticModeSwitch()
+          }
 
           // Haptic feedback
           if (navigator.vibrate) {
@@ -1965,20 +2099,24 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               <button
                 className="relative flex-1 h-16 rounded-[2rem] flex items-center justify-between px-8 overflow-hidden"
               >
-                {/* Background - Changes based on completion */}
+                {/* Background - Changes based on completion and recovery day */}
                 <div 
                   className={`absolute inset-0 rounded-[2rem] transition-all duration-500 ${
                     progressPercentage >= 100 
-                      ? weekMode === 'insane'
-                        ? 'bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400'
-                        : 'bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500'
+                      ? isRecoveryDayActive
+                        ? 'bg-gradient-to-r from-green-600 via-green-500 to-emerald-500'
+                        : weekMode === 'insane'
+                          ? 'bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400'
+                          : 'bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500'
                       : 'bg-white'
                   }`}
                   style={{
                     boxShadow: progressPercentage >= 100
-                      ? weekMode === 'insane'
-                        ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(234, 88, 12, 0.6)'
-                        : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6)'
+                      ? isRecoveryDayActive
+                        ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(22, 163, 74, 0.6)'
+                        : weekMode === 'insane'
+                          ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(234, 88, 12, 0.6)'
+                          : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6)'
                       : 'none'
                   }}
                 />
@@ -1989,12 +2127,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     className="absolute top-0 left-0 bottom-0 transition-all duration-500 ease-out rounded-l-[2rem]"
                     style={{
                       width: `${progressPercentage}%`,
-                      background: weekMode === 'insane'
-                        ? 'linear-gradient(90deg, rgb(234, 88, 12) 0%, rgb(249, 115, 22) 40%, rgb(251, 146, 60) 100%)'
-                        : 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
-                      boxShadow: weekMode === 'insane'
-                        ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(234, 88, 12, 0.6), 4px 0 20px rgba(249, 115, 22, 0.5), 8px 0 30px rgba(251, 146, 60, 0.3)'
-                        : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
+                      background: isRecoveryDayActive
+                        ? 'linear-gradient(90deg, rgb(22, 163, 74) 0%, rgb(34, 197, 94) 40%, rgb(74, 222, 128) 100%)'
+                        : weekMode === 'insane'
+                          ? 'linear-gradient(90deg, rgb(234, 88, 12) 0%, rgb(249, 115, 22) 40%, rgb(251, 146, 60) 100%)'
+                          : 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
+                      boxShadow: isRecoveryDayActive
+                        ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(22, 163, 74, 0.6), 4px 0 20px rgba(34, 197, 94, 0.5), 8px 0 30px rgba(74, 222, 128, 0.3)'
+                        : weekMode === 'insane'
+                          ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(234, 88, 12, 0.6), 4px 0 20px rgba(249, 115, 22, 0.5), 8px 0 30px rgba(251, 146, 60, 0.3)'
+                          : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
                     }}
                   />
                 )}
@@ -2002,10 +2144,10 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 {/* Content */}
                 <div className="relative z-10 flex flex-col items-start">
                   <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ${progressPercentage >= 100 ? 'text-white/80' : 'text-black'}`}>
-                    Today's Goal
+                    {isRecoveryDayActive ? 'Recovery Day' : "Today's Goal"}
                   </span>
                   <span className={`text-xl font-black tracking-tight leading-none ${progressPercentage >= 100 ? 'text-white' : 'text-black'}`}>
-                    WORKOUT LOG
+                    {isRecoveryDayActive ? `${dailyProgress}/${RECOVERY_DAY_TARGET_MINUTES} MIN` : 'WORKOUT LOG'}
                   </span>
                 </div>
 
@@ -2149,7 +2291,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                               {/* Text Info */}
                               <div className="flex flex-col items-start gap-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-bold text-white uppercase tracking-wide">{workout.exercises?.name || 'Unknown'}</span>
+                                  <span className="text-sm font-bold text-white uppercase tracking-wide">{workout.sport_name || workout.exercises?.name || 'Unknown'}</span>
                                   {workout.weight > 0 && (
                                     <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-white border border-white/20">
                                       {workout.weight}kg
@@ -2204,7 +2346,16 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                                     {/* Text Info */}
                                     <div className="flex items-center gap-2">
                                       <span className="text-sm font-medium text-white">
-                                        {log.count || log.duration} <span className="text-white/60">{workout.exercises?.unit}</span>
+                                        {(() => {
+                                          const value = log.count || log.duration
+                                          const unit = workout.exercises?.unit
+                                          // Convert fractional hours to minutes for better display
+                                          if (unit === 'hour' && value < 1) {
+                                            const minutes = Math.round(value * 60)
+                                            return <>{minutes} <span className="text-white/60">min</span></>
+                                          }
+                                          return <>{value} <span className="text-white/60">{unit}</span></>
+                                        })()}
                                       </span>
                                       {log.weight > 0 && (
                                         <span className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded-full text-white border border-white/20">
@@ -2282,8 +2433,36 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 )}
               </div>
 
-              {/* Favorites Section - New design system */}
-              {favoriteExercises.length > 0 && (
+              {/* Recovery Day Banner - Show at top when active */}
+              {isRecoveryDayActive && (
+                <div className="px-4 mb-6">
+                  <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-2xl">🧘</span>
+                      <div>
+                        <div className="text-lg font-black text-green-400 uppercase tracking-wider">Recovery Day Active</div>
+                        <div className="text-sm text-green-400/70">
+                          Complete {RECOVERY_DAY_TARGET_MINUTES} minutes of recovery exercise
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 bg-black/20 rounded-full h-3 overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-500"
+                        style={{ width: `${Math.min(100, (dailyProgress / RECOVERY_DAY_TARGET_MINUTES) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="mt-2 text-center text-sm font-bold text-green-400">
+                      {dailyProgress >= RECOVERY_DAY_TARGET_MINUTES 
+                        ? '✅ Recovery complete!' 
+                        : `${dailyProgress} / ${RECOVERY_DAY_TARGET_MINUTES} min`}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Favorites Section - Hidden on recovery day */}
+              {!isRecoveryDayActive && favoriteExercises.length > 0 && (
                 <div className="py-0">
                   <button
                     onClick={() => setFavoritesExpanded(!favoritesExpanded)}
@@ -2309,8 +2488,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               )}
 
-              {/* Reps Exercises Section - New design system */}
-              {allExercises.length > 0 && (
+              {/* Reps Exercises Section - Hidden on recovery day */}
+              {!isRecoveryDayActive && allExercises.length > 0 && (
                 <div className="py-0 mt-8">
                   <button
                     onClick={() => setAllExercisesExpanded(!allExercisesExpanded)}
@@ -2336,26 +2515,28 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               )}
 
-              {/* Recovery Section - New design system */}
+              {/* Recovery Section - Always visible, expanded by default on recovery day */}
               {recoveryExercises.length > 0 && (
-                <div className="py-0 mt-8">
+                <div className={`py-0 ${isRecoveryDayActive ? '' : 'mt-8'}`}>
                   <button
                     onClick={() => setRecoveryExpanded(!recoveryExpanded)}
                     className="flex items-center justify-between w-full mb-2 px-4"
                   >
                     <div className="flex items-center gap-4">
                       <Smile size={24} className="text-green-400" />
-                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">HEAL</h4>
+                      <h4 className="text-4xl font-black text-white uppercase tracking-tight">
+                        {isRecoveryDayActive ? 'RECOVERY' : 'HEAL'}
+                      </h4>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-zinc-600 font-bold">({recoveryExercises.length})</span>
                       <ChevronDown
                         size={14}
-                        className={`text-zinc-500 transition-transform duration-200 ${recoveryExpanded ? 'rotate-180' : ''}`}
+                        className={`text-zinc-500 transition-transform duration-200 ${(recoveryExpanded || isRecoveryDayActive) ? 'rotate-180' : ''}`}
                       />
                     </div>
                   </button>
-                  {recoveryExpanded && (
+                  {(recoveryExpanded || isRecoveryDayActive) && (
                     <div className="bg-white/5 rounded-xl overflow-hidden border border-white/5">
                       {recoveryExercises.map((exercise) => renderExerciseButton(exercise))}
                     </div>
@@ -2363,8 +2544,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               )}
 
-              {/* Sports Section - New design system */}
-              {sportsExercises.length > 0 && (
+              {/* Sports Section - Hidden on recovery day */}
+              {!isRecoveryDayActive && sportsExercises.length > 0 && (
                 <div className="py-0 mt-8">
                   <button
                     onClick={() => setSportsExpanded(!sportsExpanded)}
@@ -2393,8 +2574,63 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
               {/* Bottom Actions Section - Unified Component */}
               <div className="px-4 pb-6 mt-8">
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-4">
-                  {/* Week Mode Toggle - Compact */}
-                  {isWeekModeAvailable(groupDaysSinceStart) && (
+                  
+{/* Recovery Day Active Banner */}
+                  {isRecoveryDayActive && (
+                    <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <span className="text-xl">🧘</span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-black text-green-400 uppercase tracking-wider">Recovery Day</div>
+                            <div className="text-xs text-green-400/70">
+                              {dailyProgress >= RECOVERY_DAY_TARGET_MINUTES
+                                ? '✅ Complete!'
+                                : `${dailyProgress}/${RECOVERY_DAY_TARGET_MINUTES} min`}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {dailyProgress >= RECOVERY_DAY_TARGET_MINUTES && (
+                            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                              <Check className="w-5 h-5 text-white" />
+                            </div>
+                          )}
+                          <button
+                            onClick={handleCancelRecoveryDay}
+                            disabled={isCancellingRecoveryDay}
+                            className="text-xs font-bold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {isCancellingRecoveryDay ? 'Cancelling...' : 'Cancel'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Use Recovery Day Button - Only show when available and not already active */}
+                  {!isRecoveryDayActive && canUseRecoveryDay && (
+                    <button
+                      onClick={handleActivateRecoveryDay}
+                      disabled={isActivatingRecoveryDay}
+                      className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-black shadow-lg shadow-green-500/20 ${isActivatingRecoveryDay ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <span className="text-xl">🧘</span>
+                      {isActivatingRecoveryDay ? 'Activating...' : 'USE RECOVERY DAY'}
+                    </button>
+                  )}
+                  
+                  {/* Recovery Day Info - Show when available */}
+                  {!isRecoveryDayActive && canUseRecoveryDay && (
+                    <p className="text-xs text-zinc-500 text-center">
+                      Take your weekly recovery day. Complete {RECOVERY_DAY_TARGET_MINUTES} min of recovery exercise.
+                    </p>
+                  )}
+                  
+                  {/* Week Mode Toggle - Only show when NOT on recovery day */}
+                  {!isRecoveryDayActive && isWeekModeAvailable(groupDaysSinceStart) && (
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mode</span>
                       <div className="bg-black/40 p-0.5 rounded-full border border-white/10 flex items-center relative h-10 w-40">
@@ -2430,7 +2666,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   )}
 
                   {/* Divider */}
-                  {isWeekModeAvailable(groupDaysSinceStart) && profile?.group_id && (
+                  {!isRecoveryDayActive && isWeekModeAvailable(groupDaysSinceStart) && profile?.group_id && (
                     <div className="border-t border-white/10" />
                   )}
 

@@ -25,6 +25,7 @@ import { PenaltyResponseModal } from '@/components/modals/PenaltyResponseModal';
 import type { PendingPenalty } from '@/types/penalties';
 import { formatTimeRemaining } from '@/utils/penaltyHelpers';
 import { TimePeriod, TIME_PERIOD_LABELS, getNextTimePeriod, getDateRangeForPeriod, getTimestampRangeForPeriod } from '@/utils/timePeriodHelpers';
+import { getRecoveryDayStatusForUsers } from '@/utils/recoveryDayHelpers';
 
 export default function NewDashboard() {
     const { user } = useAuth();
@@ -238,12 +239,20 @@ export default function NewDashboard() {
                     if (data.error) {
                         console.error('Error from squad-status API:', data.error);
                     } else {
-                        const squad = data.squad.map((u: any) => ({
-                            name: u.id === user.id ? "You" : u.username || "User",
-                            pct: u.is_sick_mode ? u.pct : u.pct, // Percentage already calculated correctly
-                            mode: u.is_sick_mode ? "sick" : (u.week_mode || "insane"), // Show sick mode or actual week mode
-                            isLive: false // TODO: Real-time status from last_seen
-                        }));
+                        // Fetch recovery day status for all squad members
+                        const memberIds = data.squad.map((u: any) => u.id);
+                        const recoveryDayStatus = await getRecoveryDayStatusForUsers(memberIds);
+                        
+                        const squad = data.squad.map((u: any) => {
+                            const isOnRecoveryDay = recoveryDayStatus.has(u.id);
+                            return {
+                                name: u.id === user.id ? "You" : u.username || "User",
+                                pct: u.is_sick_mode ? u.pct : u.pct, // Percentage already calculated correctly
+                                mode: u.is_sick_mode ? "sick" : (u.week_mode || "insane"), // Show sick mode or actual week mode
+                                isLive: false, // TODO: Real-time status from last_seen
+                                isRecoveryDay: isOnRecoveryDay
+                            };
+                        });
 
                         // Sort: You first, then by pct
                         const sortedSquad = [
@@ -1521,7 +1530,7 @@ export default function NewDashboard() {
                         <GlassCard noPadding className="overflow-visible min-h-[240px]">
                             <CardHeader title="Squad Status" icon={Flame} colorClass="text-orange-500" />
                             <div className="px-4 py-3 flex flex-col">
-                                {squadData.map((u, i) => (<SquadMemberRow key={i} name={u.name} pct={u.pct} mode={u.mode} isLive={u.isLive} />))}
+                                {squadData.map((u, i) => (<SquadMemberRow key={i} name={u.name} pct={u.pct} mode={u.mode} isLive={u.isLive} isRecoveryDay={u.isRecoveryDay} />))}
                                 {squadData.length === 0 && <div className="text-zinc-500 text-center py-4">Loading squad...</div>}
                             </div>
                         </GlassCard>

@@ -8,6 +8,7 @@ interface PersonalOverperformChartProps {
         overperformance: number;
         recovery: number;
         sickPlaceholder: number;
+        isRecoveryDay?: boolean; // User-chosen recovery day
     }>;
 }
 
@@ -37,6 +38,7 @@ export const PersonalOverperformChart = ({ dailyData }: PersonalOverperformChart
                 <div className="relative flex items-end justify-between h-32 w-full">
                     {dailyData.map((day, index) => {
                         const isToday = day.date === today;
+                        const isRecoveryDay = day.isRecoveryDay || false;
 
                         // Calculate component heights
                         const basePoints = Math.max(0, day.actual - day.overperformance - day.recovery);
@@ -54,48 +56,64 @@ export const PersonalOverperformChart = ({ dailyData }: PersonalOverperformChart
                             >
                                 <div className="w-full flex flex-col justify-end items-center">
                                     <div className="w-full max-w-[7px] flex flex-col justify-end">
-                                        {/* 1. Orange overperformance bar (TOP) */}
-                                        {day.overperformance > 0 && (
+                                        {/* Recovery Day indicator - full green bar */}
+                                        {isRecoveryDay && (
                                             <div
-                                                className="w-full rounded-t-[1.5px] transition-all duration-300 bg-gradient-to-t from-orange-700 to-orange-600"
+                                                className="w-full rounded-t-[1.5px] transition-all duration-300 bg-gradient-to-t from-green-700 to-green-500"
                                                 style={{
-                                                    height: `${overHeightPx}px`,
+                                                    height: `${(day.actual / maxScale) * usableHeight}px`,
                                                     opacity: opacity
                                                 }}
                                             />
                                         )}
+                                        
+                                        {/* Normal day display */}
+                                        {!isRecoveryDay && (
+                                            <>
+                                                {/* 1. Orange overperformance bar (TOP) */}
+                                                {day.overperformance > 0 && (
+                                                    <div
+                                                        className="w-full rounded-t-[1.5px] transition-all duration-300 bg-gradient-to-t from-orange-700 to-orange-600"
+                                                        style={{
+                                                            height: `${overHeightPx}px`,
+                                                            opacity: opacity
+                                                        }}
+                                                    />
+                                                )}
 
-                                        {/* 2. Base points bar (blue) (MIDDLE) */}
-                                        {baseHeightPx > 0 && (
-                                            <div
-                                                className={`w-full transition-all duration-300 bg-gradient-to-t from-blue-700 to-blue-600 ${day.overperformance === 0 ? 'rounded-t-[1.5px]' : ''}`}
-                                                style={{
-                                                    height: `${baseHeightPx}px`,
-                                                    opacity: opacity
-                                                }}
-                                            />
-                                        )}
+                                                {/* 2. Base points bar (blue) (MIDDLE) */}
+                                                {baseHeightPx > 0 && (
+                                                    <div
+                                                        className={`w-full transition-all duration-300 bg-gradient-to-t from-blue-700 to-blue-600 ${day.overperformance === 0 ? 'rounded-t-[1.5px]' : ''}`}
+                                                        style={{
+                                                            height: `${baseHeightPx}px`,
+                                                            opacity: opacity
+                                                        }}
+                                                    />
+                                                )}
 
-                                        {/* 3. Recovery points bar (teal) (LOWER) */}
-                                        {day.recovery > 0 && (
-                                            <div
-                                                className={`w-full transition-all duration-300 bg-gradient-to-t from-teal-700 to-teal-600 ${day.overperformance === 0 && basePoints === 0 ? 'rounded-t-[1.5px]' : ''}`}
-                                                style={{
-                                                    height: `${recoveryHeightPx}px`,
-                                                    opacity: opacity
-                                                }}
-                                            />
-                                        )}
+                                                {/* 3. Recovery points bar (teal) (LOWER) */}
+                                                {day.recovery > 0 && (
+                                                    <div
+                                                        className={`w-full transition-all duration-300 bg-gradient-to-t from-teal-700 to-teal-600 ${day.overperformance === 0 && basePoints === 0 ? 'rounded-t-[1.5px]' : ''}`}
+                                                        style={{
+                                                            height: `${recoveryHeightPx}px`,
+                                                            opacity: opacity
+                                                        }}
+                                                    />
+                                                )}
 
-                                        {/* 4. Sick Placeholder (Gray) (BOTTOM) */}
-                                        {day.sickPlaceholder > 0 && (
-                                            <div
-                                                className={`w-full transition-all duration-300 bg-zinc-800/80 border-t border-white/5 ${day.overperformance === 0 && basePoints === 0 && day.recovery === 0 ? 'rounded-t-[1.5px]' : ''}`}
-                                                style={{
-                                                    height: `${sickHeightPx}px`,
-                                                    opacity: opacity
-                                                }}
-                                            />
+                                                {/* 4. Sick Placeholder (Gray) (BOTTOM) */}
+                                                {day.sickPlaceholder > 0 && (
+                                                    <div
+                                                        className={`w-full transition-all duration-300 bg-zinc-800/80 border-t border-white/5 ${day.overperformance === 0 && basePoints === 0 && day.recovery === 0 ? 'rounded-t-[1.5px]' : ''}`}
+                                                        style={{
+                                                            height: `${sickHeightPx}px`,
+                                                            opacity: opacity
+                                                        }}
+                                                    />
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -106,16 +124,22 @@ export const PersonalOverperformChart = ({ dailyData }: PersonalOverperformChart
                                         <div className="text-zinc-400 mb-0.5">
                                             {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </div>
-                                        <div className="text-blue-400">Target: {day.target}</div>
-                                        <div className="text-white">Actual: {day.actual}</div>
-                                        {day.recovery > 0 && (
-                                            <div className="text-teal-400">Recovery: {day.recovery}</div>
-                                        )}
-                                        {day.overperformance > 0 && (
-                                            <div className="text-orange-400">+{day.overperformance}</div>
-                                        )}
-                                        {day.sickPlaceholder > 0 && (
-                                            <div className="text-zinc-500">Sick: {day.sickPlaceholder}</div>
+                                        {isRecoveryDay ? (
+                                            <div className="text-green-400">🧘 Recovery Day</div>
+                                        ) : (
+                                            <>
+                                                <div className="text-blue-400">Target: {day.target}</div>
+                                                <div className="text-white">Actual: {day.actual}</div>
+                                                {day.recovery > 0 && (
+                                                    <div className="text-teal-400">Recovery: {day.recovery}</div>
+                                                )}
+                                                {day.overperformance > 0 && (
+                                                    <div className="text-orange-400">+{day.overperformance}</div>
+                                                )}
+                                                {day.sickPlaceholder > 0 && (
+                                                    <div className="text-zinc-500">Sick: {day.sickPlaceholder}</div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -130,11 +154,18 @@ export const PersonalOverperformChart = ({ dailyData }: PersonalOverperformChart
                         const dayOfWeek = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
                         const firstLetter = dayOfWeek.charAt(0);
                         const isToday = day.date === today;
+                        const isRecoveryDay = day.isRecoveryDay || false;
 
                         return (
                             <div key={index} className="flex-1">
-                                <span className={`text-[8px] font-bold ${isToday ? 'text-white' : 'text-zinc-600'}`}>
-                                    {firstLetter}
+                                <span className={`text-[8px] font-bold ${
+                                    isRecoveryDay 
+                                        ? 'text-green-500' 
+                                        : isToday 
+                                            ? 'text-white' 
+                                            : 'text-zinc-600'
+                                }`}>
+                                    {isRecoveryDay ? '🧘' : firstLetter}
                                 </span>
                             </div>
                         );
@@ -155,6 +186,10 @@ export const PersonalOverperformChart = ({ dailyData }: PersonalOverperformChart
                 <div className="flex items-center gap-1">
                     <div className="w-2.5 h-2.5 rounded bg-gradient-to-r from-teal-700 to-teal-600" />
                     <span className="text-zinc-500">Recovery</span>
+                </div>
+                <div className="flex items-center gap-1">
+                    <div className="w-2.5 h-2.5 rounded bg-gradient-to-r from-green-700 to-green-500" />
+                    <span className="text-zinc-500">Rest</span>
                 </div>
                 <div className="flex items-center gap-1">
                     <div className="w-2.5 h-2.5 rounded bg-zinc-600" />
