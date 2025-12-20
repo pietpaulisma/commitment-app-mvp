@@ -53,9 +53,6 @@ export const SquadMemberRow = ({ name, pct, mode, isLive, isRecoveryDay = false 
                     <span className={`text-lg font-black tracking-tighter leading-none transition-colors ${isZero ? 'text-zinc-600' : 'text-white'}`}>
                         {displayName}
                     </span>
-                    {isRecoveryDay && (
-                        <span className="ml-1 text-xs">🧘</span>
-                    )}
                     {isLive && !isRecoveryDay && (
                         <div className="ml-0.5 -mt-2 relative">
                             <span className="absolute inline-flex h-1.5 w-1.5 rounded-full bg-orange-500 opacity-75 animate-ping"></span>
