@@ -1,5 +1,16 @@
 # Commitment App - Development Guide
 
+## 🚨 MANDATORY: VERSION BUMP ON EVERY COMMIT TO DEV 🚨
+
+**BEFORE EVERY `git push origin dev`, Claude MUST:**
+1. Update version in `package.json` (current: check file)
+2. Patch bump (0.5.0 → 0.5.1) for fixes, Minor bump (0.5.0 → 0.6.0) for features
+3. Include version bump in the commit
+
+**NO EXCEPTIONS. The user has explicitly requested this.**
+
+---
+
 ## Project Overview
 Fitness accountability platform with group-based workouts, penalty systems, and social features. 
 
