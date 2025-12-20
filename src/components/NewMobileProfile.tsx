@@ -20,7 +20,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Bug,
-  Dumbbell
+  Dumbbell,
+  BookOpen
 } from 'lucide-react'
 import { SystemMessageConfigAdmin } from './SystemMessageConfigAdmin'
 import NotificationSettings from './NotificationSettings'
@@ -426,6 +427,23 @@ export default function NewMobileProfile() {
                     <div className="flex flex-col items-start">
                       <span className="text-sm font-bold text-white group-hover:text-blue-200 transition-colors">Notifications</span>
                       <span className="text-[10px] text-zinc-500">Push, email, alerts</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-zinc-600 group-hover:text-zinc-400" />
+                </button>
+
+                {/* Rules */}
+                <button
+                  onClick={() => router.push('/rules')}
+                  className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
+                      <BookOpen size={16} />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm font-bold text-white group-hover:text-orange-200 transition-colors">Rules</span>
+                      <span className="text-[10px] text-zinc-500">The commitment explained</span>
                     </div>
                   </div>
                   <ChevronRight size={16} className="text-zinc-600 group-hover:text-zinc-400" />
