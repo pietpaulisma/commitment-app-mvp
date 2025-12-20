@@ -21,8 +21,15 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const [isCreatingSupremeAdmin, setIsCreatingSupremeAdmin] = useState(false)
   const [shouldRefreshProfile, setShouldRefreshProfile] = useState(false)
   const [forceComplete, setForceComplete] = useState(false)
+  const [isOnboardingDemoMode, setIsOnboardingDemoMode] = useState(false)
   const mountedRef = useRef(false)
   const lastPathnameRef = useRef(pathname)
+
+  // Check for onboarding demo mode on mount
+  useEffect(() => {
+    const isDemoMode = localStorage.getItem('onboarding-demo-mode') === 'true'
+    setIsOnboardingDemoMode(isDemoMode)
+  }, [])
 
   // Loading stages management
   const { currentStage, setStage, complete, isComplete } = useLoadingStages(AUTH_STAGES)
@@ -145,7 +152,16 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     }
 
     // Don't check on auth/onboarding pages
+    // Also allow access if in onboarding demo mode
     if (isAuthPage || isOnboardingPage) {
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
+      return
+    }
+
+    // If in onboarding demo mode, allow access to any page
+    if (isOnboardingDemoMode) {
       if (!hasChecked) {
         setHasChecked(true)
       }
@@ -188,7 +204,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       setHasChecked(true)
       router.replace('/onboarding')
     }
-  }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile, forceComplete])
+  }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile, forceComplete, isOnboardingDemoMode])
 
 
   // Update loading stages based on current state

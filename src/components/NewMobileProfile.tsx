@@ -21,8 +21,10 @@ import {
   ShieldCheck,
   Bug,
   Dumbbell,
-  BookOpen
+  BookOpen,
+  Eye
 } from 'lucide-react'
+import { useDemoMode } from '@/contexts/DemoModeContext'
 import { SystemMessageConfigAdmin } from './SystemMessageConfigAdmin'
 import NotificationSettings from './NotificationSettings'
 import { PenaltyResponseModal } from './modals/PenaltyResponseModal'
@@ -41,6 +43,7 @@ export default function NewMobileProfile() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
+  const { enterDemoMode } = useDemoMode()
   const [showSystemMessageConfig, setShowSystemMessageConfig] = useState(false)
   const [showNotificationSettings, setShowNotificationSettings] = useState(false)
   const [showTestPenaltyModal, setShowTestPenaltyModal] = useState(false)
@@ -492,6 +495,40 @@ export default function NewMobileProfile() {
 
                       <AdminAction onClick={() => setShowSystemMessageConfig(true)} icon={Sparkles} iconColor="text-pink-400" bgColor="bg-pink-500/10" title="System Messages" />
                       <AdminAction onClick={() => setShowTestPenaltyModal(true)} icon={Play} iconColor="text-lime-400" bgColor="bg-lime-500/10" title="Test Penalty Modal" />
+
+                      {/* Demo Mode Controls */}
+                      <div className="p-4 border-t border-white/5">
+                        <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Demo Modes</div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            onClick={() => enterDemoMode('user')}
+                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all group"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                              <span className="text-lg">👤</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-blue-400 group-hover:text-blue-300">User</span>
+                          </button>
+                          <button
+                            onClick={() => enterDemoMode('group_admin')}
+                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all group"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+                              <span className="text-lg">👑</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-amber-400 group-hover:text-amber-300">Group Admin</span>
+                          </button>
+                          <button
+                            onClick={() => enterDemoMode('onboarding')}
+                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all group"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                              <span className="text-lg">🚀</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-purple-400 group-hover:text-purple-300">Onboarding</span>
+                          </button>
+                        </div>
+                      </div>
                     </>
                   )}
 
