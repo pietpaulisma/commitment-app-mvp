@@ -28,6 +28,7 @@ type WorkoutLog = {
     duration: number
     points: number
     date: string
+    sport_name?: string
     exercises?: Exercise
 }
 
@@ -312,7 +313,7 @@ export const LogWorkoutOverlay = ({ isOpen, onClose, userId, userProfile, onLogS
                                 {todaysLogs.map(log => (
                                     <CompletedExerciseCard
                                         key={log.id}
-                                        name={log.exercises?.name || 'Unknown'}
+                                        name={log.sport_name || log.exercises?.name || 'Unknown'}
                                         points={log.points}
                                         maxPoints={dailyTarget}
                                         icon={getIconForExercise(log.exercises as Exercise)}

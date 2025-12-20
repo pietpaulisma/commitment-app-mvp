@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { calculateDailyTarget } from '@/utils/targetCalculation'
+import { calculateDailyTarget, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 import { SystemMessageService } from '@/services/systemMessages'
 import { calculateDeadline, getYesterdayDateString } from '@/utils/penaltyHelpers'
 import type { CheckPenaltiesResponse, PenaltyStats, PendingMemberInfo, DisputedMemberInfo } from '@/types/penalties'
@@ -236,6 +236,83 @@ export async function POST(request: NextRequest) {
           completedMembers.push(member.username)
           console.log(`${member.username}: Rest day - skipped`)
           continue
+        }
+
+        // Check if user had an active recovery day for yesterday
+        const { data: yesterdayRecoveryDay } = await supabase
+          .from('user_recovery_days')
+          .select('id, recovery_minutes, is_complete')
+          .eq('user_id', member.id)
+          .eq('used_date', yesterday)
+          .maybeSingle()
+
+        if (yesterdayRecoveryDay) {
+          // User had activated a recovery day for yesterday
+          if (yesterdayRecoveryDay.is_complete || yesterdayRecoveryDay.recovery_minutes >= RECOVERY_DAY_TARGET_MINUTES) {
+            stats.completed++
+            completedMembers.push(member.username)
+            console.log(`${member.username}: Recovery day completed (${yesterdayRecoveryDay.recovery_minutes}/${RECOVERY_DAY_TARGET_MINUTES} min)`)
+            continue
+          } else {
+            // User activated recovery day but didn't complete it - will create penalty below
+            console.log(`${member.username}: Incomplete recovery day (${yesterdayRecoveryDay.recovery_minutes}/${RECOVERY_DAY_TARGET_MINUTES} min)`)
+            
+            // Check if penalty already exists for this date
+            const { data: existingPenalty } = await supabase
+              .from('pending_penalties')
+              .select('id, status')
+              .eq('user_id', member.id)
+              .eq('date', yesterday)
+              .single()
+
+            if (existingPenalty) {
+              if (existingPenalty.status === 'disputed') {
+                stats.disputed++
+                disputedMembers.push({
+                  username: member.username,
+                  target: RECOVERY_DAY_TARGET_MINUTES,
+                  actual: yesterdayRecoveryDay.recovery_minutes
+                })
+              } else if (existingPenalty.status === 'pending') {
+                stats.pending++
+                pendingMembers.push({
+                  username: member.username,
+                  target: RECOVERY_DAY_TARGET_MINUTES,
+                  actual: yesterdayRecoveryDay.recovery_minutes,
+                  deadline: '' // Would need to fetch this
+                })
+              }
+              continue
+            }
+
+            // Create new penalty for incomplete recovery day
+            const deadline = calculateDeadline()
+
+            const { error: penaltyError } = await supabase
+              .from('pending_penalties')
+              .insert({
+                user_id: member.id,
+                group_id: profile.group_id,
+                date: yesterday,
+                target_points: RECOVERY_DAY_TARGET_MINUTES,
+                actual_points: yesterdayRecoveryDay.recovery_minutes,
+                penalty_amount: penaltyAmount,
+                status: 'pending',
+                deadline: deadline.toISOString()
+              })
+
+            if (!penaltyError) {
+              stats.penaltiesCreated++
+              pendingMembers.push({
+                username: member.username,
+                target: RECOVERY_DAY_TARGET_MINUTES,
+                actual: yesterdayRecoveryDay.recovery_minutes,
+                deadline: deadline.toISOString()
+              })
+              console.log(`${member.username}: Penalty created for incomplete recovery day`)
+            }
+            continue
+          }
         }
 
         // Get yesterday's workout logs

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { calculateDailyTarget } from '@/utils/targetCalculation'
+import { calculateDailyTarget, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 
 // Initialize Supabase with service role for admin operations
 // Note: This will be properly initialized at runtime when environment variables are available
@@ -115,9 +115,9 @@ export async function GET(request: NextRequest) {
             dayBeforeRestDay.setDate(dayBeforeRestDay.getDate() - 1)
             const dayBeforeRestDayStr = dayBeforeRestDay.toISOString().split('T')[0]
 
-            // Get points from the day before rest day
+            // Get points from the day before rest day (from logs table where workouts are stored)
             const { data: previousDayLogs } = await supabase
-              .from('workout_logs')
+              .from('logs')
               .select('points')
               .eq('user_id', profile.id)
               .eq('date', dayBeforeRestDayStr)
@@ -170,9 +170,77 @@ export async function GET(request: NextRequest) {
           continue
         }
 
-        // Get user's workout logs for yesterday
+        // Check if user had an active recovery day for yesterday
+        const { data: yesterdayRecoveryDay } = await supabase
+          .from('user_recovery_days')
+          .select('id, recovery_minutes, is_complete')
+          .eq('user_id', profile.id)
+          .eq('used_date', yesterdayStr)
+          .maybeSingle()
+
+        if (yesterdayRecoveryDay) {
+          // User had activated a recovery day for yesterday
+          if (yesterdayRecoveryDay.is_complete || yesterdayRecoveryDay.recovery_minutes >= RECOVERY_DAY_TARGET_MINUTES) {
+            console.log(`${profile.username}: Skipping penalty - completed recovery day (${yesterdayRecoveryDay.recovery_minutes}/${RECOVERY_DAY_TARGET_MINUTES} min)`)
+
+            // Update last penalty check without issuing penalty
+            await supabase
+              .from('profiles')
+              .update({ last_penalty_check: yesterdayStr })
+              .eq('id', profile.id)
+
+            continue
+          } else {
+            // User activated recovery day but didn't complete it
+            console.log(`${profile.username}: Incomplete recovery day (${yesterdayRecoveryDay.recovery_minutes}/${RECOVERY_DAY_TARGET_MINUTES} min) - issuing penalty`)
+
+            const penaltyAmount = group.penalty_amount || 10
+
+            // Insert penalty transaction
+            const { error: transactionError } = await supabase
+              .from('payment_transactions')
+              .insert({
+                user_id: profile.id,
+                group_id: profile.group_id,
+                amount: penaltyAmount,
+                transaction_type: 'penalty',
+                description: `Automatic penalty: Incomplete recovery day (${yesterdayRecoveryDay.recovery_minutes}/${RECOVERY_DAY_TARGET_MINUTES} minutes)`
+              })
+
+            if (transactionError) {
+              console.error(`Error inserting recovery day penalty for ${profile.username}:`, transactionError)
+              continue
+            }
+
+            // Update user's total penalty owed
+            const newTotalOwed = (profile.total_penalty_owed || 0) + penaltyAmount
+
+            await supabase
+              .from('profiles')
+              .update({
+                total_penalty_owed: newTotalOwed,
+                last_penalty_check: yesterdayStr
+              })
+              .eq('id', profile.id)
+
+            totalPenaltiesIssued++
+            penaltyResults.push({
+              username: profile.username,
+              penaltyAmount,
+              target: RECOVERY_DAY_TARGET_MINUTES,
+              actual: yesterdayRecoveryDay.recovery_minutes,
+              newTotal: newTotalOwed,
+              type: 'recovery_day'
+            })
+
+            console.log(`${profile.username}: Recovery day penalty issued €${penaltyAmount} (Total: €${newTotalOwed})`)
+            continue
+          }
+        }
+
+        // Get user's workout logs for yesterday (from logs table where workouts are stored)
         const { data: yesterdayLogs, error: logsError } = await supabase
-          .from('workout_logs')
+          .from('logs')
           .select('points, exercise_id')
           .eq('user_id', profile.id)
           .eq('date', yesterdayStr)

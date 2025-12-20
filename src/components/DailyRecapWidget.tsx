@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { CalendarDaysIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { formatDateShort, getReasonLabel } from '@/utils/penaltyHelpers'
 import { DailyRecapHistoryModal } from './modals/DailyRecapHistoryModal'
-import { calculateDailyTarget } from '@/utils/targetCalculation'
+import { calculateDailyTarget, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 import { supabase } from '@/lib/supabase'
 
 interface DailyRecapWidgetProps {
@@ -146,8 +146,9 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       // Skip log query if no members
       let allLogs = null
       if (memberIds.length > 0) {
+        // Use logs table where workouts are actually stored
         const { data, error: logsError } = await supabase
-          .from('workout_logs')
+          .from('logs')
           .select('user_id, points, exercise_id, date')
           .in('user_id', memberIds)
           .in('date', [targetDateStr, dayBeforeStr])
@@ -187,6 +188,16 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
 
       const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || [])
 
+      // Fetch recovery day records for all members for the target date
+      const { data: recoveryDayRecords } = await supabase
+        .from('user_recovery_days')
+        .select('user_id, recovery_minutes, is_complete')
+        .in('user_id', memberIds)
+        .eq('used_date', targetDateStr)
+
+      // Create a map of user_id -> recovery day info
+      const recoveryDayMap = new Map(recoveryDayRecords?.map(rd => [rd.user_id, rd]) || [])
+
       for (const member of members) {
         // Skip if sick
         if (member.is_sick_mode) {
@@ -225,7 +236,47 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           continue
         }
 
-        // Calculate target for yesterday
+        // Check if member had an active recovery day
+        const memberRecoveryDay = recoveryDayMap.get(member.id)
+        if (memberRecoveryDay) {
+          // User had activated a recovery day for this date
+          const memberStatus: MemberStatus = {
+            username: member.username,
+            userId: member.id,
+            target: RECOVERY_DAY_TARGET_MINUTES,
+            actual: memberRecoveryDay.recovery_minutes || 0,
+            status: 'completed'
+          }
+
+          if (memberRecoveryDay.is_complete || memberRecoveryDay.recovery_minutes >= RECOVERY_DAY_TARGET_MINUTES) {
+            // Completed recovery day
+            memberStatus.status = 'completed'
+            completedList.push(member.username)
+          } else {
+            // Incomplete recovery day - check for penalty
+            const penalty = penaltyMap.get(member.id)
+            if (penalty) {
+              if (penalty.status === 'pending') {
+                memberStatus.status = 'pending'
+                memberStatus.reasonCategory = penalty.reason_category
+                memberStatus.reasonMessage = penalty.reason_message
+                pendingList.push(memberStatus)
+              } else if (penalty.status === 'disputed') {
+                memberStatus.status = 'disputed'
+                memberStatus.reasonCategory = penalty.reason_category
+                memberStatus.reasonMessage = penalty.reason_message
+                disputedList.push(memberStatus)
+              }
+            } else {
+              memberStatus.status = 'to_be_confirmed'
+              toBeConfirmedList.push(memberStatus)
+            }
+          }
+          memberStatuses.push(memberStatus)
+          continue
+        }
+
+        // Calculate target for yesterday (regular day, no recovery day)
         const dailyTarget = calculateDailyTarget({
           daysSinceStart,
           weekMode: member.week_mode || 'sane',

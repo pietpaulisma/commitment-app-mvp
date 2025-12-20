@@ -14,7 +14,7 @@ import { PeakWorkoutTimeChart } from './PeakWorkoutTimeChart';
 import { PopularExerciseWidget } from './PopularExerciseWidget';
 import WorkoutModal from '@/components/modals/WorkoutModal';
 import { BottomNavigation } from './BottomNavigation';
-import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation';
+import { calculateDailyTarget, getDaysSinceStart, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation';
 import WeeklyOverperformers from '@/components/WeeklyOverperformers';
 import { SeasonalChampionsWidget } from '@/components/SeasonalChampionsWidget';
 import { COLORS } from '@/utils/colors';
@@ -25,7 +25,7 @@ import { PenaltyResponseModal } from '@/components/modals/PenaltyResponseModal';
 import type { PendingPenalty } from '@/types/penalties';
 import { formatTimeRemaining } from '@/utils/penaltyHelpers';
 import { TimePeriod, TIME_PERIOD_LABELS, getNextTimePeriod, getDateRangeForPeriod, getTimestampRangeForPeriod } from '@/utils/timePeriodHelpers';
-import { getRecoveryDayStatusForUsers } from '@/utils/recoveryDayHelpers';
+import { getRecoveryDayStatusForUsers, getActiveRecoveryDay } from '@/utils/recoveryDayHelpers';
 
 export default function NewDashboard() {
     const { user } = useAuth();
@@ -394,6 +394,15 @@ export default function NewDashboard() {
 
                     const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || []);
 
+                    // Get recovery day records for all members for yesterday
+                    const { data: recoveryDayRecords } = await supabase
+                        .from('user_recovery_days')
+                        .select('user_id, recovery_minutes, is_complete')
+                        .in('user_id', members.map(m => m.id))
+                        .eq('used_date', yesterdayStr);
+
+                    const recoveryDayMap = new Map(recoveryDayRecords?.map(rd => [rd.user_id, rd]) || []);
+
                     // Calculate days since start for target calculation
                     const startDate = new Date(group.start_date);
                     const daysSinceStartForYesterday = Math.floor((yesterday.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -418,10 +427,34 @@ export default function NewDashboard() {
                             continue;
                         }
 
-                        // Calculate target
+                        // Check if member had an active recovery day yesterday
+                        const memberRecoveryDay = recoveryDayMap.get(member.id);
+                        if (memberRecoveryDay) {
+                            const recoveryTarget = RECOVERY_DAY_TARGET_MINUTES;
+                            const recoveryActual = memberRecoveryDay.recovery_minutes || 0;
+                            const metRecoveryTarget = memberRecoveryDay.is_complete || recoveryActual >= recoveryTarget;
+                            const penalty = penaltyMap.get(member.id);
+
+                            if (metRecoveryTarget) {
+                                completedList.push(member.username);
+                            } else if (penalty) {
+                                if (penalty.status === 'pending') {
+                                    pendingList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
+                                } else if (penalty.status === 'accepted') {
+                                    paidList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
+                                } else if (penalty.status === 'disputed') {
+                                    disputedList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
+                                }
+                            } else {
+                                pendingList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
+                            }
+                            continue;
+                        }
+
+                        // Calculate target for regular day (default to 'sane' mode if not set)
                         const dailyTarget = calculateDailyTarget({
                             daysSinceStart: daysSinceStartForYesterday,
-                            weekMode: member.week_mode || 'insane',
+                            weekMode: member.week_mode || 'sane',
                             restDays,
                             recoveryDays,
                             currentDayOfWeek: yesterdayDayOfWeek
@@ -1158,64 +1191,81 @@ export default function NewDashboard() {
                     const today = new Date().toISOString().split('T')[0];
                     const todayDayOfWeek = new Date().getDay();
 
-                    // Get group settings
-                    const { data: groupSettings } = await supabase
-                        .from('group_settings')
-                        .select('rest_days, recovery_days')
-                        .eq('group_id', profile.group_id)
-                        .maybeSingle();
+                    // Check if user has an active recovery day for today
+                    const activeRecoveryDay = await getActiveRecoveryDay(user.id);
+                    
+                    if (activeRecoveryDay) {
+                        // User has an active recovery day - use recovery day target (15 min)
+                        const percentage = RECOVERY_DAY_TARGET_MINUTES > 0 
+                            ? Math.round((activeRecoveryDay.recovery_minutes / RECOVERY_DAY_TARGET_MINUTES) * 100) 
+                            : 0;
 
-                    const restDays = groupSettings?.rest_days || [1];
-                    const recoveryDays = groupSettings?.recovery_days || [5];
+                        setTodayProgress({
+                            actual: activeRecoveryDay.recovery_minutes,
+                            target: RECOVERY_DAY_TARGET_MINUTES,
+                            percentage
+                        });
+                    } else {
+                        // Regular calculation for non-recovery days
+                        // Get group settings
+                        const { data: groupSettings } = await supabase
+                            .from('group_settings')
+                            .select('rest_days, recovery_days')
+                            .eq('group_id', profile.group_id)
+                            .maybeSingle();
 
-                    // Calculate today's target
-                    const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
-                    const dailyTarget = calculateDailyTarget({
-                        daysSinceStart,
-                        weekMode: profile.week_mode || 'sane',
-                        restDays,
-                        recoveryDays,
-                        currentDayOfWeek: todayDayOfWeek
-                    });
+                        const restDays = groupSettings?.rest_days || [1];
+                        const recoveryDays = groupSettings?.recovery_days || [5];
 
-                    // Get today's logs for current user
-                    const { data: todayLogs } = await supabase
-                        .from('logs')
-                        .select('points, exercise_id')
-                        .eq('user_id', user.id)
-                        .eq('date', today);
+                        // Calculate today's target
+                        const daysSinceStart = Math.floor((new Date().getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24));
+                        const dailyTarget = calculateDailyTarget({
+                            daysSinceStart,
+                            weekMode: profile.week_mode || 'sane',
+                            restDays,
+                            recoveryDays,
+                            currentDayOfWeek: todayDayOfWeek
+                        });
 
-                    // Get exercises for recovery capping
-                    const { data: exercises } = await supabase
-                        .from('exercises')
-                        .select('id, type');
+                        // Get today's logs for current user
+                        const { data: todayLogs } = await supabase
+                            .from('logs')
+                            .select('points, exercise_id')
+                            .eq('user_id', user.id)
+                            .eq('date', today);
 
-                    const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || []);
+                        // Get exercises for recovery capping
+                        const { data: exercises } = await supabase
+                            .from('exercises')
+                            .select('id, type');
 
-                    // Calculate actual points with recovery capping
-                    let totalRecovery = 0;
-                    let totalNonRecovery = 0;
+                        const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || []);
 
-                    todayLogs?.forEach(log => {
-                        const exerciseType = exerciseTypeMap.get(log.exercise_id);
-                        if (exerciseType === 'recovery') {
-                            totalRecovery += log.points;
-                        } else {
-                            totalNonRecovery += log.points;
-                        }
-                    });
+                        // Calculate actual points with recovery capping
+                        let totalRecovery = 0;
+                        let totalNonRecovery = 0;
 
-                    const recoveryCapLimit = Math.round(dailyTarget * 0.25);
-                    const cappedRecovery = Math.min(totalRecovery, recoveryCapLimit);
-                    const actualPoints = totalNonRecovery + cappedRecovery;
+                        todayLogs?.forEach(log => {
+                            const exerciseType = exerciseTypeMap.get(log.exercise_id);
+                            if (exerciseType === 'recovery') {
+                                totalRecovery += log.points;
+                            } else {
+                                totalNonRecovery += log.points;
+                            }
+                        });
 
-                    const percentage = dailyTarget > 0 ? Math.round((actualPoints / dailyTarget) * 100) : 0;
+                        const recoveryCapLimit = Math.round(dailyTarget * 0.25);
+                        const cappedRecovery = Math.min(totalRecovery, recoveryCapLimit);
+                        const actualPoints = totalNonRecovery + cappedRecovery;
 
-                    setTodayProgress({
-                        actual: actualPoints,
-                        target: dailyTarget,
-                        percentage
-                    });
+                        const percentage = dailyTarget > 0 ? Math.round((actualPoints / dailyTarget) * 100) : 0;
+
+                        setTodayProgress({
+                            actual: actualPoints,
+                            target: dailyTarget,
+                            percentage
+                        });
+                    }
                 } catch (error) {
                     console.error('[NewDashboard] Error calculating today progress:', error);
                 }
@@ -1983,6 +2033,7 @@ export default function NewDashboard() {
                 groupId={userProfile?.group_id}
                 progressPercentage={squadData.find(u => u.name === "You")?.pct || todayProgress.percentage}
                 hasUnreadMessages={hasUnreadMessages}
+                isRecoveryDay={squadData.find(u => u.name === "You")?.isRecoveryDay || false}
             />
 
             {/* --- WORKOUT MODAL --- */}

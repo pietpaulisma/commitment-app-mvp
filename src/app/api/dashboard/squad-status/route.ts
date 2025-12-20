@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { calculateDailyTarget, getDaysSinceStart } from '@/utils/targetCalculation'
+import { calculateDailyTarget, getDaysSinceStart, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -148,23 +148,45 @@ export async function GET(request: Request) {
       .select('id, week_mode, is_sick_mode')
       .in('id', groupUsers.map(u => u.id))
 
+    // Get active recovery days for all users in the group for today
+    const { data: activeRecoveryDays } = await supabaseAdmin
+      .from('user_recovery_days')
+      .select('user_id, is_complete, recovery_minutes')
+      .in('user_id', groupUsers.map(u => u.id))
+      .eq('used_date', today)
+
+    // Create a map of user_id -> recovery day info
+    const recoveryDayMap = new Map(activeRecoveryDays?.map(rd => [rd.user_id, rd]) || [])
+
     // Map users to squad data with proper individual targets
     const squad = groupUsers.map(u => {
       const points = pointsByUser.get(u.id) || 0
       const profileMode = profilesWithMode?.find(p => p.id === u.id)
       const memberWeekMode = profileMode?.week_mode as 'sane' | 'insane' | null
       const isSickMode = profileMode?.is_sick_mode || false
+      
+      // Check if user has an active recovery day for today
+      const userRecoveryDay = recoveryDayMap.get(u.id)
+      const isUserRecoveryDay = !!userRecoveryDay
 
-      // Calculate individual daily target using same logic as RectangularDashboard
-      const memberDailyTarget = calculateDailyTarget({
-        daysSinceStart,
-        weekMode: memberWeekMode || 'insane', // Default to insane if null
-        restDays,
-        recoveryDays,
-        currentDayOfWeek
-      })
+      // If user has activated their recovery day, use the recovery day target (15 min)
+      // Otherwise, calculate the regular daily target
+      const memberDailyTarget = isUserRecoveryDay
+        ? RECOVERY_DAY_TARGET_MINUTES
+        : calculateDailyTarget({
+            daysSinceStart,
+            weekMode: memberWeekMode || 'insane', // Default to insane if null
+            restDays,
+            recoveryDays,
+            currentDayOfWeek
+          })
 
-      const pct = Math.round((points / memberDailyTarget) * 100)
+      // For recovery day users, points are the recovery minutes logged
+      const effectivePoints = isUserRecoveryDay 
+        ? (userRecoveryDay?.recovery_minutes || 0)
+        : points
+      
+      const pct = Math.round((effectivePoints / memberDailyTarget) * 100)
 
       return {
         id: u.id,
@@ -172,11 +194,12 @@ export async function GET(request: Request) {
         personal_color: u.personal_color,
         custom_icon: u.custom_icon,
         target: memberDailyTarget,
-        points,
+        points: effectivePoints,
         pct,
         is_complete: pct >= 100,
         is_sick_mode: isSickMode,
-        week_mode: memberWeekMode || 'insane'
+        week_mode: memberWeekMode || 'insane',
+        is_recovery_day: isUserRecoveryDay
       }
     })
 

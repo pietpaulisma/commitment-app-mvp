@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { calculateDailyTarget } from '@/utils/targetCalculation'
+import { calculateDailyTarget, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 import webpush from 'web-push'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -115,6 +115,55 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Check if user had an active recovery day for yesterday
+    const { data: yesterdayRecoveryDay } = await supabase
+      .from('user_recovery_days')
+      .select('id, recovery_minutes, is_complete')
+      .eq('user_id', user.id)
+      .eq('used_date', yesterdayStr)
+      .maybeSingle()
+
+    if (yesterdayRecoveryDay) {
+      // User had activated a recovery day for yesterday
+      if (yesterdayRecoveryDay.is_complete || yesterdayRecoveryDay.recovery_minutes >= RECOVERY_DAY_TARGET_MINUTES) {
+        // User completed their recovery day - no penalty
+        return NextResponse.json({
+          noPenalty: true,
+          reason: 'User completed their recovery day'
+        })
+      } else {
+        // User activated recovery day but didn't complete it - create penalty with recovery day target
+        const deadline = new Date()
+        deadline.setHours(deadline.getHours() + 24)
+
+        const { data: newPenalty, error: penaltyError } = await supabase
+          .from('pending_penalties')
+          .insert({
+            user_id: user.id,
+            group_id: groupId,
+            date: yesterdayStr,
+            target_points: RECOVERY_DAY_TARGET_MINUTES,
+            actual_points: yesterdayRecoveryDay.recovery_minutes || 0,
+            penalty_amount: groupSettingsRes.data?.penalty_amount || 10,
+            status: 'pending',
+            deadline: deadline.toISOString()
+          })
+          .select()
+          .single()
+
+        if (penaltyError) {
+          console.error('Error creating recovery day penalty:', penaltyError)
+          return NextResponse.json({ error: 'Failed to create penalty' }, { status: 500 })
+        }
+
+        return NextResponse.json({
+          penaltyCreated: true,
+          penalty: newPenalty,
+          message: 'Penalty created for incomplete recovery day'
+        })
+      }
+    }
+
     // Check if yesterday was a rest day
     const isRestDay = restDays.includes(dayOfWeek)
 
@@ -126,7 +175,7 @@ export async function POST(request: NextRequest) {
         const dayBeforeStr = dayBeforeRestDay.toISOString().split('T')[0]
 
         const { data: prevDayLogs } = await supabase
-          .from('workout_logs')
+          .from('logs')
           .select('points')
           .eq('user_id', user.id)
           .eq('date', dayBeforeStr)
@@ -173,9 +222,9 @@ export async function POST(request: NextRequest) {
       currentDayOfWeek: dayOfWeek
     })
 
-    // Get yesterday's workout logs
+    // Get yesterday's workout logs from the logs table (where workouts are actually stored)
     const { data: logs } = await supabase
-      .from('workout_logs')
+      .from('logs')
       .select('points, exercise_id')
       .eq('user_id', user.id)
       .eq('date', yesterdayStr)

@@ -8,9 +8,10 @@ interface BottomNavigationProps {
     groupId?: string | null
     progressPercentage?: number
     hasUnreadMessages?: boolean
+    isRecoveryDay?: boolean
 }
 
-export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progressPercentage = 0, hasUnreadMessages = false }: BottomNavigationProps) => {
+export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progressPercentage = 0, hasUnreadMessages = false, isRecoveryDay = false }: BottomNavigationProps) => {
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-4 pointer-events-none">
             <div className="max-w-2xl mx-auto pointer-events-auto">
@@ -21,16 +22,22 @@ export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progres
                         onClick={onWorkoutClick}
                         className="relative flex-1 h-16 rounded-[2rem] flex items-center justify-between px-8 transition-all group overflow-hidden"
                     >
-                        {/* Background - Changes based on completion */}
+                        {/* Background - Changes based on completion and recovery day */}
                         <div 
                             className={`absolute inset-0 rounded-[2rem] transition-all duration-500 ${
                                 progressPercentage >= 100 
-                                    ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500'
-                                    : 'bg-white group-hover:bg-zinc-200'
+                                    ? isRecoveryDay
+                                        ? 'bg-gradient-to-r from-green-700 via-green-600 to-green-500'
+                                        : 'bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500'
+                                    : isRecoveryDay
+                                        ? 'bg-green-900/30 group-hover:bg-green-900/40 border border-green-500/30'
+                                        : 'bg-white group-hover:bg-zinc-200'
                             }`}
                             style={{
                                 boxShadow: progressPercentage >= 100
-                                    ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6)'
+                                    ? isRecoveryDay
+                                        ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(22, 101, 52, 0.6)'
+                                        : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6)'
                                     : 'none'
                             }}
                         />
@@ -41,30 +48,52 @@ export const BottomNavigation = ({ onWorkoutClick, onChatClick, groupId, progres
                                 className="absolute top-0 left-0 bottom-0 transition-all duration-500 ease-out rounded-l-[2rem]"
                                 style={{
                                     width: `${progressPercentage}%`,
-                                    background: 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
-                                    boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
+                                    background: isRecoveryDay
+                                        ? 'linear-gradient(90deg, rgb(22, 101, 52) 0%, rgb(34, 197, 94) 40%, rgb(74, 222, 128) 100%)'
+                                        : 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
+                                    boxShadow: isRecoveryDay
+                                        ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(22, 101, 52, 0.6), 4px 0 20px rgba(34, 197, 94, 0.5), 8px 0 30px rgba(74, 222, 128, 0.3)'
+                                        : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
                                 }}
                             />
                         )}
 
                         {/* Content */}
                         <div className="relative z-10 flex flex-col items-start">
-                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ${progressPercentage >= 100 ? 'text-white/80' : 'text-black'}`}>
-                                Today's Goal
+                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-0.5 ${
+                                progressPercentage >= 100 
+                                    ? 'text-white/80' 
+                                    : isRecoveryDay 
+                                        ? 'text-green-300/80' 
+                                        : 'text-black'
+                            }`}>
+                                {isRecoveryDay ? 'Recovery Day' : "Today's Goal"}
                             </span>
-                            <span className={`text-xl font-black tracking-tight leading-none ${progressPercentage >= 100 ? 'text-white' : 'text-black'}`}>
-                                LOG WORKOUT
+                            <span className={`text-xl font-black tracking-tight leading-none ${
+                                progressPercentage >= 100 
+                                    ? 'text-white' 
+                                    : isRecoveryDay 
+                                        ? 'text-green-100' 
+                                        : 'text-black'
+                            }`}>
+                                {isRecoveryDay ? 'RECOVERY' : 'LOG WORKOUT'}
                             </span>
                         </div>
 
                         {/* Percentage or Arrow */}
                         <div className="relative z-10">
                             {progressPercentage > 0 ? (
-                                <span className={`text-sm font-black tabular-nums ${progressPercentage >= 100 ? 'text-white' : 'text-black'}`}>
+                                <span className={`text-sm font-black tabular-nums ${
+                                    progressPercentage >= 100 
+                                        ? 'text-white' 
+                                        : isRecoveryDay 
+                                            ? 'text-green-100' 
+                                            : 'text-black'
+                                }`}>
                                     {Math.round(progressPercentage)}%
                                 </span>
                             ) : (
-                                <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform text-black" />
+                                <ChevronRight size={24} className={`group-hover:translate-x-1 transition-transform ${isRecoveryDay ? 'text-green-100' : 'text-black'}`} />
                             )}
                         </div>
                     </button>
