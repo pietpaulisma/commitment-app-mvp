@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, AlertTriangle, Zap, Users, Target, Shield, Skull } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -66,6 +66,9 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
+
+  // Ref to hold nextStep function to avoid dependency issues in useEffect
+  const nextStepRef = useRef<() => void>(() => {})
 
   const finalWarningQuotes = [
     "Are you sure...",
@@ -155,7 +158,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
               setScreenIntensity(0.2)
               // Automatically proceed to next step after completion
               setTimeout(() => {
-                nextStep()
+                nextStepRef.current()
               }, 2000) // Wait 2 seconds to show completion state
             }, 1000)
           }
@@ -165,7 +168,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       }, 100)
     }
     return () => clearInterval(interval)
-  }, [isHolding, holdProgress, finalWarningQuotes, nextStep])
+  }, [isHolding, holdProgress, finalWarningQuotes])
 
   // Handle scroll detection for final commitment page
   useEffect(() => {
@@ -281,6 +284,11 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       handleFinalCompletion()
     }
   }
+
+  // Keep ref updated with latest nextStep function
+  useEffect(() => {
+    nextStepRef.current = nextStep
+  })
 
   const prevStep = () => {
     if (currentStep === 0 && currentRuleCard === 1) {

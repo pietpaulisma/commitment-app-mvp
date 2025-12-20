@@ -7,14 +7,14 @@ const sql = postgres('postgresql://postgres.cltndnfdtytimrwticej:1UMGDjPFX02UJ6N
 });
 
 const targetBalances = {
-  'Stephan': 340,
-  'Pauli': 360,
-  'derfriesinger': 370,
-  'Peter': 290,
-  'Matthijs': 140,
-  'Marius': 200,
+  'Stephan': 370,
+  'Pauli': 370,
+  'derfriesinger': 400,
+  'Peter': 310,
+  'Matthijs': 160,
+  'Marius': 230,
   'Harry': 80,
-  'Roel': 70
+  'Roel': 80
 }
 
 async function updatePotBalances() {
