@@ -26,9 +26,10 @@ interface MemberStatus {
   userId: string
   target: number
   actual: number
-  status: 'completed' | 'to_be_confirmed' | 'pending' | 'disputed' | 'sick'
+  status: 'completed' | 'to_be_confirmed' | 'pending' | 'disputed' | 'sick' | 'waived' | 'accepted'
   reasonCategory?: string
   reasonMessage?: string
+  penaltyId?: string
 }
 
 export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetProps) {
@@ -38,8 +39,12 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
   const [toBeConfirmedMembers, setToBeConfirmedMembers] = useState<MemberStatus[]>([])
   const [pendingMembers, setPendingMembers] = useState<MemberStatus[]>([])
   const [disputedMembers, setDisputedMembers] = useState<MemberStatus[]>([])
+  const [waivedMembers, setWaivedMembers] = useState<MemberStatus[]>([])
+  const [paidMembers, setPaidMembers] = useState<MemberStatus[]>([])
   const [sickMembers, setSickMembers] = useState<string[]>([])
+  const [recoveryDayMembers, setRecoveryDayMembers] = useState<string[]>([])
   const [groupStreak, setGroupStreak] = useState(0)
+  const [waivingPenalty, setWaivingPenalty] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const d = new Date()
     d.setDate(d.getDate() - 1)
@@ -65,6 +70,36 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date)
     setShowHistoryModal(false)
+  }
+
+  const handleWaivePenalty = async (penaltyId: string) => {
+    if (!penaltyId) return
+    
+    setWaivingPenalty(penaltyId)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) return
+
+      const response = await fetch('/api/admin/waive-penalty', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ penalty_id: penaltyId })
+      })
+
+      if (response.ok) {
+        // Reload data to reflect the change
+        loadRecapData()
+      } else {
+        console.error('Failed to waive penalty')
+      }
+    } catch (error) {
+      console.error('Error waiving penalty:', error)
+    } finally {
+      setWaivingPenalty(null)
+    }
   }
 
   const loadRecapData = async () => {
@@ -179,7 +214,10 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       const toBeConfirmedList: MemberStatus[] = []
       const pendingList: MemberStatus[] = []
       const disputedList: MemberStatus[] = []
+      const waivedList: MemberStatus[] = []
+      const paidList: MemberStatus[] = []
       const sickList: string[] = []
+      const recoveryDayList: string[] = []
 
       // Get all exercises to check types
       const { data: exercises } = await supabase
@@ -198,9 +236,22 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       // Create a map of user_id -> recovery day info
       const recoveryDayMap = new Map(recoveryDayRecords?.map(rd => [rd.user_id, rd]) || [])
 
+      // Fetch historical sick mode records for the target date
+      // This tells us who was actually sick on that specific date, not just who is currently sick
+      const { data: sickModeRecords } = await supabase
+        .from('sick_mode')
+        .select('user_id')
+        .in('user_id', memberIds)
+        .eq('date', targetDateStr)
+
+      // Create a set of user IDs who were sick on this specific date
+      const historicallySickUserIds = new Set(sickModeRecords?.map(sm => sm.user_id) || [])
+
       for (const member of members) {
-        // Skip if sick
-        if (member.is_sick_mode) {
+        // Check if user was sick on this specific date (historical tracking)
+        // We use the sick_mode table which logs actual sick days, not just current sick mode status
+        const wasSickOnDate = historicallySickUserIds.has(member.id)
+        if (wasSickOnDate) {
           sickList.push(member.username)
           continue
         }
@@ -240,32 +291,42 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
         const memberRecoveryDay = recoveryDayMap.get(member.id)
         if (memberRecoveryDay) {
           // User had activated a recovery day for this date
+          const penalty = penaltyMap.get(member.id)
           const memberStatus: MemberStatus = {
             username: member.username,
             userId: member.id,
             target: RECOVERY_DAY_TARGET_MINUTES,
             actual: memberRecoveryDay.recovery_minutes || 0,
-            status: 'completed'
+            status: 'completed',
+            penaltyId: penalty?.id
           }
 
           if (memberRecoveryDay.is_complete || memberRecoveryDay.recovery_minutes >= RECOVERY_DAY_TARGET_MINUTES) {
             // Completed recovery day
             memberStatus.status = 'completed'
-            completedList.push(member.username)
+            recoveryDayList.push(member.username)
           } else {
             // Incomplete recovery day - check for penalty
-            const penalty = penaltyMap.get(member.id)
             if (penalty) {
+              memberStatus.reasonCategory = penalty.reason_category
+              memberStatus.reasonMessage = penalty.reason_message
               if (penalty.status === 'pending') {
                 memberStatus.status = 'pending'
-                memberStatus.reasonCategory = penalty.reason_category
-                memberStatus.reasonMessage = penalty.reason_message
                 pendingList.push(memberStatus)
               } else if (penalty.status === 'disputed') {
                 memberStatus.status = 'disputed'
-                memberStatus.reasonCategory = penalty.reason_category
-                memberStatus.reasonMessage = penalty.reason_message
                 disputedList.push(memberStatus)
+              } else if (penalty.status === 'waived') {
+                memberStatus.status = 'waived'
+                // Technical glitch = they actually made it
+                if (penalty.reason_category === 'technical') {
+                  recoveryDayList.push(member.username)
+                } else {
+                  waivedList.push(memberStatus)
+                }
+              } else if (penalty.status === 'accepted') {
+                memberStatus.status = 'accepted'
+                paidList.push(memberStatus)
               }
             } else {
               memberStatus.status = 'to_be_confirmed'
@@ -319,7 +380,8 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           actual: actualPoints,
           status: 'completed',
           reasonCategory: penalty?.reason_category,
-          reasonMessage: penalty?.reason_message
+          reasonMessage: penalty?.reason_message,
+          penaltyId: penalty?.id
         }
 
         if (metTarget) {
@@ -334,6 +396,17 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           } else if (penalty.status === 'disputed') {
             memberStatus.status = 'disputed'
             disputedList.push(memberStatus)
+          } else if (penalty.status === 'waived') {
+            memberStatus.status = 'waived'
+            // Technical glitch = they actually made it
+            if (penalty.reason_category === 'technical') {
+              completedList.push(member.username)
+            } else {
+              waivedList.push(memberStatus)
+            }
+          } else if (penalty.status === 'accepted') {
+            memberStatus.status = 'accepted'
+            paidList.push(memberStatus)
           }
         } else {
           // Didn't meet target but no penalty yet
@@ -349,7 +422,10 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       setToBeConfirmedMembers(toBeConfirmedList)
       setPendingMembers(pendingList)
       setDisputedMembers(disputedList)
+      setWaivedMembers(waivedList)
+      setPaidMembers(paidList)
       setSickMembers(sickList)
+      setRecoveryDayMembers(recoveryDayList)
 
       setStats({
         total: members.length,
@@ -362,14 +438,15 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       // Set user status for non-admin view
       if (!isAdmin && userId) {
         const myStatus = memberStatuses.find(m => m.userId === userId)
-        const amISick = sickList.some(username => members.find(m => m.id === userId)?.username === username)
+        // Check if user was sick on this specific historical date
+        const wasISickOnDate = historicallySickUserIds.has(userId)
 
         setUserStatus({
           targetMet: myStatus?.status === 'completed',
           toBeConfirmed: myStatus?.status === 'to_be_confirmed',
           hasPending: myStatus?.status === 'pending',
           disputed: myStatus?.status === 'disputed',
-          isSick: amISick,
+          isSick: wasISickOnDate,
           points: myStatus?.actual || 0,
           target: myStatus?.target || 0
         })
@@ -441,16 +518,82 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
             </div>
           )}
 
-          {/* To Be Confirmed */}
-          {toBeConfirmedMembers.length > 0 && (
-            <div className="bg-orange-900/20 border border-orange-600/30 rounded-lg p-2">
-              <div className="text-xs text-orange-300 font-medium mb-1">
-                ⏳ To Be Confirmed
+          {/* Recovery Day */}
+          {recoveryDayMembers.length > 0 && (
+            <div className="bg-emerald-900/20 border border-emerald-600/30 rounded-lg p-2">
+              <div className="text-xs text-emerald-300 font-medium mb-1">
+                🧘 Recovery Day
               </div>
-              <div className="text-xs text-orange-200/60 space-y-0.5">
-                {toBeConfirmedMembers.map(m => (
+              <div className="text-xs text-emerald-200/60 space-y-0.5">
+                {recoveryDayMembers.map((username, idx) => (
+                  <div key={idx}>{username}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Paid (Accepted Penalties) */}
+          {paidMembers.length > 0 && (
+            <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-2">
+              <div className="text-xs text-red-300 font-medium mb-1">
+                💰 Paid
+              </div>
+              <div className="text-xs text-red-200/60 space-y-0.5">
+                {paidMembers.map(m => (
                   <div key={m.userId}>
                     {m.username} • {m.actual}/{m.target}pts
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Waived (Approved Disputes) */}
+          {waivedMembers.length > 0 && (
+            <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-2">
+              <div className="text-xs text-purple-300 font-medium mb-1">
+                ✨ Waived
+              </div>
+              <div className="text-xs text-purple-200/60 space-y-0.5">
+                {waivedMembers.map(m => (
+                  <div key={m.userId}>
+                    {m.username}
+                    {m.reasonCategory && (
+                      <span className="text-purple-200/40"> • {getReasonLabel(m.reasonCategory)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Under Review (Disputed) */}
+          {disputedMembers.length > 0 && (
+            <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-2">
+              <div className="text-xs text-blue-300 font-medium mb-1">
+                🔍 Under Review
+              </div>
+              <div className="text-xs text-blue-200/60 space-y-1">
+                {disputedMembers.map(m => (
+                  <div key={m.userId} className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="font-medium">{m.username}</div>
+                      {m.reasonCategory && (
+                        <div className="text-blue-200/40 text-[10px]">
+                          {getReasonLabel(m.reasonCategory)}
+                          {m.reasonMessage && `: ${m.reasonMessage}`}
+                        </div>
+                      )}
+                    </div>
+                    {m.penaltyId && (
+                      <button
+                        onClick={() => handleWaivePenalty(m.penaltyId!)}
+                        disabled={waivingPenalty === m.penaltyId}
+                        className="text-[9px] px-1.5 py-0.5 bg-green-600/30 hover:bg-green-600/50 text-green-300 rounded transition-colors disabled:opacity-50"
+                      >
+                        {waivingPenalty === m.penaltyId ? '...' : 'Approve'}
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -473,22 +616,16 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
             </div>
           )}
 
-          {/* Disputed */}
-          {disputedMembers.length > 0 && (
-            <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-2">
-              <div className="text-xs text-blue-300 font-medium mb-1">
-                💭 Disputed
+          {/* To Be Confirmed */}
+          {toBeConfirmedMembers.length > 0 && (
+            <div className="bg-orange-900/20 border border-orange-600/30 rounded-lg p-2">
+              <div className="text-xs text-orange-300 font-medium mb-1">
+                ⏳ To Be Confirmed
               </div>
-              <div className="text-xs text-blue-200/60 space-y-1">
-                {disputedMembers.map(m => (
+              <div className="text-xs text-orange-200/60 space-y-0.5">
+                {toBeConfirmedMembers.map(m => (
                   <div key={m.userId}>
-                    <div className="font-medium">{m.username}</div>
-                    {m.reasonCategory && (
-                      <div className="text-blue-200/40 text-[10px]">
-                        {getReasonLabel(m.reasonCategory)}
-                        {m.reasonMessage && `: ${m.reasonMessage}`}
-                      </div>
-                    )}
+                    {m.username} • {m.actual}/{m.target}pts
                   </div>
                 ))}
               </div>

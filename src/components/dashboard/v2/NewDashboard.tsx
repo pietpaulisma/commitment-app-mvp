@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Trophy, Calendar, CheckCircle2, ChevronRight, Zap, Flame, Clock, CircleDollarSign, TrendingUp, AlertCircle, Menu, Star, Dumbbell, Moon, History, Coins } from 'lucide-react';
+import { MessageCircle, Trophy, Calendar, CheckCircle2, ChevronRight, Zap, Flame, Clock, CircleDollarSign, TrendingUp, AlertCircle, Menu, Star, Dumbbell, Moon, History, Coins, Heart, Sparkles, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeekMode } from '@/contexts/WeekModeContext';
@@ -60,16 +60,20 @@ export default function NewDashboard() {
     const [peakWorkoutTime, setPeakWorkoutTime] = useState('--:--');
     const [recapData, setRecapData] = useState<{
         completedMembers: string[];
+        recoveryDayMembers: string[];
         pendingMembers: Array<{ username: string; actual: number; target: number }>;
         paidMembers: Array<{ username: string; actual: number; target: number }>;
-        disputedMembers: Array<{ username: string; actual: number; target: number }>;
+        waivedMembers: Array<{ username: string; reason?: string }>;
+        underReviewMembers: Array<{ username: string; actual: number; target: number; reason?: string; reasonMessage?: string }>;
         sickMembers: string[];
         yesterdayDate: string;
     }>({
         completedMembers: [],
+        recoveryDayMembers: [],
         pendingMembers: [],
         paidMembers: [],
-        disputedMembers: [],
+        waivedMembers: [],
+        underReviewMembers: [],
         sickMembers: [],
         yesterdayDate: ''
     });
@@ -243,14 +247,25 @@ export default function NewDashboard() {
                         const memberIds = data.squad.map((u: any) => u.id);
                         const recoveryDayStatus = await getRecoveryDayStatusForUsers(memberIds);
                         
+                        // Fetch flexible rest day usage for today
+                        const { data: flexibleRestDayUsage } = await supabase
+                            .from('flexible_rest_days')
+                            .select('user_id')
+                            .eq('used_date', today)
+                            .in('user_id', memberIds);
+                        
+                        const flexibleRestDayUserIds = new Set(flexibleRestDayUsage?.map(r => r.user_id) || []);
+                        
                         const squad = data.squad.map((u: any) => {
                             const isOnRecoveryDay = recoveryDayStatus.has(u.id);
+                            const isOnFlexibleRestDay = flexibleRestDayUserIds.has(u.id);
                             return {
                                 name: u.id === user.id ? "You" : u.username || "User",
                                 pct: u.is_sick_mode ? u.pct : u.pct, // Percentage already calculated correctly
                                 mode: u.is_sick_mode ? "sick" : (u.week_mode || "insane"), // Show sick mode or actual week mode
                                 isLive: false, // TODO: Real-time status from last_seen
-                                isRecoveryDay: isOnRecoveryDay
+                                isRecoveryDay: isOnRecoveryDay,
+                                isFlexibleRestDay: isOnFlexibleRestDay
                             };
                         });
 
@@ -374,7 +389,7 @@ export default function NewDashboard() {
                     // Get penalties for yesterday
                     const { data: penalties } = await supabase
                         .from('pending_penalties')
-                        .select('user_id, status, actual_points, target_points')
+                        .select('user_id, status, actual_points, target_points, reason_category, reason_message')
                         .eq('group_id', profile.group_id)
                         .eq('date', yesterdayStr);
 
@@ -403,20 +418,32 @@ export default function NewDashboard() {
 
                     const recoveryDayMap = new Map(recoveryDayRecords?.map(rd => [rd.user_id, rd]) || []);
 
+                    // Get historical sick mode records for yesterday
+                    // This tells us who was actually sick on that specific date
+                    const { data: sickModeRecords } = await supabase
+                        .from('sick_mode')
+                        .select('user_id')
+                        .in('user_id', members.map(m => m.id))
+                        .eq('date', yesterdayStr);
+
+                    const historicallySickUserIds = new Set(sickModeRecords?.map(sm => sm.user_id) || []);
+
                     // Calculate days since start for target calculation
                     const startDate = new Date(group.start_date);
                     const daysSinceStartForYesterday = Math.floor((yesterday.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
                     const completedList: string[] = [];
+                    const recoveryDayList: string[] = [];
                     const pendingList: Array<{ username: string; actual: number; target: number }> = [];
                     const paidList: Array<{ username: string; actual: number; target: number }> = [];
-                    const disputedList: Array<{ username: string; actual: number; target: number }> = [];
+                    const waivedList: Array<{ username: string; reason?: string }> = [];
+                    const underReviewList: Array<{ username: string; actual: number; target: number; reason?: string; reasonMessage?: string }> = [];
                     const sickList: string[] = [];
 
                     // Process each member
                     for (const member of members) {
-                        // Check sick mode
-                        if (member.is_sick_mode) {
+                        // Check if user was sick on this specific historical date
+                        if (historicallySickUserIds.has(member.id)) {
                             sickList.push(member.username);
                             continue;
                         }
@@ -429,6 +456,7 @@ export default function NewDashboard() {
 
                         // Check if member had an active recovery day yesterday
                         const memberRecoveryDay = recoveryDayMap.get(member.id);
+                        
                         if (memberRecoveryDay) {
                             const recoveryTarget = RECOVERY_DAY_TARGET_MINUTES;
                             const recoveryActual = memberRecoveryDay.recovery_minutes || 0;
@@ -436,14 +464,27 @@ export default function NewDashboard() {
                             const penalty = penaltyMap.get(member.id);
 
                             if (metRecoveryTarget) {
-                                completedList.push(member.username);
+                                recoveryDayList.push(member.username);
                             } else if (penalty) {
-                                if (penalty.status === 'pending') {
-                                    pendingList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
+                                if (penalty.status === 'waived') {
+                                    // Technical glitch = they actually made it
+                                    if (penalty.reason_category === 'technical') {
+                                        recoveryDayList.push(member.username);
+                                    } else {
+                                        waivedList.push({ username: member.username, reason: penalty.reason_category });
+                                    }
                                 } else if (penalty.status === 'accepted') {
                                     paidList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
                                 } else if (penalty.status === 'disputed') {
-                                    disputedList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
+                                    underReviewList.push({ 
+                                        username: member.username, 
+                                        actual: recoveryActual, 
+                                        target: recoveryTarget,
+                                        reason: penalty.reason_category,
+                                        reasonMessage: penalty.reason_message
+                                    });
+                                } else if (penalty.status === 'pending') {
+                                    pendingList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
                                 }
                             } else {
                                 pendingList.push({ username: member.username, actual: recoveryActual, target: recoveryTarget });
@@ -486,12 +527,13 @@ export default function NewDashboard() {
                         } else {
                             // Didn't meet target - categorize by penalty status
                             if (penalty) {
-                                if (penalty.status === 'pending') {
-                                    pendingList.push({
-                                        username: member.username,
-                                        actual: actualPoints,
-                                        target: dailyTarget
-                                    });
+                                if (penalty.status === 'waived') {
+                                    // Technical glitch = they actually made it
+                                    if (penalty.reason_category === 'technical') {
+                                        completedList.push(member.username);
+                                    } else {
+                                        waivedList.push({ username: member.username, reason: penalty.reason_category });
+                                    }
                                 } else if (penalty.status === 'accepted') {
                                     paidList.push({
                                         username: member.username,
@@ -499,7 +541,15 @@ export default function NewDashboard() {
                                         target: dailyTarget
                                     });
                                 } else if (penalty.status === 'disputed') {
-                                    disputedList.push({
+                                    underReviewList.push({
+                                        username: member.username,
+                                        actual: actualPoints,
+                                        target: dailyTarget,
+                                        reason: penalty.reason_category,
+                                        reasonMessage: penalty.reason_message
+                                    });
+                                } else if (penalty.status === 'pending') {
+                                    pendingList.push({
                                         username: member.username,
                                         actual: actualPoints,
                                         target: dailyTarget
@@ -519,9 +569,11 @@ export default function NewDashboard() {
 
                     setRecapData({
                         completedMembers: completedList,
+                        recoveryDayMembers: recoveryDayList,
                         pendingMembers: pendingList,
                         paidMembers: paidList,
-                        disputedMembers: disputedList,
+                        waivedMembers: waivedList,
+                        underReviewMembers: underReviewList,
                         sickMembers: sickList,
                         yesterdayDate: yesterdayStr
                     });
@@ -880,164 +932,10 @@ export default function NewDashboard() {
                     console.error('[NewDashboard] Error calculating peak workout time:', error);
                 }
 
-                // 8. Calculate Top 5 Popular Exercises (Group - THIS WEEK)
-                try {
-                    const { data: members } = await supabase
-                        .from('profiles')
-                        .select('id')
-                        .eq('group_id', profile.group_id);
+                // 8. Popular exercises are now loaded by useEffect based on favoriteTimePeriod
+                // This avoids race conditions with the initial data load
 
-                    if (members && members.length > 0) {
-                        const memberIds = members.map(m => m.id);
-
-                        // Get start of current week (Monday) - using LOCAL date not UTC
-                        const now = new Date();
-                        const day = now.getDay();
-                        const diff = day === 0 ? -6 : 1 - day; // Days to get to Monday
-                        const monday = new Date(now);
-                        monday.setDate(now.getDate() + diff);
-                        monday.setHours(0, 0, 0, 0);
-                        // Use local date format to avoid UTC conversion shifting the date
-                        const year = monday.getFullYear();
-                        const month = String(monday.getMonth() + 1).padStart(2, '0');
-                        const dayOfMonth = String(monday.getDate()).padStart(2, '0');
-                        const mondayStr = `${year}-${month}-${dayOfMonth}`; // Format: YYYY-MM-DD
-
-                        // Get logs for this week with exercise details via join
-                        const { data: weekLogs, error: logsError } = await supabase
-                            .from('logs')
-                            .select('exercise_id, points, sport_name, date, user_id, exercises(name)')
-                            .in('user_id', memberIds)
-                            .gte('date', mondayStr);
-
-                        if (logsError) console.error('[NewDashboard] Group Popular - Error:', logsError);
-
-                        // Get all member profiles to map user_id to username
-                        const { data: allMembers } = await supabase
-                            .from('profiles')
-                            .select('id, username')
-                            .in('id', memberIds);
-
-                        const userIdToUsername = new Map(allMembers?.map(m => [m.id, m.username]) || []);
-
-                        // Sum points per exercise (group sports by sport_name, regular exercises by exercise_id)
-                        const exerciseCount = new Map<string, { name: string; count: number; contributors: Set<string> }>();
-                        weekLogs?.forEach((log: any) => {
-                            let displayName: string;
-                            let groupKey: string;
-
-                            // Get exercise name from joined data
-                            const exerciseName = log.exercises?.name;
-
-                            if (log.sport_name) {
-                                // Has sport_name: use it and group all intensities together
-                                displayName = log.sport_name;
-                                groupKey = `sport:${log.sport_name}`;
-                            } else if (exerciseName && exerciseName !== 'Intense Sport') {
-                                // Regular exercise (not "Intense Sport"): use exercise name from join
-                                displayName = exerciseName;
-                                groupKey = `exercise:${log.exercise_id}`;
-                            } else {
-                                // Skip generic "Intense Sport" entries without sport_name
-                                return;
-                            }
-
-                            const username = userIdToUsername.get(log.user_id);
-                            if (!username) return;
-
-                            const current = exerciseCount.get(groupKey);
-                            if (current) {
-                                current.count += log.points;
-                                current.contributors.add(username);
-                            } else {
-                                exerciseCount.set(groupKey, {
-                                    name: displayName,
-                                    count: log.points,
-                                    contributors: new Set([username])
-                                });
-                            }
-                        });
-
-                        // Get top 5 exercises sorted by total points, convert Set to array
-                        const topExercises = Array.from(exerciseCount.values())
-                            .map(exercise => ({
-                                name: exercise.name,
-                                count: exercise.count,
-                                contributors: Array.from(exercise.contributors)
-                            }))
-                            .sort((a, b) => b.count - a.count)
-                            .slice(0, 5);
-
-                        setPopularExercisesGroup(topExercises);
-                    }
-                } catch (error) {
-                    console.error('[NewDashboard] Error calculating group popular exercises:', error);
-                    console.error('[NewDashboard] Error details:', error instanceof Error ? error.message : String(error));
-                }
-
-                // 9. Calculate Top 5 Popular Exercises (Personal - THIS WEEK)
-                try {
-                    // Get start of current week (Monday) - using LOCAL date not UTC
-                    const now = new Date();
-                    const day = now.getDay();
-                    const diff = day === 0 ? -6 : 1 - day; // Days to get to Monday
-                    const monday = new Date(now);
-                    monday.setDate(now.getDate() + diff);
-                    monday.setHours(0, 0, 0, 0);
-                    // Use local date format to avoid UTC conversion shifting the date
-                    const year = monday.getFullYear();
-                    const month = String(monday.getMonth() + 1).padStart(2, '0');
-                    const dayOfMonth = String(monday.getDate()).padStart(2, '0');
-                    const mondayStr = `${year}-${month}-${dayOfMonth}`; // Format: YYYY-MM-DD
-
-                    // Get user's logs for this week with exercise details via join
-                    const { data: weekLogs } = await supabase
-                        .from('logs')
-                        .select('exercise_id, points, sport_name, date, exercises(name)')
-                        .eq('user_id', user!.id)
-                        .gte('date', mondayStr);
-
-                    // Sum points per exercise (group sports by sport_name, regular exercises by exercise_id)
-                    const exerciseCount = new Map<string, { name: string; count: number }>();
-                    weekLogs?.forEach((log: any) => {
-                        let displayName: string;
-                        let groupKey: string;
-
-                        // Get exercise name from joined data
-                        const exerciseName = log.exercises?.name;
-
-                        if (log.sport_name) {
-                            // Has sport_name: use it and group all intensities together
-                            displayName = log.sport_name;
-                            groupKey = `sport:${log.sport_name}`;
-                        } else if (exerciseName && exerciseName !== 'Intense Sport') {
-                            // Regular exercise (not "Intense Sport"): use exercise name from join
-                            displayName = exerciseName;
-                            groupKey = `exercise:${log.exercise_id}`;
-                        } else {
-                            // Skip generic "Intense Sport" entries without sport_name
-                            return;
-                        }
-
-                        const current = exerciseCount.get(groupKey);
-                        if (current) {
-                            current.count += log.points;
-                        } else {
-                            exerciseCount.set(groupKey, { name: displayName, count: log.points });
-                        }
-                    });
-
-                    // Get top 5 exercises sorted by total points
-                    const topExercises = Array.from(exerciseCount.values())
-                        .sort((a, b) => b.count - a.count)
-                        .slice(0, 5);
-
-                    setPopularExercisesPersonal(topExercises);
-                } catch (error) {
-                    console.error('[NewDashboard] Error calculating personal popular exercises:', error);
-                }
-
-                // 9b. Calculate Top 5 Popular Exercises (Personal - THIS YEAR)
+                // 9. Calculate Top 5 Popular Exercises (Personal - THIS YEAR)
                 try {
                     // Get start of current year (January 1st)
                     const now = new Date();
@@ -1170,17 +1068,21 @@ export default function NewDashboard() {
 
                     const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-                    // Add to upcomingBirthdays if not already there
+                    // Add to upcomingBirthdays if not already there, maintaining sort order
                     setUpcomingBirthdays(prev => {
                         const hasCurrentUser = prev.find(b => b.isCurrentUser);
                         if (!hasCurrentUser) {
-                            return [{
+                            const newEntry = {
                                 username: profile.username || 'You',
                                 daysUntil,
                                 date: profile.birth_date!,
                                 isCurrentUser: true,
                                 dailyTarget: 0
-                            }, ...prev];
+                            };
+                            // Add to array, re-sort by daysUntil, and keep top 2
+                            return [...prev, newEntry]
+                                .sort((a, b) => a.daysUntil - b.daysUntil)
+                                .slice(0, 2);
                         }
                         return prev;
                     });
@@ -1580,7 +1482,7 @@ export default function NewDashboard() {
                         <GlassCard noPadding className="overflow-visible min-h-[240px]">
                             <CardHeader title="Squad Status" icon={Flame} colorClass="text-orange-500" />
                             <div className="px-4 py-3 flex flex-col">
-                                {squadData.map((u, i) => (<SquadMemberRow key={i} name={u.name} pct={u.pct} mode={u.mode} isLive={u.isLive} isRecoveryDay={u.isRecoveryDay} />))}
+                                {squadData.map((u, i) => (<SquadMemberRow key={i} name={u.name} pct={u.pct} mode={u.mode} isLive={u.isLive} isRecoveryDay={u.isRecoveryDay} isFlexibleRestDay={u.isFlexibleRestDay} />))}
                                 {squadData.length === 0 && <div className="text-zinc-500 text-center py-4">Loading squad...</div>}
                             </div>
                         </GlassCard>
@@ -1637,47 +1539,65 @@ export default function NewDashboard() {
                                 colorClass="text-orange-500"
                             />
                             <div className="p-4 grid grid-cols-2 gap-3">
-                                {/* Made It - using opal colors */}
-                                {recapData.completedMembers.length > 0 && (
-                                    <div className="rounded-xl p-3 border" style={{
-                                        background: 'linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(79, 70, 229, 0.15) 100%)',
-                                        borderColor: 'rgba(96, 165, 250, 0.2)'
-                                    }}>
-                                        <div className="flex items-center gap-2 mb-2" style={{ color: 'rgb(96, 165, 250)' }}>
-                                            <CheckCircle2 size={16} />
-                                            <span className="text-xs font-black uppercase tracking-wide">Made It</span>
-                                        </div>
-                                        <div className="text-xs font-bold text-zinc-300 space-y-0.5">
-                                            {recapData.completedMembers.map((username, idx) => (
-                                                <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Right column: Pending, Paid, Disputed, and Sick stacked */}
+                                {/* Left column: Made It, Recovery Day */}
                                 <div className="flex flex-col gap-2">
-                                    {/* Pending - orange colors */}
-                                    {recapData.pendingMembers.length > 0 && (
-                                        <div className="rounded-xl p-2.5 border" style={{
-                                            background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%)',
-                                            borderColor: 'rgba(251, 146, 60, 0.2)'
+                                    {/* Made It - using opal colors */}
+                                    {recapData.completedMembers.length > 0 && (
+                                        <div className="rounded-xl p-3 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(79, 70, 229, 0.15) 100%)',
+                                            borderColor: 'rgba(96, 165, 250, 0.2)'
                                         }}>
-                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(251, 146, 60)' }}>
-                                                <Clock size={14} />
-                                                <span className="text-[10px] font-black uppercase tracking-wide">Pending</span>
+                                            <div className="flex items-center gap-2 mb-2" style={{ color: 'rgb(96, 165, 250)' }}>
+                                                <CheckCircle2 size={16} />
+                                                <span className="text-xs font-black uppercase tracking-wide">Made It</span>
                                             </div>
-                                            <div className="space-y-0.5">
-                                                {recapData.pendingMembers.map((m, idx) => (
-                                                    <div key={idx} className="flex justify-between text-xs font-bold text-zinc-300">
-                                                        <span>{m.username.slice(0, 4).toUpperCase()}</span>
-                                                        <span className="font-mono text-[9px]">{m.actual}/{m.target}</span>
-                                                    </div>
+                                            <div className="text-xs font-bold text-zinc-300 space-y-0.5">
+                                                {recapData.completedMembers.map((username, idx) => (
+                                                    <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
 
+                                    {/* Recovery Day - emerald colors */}
+                                    {recapData.recoveryDayMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%)',
+                                            borderColor: 'rgba(16, 185, 129, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(16, 185, 129)' }}>
+                                                <Heart size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Recovery</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-zinc-300 space-y-0.5">
+                                                {recapData.recoveryDayMembers.map((username, idx) => (
+                                                    <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Waived - purple colors */}
+                                    {recapData.waivedMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)',
+                                            borderColor: 'rgba(168, 85, 247, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(168, 85, 247)' }}>
+                                                <Sparkles size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Waived</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-zinc-300 space-y-0.5">
+                                                {recapData.waivedMembers.map((m, idx) => (
+                                                    <div key={idx}>{m.username.slice(0, 4).toUpperCase()}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Right column: Paid, Under Review, Pending, Sick */}
+                                <div className="flex flex-col gap-2">
                                     {/* Paid - red colors */}
                                     {recapData.paidMembers.length > 0 && (
                                         <div className="rounded-xl p-2.5 border" style={{
@@ -1699,18 +1619,39 @@ export default function NewDashboard() {
                                         </div>
                                     )}
 
-                                    {/* Disputed - blue colors */}
-                                    {recapData.disputedMembers.length > 0 && (
+                                    {/* Under Review - blue colors */}
+                                    {recapData.underReviewMembers.length > 0 && (
                                         <div className="rounded-xl p-2.5 border" style={{
                                             background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%)',
                                             borderColor: 'rgba(59, 130, 246, 0.2)'
                                         }}>
                                             <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(59, 130, 246)' }}>
-                                                <AlertCircle size={14} />
-                                                <span className="text-[10px] font-black uppercase tracking-wide">Disputed</span>
+                                                <Search size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Under Review</span>
                                             </div>
                                             <div className="space-y-0.5">
-                                                {recapData.disputedMembers.map((m, idx) => (
+                                                {recapData.underReviewMembers.map((m, idx) => (
+                                                    <div key={idx} className="flex justify-between text-xs font-bold text-zinc-300">
+                                                        <span>{m.username.slice(0, 4).toUpperCase()}</span>
+                                                        <span className="font-mono text-[9px]">{m.actual}/{m.target}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Pending - orange colors */}
+                                    {recapData.pendingMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%)',
+                                            borderColor: 'rgba(251, 146, 60, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(251, 146, 60)' }}>
+                                                <Clock size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Pending</span>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                {recapData.pendingMembers.map((m, idx) => (
                                                     <div key={idx} className="flex justify-between text-xs font-bold text-zinc-300">
                                                         <span>{m.username.slice(0, 4).toUpperCase()}</span>
                                                         <span className="font-mono text-[9px]">{m.actual}/{m.target}</span>

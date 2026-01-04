@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { XMarkIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { supabase } from '@/lib/supabase'
-import { calculateDailyTarget } from '@/utils/targetCalculation'
+import { calculateDailyTarget, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 import { formatDateShort, getReasonLabel } from '@/utils/penaltyHelpers'
 
 interface DailyRecapHistoryModalProps {
@@ -17,7 +17,7 @@ interface MemberStatus {
     userId: string
     target: number
     actual: number
-    status: 'completed' | 'pending' | 'disputed' | 'failed' | 'sick' | 'rest'
+    status: 'completed' | 'pending' | 'disputed' | 'waived' | 'accepted' | 'failed' | 'sick' | 'rest'
     reasonCategory?: string
     reasonMessage?: string
 }
@@ -26,8 +26,11 @@ interface DayStats {
     date: string
     isRestDay: boolean
     completedMembers: MemberStatus[]
+    recoveryDayMembers: MemberStatus[]
+    paidMembers: MemberStatus[]
+    waivedMembers: MemberStatus[]
+    underReviewMembers: MemberStatus[]
     pendingMembers: MemberStatus[]
-    failedMembers: MemberStatus[]
     sickMembers: string[]
     restMembers: string[]
 }
@@ -60,7 +63,7 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
             const groupStartDate = new Date(groupDataRes.data.start_date)
             const members = membersRes.data
 
-            // 2. Calculate last 30 days (using local dates)
+            // 2. Calculate last 30 days (using UTC dates to match dashboard)
             const days = []
             const today = new Date()
 
@@ -70,11 +73,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                 // Don't show days before group start
                 if (d < groupStartDate) break
 
-                // Construct local date string YYYY-MM-DD
-                const year = d.getFullYear()
-                const month = String(d.getMonth() + 1).padStart(2, '0')
-                const day = String(d.getDate()).padStart(2, '0')
-                const dateStr = `${year}-${month}-${day}`
+                // Use UTC-based date string (same as dashboard) for consistency
+                const dateStr = d.toISOString().split('T')[0]
 
                 days.push({ dateObj: d, dateStr })
             }
@@ -88,6 +88,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
             const startDateStr = days[days.length - 1].dateStr
 
             // 3. Fetch logs for the date range
+            // Note: Default Supabase limit is 1000, we need more for 30 days of logs for all members
+            // Order by date descending to get recent logs first (in case of limit)
             const memberIds = members.map(m => m.id)
             const { data: logs, error: logsError } = await supabase
                 .from('logs')
@@ -95,6 +97,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                 .in('user_id', memberIds)
                 .gte('date', startDateStr)
                 .lte('date', endDateStr)
+                .order('date', { ascending: false })
+                .range(0, 9999)
 
             if (logs) {
                 // Debug info removed
@@ -118,6 +122,51 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                 .select('id, type')
             const exerciseTypeMap = new Map(exercises?.map(e => [e.id, e.type]) || [])
 
+            // 5b. Fetch recovery day records for the date range
+            const { data: recoveryDayRecords, error: recoveryError } = await supabase
+                .from('user_recovery_days')
+                .select('user_id, used_date, recovery_minutes, is_complete')
+                .in('user_id', memberIds)
+                .gte('used_date', startDateStr)
+                .lte('used_date', endDateStr)
+
+            if (logsError) console.error('[RecapHistory] Logs error:', logsError)
+            if (recoveryError) console.error('[RecapHistory] Recovery day error:', recoveryError)
+
+            // Group recovery day records by date and user
+            const recoveryDayMap = new Map<string, Map<string, { recovery_minutes: number; is_complete: boolean }>>()
+            recoveryDayRecords?.forEach(rd => {
+                // Normalize date to YYYY-MM-DD format
+                // Handle: "2025-12-25", "2025-12-25T00:00:00Z", "2025-12-25+01:00", etc.
+                const normalizedDate = rd.used_date.substring(0, 10)
+                if (!recoveryDayMap.has(normalizedDate)) {
+                    recoveryDayMap.set(normalizedDate, new Map())
+                }
+                recoveryDayMap.get(normalizedDate)!.set(rd.user_id, {
+                    recovery_minutes: rd.recovery_minutes || 0,
+                    is_complete: rd.is_complete || false
+                })
+            })
+
+            // 5c. Fetch historical sick mode records for the date range
+            // This tells us who was actually sick on specific dates, not just who is currently sick
+            const { data: sickModeRecords } = await supabase
+                .from('sick_mode')
+                .select('user_id, date')
+                .in('user_id', memberIds)
+                .gte('date', startDateStr)
+                .lte('date', endDateStr)
+
+            // Group sick mode records by date
+            const sickModeByDate = new Map<string, Set<string>>()
+            sickModeRecords?.forEach(sm => {
+                const normalizedDate = sm.date.substring(0, 10)
+                if (!sickModeByDate.has(normalizedDate)) {
+                    sickModeByDate.set(normalizedDate, new Set())
+                }
+                sickModeByDate.get(normalizedDate)!.add(sm.user_id)
+            })
+
             // 6. Process each day
             const stats: DayStats[] = days.map(({ dateObj, dateStr }) => {
                 const dayOfWeek = dateObj.getDay()
@@ -127,8 +176,11 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                 const daysSinceStart = Math.floor((dateObj.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
 
                 const completedList: MemberStatus[] = []
+                const recoveryDayList: MemberStatus[] = []
+                const paidList: MemberStatus[] = []
+                const waivedList: MemberStatus[] = []
+                const underReviewList: MemberStatus[] = []
                 const pendingList: MemberStatus[] = []
-                const failedList: MemberStatus[] = []
                 const sickList: string[] = []
                 const restList: string[] = []
 
@@ -140,9 +192,9 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                 // unless it's critical. Let's stick to basic rest day check for now.
 
                 members.forEach(member => {
-                    // Check sick mode (simplified: if currently sick, mark as sick. 
-                    // Ideally we need historical sick status)
-                    if (member.is_sick_mode) {
+                    // Check if user was sick on this specific historical date
+                    const sickUsersOnDate = sickModeByDate.get(dateStr)
+                    if (sickUsersOnDate?.has(member.id)) {
                         sickList.push(member.username)
                         return
                     }
@@ -154,6 +206,51 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                         return
                     }
 
+                    // Check if member had an active recovery day on this date
+                    const dateRecoveryDays = recoveryDayMap.get(dateStr)
+                    const memberRecoveryDay = dateRecoveryDays?.get(member.id)
+                    
+                    if (memberRecoveryDay) {
+                        const recoveryTarget = RECOVERY_DAY_TARGET_MINUTES
+                        const recoveryActual = memberRecoveryDay.recovery_minutes
+                        const metRecoveryTarget = memberRecoveryDay.is_complete || recoveryActual >= recoveryTarget
+                        const penalty = penalties?.find(p => p.user_id === member.id && p.date.substring(0, 10) === dateStr)
+
+                        const recoveryStatus: MemberStatus = {
+                            username: member.username,
+                            userId: member.id,
+                            target: recoveryTarget,
+                            actual: recoveryActual,
+                            status: metRecoveryTarget ? 'completed' : 'pending',
+                            reasonCategory: penalty?.reason_category,
+                            reasonMessage: penalty?.reason_message
+                        }
+
+                        if (metRecoveryTarget) {
+                            recoveryDayList.push(recoveryStatus)
+                        } else if (penalty?.status === 'waived') {
+                            recoveryStatus.status = 'waived'
+                            // Technical glitch = they actually made it
+                            if (penalty.reason_category === 'technical') {
+                                recoveryDayList.push(recoveryStatus)
+                            } else {
+                                waivedList.push(recoveryStatus)
+                            }
+                        } else if (penalty?.status === 'accepted') {
+                            recoveryStatus.status = 'accepted'
+                            paidList.push(recoveryStatus)
+                        } else if (penalty?.status === 'disputed') {
+                            recoveryStatus.status = 'disputed'
+                            underReviewList.push(recoveryStatus)
+                        } else if (penalty?.status === 'pending') {
+                            pendingList.push(recoveryStatus)
+                        } else {
+                            // No penalty yet - show as pending
+                            pendingList.push(recoveryStatus)
+                        }
+                        return
+                    }
+
                     const dailyTarget = calculateDailyTarget({
                         daysSinceStart,
                         weekMode: member.week_mode || 'sane',
@@ -162,8 +259,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                         currentDayOfWeek: dayOfWeek
                     })
 
-                    // Get logs for this user and date
-                    const userLogs = logs?.filter(l => l.user_id === member.id && l.date === dateStr) || []
+                    // Get logs for this user and date (normalize date comparison)
+                    const userLogs = logs?.filter(l => l.user_id === member.id && l.date.substring(0, 10) === dateStr) || []
 
                     let totalRecoveryPoints = 0
                     let totalNonRecoveryPoints = 0
@@ -182,8 +279,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                     const actualPoints = totalNonRecoveryPoints + cappedRecoveryPoints
                     const metTarget = actualPoints >= dailyTarget
 
-                    // Find penalty
-                    const penalty = penalties?.find(p => p.user_id === member.id && p.date === dateStr)
+                    // Find penalty (normalize date comparison)
+                    const penalty = penalties?.find(p => p.user_id === member.id && p.date.substring(0, 10) === dateStr)
 
                     const status: MemberStatus = {
                         username: member.username,
@@ -198,14 +295,27 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                     if (metTarget) {
                         completedList.push(status)
                     } else {
-                        if (penalty?.status === 'pending') {
-                            status.status = 'pending'
-                            pendingList.push(status)
+                        if (penalty?.status === 'waived') {
+                            status.status = 'waived'
+                            // Technical glitch = they actually made it
+                            if (penalty.reason_category === 'technical') {
+                                completedList.push(status)
+                            } else {
+                                waivedList.push(status)
+                            }
+                        } else if (penalty?.status === 'accepted') {
+                            status.status = 'accepted'
+                            paidList.push(status)
                         } else if (penalty?.status === 'disputed') {
                             status.status = 'disputed'
-                            pendingList.push(status) // Group disputed with pending for overview
+                            underReviewList.push(status)
+                        } else if (penalty?.status === 'pending') {
+                            status.status = 'pending'
+                            pendingList.push(status)
                         } else {
-                            failedList.push(status)
+                            // No penalty yet or other status - show as pending (awaiting penalty check)
+                            status.status = 'pending'
+                            pendingList.push(status)
                         }
                     }
                 })
@@ -214,8 +324,11 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                     date: dateStr,
                     isRestDay,
                     completedMembers: completedList,
+                    recoveryDayMembers: recoveryDayList,
+                    paidMembers: paidList,
+                    waivedMembers: waivedList,
+                    underReviewMembers: underReviewList,
                     pendingMembers: pendingList,
-                    failedMembers: failedList,
                     sickMembers: sickList,
                     restMembers: restList
                 }
@@ -297,7 +410,7 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {day.completedMembers.map(m => (
-                                                    <span key={m.userId} className="text-sm text-white/80 bg-white/5 px-2 py-1 rounded">
+                                                    <span key={m.userId} className="text-sm text-white/80 bg-green-500/10 px-2 py-1 rounded">
                                                         {m.username}
                                                     </span>
                                                 ))}
@@ -305,34 +418,31 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                                         </div>
                                     )}
 
-                                    {/* Pending / Disputed */}
-                                    {day.pendingMembers.length > 0 && (
+                                    {/* Recovery Day */}
+                                    {day.recoveryDayMembers.length > 0 && (
                                         <div>
-                                            <div className="text-xs font-medium text-yellow-400 mb-2 uppercase tracking-wider">
-                                                ⚠️ Pending / Disputed
+                                            <div className="text-xs font-medium text-emerald-400 mb-2 uppercase tracking-wider">
+                                                🧘 Recovery Day
                                             </div>
-                                            <div className="space-y-1">
-                                                {day.pendingMembers.map(m => (
-                                                    <div key={m.userId} className="text-sm text-white/80 flex items-center justify-between bg-white/5 px-2 py-1 rounded">
-                                                        <span>{m.username}</span>
-                                                        <span className="text-xs text-white/40">
-                                                            {m.status === 'disputed' ? 'Disputed' : `${m.actual}/${m.target} pts`}
-                                                        </span>
-                                                    </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {day.recoveryDayMembers.map(m => (
+                                                    <span key={m.userId} className="text-sm text-white/80 bg-emerald-500/10 px-2 py-1 rounded">
+                                                        {m.username}
+                                                    </span>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Paid */}
-                                    {day.failedMembers.length > 0 && (
+                                    {day.paidMembers.length > 0 && (
                                         <div>
                                             <div className="text-xs font-medium text-red-400 mb-2 uppercase tracking-wider">
                                                 💰 Paid
                                             </div>
                                             <div className="space-y-1">
-                                                {day.failedMembers.map(m => (
-                                                    <div key={m.userId} className="text-sm text-white/80 flex items-center justify-between bg-white/5 px-2 py-1 rounded">
+                                                {day.paidMembers.map(m => (
+                                                    <div key={m.userId} className="text-sm text-white/80 flex items-center justify-between bg-red-500/10 px-2 py-1 rounded">
                                                         <span>{m.username}</span>
                                                         <span className="text-xs text-white/40">
                                                             {m.actual}/{m.target} pts
@@ -343,20 +453,98 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                                         </div>
                                     )}
 
-                                    {/* Sick / Rest */}
-                                    {(day.sickMembers.length > 0 || day.restMembers.length > 0) && (
+                                    {/* Waived */}
+                                    {day.waivedMembers.length > 0 && (
+                                        <div>
+                                            <div className="text-xs font-medium text-purple-400 mb-2 uppercase tracking-wider">
+                                                ✨ Waived
+                                            </div>
+                                            <div className="space-y-1">
+                                                {day.waivedMembers.map(m => (
+                                                    <div key={m.userId} className="text-sm text-white/80 flex items-center justify-between bg-purple-500/10 px-2 py-1 rounded">
+                                                        <span>{m.username}</span>
+                                                        {m.reasonCategory && (
+                                                            <span className="text-xs text-white/40">
+                                                                {getReasonLabel(m.reasonCategory)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Under Review */}
+                                    {day.underReviewMembers.length > 0 && (
                                         <div>
                                             <div className="text-xs font-medium text-blue-400 mb-2 uppercase tracking-wider">
-                                                💤 Sick / Rest
+                                                🔍 Under Review
+                                            </div>
+                                            <div className="space-y-1">
+                                                {day.underReviewMembers.map(m => (
+                                                    <div key={m.userId} className="text-sm text-white/80 bg-blue-500/10 px-2 py-1 rounded">
+                                                        <div className="flex items-center justify-between">
+                                                            <span>{m.username}</span>
+                                                            <span className="text-xs text-white/40">
+                                                                {m.actual}/{m.target} pts
+                                                            </span>
+                                                        </div>
+                                                        {m.reasonCategory && (
+                                                            <div className="text-xs text-white/40 mt-1">
+                                                                {getReasonLabel(m.reasonCategory)}
+                                                                {m.reasonMessage && `: ${m.reasonMessage}`}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Pending Response */}
+                                    {day.pendingMembers.length > 0 && (
+                                        <div>
+                                            <div className="text-xs font-medium text-yellow-400 mb-2 uppercase tracking-wider">
+                                                ⏰ Pending Response
+                                            </div>
+                                            <div className="space-y-1">
+                                                {day.pendingMembers.map(m => (
+                                                    <div key={m.userId} className="text-sm text-white/80 flex items-center justify-between bg-yellow-500/10 px-2 py-1 rounded">
+                                                        <span>{m.username}</span>
+                                                        <span className="text-xs text-white/40">
+                                                            {m.actual}/{m.target} pts
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Sick */}
+                                    {day.sickMembers.length > 0 && (
+                                        <div>
+                                            <div className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                                                🤒 Sick
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {day.sickMembers.map(username => (
-                                                    <span key={username} className="text-sm text-white/60 bg-white/5 px-2 py-1 rounded">
-                                                        {username} (Sick)
+                                                    <span key={username} className="text-sm text-white/60 bg-gray-500/10 px-2 py-1 rounded">
+                                                        {username}
                                                     </span>
                                                 ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Rest */}
+                                    {day.restMembers.length > 0 && (
+                                        <div>
+                                            <div className="text-xs font-medium text-blue-400 mb-2 uppercase tracking-wider">
+                                                💤 Rest Day
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
                                                 {day.restMembers.map(username => (
-                                                    <span key={username} className="text-sm text-white/60 bg-white/5 px-2 py-1 rounded">
+                                                    <span key={username} className="text-sm text-white/60 bg-blue-500/10 px-2 py-1 rounded">
                                                         {username}
                                                     </span>
                                                 ))}

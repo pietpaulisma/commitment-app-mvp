@@ -109,6 +109,20 @@ export async function POST(request: NextRequest) {
 
     // Check if user was in sick mode
     if (profile.is_sick_mode) {
+      // Log this sick day for historical tracking (so recaps show correctly)
+      // This replaces the cron job approach - sick days are logged when users open the app
+      try {
+        await supabase
+          .from('sick_mode')
+          .upsert(
+            { user_id: user.id, date: yesterdayStr },
+            { onConflict: 'user_id,date' }
+          )
+      } catch (sickLogError) {
+        // Don't fail if table doesn't exist yet - just log and continue
+        console.log('[auto-create] Could not log sick day (table may not exist):', sickLogError)
+      }
+      
       return NextResponse.json({
         noPenalty: true,
         reason: 'User was in sick mode'
