@@ -214,6 +214,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ squad, date: today })
   } catch (error) {
     console.error('Error in squad-status API:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { message: errorMessage, stack: errorStack })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: errorMessage
+    }, { status: 500 })
   }
 }

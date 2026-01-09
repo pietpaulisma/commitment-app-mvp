@@ -78,10 +78,13 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching pending penalties:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Error details:', { message: errorMessage, stack: errorStack })
     return NextResponse.json(
       {
         error: 'Failed to fetch pending penalties',
-        details: error instanceof Error ? error.message : String(error)
+        details: errorMessage
       },
       { status: 500 }
     )
