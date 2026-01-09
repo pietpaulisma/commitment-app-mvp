@@ -2,14 +2,16 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { calculateDailyTarget, getDaysSinceStart, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-// Create a Supabase client with service role key to bypass RLS
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+// Create a Supabase client at runtime to avoid build-time errors
+const getSupabaseAdmin = () => createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function GET(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdmin()
+    
     const { searchParams } = new URL(request.url)
     const groupId = searchParams.get('groupId')
     const today = searchParams.get('date') || new Date().toISOString().split('T')[0]
@@ -142,10 +144,10 @@ export async function GET(request: Request) {
 
     console.log('API - Users with points today:', pointsByUser.size)
 
-    // Get profiles with week_mode and sick_mode to calculate targets
+    // Get profiles with week_mode, sick_mode, and flexible rest day status to calculate targets
     const { data: profilesWithMode } = await supabaseAdmin
       .from('profiles')
-      .select('id, week_mode, is_sick_mode')
+      .select('id, week_mode, is_sick_mode, has_flexible_rest_day')
       .in('id', groupUsers.map(u => u.id))
 
     // Get active recovery days for all users in the group for today
@@ -158,12 +160,16 @@ export async function GET(request: Request) {
     // Create a map of user_id -> recovery day info
     const recoveryDayMap = new Map(activeRecoveryDays?.map(rd => [rd.user_id, rd]) || [])
 
+    // Check if today is a rest day
+    const isRestDay = restDays.includes(currentDayOfWeek)
+
     // Map users to squad data with proper individual targets
     const squad = groupUsers.map(u => {
       const points = pointsByUser.get(u.id) || 0
       const profileMode = profilesWithMode?.find(p => p.id === u.id)
       const memberWeekMode = profileMode?.week_mode as 'sane' | 'insane' | null
       const isSickMode = profileMode?.is_sick_mode || false
+      const hasFlexibleRestDay = profileMode?.has_flexible_rest_day || false
       
       // Check if user has an active recovery day for today
       const userRecoveryDay = recoveryDayMap.get(u.id)
@@ -199,7 +205,9 @@ export async function GET(request: Request) {
         is_complete: pct >= 100,
         is_sick_mode: isSickMode,
         week_mode: memberWeekMode || 'insane',
-        is_recovery_day: isUserRecoveryDay
+        is_recovery_day: isUserRecoveryDay,
+        has_flexible_rest_day: hasFlexibleRestDay,
+        is_rest_day: isRestDay
       }
     })
 
