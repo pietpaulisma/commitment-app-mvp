@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.13] - 2026-01-09
+
+### Fixed
+- **Penalty System Restored**: Fixed critical bug where penalty popup wasn't appearing - the `auto-create` endpoint was querying non-existent columns (`rest_day_1`, `rest_day_2`) from the `groups` table
+- **Push Notifications Fixed**: Fixed notifications not being delivered - API routes were trying to select a `subscription` column that doesn't exist (should be `endpoint`, `p256dh`, `auth`)
+- **Cron Job Column Fix**: Fixed daily-recap cron job with same non-existent column issue
+
+### Technical
+- Added detailed step-by-step logging to `auto-create` endpoint for easier debugging
+- Enabled `SUPABASE_SERVICE_ROLE_KEY` environment variable for Preview deployments
+
+---
+
 ## [0.6.12] - 2026-01-09
 
 ### Fixed
