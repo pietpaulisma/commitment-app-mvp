@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, AlertTriangle, Zap, Users, Target, Shield, Skull } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Zap, Users, Target, Shield, Skull, Check, Calendar, Palette, User, Sparkles, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -17,7 +17,6 @@ export default function OnboardingPage() {
   
   const handleOnboardingComplete = () => {
     console.log('Onboarding completed, allowing time for profile data to refresh...')
-    // Add a longer delay to ensure database update propagates and profile data refreshes
     setTimeout(() => {
       console.log('Redirecting to dashboard after onboarding completion')
       router.replace('/dashboard')
@@ -51,23 +50,22 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [selectedEmoji, setSelectedEmoji] = useState('')
-  const [selectedColor, setSelectedColor] = useState('')
   const [birthday, setBirthday] = useState('')
   const [username, setUsername] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   const [attemptedProceedWithIncomplete, setAttemptedProceedWithIncomplete] = useState(false)
   const [finalWarningCompleted, setFinalWarningCompleted] = useState(false)
   const [confirmedRuleCards, setConfirmedRuleCards] = useState<boolean[]>([false, false, false, false, false, false, false])
+  const [animatedConfirmations, setAnimatedConfirmations] = useState<boolean[]>([false, false, false, false, false, false, false])
   const [showHoldButton, setShowHoldButton] = useState(false)
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
-  const [selectedEmojiInput, setSelectedEmojiInput] = useState('')
   const [groupInfo, setGroupInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
+  const [demoMode, setDemoMode] = useState(false)
+  const [quoteIndex, setQuoteIndex] = useState(0)
 
-  // Ref to hold nextStep function to avoid dependency issues in useEffect
   const nextStepRef = useRef<() => void>(() => {})
 
   const finalWarningQuotes = [
@@ -80,13 +78,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     "YOU'RE ALL IN NOW"
   ]
 
-  const colors = [
-    '#DC2626', '#EA580C', '#D97706', '#EAB308', '#65A30D', 
-    '#059669', '#0891B2', '#2563EB', '#7C3AED', '#C026D3', 
-    '#E11D48', '#F97316', '#84CC16', '#06B6D4', '#8B5CF6'
-  ]
 
-  // Welcome screen sentences
   const welcomeSentences = [
     "This is a COMMITMENT system.",
     "You show up every day. Or you pay.",
@@ -96,49 +88,48 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     "Understand this before you commit."
   ]
 
-  // Rule cards data
   const ruleCards = [
     {
       icon: Zap,
-      title: "Show up daily.",
+      title: "Show up daily",
       description: "Every day, your target increases by one point. No skipping. No banking. No compromises.",
-      color: "#DC2626",
+      gradient: "from-blue-500 to-cyan-400",
     },
     {
       icon: AlertTriangle,
-      title: "Log it or pay.",
-      description: "If you don't log your workout before midnight, you owe €10 to the group pot. No exceptions. No excuses.",
-      color: "#EA580C",
+      title: "Log it or pay",
+      description: "If you don't log your workout before midnight, you owe €10 to the group pot. No exceptions.",
+      gradient: "from-orange-500 to-amber-400",
     },
     {
       icon: Target,
-      title: "Follow the system.",
-      description: "Only approved exercises count. Each has a defined point value. No improvising. No freelancing.",
-      color: "#7C3AED",
+      title: "Follow the system",
+      description: "Only approved exercises count. Each has a defined point value. No improvising.",
+      gradient: "from-purple-500 to-violet-400",
     },
     {
       icon: Shield,
-      title: "Own your absence.",
-      description: "Sickness or grief may pause your progress — but you return when you can. If you abuse this, the system won't break — you will.",
-      color: "#059669",
+      title: "Own your absence",
+      description: "Sickness or grief may pause your progress — but you return when you can.",
+      gradient: "from-emerald-500 to-teal-400",
     },
     {
       icon: Users,
-      title: "The pot belongs to the group.",
-      description: "Every €10 goes into a collective fund. It fuels whatever the group decides — celebration, charity, or chaos.",
-      color: "#0891B2",
+      title: "The pot belongs to the group",
+      description: "Every €10 goes into a collective fund. It fuels whatever the group decides.",
+      gradient: "from-pink-500 to-rose-400",
     },
     {
       icon: Shield,
-      title: "This is not a challenge.",
-      description: "This is a standard. A pact. A personal operating system designed to build strength, discipline, and integrity.",
-      color: "#C026D3",
+      title: "This is not a challenge",
+      description: "This is a standard. A pact. A personal operating system designed to build discipline.",
+      gradient: "from-indigo-500 to-blue-400",
     },
     {
       icon: Skull,
-      title: "There is no exit.",
-      description: "Silence means you keep paying. You owe it to your crew — and to your own health. This is a commitment for life.",
-      color: "#4B5563",
+      title: "There is no exit",
+      description: "Silence means you keep paying. This is a commitment for life.",
+      gradient: "from-zinc-600 to-zinc-500",
     }
   ]
 
@@ -147,20 +138,22 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     if (isHolding && holdProgress < 100) {
       interval = setInterval(() => {
         setHoldProgress(prev => {
-          const newProgress = Math.min(prev + (100/150), 100)
-          const quoteIndex = Math.floor((newProgress / 100) * finalWarningQuotes.length)
-          setCurrentQuote(finalWarningQuotes[Math.min(quoteIndex, finalWarningQuotes.length - 1)])
+          const newProgress = Math.min(prev + (100/100), 100) // 10 seconds total
+          const newQuoteIndex = Math.floor((newProgress / 100) * finalWarningQuotes.length)
+          if (newQuoteIndex !== quoteIndex) {
+            setQuoteIndex(newQuoteIndex)
+            setCurrentQuote(finalWarningQuotes[Math.min(newQuoteIndex, finalWarningQuotes.length - 1)])
+          }
           setScreenIntensity(newProgress / 100)
           
           if (newProgress >= 100) {
             setFinalWarningCompleted(true)
             setTimeout(() => {
               setScreenIntensity(0.2)
-              // Automatically proceed to next step after completion
               setTimeout(() => {
                 nextStepRef.current()
-              }, 2000) // Wait 2 seconds to show completion state
-            }, 1000)
+              }, 1500)
+            }, 800)
           }
           
           return newProgress
@@ -168,21 +161,16 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       }, 100)
     }
     return () => clearInterval(interval)
-  }, [isHolding, holdProgress, finalWarningQuotes])
+  }, [isHolding, holdProgress, finalWarningQuotes, quoteIndex])
 
-  // Handle scroll detection for final commitment page
   useEffect(() => {
     if (currentStep === 2) {
-      // Reset scroll state when entering step 2
       setHasScrolledToBottom(false)
       
       const handleScroll = () => {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop
         const scrollHeight = document.documentElement.scrollHeight
         const clientHeight = window.innerHeight || document.documentElement.clientHeight
-        
-        // More lenient scroll detection - consider scrolled to bottom if within 150px
-        // This accounts for different mobile browsers and viewport calculations
         const scrollThreshold = 150
         const isScrollableContent = scrollHeight > clientHeight + 50
         
@@ -194,18 +182,13 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
             setHasScrolledToBottom(false)
           }
         } else {
-          // If content fits in viewport, show buttons after a delay
           setTimeout(() => setHasScrolledToBottom(true), 1000)
         }
       }
 
       window.addEventListener('scroll', handleScroll)
-      window.addEventListener('resize', handleScroll) // Also listen for resize events
-      
-      // Check initial state after content loads
-      setTimeout(() => {
-        handleScroll()
-      }, 800)
+      window.addEventListener('resize', handleScroll)
+      setTimeout(() => handleScroll(), 800)
       
       return () => {
         window.removeEventListener('scroll', handleScroll)
@@ -214,7 +197,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     }
   }, [currentStep])
 
-  // Global mouse/touch event listeners for slider dragging
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isDragging && currentStep === 1) {
@@ -232,7 +214,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
 
     const handleGlobalTouchMove = (e: TouchEvent) => {
       if (isDragging && currentStep === 1) {
-        e.preventDefault() // Prevent scrolling while dragging
+        e.preventDefault()
         const sliderElement = document.querySelector('[data-slider-track]') as HTMLElement
         if (sliderElement) {
           const touch = e.touches[0]
@@ -280,12 +262,10 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       setHasScrolledToBottom(false)
     } else {
       console.log('Onboarding nextStep completed, updating profile and calling onComplete callback')
-      // Set onboarding completion flag before calling onComplete
       handleFinalCompletion()
     }
   }
 
-  // Keep ref updated with latest nextStep function
   useEffect(() => {
     nextStepRef.current = nextStep
   })
@@ -309,58 +289,41 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   const revealNextSentence = () => {
     if (revealedSentences < welcomeSentences.length) {
       setRevealedSentences(revealedSentences + 1)
-      
-      // Auto-scroll to show the new content after a short delay for animation
       setTimeout(() => {
         const newSentenceCount = revealedSentences + 1
-        if (newSentenceCount >= 2) { // Start scrolling from 2nd sentence
-          // More aggressive scrolling to ensure content is visible
+        if (newSentenceCount >= 2) {
           const viewportHeight = window.innerHeight
-          const scrollAmount = Math.max(150, viewportHeight * 0.25) // Scroll 25% of viewport or 150px min
-          
-          window.scrollBy({
-            top: scrollAmount,
-            behavior: 'smooth'
-          })
+          const scrollAmount = Math.max(150, viewportHeight * 0.25)
+          window.scrollBy({ top: scrollAmount, behavior: 'smooth' })
         }
-      }, 300) // Wait for animation to start
+      }, 300)
     }
   }
 
   const revealNextRuleCard = () => {
     if (revealedRuleCards < ruleCards.length) {
       setRevealedRuleCards(revealedRuleCards + 1)
-      
-      // Very aggressive auto-scroll for rule cards to ensure confirm button is visible
       setTimeout(() => {
         const newCardCount = revealedRuleCards + 1
-        if (newCardCount >= 1) { // Start scrolling from first card
-          // Try to find the latest card and scroll it fully into view with extra padding
+        if (newCardCount >= 1) {
           const ruleCardElements = document.querySelectorAll('[data-rule-card]')
           const latestCard = ruleCardElements[newCardCount - 1] as HTMLElement
           
           if (latestCard) {
-            // Scroll the card into view with extra bottom padding to show confirm button
             const cardRect = latestCard.getBoundingClientRect()
             const viewportHeight = window.innerHeight
-            const desiredBottomPadding = viewportHeight * 0.3 // 30% of viewport as padding below the card
-            
+            const desiredBottomPadding = viewportHeight * 0.3
             window.scrollBy({
               top: cardRect.bottom + desiredBottomPadding - viewportHeight,
               behavior: 'smooth'
             })
           } else {
-            // Fallback to aggressive fixed scroll
             const viewportHeight = window.innerHeight
-            const scrollAmount = Math.max(400, viewportHeight * 0.6) // Scroll 60% of viewport or 400px min
-            
-            window.scrollBy({
-              top: scrollAmount,
-              behavior: 'smooth'
-            })
+            const scrollAmount = Math.max(400, viewportHeight * 0.6)
+            window.scrollBy({ top: scrollAmount, behavior: 'smooth' })
           }
         }
-      }, 500) // Wait a bit longer to ensure the card is fully rendered
+      }, 500)
     }
   }
 
@@ -383,7 +346,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   }
 
   const handleSignUp = async () => {
-
     if (password !== passwordConfirm) {
       setError('Passwords do not match')
       return
@@ -405,22 +367,18 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
 
       if (error) throw error
       
-      // Check if user was created successfully
       if (data.user) {
         console.log('User created:', data.user.email)
         
-        // If user needs email confirmation, show message
         if (!data.session && data.user && !data.user.email_confirmed_at) {
           setError('Please check your email and click the confirmation link, then try logging in.')
           setIsLoading(false)
           return
         }
         
-        // If user is immediately signed in (confirmation disabled), continue
         if (data.session) {
           nextStep()
         } else {
-          // For email confirmation flow, redirect to login
           setError('Account created! Please check your email for confirmation, then use the login screen.')
           setTimeout(() => {
             onGoToLogin?.()
@@ -445,14 +403,11 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     setError('')
 
     try {
-
-      // First, ensure the user profile exists
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) {
         throw new Error('User not authenticated')
       }
 
-      // Check if profile exists, create if it doesn't
       const { error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -460,7 +415,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         .single()
 
       if (profileError && profileError.code === 'PGRST116') {
-        // Profile doesn't exist, create it
         console.log('Creating profile for user:', user.email)
         const { error: createError } = await supabase
           .from('profiles')
@@ -482,7 +436,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
         }
       }
 
-      // Now try to join the group
       const { data, error } = await supabase.rpc('join_group_via_invite', {
         p_invite_code: inviteCode.trim().toUpperCase()
       })
@@ -490,20 +443,17 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       if (error) throw error
 
       if (data.success) {
-        // Fetch the full group information after successfully joining
         const { data: groupData, error: groupError } = await supabase
           .from('groups')
           .select('*')
           .eq('id', data.group_id)
           .single()
 
-        // Get member count separately
         const { count: memberCount } = await supabase
           .from('profiles')
           .select('*', { count: 'exact', head: true })
           .eq('group_id', data.group_id)
 
-        // Get group admin info
         const { data: adminData } = await supabase
           .from('profiles')
           .select('username, custom_icon')
@@ -533,23 +483,31 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
   }
 
   const handleFinalCompletion = async () => {
+    // In demo mode, just show completion without saving
+    if (demoMode) {
+    setIsLoading(true)
+      // Simulate a brief delay for effect
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      setIsLoading(false)
+      // Show a message but don't redirect
+    setError('')
+      return
+    }
+    
     setIsLoading(true)
     setError('')
-    
-    try {
 
-      // Get current user
+    try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) {
         throw new Error('User not authenticated')
       }
 
-      // Update profile with all collected data and mark onboarding as complete
       const profileData = {
         username: username.trim() || user.email?.split('@')[0] || 'User',
         onboarding_completed: true,
-        personal_color: selectedColor || '#3b82f6',
-        custom_icon: selectedEmoji || selectedEmojiInput || '💪',
+        personal_color: '#3b82f6',
+        custom_icon: '💪',
         birth_date: birthday || null,
         updated_at: new Date().toISOString()
       }
@@ -563,7 +521,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
 
       if (updateError) {
         console.error('Profile update error:', updateError)
-        // Try fallback with minimal data
         const { error: basicUpdateError } = await supabase
           .from('profiles')
           .update({
@@ -588,64 +545,6 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     }
   }
 
-  const handleCompleteProfile = async () => {
-    const trimmedUsername = username.trim()
-    
-    if (!trimmedUsername) {
-      setError('Username is required')
-      return
-    }
-    
-    if (trimmedUsername.length > 13) {
-      setError('Username must be 13 characters or less')
-      return
-    }
-    
-    if (trimmedUsername.includes(' ')) {
-      setError('Username cannot contain spaces')
-      return
-    }
-
-    setIsLoading(true)
-    setError('')
-
-    try {
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          username: username.trim(),
-          onboarding_completed: true,
-          personal_color: selectedColor,
-          custom_icon: selectedEmoji || selectedEmojiInput,
-          birth_date: birthday
-        })
-        .eq('id', user?.id)
-
-      if (updateError) {
-        // Try fallback without custom columns
-        const { error: basicUpdateError } = await supabase
-          .from('profiles')
-          .update({
-            username: username.trim(),
-            onboarding_completed: true
-          })
-          .eq('id', user?.id)
-          
-        if (basicUpdateError) {
-          throw basicUpdateError
-        }
-      }
-
-      onComplete?.()
-    } catch (error: any) {
-      console.error('Profile update failed:', error)
-      setError(error.message || 'Failed to save profile')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const canProceed = () => {
     switch (currentStep) {
       case 0:
@@ -660,21 +559,19 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       case 2:
         return holdProgress >= 100
       case 3:
-        return email.trim() && password.trim() && password === passwordConfirm
+        // Allow demo mode to skip, or require valid credentials
+        return demoMode || (email.trim() && password.trim() && password === passwordConfirm)
       case 4:
-        return inviteCode.trim()
+        // Allow demo mode to skip
+        return demoMode || inviteCode.trim()
       case 5:
         return true
       case 6:
-        return selectedEmoji || selectedEmojiInput
-      case 7:
-        return selectedColor
-      case 8:
         return birthday
-      case 9:
+      case 7:
         const trimmedUsername = username.trim()
-        return trimmedUsername && trimmedUsername.length <= 13 && !trimmedUsername.includes(' ')
-      case 10:
+        return trimmedUsername && trimmedUsername.length >= 1 && trimmedUsername.length <= 4 && !trimmedUsername.includes(' ')
+      case 8:
         return true
       default:
         return true
@@ -690,93 +587,147 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
     }
   }
 
-  const getGradientIntensity = () => {
-    if (!finalWarningCompleted) {
-      return 0
-    }
-    
-    const totalSteps = 12
-    const baseIntensity = 0.6
-    const progressBonus = (currentStep / totalSteps) * 0.4
-    
-    return Math.min(baseIntensity + progressBonus, 1)
-  }
-
-  const gradientIntensity = getGradientIntensity()
+  // Glass Card Component
+  const GlassCard = ({ children, className = "", noPadding = false }: { children: React.ReactNode; className?: string; noPadding?: boolean }) => (
+    <div className={`relative bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-xl ${noPadding ? '' : 'p-6'} ${className}`}>
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  )
 
   const renderStep = () => {
     switch (currentStep) {
       case 0:
         if (currentRuleCard === 0) {
-          // Welcome screen with tap-to-reveal
+          // Welcome screen with enhanced animations
           return (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              className="text-center space-y-12 max-w-4xl mx-auto px-4"
-              style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="text-center space-y-8 max-w-2xl mx-auto px-6 pt-8 relative"
             >
-              <div className="space-y-8">
-                <div className="flex justify-center">
+              {/* Floating particles background */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(6)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 rounded-full bg-blue-500/20"
+                    initial={{ 
+                      x: Math.random() * 300 - 150,
+                      y: Math.random() * 400,
+                      scale: Math.random() * 0.5 + 0.5 
+                    }}
+                    animate={{
+                      y: [null, Math.random() * -100 - 50],
+                      opacity: [0, 0.6, 0],
+                    }}
+                    transition={{
+                      duration: 4 + Math.random() * 2,
+                      repeat: Infinity,
+                      delay: Math.random() * 2,
+                      ease: "easeOut"
+                    }}
+                    style={{ left: `${20 + i * 12}%` }}
+                  />
+                ))}
+              </div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8, y: -20 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                transition={{ 
+                  delay: 0.2,
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 20
+                }}
+                className="flex justify-center relative"
+              >
+                <motion.div
+                  animate={{ 
+                    boxShadow: [
+                      '0 0 20px 0px rgba(96, 165, 250, 0.2)',
+                      '0 0 40px 10px rgba(96, 165, 250, 0.3)',
+                      '0 0 20px 0px rgba(96, 165, 250, 0.2)'
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="rounded-2xl"
+                >
                   <img 
                     src="/logo.png" 
                     alt="The Commitment" 
-                    className="h-16 md:h-20 w-auto drop-shadow-2xl"
+                    className="h-14 w-auto"
                   />
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
               
-              <div className="max-w-4xl mx-auto px-4">
-                <div className="text-center min-h-[400px] flex flex-col justify-center">
-                  <div className="relative space-y-4">
+              <div className="min-h-[400px] flex flex-col justify-center relative z-10">
+                <div className="space-y-5">
                     <motion.div
-                      initial={{ opacity: 0, y: 40, scale: 1.1 }}
+                    initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ 
+                      duration: 0.8, 
+                      delay: 0.4,
+                      type: "spring",
+                      stiffness: 100
+                    }}
+                    className="text-2xl sm:text-3xl font-bold text-white leading-tight"
+                  >
+                    This is not just another fitness app — 
+                    <motion.span 
+                      className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-500 text-transparent bg-clip-text inline-block"
                       animate={{ 
-                        opacity: 1, 
-                        y: 0,
-                        scale: 1
+                        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
                       }}
-                      transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-                      className="text-white font-black leading-tight"
-                      style={{
-                        fontSize: revealedSentences === 0 ? '2rem' : `${Math.max(1.2, 2 - (revealedSentences * 0.15))}rem`
-                      }}
+                      transition={{ duration: 5, repeat: Infinity }}
+                      style={{ backgroundSize: '200% 200%' }}
                     >
-                      This is not just another fitness app - <span className="text-red-400 underline">it&apos;s a lifestyle</span>.
+                      it&apos;s a lifestyle
+                    </motion.span>.
                     </motion.div>
                     
                     <AnimatePresence>
                       {welcomeSentences.slice(0, revealedSentences).map((sentence, index) => {
                         const sentenceAge = revealedSentences - index - 1
-                        const fontSize = Math.max(1.1, 2.2 - (sentenceAge * 0.2))
-                        const opacity = Math.max(0.6, 1 - (sentenceAge * 0.08))
-                        
-                        const colors = ['#ffffff', '#e5e7eb', '#fca5a5', '#d1d5db', '#9ca3af', '#f87171']
-                        const color = colors[index] || '#9ca3af'
+                      const opacity = Math.max(0.5, 1 - (sentenceAge * 0.08))
+                      const isLatest = index === revealedSentences - 1
                         
                         return (
                           <motion.div
                             key={index}
-                            initial={{ opacity: 0, y: 40, scale: 1.1 }}
+                          initial={{ opacity: 0, y: 25, x: -10 }}
                             animate={{ 
-                              opacity: opacity,
+                            opacity, 
                               y: 0,
-                              scale: 1
+                            x: 0,
+                            scale: isLatest ? 1 : 0.98,
                             }}
                             transition={{ 
                               duration: 0.6, 
-                              ease: "easeOut",
-                              delay: 0.1
-                            }}
-                            className="font-black leading-tight"
-                            style={{
-                              fontSize: `${fontSize}rem`,
-                              color: color,
-                              marginTop: sentenceAge === 0 ? '1.5rem' : '0.75rem'
-                            }}
+                            type: "spring",
+                            stiffness: 100,
+                            damping: 15
+                          }}
+                          className={`text-lg sm:text-xl font-medium leading-relaxed transition-colors duration-300 ${
+                            isLatest ? 'text-white' : 'text-zinc-500'
+                          }`}
                           >
                             {sentence.includes("COMMITMENT") ? (
-                              <>This is a <span className="text-red-400">COMMITMENT</span> system.</>
+                            <>This is a <motion.span 
+                              className="text-blue-400 font-bold"
+                              animate={isLatest ? { 
+                                textShadow: [
+                                  '0 0 10px rgba(96, 165, 250, 0)',
+                                  '0 0 20px rgba(96, 165, 250, 0.5)',
+                                  '0 0 10px rgba(96, 165, 250, 0)'
+                                ]
+                              } : {}}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >COMMITMENT</motion.span> system.</>
+                          ) : sentence.includes("€10") ? (
+                            <>Miss a session — or log it late — that&apos;s <span className="text-orange-400 font-semibold">€10</span> to the group pot.</>
                             ) : (
                               sentence
                             )}
@@ -784,77 +735,101 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                         )
                       })}
                     </AnimatePresence>
-                  </div>
                 </div>
               </div>
             </motion.div>
           )
         } else {
-          // Rule cards
+          // Rule cards with enhanced animations
           return (
             <motion.div 
-              initial={{ opacity: 0, y: 30 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              className="text-center space-y-8 max-w-4xl mx-auto px-4"
-              style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="text-center space-y-8 max-w-2xl mx-auto px-6 pt-8"
             >
-              <div className="space-y-4">
-                <h2 className="text-4xl md:text-6xl font-black mb-4">THE RULES</h2>
-                <p className="text-xl md:text-2xl text-gray-300 font-bold">Read every single one. They are non-negotiable.</p>
-              </div>
+              <motion.div 
+                className="space-y-2"
+                initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.5 }}
+              >
+                <motion.h2 
+                  className="text-3xl sm:text-4xl font-black"
+                  animate={{ 
+                    textShadow: [
+                      '0 0 20px rgba(255,255,255,0)',
+                      '0 0 30px rgba(255,255,255,0.1)',
+                      '0 0 20px rgba(255,255,255,0)'
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  The Rules
+                </motion.h2>
+                <p className="text-zinc-400">Read and confirm each one. They are non-negotiable.</p>
+                <motion.div 
+                  className="flex justify-center gap-1.5 pt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {ruleCards.map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        i < revealedRuleCards 
+                          ? confirmedRuleCards[i] 
+                            ? 'bg-emerald-500' 
+                            : 'bg-blue-500'
+                          : 'bg-white/20'
+                      }`}
+                      animate={i < revealedRuleCards && !confirmedRuleCards[i] ? {
+                        scale: [1, 1.3, 1],
+                      } : {}}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                  ))}
+                </motion.div>
+              </motion.div>
               
-              <div className="space-y-8 min-h-[500px] flex flex-col justify-start">
-                <AnimatePresence>
+              <div className="space-y-4">
                   {ruleCards.slice(0, revealedRuleCards).map((rule, index) => {
                     const Icon = rule.icon
                     const isConfirmed = confirmedRuleCards[index]
+                  const isLatest = index === revealedRuleCards - 1
+                  // Only animate entrance for newest card
+                  const isNewlyRevealed = index === revealedRuleCards - 1
+                  
                     return (
                       <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                      key={`rule-${index}`}
+                      data-rule-card
+                      initial={isNewlyRevealed ? { opacity: 0, y: 40, scale: 0.95 } : false}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.7, ease: "easeOut" }}
-                        className={`border rounded-2xl p-6 md:p-8 relative overflow-hidden max-w-2xl mx-auto w-full transition-all ${
-                          isConfirmed 
-                            ? 'bg-green-900/30 border-green-500' 
-                            : 'bg-black border-gray-700'
-                        }`}
-                        style={{
-                          boxShadow: isConfirmed 
-                            ? '0 15px 50px rgba(34, 197, 94, 0.4)' 
-                            : `0 15px 50px ${rule.color}30`
-                        }}
-                      >
-                        <div className="text-center space-y-6">
-                          <div className="flex justify-center">
-                            <div 
-                              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center"
-                              style={{ 
-                                backgroundColor: isConfirmed ? '#22c55e' : rule.color,
-                                boxShadow: `0 10px 30px ${isConfirmed ? 'rgba(34, 197, 94, 0.4)' : rule.color}40`
-                              }}
-                            >
-                              <Icon className="w-8 h-8 md:w-10 md:h-10 text-white" />
-                            </div>
+                      transition={{ duration: 0.5, type: "spring", stiffness: 100, damping: 15 }}
+                    >
+                      <GlassCard className={`transition-all duration-500 ${
+                        isConfirmed 
+                          ? 'border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.15)]' 
+                          : isLatest 
+                            ? 'border-white/20 shadow-[0_0_30px_rgba(96,165,250,0.1)]'
+                            : ''
+                      }`}>
+                        <div className="text-center space-y-4">
+                          <div 
+                            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${rule.gradient} flex items-center justify-center mx-auto transition-transform hover:scale-110`}
+                          >
+                            <Icon className="w-7 h-7 text-white" />
                           </div>
                           
-                          <div className="space-y-4">
-                            <h3 
-                              className={`text-2xl md:text-3xl font-black transition-colors ${
-                                isConfirmed ? 'text-green-400' : 'text-white'
-                              }`}
-                            >
+                          <h3 className={`text-xl font-bold transition-colors duration-300 ${isConfirmed ? 'text-emerald-400' : 'text-white'}`}>
                               {rule.title}
                             </h3>
                             
-                            <p className={`text-base md:text-lg leading-relaxed font-bold transition-colors ${
-                              isConfirmed ? 'text-green-200' : 'text-gray-300'
-                            }`}>
+                          <p className="text-zinc-400 text-base leading-relaxed">
                               {rule.description}
                             </p>
-                          </div>
                           
-                          <div className="pt-4">
                             {!isConfirmed ? (
                               <motion.button
                                 onClick={() => {
@@ -862,936 +837,917 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                                   newConfirmed[index] = true
                                   setConfirmedRuleCards(newConfirmed)
                                 }}
-                                className="px-6 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-gray-300 hover:text-white hover:border-gray-500 transition-all font-bold"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                              >
-                                CONFIRM
+                              className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all font-medium"
+                              whileHover={{ scale: 1.05, y: -2 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              I understand
                               </motion.button>
                             ) : (
                               <motion.div
-                                initial={{ opacity: 0, scale: 0.8 }}
+                              initial={!animatedConfirmations[index] ? { opacity: 0, scale: 0.5 } : false}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="flex items-center justify-center space-x-2 text-green-400 font-black"
+                              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                              onAnimationComplete={() => {
+                                if (!animatedConfirmations[index]) {
+                                  const newAnimated = [...animatedConfirmations]
+                                  newAnimated[index] = true
+                                  setAnimatedConfirmations(newAnimated)
+                                }
+                              }}
+                              className="flex items-center justify-center gap-2 text-emerald-400 font-bold"
+                            >
+                              <motion.div
+                                initial={!animatedConfirmations[index] ? { scale: 0, rotate: -180 } : false}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 300 }}
                               >
-                                <span className="text-2xl">✓</span>
-                                <span>CONFIRMED</span>
+                                <Check size={20} />
+                              </motion.div>
+                              <span>Confirmed</span>
                               </motion.div>
                             )}
                           </div>
-                        </div>
+                      </GlassCard>
                       </motion.div>
                     )
                   })}
-                </AnimatePresence>
               </div>
             </motion.div>
           )
         }
 
       case 1:
+        // Commitment slider with enhanced visuals
         return (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-2xl mx-auto px-4 relative"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            className="text-center space-y-8 max-w-lg mx-auto px-6 pt-8 relative"
           >
-            <div className="space-y-4 relative z-10">
-              <h2 className="text-4xl md:text-5xl font-black">Set Your Commitment Level</h2>
-              <p className="text-xl md:text-2xl text-gray-300 font-bold">Choose your intensity level</p>
-            </div>
-            
-            <div className="space-y-6 relative z-10">
-              <div className="relative p-6">
-                <div className="relative">
-                  <div 
-                    className="w-full h-8 rounded-full relative overflow-hidden"
-                    style={{
-                      background: 'linear-gradient(180deg, #1f2937 0%, #374151 50%, #1f2937 100%)',
-                      boxShadow: 'inset 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 -2px 4px rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(75, 85, 99, 0.8)'
-                    }}
-                  >
+            {/* Background glow effect based on slider value */}
                     <motion.div 
-                      className="h-full rounded-full relative overflow-hidden"
-                      style={{
-                        width: `${sliderValue}%`,
+              className="absolute inset-0 pointer-events-none"
+              animate={{
                         background: sliderValue === 100 
-                          ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 25%, #15803d 50%, #166534 75%, #14532d 100%)'
-                          : `linear-gradient(135deg, #dc2626 0%, #ef4444 25%, #f87171 50%, #fca5a5 75%, #fecaca 100%)`,
-                        transition: 'all 0.3s ease-out'
-                      }}
-                    />
-                  </div>
-                  
-                  {/* Touch-friendly slider overlay */}
+                  ? 'radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.15) 0%, transparent 50%)'
+                  : `radial-gradient(circle at 50% 50%, rgba(96, 165, 250, ${sliderValue * 0.002}) 0%, transparent 50%)`
+              }}
+              transition={{ duration: 0.3 }}
+            />
+
+            <motion.div 
+              className="space-y-2 relative z-10"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <h2 className="text-3xl sm:text-4xl font-black">Commitment Level</h2>
+              <p className="text-zinc-400">Slide to set your dedication</p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <GlassCard className={`transition-all duration-500 ${sliderValue === 100 ? 'border-emerald-500/30' : sliderValue > 80 ? 'border-blue-500/30' : ''}`}>
+                <div className="space-y-8">
+                  <div className="relative">
+                    {/* Track background with segments */}
                   <div
                     data-slider-track
-                    className="absolute inset-0 w-full h-8 cursor-pointer"
-                    style={{ zIndex: 10 }}
+                      className="w-full h-4 rounded-full relative overflow-hidden cursor-pointer bg-zinc-800/80"
                     onMouseDown={(e) => {
                       setIsDragging(true)
-                      const updateSlider = (clientX: number) => {
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-                        setSliderValue(Math.round(percentage))
-                        if (Math.round(percentage) === 100) {
-                          setAttemptedProceedWithIncomplete(false)
-                        }
-                      }
-                      updateSlider(e.clientX)
-                    }}
-                    onTouchStart={(e) => {
-                      setIsDragging(true)
-                      const updateSlider = (clientX: number) => {
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
-                        setSliderValue(Math.round(percentage))
-                        if (Math.round(percentage) === 100) {
-                          setAttemptedProceedWithIncomplete(false)
-                        }
-                      }
-                      const touch = e.touches[0]
-                      updateSlider(touch.clientX)
-                    }}
-                    onMouseMove={(e) => {
-                      if (isDragging) {
                         const rect = e.currentTarget.getBoundingClientRect()
                         const percentage = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
                         setSliderValue(Math.round(percentage))
-                        if (Math.round(percentage) === 100) {
-                          setAttemptedProceedWithIncomplete(false)
-                        }
-                      }
+                        if (Math.round(percentage) === 100) setAttemptedProceedWithIncomplete(false)
                     }}
-                    onTouchMove={(e) => {
-                      if (isDragging) {
+                    onTouchStart={(e) => {
+                      setIsDragging(true)
+                      const touch = e.touches[0]
                         const rect = e.currentTarget.getBoundingClientRect()
-                        const touch = e.touches[0]
                         const percentage = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100))
                         setSliderValue(Math.round(percentage))
-                        if (Math.round(percentage) === 100) {
-                          setAttemptedProceedWithIncomplete(false)
-                        }
-                      }
-                    }}
-                    onMouseUp={() => setIsDragging(false)}
-                    onMouseLeave={() => setIsDragging(false)}
-                    onTouchEnd={() => setIsDragging(false)}
-                  />
-                  
+                        if (Math.round(percentage) === 100) setAttemptedProceedWithIncomplete(false)
+                      }}
+                    >
+                      {/* Progress fill */}
+                      <motion.div 
+                        className="h-full rounded-full relative"
+                        animate={{
+                          width: `${sliderValue}%`,
+                        }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        style={{
+                          background: sliderValue === 100 
+                            ? 'linear-gradient(90deg, rgb(34, 197, 94), rgb(16, 185, 129), rgb(34, 197, 94))'
+                            : sliderValue > 80 
+                              ? 'linear-gradient(90deg, rgb(96, 165, 250), rgb(139, 92, 246), rgb(236, 72, 153))'
+                              : 'linear-gradient(90deg, rgb(96, 165, 250), rgb(139, 92, 246))',
+                          boxShadow: sliderValue === 100
+                            ? '0 0 30px rgba(34, 197, 94, 0.6), inset 0 0 10px rgba(255,255,255,0.2)'
+                            : sliderValue > 80 
+                              ? '0 0 25px rgba(139, 92, 246, 0.5), inset 0 0 10px rgba(255,255,255,0.1)'
+                              : '0 0 20px rgba(96, 165, 250, 0.3)',
+                          backgroundSize: sliderValue === 100 ? '200% 100%' : '100% 100%',
+                        }}
+                      >
+                        {/* Shimmer effect when at 100% */}
+                        {sliderValue === 100 && (
+                          <motion.div
+                            className="absolute inset-0 rounded-full"
+                            animate={{
+                              backgroundPosition: ['0% 0%', '200% 0%'],
+                            }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                            style={{
+                              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                              backgroundSize: '50% 100%',
+                            }}
+                          />
+                        )}
+                      </motion.div>
+                    </div>
+                    
+                    {/* Thumb - draggable */}
                   <motion.div 
-                    className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{
-                      left: `calc(${sliderValue}% - 20px)`,
-                      zIndex: 15
-                    }}
-                  >
-                    <div 
-                      className="w-10 h-10 rounded-full border-4 border-white relative overflow-hidden"
+                    className="absolute top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10"
+                      animate={{ left: `calc(${sliderValue}% - 14px)` }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation()
+                        setIsDragging(true)
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation()
+                        setIsDragging(true)
+                      }}
+                    >
+                      <motion.div 
+                        className="w-7 h-7 rounded-full border-2 border-white shadow-xl"
+                        animate={sliderValue > 90 && sliderValue < 100 ? {
+                          scale: [1, 1.1, 1],
+                        } : { scale: 1 }}
+                        transition={{ duration: 0.5, repeat: sliderValue > 90 && sliderValue < 100 ? Infinity : 0 }}
                       style={{
                         background: sliderValue === 100 
-                          ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)'
-                          : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%)',
-                        cursor: 'pointer'
+                            ? 'linear-gradient(135deg, rgb(34, 197, 94), rgb(16, 185, 129))'
+                            : 'linear-gradient(135deg, rgb(96, 165, 250), rgb(139, 92, 246))',
+                          boxShadow: sliderValue === 100 
+                            ? '0 0 20px rgba(34, 197, 94, 0.8)'
+                            : '0 0 15px rgba(96, 165, 250, 0.6)',
                       }}
                     />
                   </motion.div>
                 </div>
                 
-                <div className="flex justify-between text-lg md:text-xl mt-6 font-bold">
-                  <span className="text-gray-400">Casual</span>
-                  <span className="text-red-400 font-black">BEAST MODE</span>
-                </div>
+                  <div className="flex justify-between text-sm font-medium">
+                    <span className="text-zinc-500">Casual</span>
+                    <motion.span 
+                      className={sliderValue === 100 ? 'text-emerald-400' : 'text-blue-400'}
+                      animate={sliderValue > 90 ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.5, repeat: sliderValue > 90 && sliderValue < 100 ? Infinity : 0 }}
+                    >
+                      Maximum
+                    </motion.span>
               </div>
               
-              <div className="text-center py-6">
-                <div 
-                  className="text-7xl md:text-8xl font-black mb-4"
-                  style={{
-                    color: sliderValue === 100 ? '#22c55e' : '#ef4444',
+                  <div className="text-center">
+                    <motion.div 
+                      className="text-7xl font-black mb-2 tabular-nums"
+                      animate={{ 
+                        scale: sliderValue === 100 ? [1, 1.05, 1] : 1,
+                        color: sliderValue === 100 ? '#22c55e' : '#60a5fa'
+                      }}
+                      transition={{ 
+                        scale: { duration: 0.5, repeat: sliderValue === 100 ? 2 : 0 },
+                        color: { duration: 0.3 }
                   }}
                 >
                   {sliderValue}%
-                </div>
+                    </motion.div>
+                    <AnimatePresence>
                 {sliderValue === 100 && (
-                  <p className="text-xl md:text-2xl font-black text-green-400">
-                    MAXIMUM COMMITMENT ACHIEVED
-                  </p>
-                )}
+                        <motion.p 
+                          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="text-emerald-400 font-bold flex items-center justify-center gap-2"
+                        >
+                          <motion.span
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                          >
+                            🔥
+                          </motion.span>
+                          Maximum commitment unlocked
+                          <motion.span
+                            animate={{ rotate: [0, -10, 10, 0] }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                          >
+                            🔥
+                          </motion.span>
+                        </motion.p>
+                      )}
+                      {sliderValue > 80 && sliderValue < 100 && (
+                        <motion.p 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="text-purple-400 font-medium text-sm"
+                        >
+                          Almost there... push to 100%!
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
               </div>
+                </div>
+              </GlassCard>
+            </motion.div>
 
               <AnimatePresence>
                 {attemptedProceedWithIncomplete && sliderValue < 100 && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                    className="bg-red-950/50 border border-red-600 rounded-2xl p-6 space-y-4"
-                  >
-                    <div>
-                      <p className="text-red-400 font-black text-xl mb-2">ACCESS DENIED</p>
-                      <p className="text-gray-300 font-bold text-lg mb-4">
-                        This system requires 100% commitment. Anything less is failure.
-                      </p>
-                    </div>
-                    
-                    <div className="pt-4 border-t border-red-600/30">
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                >
+                  <GlassCard className="border-orange-500/30">
+                    <div className="text-center space-y-3">
+                      <motion.p 
+                        className="text-orange-400 font-bold text-lg"
+                        animate={{ x: [-2, 2, -2, 2, 0] }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        100% commitment required
+                      </motion.p>
+                      <p className="text-zinc-400">This system requires maximum dedication. Slide all the way to continue.</p>
+                      
                       <button
                         onClick={() => onGoToLogin?.()}
-                        className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl text-gray-300 hover:text-white transition-colors font-bold text-center"
+                        className="text-zinc-500 hover:text-zinc-300 text-sm underline transition-colors"
                       >
-                        I&apos;m not made for this
+                        I&apos;m not ready for this
                       </button>
                     </div>
+                  </GlassCard>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </motion.div>
-        )
-
-      // Add other cases as needed - simplified for now
-      case 3:
-        return (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-md mx-auto px-4"
-          >
-            <div className="space-y-4">
-              <h2 className="text-4xl font-black">Create Your Account</h2>
-              <p className="text-xl text-gray-300 font-bold">Enter your credentials to lock in your commitment.</p>
-              <p className="text-sm text-gray-400 font-medium">Leave fields empty to skip account creation for testing</p>
-            </div>
-            
-            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
-              <div className="space-y-4">
-                <input
-                  type="email"
-                  placeholder="Email address (optional for testing)"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
-                  disabled={isLoading}
-                />
-                <input
-                  type="password"
-                  placeholder="Create password (optional for testing)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
-                  disabled={isLoading}
-                />
-                <input
-                  type="password"
-                  placeholder="Confirm password"
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  className={`w-full px-4 py-4 bg-gray-800/50 border rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:outline-none backdrop-blur-sm transition-all ${
-                    passwordConfirm && password !== passwordConfirm 
-                      ? 'border-red-500 focus:border-red-400' 
-                      : passwordConfirm && password === passwordConfirm 
-                        ? 'border-green-500 focus:border-green-400'
-                        : 'border-gray-600 focus:border-red-500'
-                  }`}
-                  disabled={isLoading}
-                />
-                {passwordConfirm && password !== passwordConfirm && (
-                  <p className="text-red-400 font-bold text-sm">Passwords do not match</p>
-                )}
-                {passwordConfirm && password === passwordConfirm && password && (
-                  <p className="text-green-400 font-bold text-sm">Passwords match ✓</p>
-                )}
-              </div>
-              
-              {error && (
-                <div className="bg-red-900/50 border border-red-600 rounded-xl p-4 mt-4">
-                  <p className="text-red-200 text-sm font-bold">{error}</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )
-
-      case 4:
-        return (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-md mx-auto px-4"
-          >
-            <div className="space-y-4">
-              <h2 className="text-3xl font-black">JOIN YOUR ACCOUNTABILITY GROUP</h2>
-              <p className="text-xl text-gray-300 font-bold">Enter the code to join your witnesses</p>
-            </div>
-            
-            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm space-y-6">
-              <div>
-                <h3 className="text-2xl font-black mb-4">ENTER GROUP CODE</h3>
-                <p className="text-gray-400 font-bold mb-6">8-character code from your group admin</p>
-                
-                <input
-                  type="text"
-                  placeholder="ENTER CODE"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-4 bg-gray-800/50 border border-red-600 rounded-xl text-white text-center font-mono tracking-widest text-xl font-bold focus:border-red-400 focus:outline-none backdrop-blur-sm transition-all"
-                  maxLength={8}
-                  disabled={isLoading}
-                />
-                
-                <p className="text-gray-500 text-sm font-medium mt-3">Example: ABC12345</p>
-              </div>
-              
-              {error && (
-                <div className="bg-red-900/50 border border-red-600 rounded-xl p-4">
-                  <p className="text-red-200 text-sm font-bold">{error}</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="text-center space-y-2">
-              <p className="text-gray-400 font-bold text-lg">Once you join, there&apos;s no hiding from your group</p>
-              <p className="text-red-400 font-black text-xl">They will see everything</p>
-            </div>
           </motion.div>
         )
 
       case 2:
+        // Final commitment
         return (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            className="text-center space-y-8 max-w-4xl mx-auto px-4 relative min-h-screen"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-2xl mx-auto px-6 pt-8 min-h-screen"
           >
-            {/* Header - only show when not in hold mode */}
             {!showHoldButton && (
-              <div className="space-y-4 relative z-10 pointer-events-none">
-                <motion.div
-                  animate={{ 
-                    boxShadow: `0 15px 40px rgba(220, 38, 38, ${0.5 + screenIntensity * 0.3})` 
-                  }}
-                  className="w-16 h-16 bg-red-600 rounded-2xl mx-auto flex items-center justify-center"
-                >
-                  <AlertTriangle className="w-8 h-8 text-white" />
-                </motion.div>
-                <h2 className="text-4xl md:text-5xl font-black">FINAL COMMITMENT</h2>
+              <>
+            <div className="space-y-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl mx-auto flex items-center justify-center">
+                    <AlertTriangle className="w-7 h-7 text-white" />
+            </div>
+                  <h2 className="text-3xl sm:text-4xl font-black">Final Commitment</h2>
               </div>
-            )}
-            
-            {/* Content area - only show when not in hold mode */}
-            {!showHoldButton && (
-              <div className="space-y-8 relative z-10 pointer-events-auto min-h-screen pb-32">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="bg-gradient-to-br from-red-950/50 to-red-900/30 border border-red-500/30 rounded-2xl p-6 md:p-8 backdrop-blur-sm max-w-2xl mx-auto"
-                >
-                  <div className="text-center space-y-6">
-                    <div className="space-y-4 text-lg md:text-xl font-normal text-gray-300">
-                      <p>This is where most people <span className="font-bold">back out</span>.</p>
+              
+                <GlassCard className="text-left">
+                  <div className="space-y-6">
+                    <div className="space-y-4 text-zinc-300">
+                      <p>This is where most people <span className="text-white font-semibold">back out</span>.</p>
                       <p>You&apos;ve read the rules. You understand the system.</p>
-                      <p>From here on out, <span className="font-bold">every rep matters</span>. <span className="font-bold">Every miss costs</span>.</p>
-                      <p>The group is <span className="font-bold">watching</span>. So is the system.</p>
+                      <p>From here on out, <span className="text-white font-semibold">every rep matters</span>. <span className="text-white font-semibold">Every miss costs</span>.</p>
                     </div>
                     
-                    <div className="space-y-4 text-lg md:text-xl font-normal text-gray-300">
-                      <p>There&apos;s <span className="font-bold">no pause button</span>. <span className="font-bold">No ghosting</span>.</p>
-                      <p>You don&apos;t join to <span className="font-bold">try</span> — you join to <span className="font-bold">change</span>.</p>
-                    </div>
+                    <div className="h-px bg-white/10" />
                     
-                    {/* Additional content to require scrolling */}
-                    <div className="space-y-8 py-8">
-                      {/* Separator */}
-                      <div className="text-center text-gray-500 text-2xl">
-                        ⸻
+                    <div className="space-y-3">
+                      <h3 className="text-orange-400 font-bold">What this means:</h3>
+                      <ul className="space-y-2 text-zinc-400">
+                        <li className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                          Daily discipline is required
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                          Late logs = €10 penalty
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                          Your data is visible to your group
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                          Your commitment is binding
+                        </li>
+                      </ul>
                       </div>
                       
-                      <div className="space-y-6 text-lg text-gray-300">
-                        <h3 className="text-2xl font-black text-red-400">THE REALITY CHECK</h3>
-                        <div className="space-y-4">
-                          <p>Most fitness apps let you lie to yourself. This one doesn&apos;t.</p>
-                          <p>Most groups let you disappear quietly. This one doesn&apos;t.</p>
-                          <p>Most systems let you quit when it gets hard. This one doesn&apos;t.</p>
-                        </div>
-                      </div>
-
-                      {/* Separator */}
-                      <div className="text-center text-gray-500 text-2xl">
-                        ⸻
-                      </div>
-                      
-                      {/* Lock in terms */}
-                      <div className="bg-black/30 border border-red-600/50 rounded-xl p-6 backdrop-blur-sm">
-                        <div className="flex items-center space-x-3 mb-4 justify-center">
-                          <span className="text-2xl">🔐</span>
-                          <span className="text-red-400 font-black text-xl">LOCK IN TERMS</span>
-                        </div>
-                        
-                        <div className="text-left space-y-3 text-gray-200 text-base md:text-lg font-bold">
-                          <p>• Daily discipline is required</p>
-                          <p>• Late logs = €10 penalty</p>
-                          <p>• Only approved exercises count</p>
-                          <p>• Excuses are tracked</p>
-                          <p>• Your data is visible to your group</p>
-                          <p>• There is no exit button</p>
-                          <p>• Your commitment is binding</p>
-                          <p>• The system never forgets</p>
-                        </div>
-                      </div>
-
-                      {/* More content */}
-                      <div className="space-y-6 text-lg text-gray-300">
-                        <h3 className="text-2xl font-black text-red-400">WHAT HAPPENS NEXT</h3>
-                        <div className="space-y-4">
-                          <p>You&apos;ll join your group. They&apos;ll see your progress every day.</p>
-                          <p>You&apos;ll choose your identity - avatar and color. <span className="font-bold text-red-400">For life.</span></p>
-                          <p>You&apos;ll start earning points immediately. Miss a day? Pay the price.</p>
-                          <p>There&apos;s no trial period. No refunds. No second chances.</p>
-                        </div>
-                      </div>
-                      
-                      {/* Separator */}
-                      <div className="text-center text-gray-500 text-2xl">
-                        ⸻
-                      </div>
-                      
-                      <div className="space-y-4 text-lg md:text-xl font-bold text-gray-300 text-center">
-                        <p>If you&apos;re not ready, leave now.</p>
-                        <p>If you are — scroll down to commit, and never look back.</p>
-                      </div>
-                      
-                      {/* Separator */}
-                      <div className="text-center text-gray-500 text-2xl">
-                        ⸻
-                      </div>
-                      
-                      <div className="space-y-4 text-lg md:text-xl font-bold text-gray-300 text-center">
-                        <p>This is your last chance to opt out.</p>
-                        <p className="text-red-400">Are you ready to live by this level of accountability?</p>
-                        
+                    <div className="text-center text-zinc-500 py-4">
                         {!hasScrolledToBottom && (
-                          <motion.div 
-                            className="pt-8"
+                        <motion.p 
                             animate={{ opacity: [0.5, 1, 0.5] }}
                             transition={{ duration: 2, repeat: Infinity }}
                           >
-                            <p className="text-gray-500 text-base">↓ Scroll down to continue ↓</p>
-                          </motion.div>
+                          ↓ Scroll to continue ↓
+                        </motion.p>
                         )}
                       </div>
                     </div>
-                  </div>
-                </motion.div>
+                </GlassCard>
                 
-                {/* Two buttons for final warning step - positioned below content with better spacing */}
                 {hasScrolledToBottom && (
-                  <div className="relative z-50 px-4 pb-16 pt-8 pointer-events-none">
-                    <div className="flex space-x-4 w-full max-w-lg mx-auto pointer-events-auto">
-                      {/* I refuse button - blue */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex gap-4 pb-8"
+                  >
                       <motion.button
                         onClick={() => onGoToLogin?.()}
-                        className="relative overflow-hidden flex-1 min-h-[56px]"
+                      className="flex-1 h-14 rounded-2xl bg-white/5 border border-white/10 text-zinc-400 font-semibold hover:bg-white/10 transition-all"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        style={{
-                          background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
-                          borderRadius: '9999px',
-                          padding: '16px 24px',
-                          border: '2px solid rgba(37, 99, 235, 0.6)',
-                          boxShadow: '0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                          cursor: 'pointer'
-                        }}
-                        animate={{
-                          boxShadow: [
-                            '0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 6px 30px rgba(37, 99, 235, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                          ]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        <span className="text-white text-lg font-black tracking-wide relative z-10">
+                    >
                           I refuse
-                        </span>
                       </motion.button>
-
-                      {/* I Commit button - red */}
                       <motion.button
                         onClick={() => setShowHoldButton(true)}
-                        className="relative overflow-hidden flex-1 min-h-[56px]"
+                      className="flex-1 h-14 rounded-2xl font-bold text-white"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         style={{
-                          background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 80%, #7F1D1D 100%)',
-                          borderRadius: '9999px',
-                          padding: '16px 24px',
-                          border: '2px solid rgba(220, 38, 38, 0.8)',
-                          boxShadow: '0 4px 20px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                          cursor: 'pointer'
-                        }}
-                        animate={{
-                          boxShadow: [
-                            '0 4px 20px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 6px 30px rgba(220, 38, 38, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            '0 4px 20px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                          ]
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        <span className="text-white text-lg font-black tracking-wide relative z-10">
+                        background: 'linear-gradient(135deg, rgb(249, 115, 22), rgb(220, 38, 38))',
+                        boxShadow: '0 0 30px rgba(249, 115, 22, 0.3)',
+                      }}
+                    >
                           I Commit
-                        </span>
                       </motion.button>
-                    </div>
-                  </div>
+                  </motion.div>
                 )}
-              </div>
+              </>
             )}
 
-            {/* Floating quotes overlay during holding - appears over everything */}
-            {showHoldButton && currentQuote && (
+            {showHoldButton && (
               <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
-                <AnimatePresence>
                   <motion.div
-                    key={currentQuote}
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 1.2, y: -20 }}
-                    className="text-center"
-                  >
-                    <p
-                      className={`font-black ${
-                        screenIntensity > 0.7 ? 'text-red-300' : 'text-red-500'
-                      }`}
+                  className="text-center px-8"
+                  animate={{
+                    scale: [1, 1.02, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <motion.p
+                    className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight"
+                    animate={{
+                      opacity: currentQuote ? 1 : 0,
+                    }}
+                    transition={{ duration: 0.3 }}
                       style={{
-                        textShadow: `0 0 ${screenIntensity * 40}px rgba(220, 38, 38, ${0.8 + screenIntensity * 0.2})`,
-                        fontSize: `${2 + screenIntensity * 3}rem`,
-                        fontWeight: Math.min(900, 700 + screenIntensity * 200),
-                        letterSpacing: `${screenIntensity * 0.1}em`,
-                        transform: `scale(${1 + screenIntensity * 0.3})`
+                      color: screenIntensity > 0.7 ? '#fbbf24' : '#f97316',
+                      textShadow: `0 0 ${30 + screenIntensity * 50}px rgba(249, 115, 22, ${0.6 + screenIntensity * 0.4}), 0 0 ${60 + screenIntensity * 80}px rgba(249, 115, 22, ${0.3 + screenIntensity * 0.3})`,
                       }}
                     >
                       {currentQuote}
-                    </p>
+                  </motion.p>
+                  <motion.div 
+                    className="mt-6 text-lg text-orange-400/60 font-medium"
+                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    {Math.round(holdProgress)}% committed
                   </motion.div>
-                </AnimatePresence>
+                </motion.div>
               </div>
             )}
+          </motion.div>
+        )
+
+      case 3:
+        // Create account
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-md mx-auto px-6 pt-8"
+          >
+            <div className="space-y-2">
+              <motion.h2 
+                className="text-3xl sm:text-4xl font-black"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                Create Account
+              </motion.h2>
+              <motion.p 
+                className="text-zinc-400"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                Lock in your commitment
+              </motion.p>
+            </div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <GlassCard>
+              <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider text-left pl-1">Email</label>
+                <input
+                  type="email"
+                      placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-4 bg-zinc-900/50 border border-white/10 rounded-2xl text-white placeholder-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      disabled={isLoading || demoMode}
+                />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider text-left pl-1">Password</label>
+                <input
+                  type="password"
+                      placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-4 bg-zinc-900/50 border border-white/10 rounded-2xl text-white placeholder-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      disabled={isLoading || demoMode}
+                />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider text-left pl-1">Confirm Password</label>
+                <input
+                  type="password"
+                      placeholder="••••••••"
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                      className={`w-full px-4 py-4 bg-zinc-900/50 border rounded-2xl text-white placeholder-zinc-600 focus:outline-none focus:ring-2 transition-all ${
+                    passwordConfirm && password !== passwordConfirm 
+                          ? 'border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20' 
+                      : passwordConfirm && password === passwordConfirm 
+                            ? 'border-emerald-500/50 focus:border-emerald-500/50 focus:ring-emerald-500/20'
+                            : 'border-white/10 focus:border-blue-500/50 focus:ring-blue-500/20'
+                  }`}
+                      disabled={isLoading || demoMode}
+                />
+                  </div>
+                {passwordConfirm && password !== passwordConfirm && (
+                    <p className="text-red-400 text-sm text-left">Passwords do not match</p>
+                )}
+                {passwordConfirm && password === passwordConfirm && password && (
+                    <p className="text-emerald-400 text-sm text-left flex items-center gap-1">
+                      <Check size={14} /> Passwords match
+                    </p>
+                )}
+              </div>
+              
+              {error && (
+                  <div className="mt-4 p-4 bg-red-950/50 border border-red-500/30 rounded-2xl">
+                    <p className="text-red-400 text-sm">{error}</p>
+              </div>
+              )}
+              </GlassCard>
+          </motion.div>
+
+            {/* Demo mode option */}
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+              transition={{ delay: 0.5 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <div className="h-px bg-white/10 flex-1" />
+                <span className="text-zinc-600 text-sm">or</span>
+                <div className="h-px bg-white/10 flex-1" />
+            </div>
+            
+                    <motion.button
+                      onClick={() => {
+                  setDemoMode(true)
+                  // Set demo defaults
+                  setGroupInfo({
+                    name: 'Demo Squad',
+                    member_count: 5,
+                    daily_penalty: 10,
+                    current_pot_amount: 150,
+                    group_admin: { username: 'DemoAdmin', custom_icon: '👑' }
+                  })
+                  // Skip account creation, join group, and group confirmation - go directly to birthday (step 6)
+                  setCurrentStep(6)
+                }}
+                className="w-full h-12 rounded-2xl flex items-center justify-center gap-2 bg-white/5 border border-dashed border-white/20 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Sparkles size={16} />
+                <span className="font-medium">Continue in Demo Mode</span>
+                    </motion.button>
+              <p className="text-zinc-600 text-xs">Skip account creation to preview the full onboarding</p>
+            </motion.div>
+          </motion.div>
+        )
+
+      case 4:
+        // Join group
+        return (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="text-center space-y-8 max-w-md mx-auto px-6 pt-8"
+          >
+            <div className="space-y-2">
+              <h2 className="text-3xl sm:text-4xl font-black">Join Your Group</h2>
+              <p className="text-zinc-400">Enter the code from your group admin</p>
+              </div>
+
+            <GlassCard>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider text-center">Invite Code</label>
+                <input
+                  type="text"
+                    placeholder="XXXXXXXX"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                    className="w-full px-4 py-5 bg-zinc-900/50 border border-white/10 rounded-2xl text-white text-center font-mono tracking-[0.3em] text-2xl placeholder-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all uppercase"
+                  maxLength={8}
+                  disabled={isLoading}
+                />
+                  <p className="text-zinc-600 text-xs">8-character code • Example: ABC12345</p>
+            </div>
+            
+                <div className="pt-2 border-t border-white/5">
+                  <button
+                    onClick={() => {
+                      setDemoMode(true)
+                      setGroupInfo({
+                        name: 'Demo Squad',
+                        member_count: 5,
+                        daily_penalty: 10,
+                        current_pot_amount: 150,
+                        group_admin: { username: 'DemoAdmin', custom_icon: '👑' }
+                      })
+                      nextStep()
+                    }}
+                    className="text-zinc-500 hover:text-zinc-300 text-sm underline transition-colors"
+                  >
+                    Skip for Demo
+                  </button>
+              </div>
+                    </div>
+                    
+              {error && (
+                <div className="mt-4 p-4 bg-red-950/50 border border-red-500/30 rounded-2xl">
+                  <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+              )}
+            </GlassCard>
+            
+            <p className="text-zinc-500 text-sm">
+              Once you join, your group will see your progress daily
+            </p>
           </motion.div>
         )
 
       case 5:
+        // Group confirmation
         return (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-2xl mx-auto px-4"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            className="text-center space-y-8 max-w-lg mx-auto px-6 pt-8"
           >
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black">FINAL GROUP CONFIRMATION</h2>
-              <p className="text-xl md:text-2xl text-gray-300 font-bold">You are joining: <span className="text-white font-black">{groupInfo?.name || 'LOADING...'}</span></p>
+            <div className="space-y-2">
+              <h2 className="text-3xl sm:text-4xl font-black">Group Confirmed</h2>
+              <p className="text-zinc-400">You&apos;re joining: <span className="text-white font-semibold">{groupInfo?.name || 'Loading...'}</span></p>
             </div>
             
-            <div className="bg-gray-900/50 border border-red-600/50 rounded-2xl p-6 backdrop-blur-sm space-y-6">
+            <GlassCard>
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
-                <h3 className="text-2xl md:text-3xl font-black text-red-400 mb-6">GROUP COMMITMENT</h3>
+                    <p className="text-3xl font-black text-white">{groupInfo?.member_count || '1'}</p>
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider">Members</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-black text-orange-400">€{groupInfo?.daily_penalty || '10'}</p>
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider">Failure Penalty</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-black text-emerald-400">€{groupInfo?.current_pot_amount?.toFixed(0) || '0'}</p>
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider">Pot</p>
+                  </div>
+            </div>
+            
+                <div className="h-px bg-white/10" />
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-6">
-                  <div className="bg-gray-800/50 rounded-xl p-4">
-                    <p className="text-gray-400 font-bold mb-1">Members</p>
-                    <p className="text-2xl font-black">{groupInfo?.member_count || '1'}</p>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-xl p-4">
-                    <p className="text-gray-400 font-bold mb-1">Daily Penalty</p>
-                    <p className="text-2xl font-black text-red-400">€{groupInfo?.daily_penalty || '10.00'}</p>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-xl p-4">
-                    <p className="text-gray-400 font-bold mb-1">Days Active</p>
-                    <p className="text-2xl font-black">{groupInfo ? Math.floor((new Date().getTime() - new Date(groupInfo.created_at).getTime()) / (1000 * 60 * 60 * 24)) : '0'}</p>
-                  </div>
-                </div>
-
-                <div className="bg-gray-800/50 rounded-xl p-4 mb-6">
-                  <p className="text-gray-400 font-bold mb-1">Money in Pot</p>
-                  <p className="text-3xl font-black text-green-400">€{groupInfo?.current_pot_amount ? groupInfo.current_pot_amount.toFixed(2) : '0.00'}</p>
-                  <p className="text-gray-500 text-sm font-medium">From missed workouts</p>
-                </div>
-
-                <div className="bg-gray-800/50 rounded-xl p-4">
-                  <p className="text-gray-400 font-bold mb-1">Group Admin</p>
-                  <p className="font-black text-lg">
-                    {groupInfo?.group_admin?.custom_icon || '👑'} {groupInfo?.group_admin?.username || 'ADMIN'}
+                <div className="text-center">
+                  <p className="text-zinc-500 text-sm mb-1">Group Admin</p>
+                  <p className="font-bold text-lg">
+                    {groupInfo?.group_admin?.custom_icon || '👑'} {groupInfo?.group_admin?.username || 'Admin'}
                   </p>
                 </div>
               </div>
-              
-              <div className="border-t border-gray-600 pt-6">
-                <h4 className="text-red-400 font-black text-xl mb-3">FINANCIAL COMMITMENT</h4>
-                <p className="text-gray-300 text-lg font-bold">
-                  Miss a workout day = €10 penalty to the group pot.<br/>
-                  No exceptions. No mercy. No refunds.
-                </p>
-              </div>
-              
-              <div className="bg-red-950/50 border border-red-600 rounded-xl p-4">
-                <div className="flex items-center justify-center space-x-3 mb-3">
-                  <AlertTriangle className="w-6 h-6 text-red-400" />
-                  <span className="text-red-400 font-black text-xl">POINT OF NO RETURN</span>
-                </div>
-                <p className="text-gray-300 font-bold">
-                  By proceeding, you enter a binding commitment with real financial consequences.
-                </p>
-              </div>
-            </div>
+            </GlassCard>
           </motion.div>
         )
 
       case 6:
+        // Birthday
         return (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-lg mx-auto px-4"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            className="text-center space-y-8 max-w-md mx-auto px-6 pt-8"
           >
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black">Choose Your Avatar</h2>
-              <p className="text-2xl md:text-3xl text-red-400 font-black">FOR LIFE. Choose wisely.</p>
-              <p className="text-lg md:text-xl text-gray-300 font-bold">This emoji will represent you forever in the system</p>
+            <div className="space-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl mx-auto flex items-center justify-center mb-4">
+                <Calendar className="w-7 h-7 text-white" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black">Birthday Challenge</h2>
+              <p className="text-zinc-400">On your birthday, you must earn DOUBLE the points</p>
             </div>
             
-            <div className="space-y-6">
-              {/* Quick selection emojis */}
-              <div>
-                <h3 className="text-xl font-black mb-4 text-gray-300">Quick Select</h3>
-                <div className="grid grid-cols-4 gap-3 md:gap-4">
-                  {['💪', '🔥', '⚡', '🎯', '🏆', '💀', '🚀', '⭐', '👑', '🔱', '⚔️', '🌟'].map((emoji) => (
-                    <motion.button
-                      key={emoji}
-                      onClick={() => {
-                        setSelectedEmoji(emoji)
-                        setSelectedEmojiInput('')
-                      }}
-                      className={`aspect-square text-4xl md:text-5xl rounded-xl border-2 transition-all ${
-                        selectedEmoji === emoji 
-                          ? 'border-red-500 bg-red-600/20 shadow-lg' 
-                          : 'border-gray-600 bg-gray-800/50 hover:border-gray-500 hover:bg-gray-700/50'
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      animate={{
-                        boxShadow: selectedEmoji === emoji ? '0 15px 40px rgba(220, 38, 38, 0.4)' : '0 5px 20px rgba(0, 0, 0, 0.2)'
-                      }}
-                    >
-                      {emoji}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom emoji input */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
-                <h3 className="text-xl font-black mb-4 text-gray-300">Or enter any emoji</h3>
-                <input
-                  type="text"
-                  placeholder="Enter any emoji (e.g., 🦾, 🥊, 🏃‍♂️)"
-                  value={selectedEmojiInput}
-                  onChange={(e) => {
-                    const input = e.target.value
-                    // Only allow single emoji or clear
-                    if (input.length <= 2) { // Emojis can be 1-2 characters
-                      setSelectedEmojiInput(input)
-                      if (input) {
-                        setSelectedEmoji('')
-                      }
-                    }
-                  }}
-                  className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-center text-4xl font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all placeholder:text-base"
-                  maxLength={2}
-                />
-                <p className="text-gray-500 text-sm font-medium mt-3">Paste or type any emoji you want</p>
-              </div>
-            </div>
+            <GlassCard>
+              <input
+                type="date"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                className="w-full px-4 py-4 bg-zinc-900/50 border border-white/10 rounded-2xl text-white text-center focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+              />
+            </GlassCard>
             
-            {(selectedEmoji || selectedEmojiInput) && (
+            {birthday && (
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 md:p-6 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700"
               >
-                <p className="text-gray-300 mb-2 text-lg font-bold">
-                  Your avatar: <span className="text-4xl md:text-5xl">{selectedEmoji || selectedEmojiInput}</span>
-                </p>
-                <p className="text-red-400 font-black text-lg">Permanent. Unchangeable. Forever.</p>
+                <GlassCard className="border-purple-500/30">
+                  <div className="text-center">
+                    <p className="text-purple-400 font-bold">Birthday Challenge Activated</p>
+                    <p className="text-zinc-400 text-sm mt-1">
+                      Double points on {new Date(birthday).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                </GlassCard>
               </motion.div>
             )}
           </motion.div>
         )
 
       case 7:
+        // Username
         return (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-lg mx-auto px-4"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            className="text-center space-y-8 max-w-md mx-auto px-6 pt-8"
           >
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black">Choose Your Color</h2>
-              <p className="text-2xl md:text-3xl text-red-400 font-black">FOR LIFE. This represents you.</p>
-              <p className="text-lg md:text-xl text-gray-300 font-bold">Your identity color in the system - choose carefully</p>
+            <div className="space-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl mx-auto flex items-center justify-center mb-4">
+                <User className="w-7 h-7 text-white" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black">Your Identity</h2>
+              <p className="text-zinc-400">Choose a short nickname for your group</p>
             </div>
             
-            <div className="grid grid-cols-5 gap-3 md:gap-4">
-              {colors.map((color) => (
-                <motion.button
-                  key={color}
-                  onClick={() => setSelectedColor(color)}
-                  className={`aspect-square rounded-xl transition-all border-4 ${
-                    selectedColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-                  }`}
-                  style={{ 
-                    background: `linear-gradient(135deg, ${color} 0%, ${color}CC 50%, ${color}99 100%)`,
-                  }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={{
-                    boxShadow: selectedColor === color ? `0 15px 40px ${color}60` : '0 5px 20px rgba(0, 0, 0, 0.2)'
-                  }}
-                />
-              ))}
+            <GlassCard>
+              <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="NAME"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-5 bg-zinc-900/50 border border-white/10 rounded-2xl text-white text-center text-2xl font-bold tracking-wider placeholder-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all uppercase"
+                  maxLength={4}
+              />
+                <p className="text-zinc-500 text-xs">4 characters max • This is how your group sees you</p>
             </div>
+            </GlassCard>
             
-            {selectedColor && (
+            {username && (
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 md:p-6 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700"
+                className="text-center"
               >
-                <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full mx-auto mb-4"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${selectedColor} 0%, ${selectedColor}CC 50%, ${selectedColor}99 100%)`,
-                    boxShadow: `0 0 30px ${selectedColor}60`
-                  }}
-                />
-                <p className="text-gray-300 mb-2 text-lg font-bold">Your identity color</p>
-                <p className="text-red-400 font-black text-lg">Locked in forever</p>
+                <div className="inline-block px-6 py-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 rounded-2xl">
+                  <span className="font-black text-3xl tracking-wider">{username}</span>
+                </div>
+                <p className="text-zinc-500 text-sm mt-2">Your display name</p>
               </motion.div>
             )}
           </motion.div>
         )
 
       case 8:
+        // Complete - with confetti-like celebration
         return (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-md mx-auto px-4"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            className="text-center space-y-8 max-w-lg mx-auto px-6 pt-8 relative"
           >
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black">Your Birthday Challenge</h2>
-              <p className="text-xl md:text-2xl text-gray-300 font-bold">On your birthday, you must earn DOUBLE the points</p>
-              <p className="text-lg md:text-xl text-red-400 font-bold">The system remembers everything</p>
-            </div>
-            
-            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
-              <input
-                type="date"
-                value={birthday}
-                onChange={(e) => setBirthday(e.target.value)}
-                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium focus:border-red-500 focus:outline-none backdrop-blur-sm text-center transition-all"
-              />
-            </div>
-            
-            {birthday && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-6 bg-red-950/50 border border-red-600 rounded-2xl backdrop-blur-sm"
-              >
-                <p className="text-red-400 font-black text-xl mb-2">Birthday Challenge Activated</p>
-                <p className="text-gray-300 font-bold text-lg">Double points required on {new Date(birthday).toLocaleDateString()}</p>
-                <p className="text-gray-400 font-medium mt-2">The system will not forget</p>
-              </motion.div>
-            )}
-          </motion.div>
-        )
-
-      case 9:
-        return (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-md mx-auto px-4"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
-          >
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-black">Choose Your Identity</h2>
-              <p className="text-xl md:text-2xl text-gray-300 font-bold">This is how your group will know you</p>
-            </div>
-            
-            <div className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 backdrop-blur-sm">
-              <input
-                type="text"
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm text-center transition-all"
-              />
-            </div>
-            
-            {username && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-center space-x-4 p-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700"
-              >
-                <span className="text-4xl">{selectedEmoji || selectedEmojiInput}</span>
-                <span 
-                  className="w-8 h-8 rounded-full"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${selectedColor} 0%, ${selectedColor}CC 50%, ${selectedColor}99 100%)`,
-                    boxShadow: `0 0 15px ${selectedColor}60`
+            {/* Celebration particles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(12)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-3 h-3 rounded-full"
+                      style={{ 
+                    background: ['#60a5fa', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'][i % 5],
+                    left: `${10 + (i * 7)}%`,
+                  }}
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{
+                    y: [0, 300 + Math.random() * 200],
+                    opacity: [0, 1, 1, 0],
+                    x: [0, (Math.random() - 0.5) * 100],
+                    rotate: [0, 360 * (Math.random() > 0.5 ? 1 : -1)],
+                  }}
+                  transition={{
+                    duration: 2 + Math.random(),
+                    delay: 0.5 + i * 0.1,
+                    ease: "easeOut"
                   }}
                 />
-                <span className="font-black text-xl">{username}</span>
-              </motion.div>
-            )}
-          </motion.div>
-        )
-
-      case 10:
-        return (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="text-center space-y-8 max-w-2xl mx-auto px-4"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
-          >
-            <div className="space-y-4">
-              <div className="w-16 h-16 bg-green-600 rounded-2xl mx-auto flex items-center justify-center mb-6">
-                <span className="text-2xl">✓</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-black">COMMITMENT LOCKED</h2>
-              <p className="text-xl md:text-2xl text-gray-300 font-bold">Your transformation journey begins now</p>
+              ))}
             </div>
             
-            <div className="bg-gray-900/50 border border-green-600/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm">
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h3 className="text-2xl font-black text-green-400 mb-4">PROFILE COMPLETE</h3>
-                  
-                  <div className="flex items-center justify-center space-x-4 p-4 bg-gray-800/50 rounded-2xl backdrop-blur-sm border border-gray-700 mb-6">
-                    <span className="text-4xl">{selectedEmoji || selectedEmojiInput}</span>
-                    <span 
-                      className="w-8 h-8 rounded-full"
-                      style={{ 
-                        background: `linear-gradient(135deg, ${selectedColor} 0%, ${selectedColor}CC 50%, ${selectedColor}99 100%)`,
-                        boxShadow: `0 0 15px ${selectedColor}60`
-                      }}
-                    />
-                    <span className="font-black text-xl">{username}</span>
+            <motion.div 
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", duration: 0.8, bounce: 0.5 }}
+              className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-400 rounded-3xl mx-auto flex items-center justify-center relative"
+            >
+              <motion.div
+                animate={{ 
+                  boxShadow: [
+                    '0 0 20px 0px rgba(16, 185, 129, 0.4)',
+                    '0 0 40px 10px rgba(16, 185, 129, 0.6)',
+                    '0 0 20px 0px rgba(16, 185, 129, 0.4)'
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 rounded-3xl"
+              />
+              <Check className="w-10 h-10 text-white relative z-10" />
+            </motion.div>
+            
+            <motion.div 
+              className="space-y-2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <h2 className="text-3xl sm:text-4xl font-black">
+                {demoMode ? 'Demo Complete!' : 'Commitment Locked'}
+              </h2>
+              <p className="text-zinc-400">
+                {demoMode ? 'You\'ve seen the full onboarding experience' : 'Your transformation begins now'}
+              </p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <GlassCard>
+                <div className="space-y-6">
+                  <motion.div 
+                    className="flex items-center justify-center"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.5, type: "spring" }}
+                  >
+                    <div className="px-6 py-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 rounded-2xl">
+                      <span className="font-black text-3xl tracking-wider">{username || 'USER'}</span>
                   </div>
+                  </motion.div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                    <div className="bg-gray-800/50 rounded-xl p-4">
-                      <p className="text-gray-400 font-bold mb-1">Group</p>
-                      <p className="font-black">{groupInfo?.name || 'UNKNOWN'}</p>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-xl p-4">
-                      <p className="text-gray-400 font-bold mb-1">Birthday Challenge</p>
-                      <p className="font-black">{birthday ? new Date(birthday).toLocaleDateString() : 'Not set'}</p>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-xl p-4">
-                      <p className="text-gray-400 font-bold mb-1">Commitment Level</p>
-                      <p className="font-black text-red-400">100%</p>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-xl p-4">
-                      <p className="text-gray-400 font-bold mb-1">Daily Penalty</p>
-                      <p className="font-black text-red-400">€10.00</p>
-                    </div>
-                  </div>
+                  <div className="h-px bg-white/10" />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <motion.div 
+                      className="text-center p-3 bg-white/5 rounded-xl"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <p className="text-zinc-500 text-xs uppercase tracking-wider">Group</p>
+                      <p className="font-bold">{groupInfo?.name || 'Demo Squad'}</p>
+                    </motion.div>
+                    <motion.div 
+                      className="text-center p-3 bg-white/5 rounded-xl"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <p className="text-zinc-500 text-xs uppercase tracking-wider">Failure Penalty</p>
+                      <p className="font-bold text-orange-400">€{groupInfo?.daily_penalty || 10}</p>
+                    </motion.div>
                 </div>
                 
-                <div className="border-t border-gray-600 pt-6 text-center">
-                  <p className="text-gray-300 text-lg font-bold mb-4">
-                    The system is now active. Your group is watching.<br/>
-                    There&apos;s no turning back.
-                  </p>
-                  <p className="text-red-400 font-black text-xl">
-                    Welcome to the commitment lifestyle.
-                  </p>
+                  {demoMode && (
+                    <motion.div 
+                      className="p-4 bg-blue-950/30 border border-blue-500/30 rounded-2xl"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      <p className="text-blue-400 text-sm font-medium">🎭 Demo Mode</p>
+                      <p className="text-zinc-400 text-xs mt-1">
+                        Create a real account to start your commitment journey
+                      </p>
+                    </motion.div>
+                  )}
                   
                   {error && (
-                    <div className="mt-4 p-4 bg-red-950/50 border border-red-600 rounded-xl">
-                      <p className="text-red-400 font-bold">Error: {error}</p>
+                    <div className="p-4 bg-red-950/50 border border-red-500/30 rounded-2xl">
+                      <p className="text-red-400 text-sm">{error}</p>
                     </div>
                   )}
                   
                   {isLoading && (
-                    <div className="mt-4 text-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-400 mx-auto"></div>
-                      <p className="text-gray-400 mt-2">Completing onboarding...</p>
+                    <div className="text-center">
+                      <motion.div 
+                        className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full mx-auto"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                      <p className="text-zinc-500 text-sm mt-2">Completing setup...</p>
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
+              </GlassCard>
+            </motion.div>
+            
+            <motion.p 
+              className="text-zinc-600 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            >
+              {demoMode ? 'Ready to commit for real?' : 'Welcome to the commitment lifestyle'}
+            </motion.p>
           </motion.div>
         )
 
       default:
-        return (
-          <div className="text-center">
-            <h2 className="text-4xl font-black mb-4">Step {currentStep}</h2>
-            <p className="text-gray-400">Step content goes here</p>
-          </div>
-        )
+        return null
     }
   }
 
   const getButtonText = () => {
     if (currentStep === 0 && currentRuleCard === 0) {
-      return revealedSentences >= welcomeSentences.length ? 'CONTINUE' : 'TAP'
+      return revealedSentences >= welcomeSentences.length ? 'Continue' : 'Next'
     } else if (currentStep === 0 && currentRuleCard === 1) {
       if (revealedRuleCards < ruleCards.length) {
         if (revealedRuleCards > 0 && !confirmedRuleCards[revealedRuleCards - 1]) {
-          return 'CONFIRM CURRENT RULE FIRST'
+          return 'Confirm rule first'
         }
-        return 'COMMIT'
+        return 'Next Rule'
       } else if (confirmedRuleCards.every(confirmed => confirmed)) {
-        return 'I ACCEPT THE TERMS'
+        return 'I Accept'
       } else {
-        return 'CONFIRM ALL RULES'
+        return 'Confirm all rules'
       }
     } else if (currentStep === 2) {
-      return holdProgress >= 100 ? 'CONTINUE' : 'HOLD BUTTON ABOVE'
+      return holdProgress >= 100 ? 'Continue' : ''
     } else if (currentStep === 3) {
-      return 'CREATE ACCOUNT'
+      return 'Create Account'
     } else if (currentStep === 4) {
-      return 'JOIN GROUP'
+      return 'Join Group'
     } else if (currentStep === 5) {
-      return 'I ACCEPT AND COMMIT'
+      return 'Continue'
     } else if (currentStep === 6) {
-      return 'LOCK IN AVATAR'
+      return 'Save Avatar'
     } else if (currentStep === 7) {
-      return 'LOCK IN COLOR'
+      return 'Save Color'
     } else if (currentStep === 8) {
-      return 'ACCEPT BIRTHDAY CHALLENGE'
+      return 'Continue'
     } else if (currentStep === 9) {
-      return 'FINALIZE IDENTITY'
+      return demoMode ? 'Preview Complete' : 'Complete Setup'
     } else if (currentStep === 10) {
-      return 'BEGIN COMMITMENT'
+      return demoMode ? 'Start Over' : 'Enter Dashboard'
     } else {
-      return 'COMMIT'
+      return 'Continue'
     }
   }
 
@@ -1817,85 +1773,133 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
       handleSignUp()
     } else if (currentStep === 4) {
       handleInviteCodeJoin()
+    } else if (currentStep === 10 && demoMode) {
+      // In demo mode, restart the onboarding
+      setCurrentStep(0)
+      setCurrentRuleCard(0)
+      setRevealedSentences(0)
+      setRevealedRuleCards(0)
+      setConfirmedRuleCards([false, false, false, false, false, false, false])
+      setSliderValue(50)
+      setHoldProgress(0)
+      setShowHoldButton(false)
+      setFinalWarningCompleted(false)
+      setDemoMode(false)
+      setSelectedEmoji('')
+      setSelectedColor('')
+      setBirthday('')
+      setUsername('')
+      setGroupInfo(null)
+      window.scrollTo(0, 0)
     } else if (canProceed()) {
       nextStep()
       setAttemptedProceedWithIncomplete(false)
     }
   }
 
+  const calculateTotalSteps = () => 9
+  const calculateCurrentStep = () => {
+    if (currentStep === 0 && currentRuleCard === 0) return 0
+    if (currentStep === 0 && currentRuleCard === 1) return 1
+    return currentStep + 1
+  }
+
   return (
+    <div className="min-h-screen bg-black text-white relative">
+      {/* Background gradients */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
     <div 
-      className="min-h-screen text-white relative overflow-hidden"
+          className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full opacity-60"
       style={{
-        background: '#000000',
-        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif'
-      }}
-    >
-      {/* Warm gradients after commitment */}
-      {finalWarningCompleted && (
-        <motion.div 
-          className="fixed inset-0 pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 2, delay: 1 }}
+            background: 'radial-gradient(circle, rgba(96, 165, 250, 0.12) 0%, rgba(79, 70, 229, 0.08) 40%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+        />
+        <div
+          className="absolute -top-1/4 -right-1/4 w-[500px] h-[500px] rounded-full opacity-50"
           style={{
-            background: `
-              radial-gradient(ellipse 140% 100% at 0% 100%, rgba(251, 146, 60, ${0.15 + gradientIntensity * 0.4}) 0%, transparent 40%),
-              radial-gradient(ellipse 120% 90% at 100% 90%, rgba(245, 101, 101, ${0.12 + gradientIntensity * 0.35}) 0%, transparent 35%),
-              radial-gradient(ellipse 100% 120% at 50% 100%, rgba(252, 211, 77, ${0.1 + gradientIntensity * 0.3}) 0%, transparent 30%)
-            `,
-            opacity: 0.8 + gradientIntensity * 0.5
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(79, 70, 229, 0.06) 40%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+        />
+        
+        {/* Orange overlay when holding */}
+        {showHoldButton && screenIntensity > 0 && (
+          <div 
+            className="absolute inset-0 transition-opacity"
+            style={{
+              background: `radial-gradient(circle at center, rgba(249, 115, 22, ${screenIntensity * 0.2}) 0%, transparent 70%)`,
           }}
         />
       )}
+      </div>
 
       {/* Header */}
-      <div className="relative z-10 flex justify-between items-center p-4 border-b border-gray-800/50 backdrop-blur-sm">
-        {(currentStep > 0 || currentRuleCard > 0) && (
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5">
+        <div className="flex items-center justify-between px-4 h-14">
+          {(currentStep > 0 || currentRuleCard > 0) && currentStep !== 2 ? (
           <motion.button
             onClick={prevStep}
-            className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2 rounded-xl hover:bg-gray-800/50"
-            whileHover={{ scale: 1.05 }}
+              className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors p-2 -ml-2 rounded-xl hover:bg-white/5"
+              whileHover={{ x: -2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <ChevronLeft className="w-5 h-5" />
-            <span className="font-bold">Back</span>
+              <ChevronLeft size={20} />
+              <span className="text-sm font-medium">Back</span>
           </motion.button>
-        )}
-        <div className="flex-1" />
-        {!finalWarningCompleted && (
+          ) : (
+            <div className="w-20" />
+          )}
+          
+          {/* Progress */}
+          <div className="flex gap-1">
+            {Array.from({ length: calculateTotalSteps() }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i < calculateCurrentStep()
+                    ? 'w-4 bg-gradient-to-r from-blue-400 to-purple-500'
+                    : i === calculateCurrentStep()
+                    ? 'w-4 bg-white/40'
+                    : 'w-1.5 bg-white/10'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {currentStep < 3 && !finalWarningCompleted ? (
           <motion.button
             onClick={() => onGoToLogin?.()}
-            className="text-gray-500 hover:text-gray-300 transition-colors p-2 rounded-xl hover:bg-gray-800/50 text-sm font-medium text-center"
+              className="text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
             whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
-            I&apos;m not made for this
+              Login
           </motion.button>
+          ) : (
+            <div className="w-20" />
         )}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col min-h-[calc(100vh-120px)]">
-        <div className="flex-1 flex items-center justify-center p-4 pb-24">
+      <div className="relative z-10 pb-32">
           <AnimatePresence mode="wait">
             <motion.div
               key={`${currentStep}-${currentRuleCard}`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4 }}
-              className="w-full"
+            transition={{ duration: 0.3 }}
             >
               {renderStep()}
             </motion.div>
           </AnimatePresence>
-        </div>
       </div>
 
-      {/* Navigation Button - Hide for step 2 since it has its own buttons */}
-      {currentStep !== 2 && (
-        <div className="fixed bottom-8 left-0 right-0 flex justify-center z-20">
+      {/* Bottom Button - Hide for step 2 unless completed */}
+      {(currentStep !== 2 || holdProgress >= 100) && getButtonText() && (
+        <div className="fixed bottom-6 left-4 right-4 z-20">
+          <div className="max-w-md mx-auto">
           <motion.button
             onClick={handleButtonClick}
             disabled={
@@ -1905,7 +1909,7 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
                 canClickCommitButton()
               )
             }
-          className="relative overflow-hidden"
+              className="w-full h-14 rounded-2xl flex items-center justify-center gap-2 transition-all overflow-hidden disabled:opacity-50"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           style={{
@@ -1914,67 +1918,70 @@ function OnboardingFlow({ onComplete, onGoToLogin }: OnboardingFlowProps) {
               (currentStep === 0 && currentRuleCard === 1 && revealedRuleCards < ruleCards.length && (revealedRuleCards === 0 || confirmedRuleCards[revealedRuleCards - 1])) ||
               canClickCommitButton()
             ) ? 
-              'linear-gradient(135deg, #B91C1C 0%, #7F1D1D 100%)' : 
-              'linear-gradient(135deg, #374151 0%, #1F2937 100%)',
-            borderRadius: '9999px',
-            padding: '12px 32px',
-            minWidth: '200px',
-            border: `1px solid ${!isLoading && (
-              (currentStep === 0 && currentRuleCard === 0 && revealedSentences < welcomeSentences.length) ||
-              (currentStep === 0 && currentRuleCard === 1 && revealedRuleCards < ruleCards.length && (revealedRuleCards === 0 || confirmedRuleCards[revealedRuleCards - 1])) ||
-              canClickCommitButton()
-            ) ? 'rgba(185, 28, 28, 0.4)' : 'rgba(55, 65, 81, 0.4)'}`,
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            opacity: isLoading ? 0.6 : 1
-          }}
-        >
-          <span className="text-white text-lg font-black tracking-wide relative z-10 text-center block">
-            {isLoading ? 'PROCESSING...' : getButtonText()}
+                  'linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(79, 70, 229) 100%)' : 
+                  'linear-gradient(135deg, rgb(63, 63, 70) 0%, rgb(39, 39, 42) 100%)',
+                boxShadow: !isLoading && canClickCommitButton() ? '0 0 30px 5px rgba(96, 165, 250, 0.2)' : 'none',
+              }}
+            >
+              <span className="text-white font-bold">
+                {isLoading ? 'Processing...' : getButtonText()}
           </span>
+              {!isLoading && canClickCommitButton() && <ChevronRight size={20} className="text-white" />}
         </motion.button>
+          </div>
       </div>
       )}
 
-
-      {/* Hold button - positioned at bottom with better visibility and spacing */}
-      {currentStep === 2 && showHoldButton && (
-        <div className="fixed bottom-8 left-4 right-4 flex justify-center z-50">
+      {/* Hold button for step 2 */}
+      {currentStep === 2 && showHoldButton && holdProgress < 100 && (
+        <div className="fixed bottom-6 left-4 right-4 z-50">
+          <div className="max-w-md mx-auto">
           <button
-            className="relative overflow-hidden w-full max-w-md font-black text-lg py-5 px-8 rounded-2xl min-h-[64px]"
+              className="relative w-full h-16 rounded-2xl font-bold text-white overflow-hidden"
             onMouseDown={startHolding}
             onMouseUp={stopHolding}
             onMouseLeave={stopHolding}
             onTouchStart={startHolding}
             onTouchEnd={stopHolding}
-            onClick={holdProgress >= 100 ? nextStep : undefined}
             style={{
-              background: holdProgress >= 100 
-                ? 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)' 
-                : 'linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 80%, #7F1D1D 100%)',
-              border: '2px solid rgba(220, 38, 38, 0.8)',
-              boxShadow: holdProgress >= 100 
-                ? '0 4px 25px rgba(34, 197, 94, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
-                : '0 4px 25px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-              color: '#FFFFFF',
-              cursor: 'pointer'
-            }}
-          >
-            {/* Progress fill overlay */}
-            <div 
-              className="absolute left-0 top-0 bottom-0 rounded-2xl transition-all duration-100"
+                background: 'linear-gradient(135deg, rgb(249, 115, 22), rgb(220, 38, 38))',
+                boxShadow: '0 0 30px rgba(249, 115, 22, 0.4)',
+              }}
+            >
+              <div 
+                className="absolute left-0 top-0 bottom-0 rounded-2xl transition-all"
               style={{ 
                 width: `${holdProgress}%`,
-                background: holdProgress > 0 && holdProgress < 100 
-                  ? 'linear-gradient(135deg, #EF4444 0%, #DC2626 30%, #B91C1C 70%, #991B1B 100%)'
-                  : 'transparent',
-                opacity: holdProgress > 0 && holdProgress < 100 ? 0.9 : 0
+                  background: 'linear-gradient(135deg, rgb(234, 179, 8), rgb(245, 158, 11))',
               }}
             />
-            
-            <span className="relative z-10 block text-center">
-              {holdProgress >= 100 ? '🔥 COMMITTED! TAP TO CONTINUE 🔥' : 'HOLD TO COMMIT'}
+              <span className="relative z-10">
+                {holdProgress > 0 ? `${Math.round(holdProgress)}%` : 'HOLD TO COMMIT'}
             </span>
           </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Completed hold button */}
+      {currentStep === 2 && showHoldButton && holdProgress >= 100 && (
+        <div className="fixed bottom-6 left-4 right-4 z-50">
+          <div className="max-w-md mx-auto">
+            <motion.button
+              onClick={nextStep}
+              className="w-full h-16 rounded-2xl font-bold text-white"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                background: 'linear-gradient(135deg, rgb(34, 197, 94), rgb(16, 185, 129))',
+                boxShadow: '0 0 30px rgba(34, 197, 94, 0.4)',
+              }}
+            >
+              🔥 COMMITTED! Continue 🔥
+            </motion.button>
+          </div>
         </div>
       )}
     </div>

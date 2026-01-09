@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
   // Optimize for client-side routing
   generateEtags: false,
   poweredByHeader: false,
+  // Expose app version as env variable for client components
+  env: {
+    NEXT_PUBLIC_APP_VERSION: require('./package.json').version,
+  },
 };
 
 export default nextConfig;

@@ -33,6 +33,7 @@ interface DayStats {
     pendingMembers: MemberStatus[]
     sickMembers: string[]
     restMembers: string[]
+    flexRestMembers: string[]
 }
 
 export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryModalProps) {
@@ -183,13 +184,14 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                 const pendingList: MemberStatus[] = []
                 const sickList: string[] = []
                 const restList: string[] = []
+                const flexRestList: string[] = []
 
-                // Fetch logs for day before (for flex rest day check)
-                // Note: This is a simplification. Ideally we'd fetch these logs too, but for 30 days history 
-                // fetching 30 extra days of logs might be heavy. 
-                // For now, we'll assume flex rest day logic only applies if we have the data, 
-                // or we can skip the complex flex rest day check for history overview to keep it fast,
-                // unless it's critical. Let's stick to basic rest day check for now.
+                // Calculate day before for flex rest day check
+                const dayBeforeObj = new Date(dateObj)
+                dayBeforeObj.setDate(dayBeforeObj.getDate() - 1)
+                const dayBeforeStr = dayBeforeObj.toISOString().split('T')[0]
+                const dayBeforeDayOfWeek = dayBeforeObj.getDay()
+                const dayBeforeDaysSinceStart = daysSinceStart - 1
 
                 members.forEach(member => {
                     // Check if user was sick on this specific historical date
@@ -200,8 +202,27 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                     }
 
                     if (isRestDay) {
-                        // Check flex rest day logic would go here
-                        // For now, mark as rest
+                        // Check flex rest day qualification
+                        if (member.has_flexible_rest_day) {
+                            // Get day-before logs for this member
+                            const dayBeforeLogsForMember = logsByDateAndUser.get(dayBeforeStr)?.get(member.id) || []
+                            const dayBeforePoints = dayBeforeLogsForMember.reduce((sum, log) => sum + log.points, 0)
+                            
+                            const dayBeforeTarget = calculateDailyTarget({
+                                daysSinceStart: dayBeforeDaysSinceStart,
+                                weekMode: member.week_mode || 'sane',
+                                restDays,
+                                recoveryDays,
+                                currentDayOfWeek: dayBeforeDayOfWeek
+                            })
+                            
+                            // If they got 200% the day before, they earned a flex rest day
+                            if (dayBeforePoints >= dayBeforeTarget * 2) {
+                                flexRestList.push(member.username)
+                                return
+                            }
+                        }
+                        // Regular rest day
                         restList.push(member.username)
                         return
                     }
@@ -251,9 +272,10 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                         return
                     }
 
+                    // IMPORTANT: Always use 'sane' mode for penalty/made-it evaluation
                     const dailyTarget = calculateDailyTarget({
                         daysSinceStart,
-                        weekMode: member.week_mode || 'sane',
+                        weekMode: 'sane',
                         restDays,
                         recoveryDays,
                         currentDayOfWeek: dayOfWeek
@@ -330,7 +352,8 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                     underReviewMembers: underReviewList,
                     pendingMembers: pendingList,
                     sickMembers: sickList,
-                    restMembers: restList
+                    restMembers: restList,
+                    flexRestMembers: flexRestList
                 }
             })
 
@@ -539,12 +562,28 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                                     {/* Rest */}
                                     {day.restMembers.length > 0 && (
                                         <div>
-                                            <div className="text-xs font-medium text-blue-400 mb-2 uppercase tracking-wider">
-                                                💤 Rest Day
+                                            <div className="text-xs font-medium text-indigo-400 mb-2 uppercase tracking-wider">
+                                                🌙 Rest Day
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {day.restMembers.map(username => (
-                                                    <span key={username} className="text-sm text-white/60 bg-blue-500/10 px-2 py-1 rounded">
+                                                    <span key={username} className="text-sm text-white/60 bg-indigo-500/10 px-2 py-1 rounded">
+                                                        {username}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Flex Rest */}
+                                    {day.flexRestMembers.length > 0 && (
+                                        <div>
+                                            <div className="text-xs font-medium text-amber-400 mb-2 uppercase tracking-wider">
+                                                ✨ Flex Rest
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {day.flexRestMembers.map(username => (
+                                                    <span key={username} className="text-sm text-white/60 bg-amber-500/10 px-2 py-1 rounded">
                                                         {username}
                                                     </span>
                                                 ))}

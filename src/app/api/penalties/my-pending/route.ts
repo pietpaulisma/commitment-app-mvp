@@ -36,8 +36,39 @@ export async function GET(request: NextRequest) {
       throw penaltiesError
     }
 
-    // Enrich penalties with computed fields
-    const enrichedPenalties = (penalties || []).map(p => enrichPenalty(p as PendingPenalty))
+    if (!penalties || penalties.length === 0) {
+      return NextResponse.json({ penalties: [] })
+    }
+
+    // Get all dates from the penalties
+    const penaltyDates = penalties.map(p => p.date)
+
+    // Check which of these dates the user was in sick mode
+    const { data: sickDays } = await supabase
+      .from('sick_mode')
+      .select('date')
+      .eq('user_id', user.id)
+      .in('date', penaltyDates)
+
+    const sickDaySet = new Set(sickDays?.map(s => s.date) || [])
+
+    // Auto-dismiss penalties for sick days
+    const penaltiesToDismiss = penalties.filter(p => sickDaySet.has(p.date))
+    const validPenalties = penalties.filter(p => !sickDaySet.has(p.date))
+
+    // Delete the erroneous sick-day penalties
+    if (penaltiesToDismiss.length > 0) {
+      const idsToDelete = penaltiesToDismiss.map(p => p.id)
+      console.log(`[my-pending] Auto-dismissing ${idsToDelete.length} penalties for sick days:`, penaltiesToDismiss.map(p => p.date))
+      
+      await supabase
+        .from('pending_penalties')
+        .delete()
+        .in('id', idsToDelete)
+    }
+
+    // Enrich remaining valid penalties with computed fields
+    const enrichedPenalties = validPenalties.map(p => enrichPenalty(p as PendingPenalty))
 
     const response: MyPendingResponse = {
       penalties: enrichedPenalties

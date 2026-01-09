@@ -37,12 +37,11 @@ export function PenaltyResponseModal({ penalties, onComplete, onDismiss, isTestM
     return session?.access_token || ''
   }
 
-  // Handle dismissal
+  // Handle dismissal - users can temporarily dismiss to view workouts
+  // The modal will re-appear when they return to the app or refresh the page
   const handleDismiss = () => {
     if (onDismiss) {
-      // Store dismissal timestamp in localStorage to prevent re-showing immediately
-      const dismissalKey = `penalty_dismissed_${currentPenalty?.id}`
-      localStorage.setItem(dismissalKey, Date.now().toString())
+      console.log('[PenaltyResponseModal] User dismissed penalty modal temporarily')
       onDismiss()
     }
   }
@@ -224,9 +223,9 @@ export function PenaltyResponseModal({ penalties, onComplete, onDismiss, isTestM
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop - clicking it does NOT dismiss the modal to prevent accidental dismissal */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={onDismiss ? handleDismiss : undefined}
       />
 
       <div

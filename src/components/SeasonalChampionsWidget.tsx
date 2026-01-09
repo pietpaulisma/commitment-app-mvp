@@ -6,7 +6,6 @@ import { Trophy } from 'lucide-react'
 import { GlassCard } from '@/components/dashboard/v2/GlassCard'
 import { CardHeader } from '@/components/dashboard/v2/CardHeader'
 import { getCurrentSeason, getWeekDates, getWeekNumber } from '@/utils/seasonHelpers'
-import { calculateDailyTarget } from '@/utils/targetCalculation'
 import { SeasonalChampionsHistoryModal } from './modals/SeasonalChampionsHistoryModal'
 
 interface ChampionData {
@@ -27,6 +26,14 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
   const [showHistory, setShowHistory] = useState(false)
   const { season, year } = getCurrentSeason()
 
+  // Helper to format date as YYYY-MM-DD in local timezone (not UTC)
+  const formatLocalDate = (date: Date): string => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
   useEffect(() => {
     if (groupId) {
       loadSeasonalChampions()
@@ -37,32 +44,16 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
     try {
       setLoading(true)
 
-      // Get group settings and members
-      const { data: groupData } = await supabase
-        .from('groups')
-        .select('start_date')
-        .eq('id', groupId)
-        .single()
-
-      const { data: groupSettings } = await supabase
-        .from('group_settings')
-        .select('rest_days, recovery_days')
-        .eq('group_id', groupId)
-        .single()
-
+      // Get group members
       const { data: members } = await supabase
         .from('profiles')
-        .select('id, username, week_mode, personal_color')
+        .select('id, username, personal_color')
         .eq('group_id', groupId)
 
-      if (!groupData || !members) {
+      if (!members || members.length === 0) {
         setChampions([])
         return
       }
-
-      const groupStartDate = new Date(groupData.start_date)
-      const restDays = Array.isArray(groupSettings?.rest_days) ? groupSettings.rest_days : []
-      const recoveryDays = Array.isArray(groupSettings?.recovery_days) ? groupSettings.recovery_days : []
 
       // Calculate season start and end dates
       const now = new Date()
@@ -92,13 +83,13 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
         seasonEndDate = now
       }
 
-      // Get all logs for the season
+      // Get all logs for the season (use local date format to avoid UTC timezone issues)
       const { data: seasonLogs } = await supabase
         .from('logs')
         .select('user_id, points, date')
         .in('user_id', members.map(m => m.id))
-        .gte('date', seasonStartDate.toISOString().split('T')[0])
-        .lte('date', seasonEndDate.toISOString().split('T')[0])
+        .gte('date', formatLocalDate(seasonStartDate))
+        .lte('date', formatLocalDate(seasonEndDate))
 
       // Calculate weekly winners
       const weeklyWinners = new Map<string, { userId: string, weekNumber: number }>() // week key -> { userId, weekNumber }
@@ -107,61 +98,36 @@ export function SeasonalChampionsWidget({ groupId }: SeasonalChampionsWidgetProp
       while (currentWeek <= seasonEndDate) {
         const { start: weekStart, end: weekEnd } = getWeekDates(currentWeek)
 
-        // Only calculate if week has ended
+        // Only calculate if week has ended (use local date format for comparisons)
         if (weekEnd < now) {
-          const weekKey = weekStart.toISOString().split('T')[0]
+          const weekStartStr = formatLocalDate(weekStart)
+          const weekEndStr = formatLocalDate(weekEnd)
           const weekNum = getWeekNumber(weekStart)
 
-          // Calculate each member's performance for this week
-          const memberPerformance = new Map<string, { totalPoints: number, targetPoints: number }>()
+          // Calculate each member's total points for this week
+          const memberPoints: Array<{ userId: string, totalPoints: number }> = []
 
           for (const member of members) {
             const weekLogs = seasonLogs?.filter(log =>
               log.user_id === member.id &&
-              log.date >= weekStart.toISOString().split('T')[0] &&
-              log.date <= weekEnd.toISOString().split('T')[0]
+              log.date >= weekStartStr &&
+              log.date <= weekEndStr
             ) || []
 
             const totalPoints = weekLogs.reduce((sum, log) => sum + log.points, 0)
-
-            // Calculate weekly target
-            let weeklyTarget = 0
-            for (let i = 0; i < 7; i++) {
-              const date = new Date(weekStart)
-              date.setDate(date.getDate() + i)
-              const dayOfWeek = date.getDay()
-              const daysSinceStart = Math.floor((date.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
-
-              const dailyTarget = calculateDailyTarget({
-                daysSinceStart,
-                weekMode: member.week_mode || 'sane',
-                restDays,
-                recoveryDays,
-                currentDayOfWeek: dayOfWeek
-              })
-
-              weeklyTarget += dailyTarget
-            }
-
-            if (totalPoints > weeklyTarget) {
-              memberPerformance.set(member.id, {
-                totalPoints,
-                targetPoints: weeklyTarget
-              })
-            }
+            memberPoints.push({ userId: member.id, totalPoints })
           }
 
-          // Find winner for this week
-          let weekWinner: { userId: string, percentage: number } | null = null
-          for (const [userId, perf] of memberPerformance.entries()) {
-            const percentage = ((perf.totalPoints - perf.targetPoints) / perf.targetPoints) * 100
-            if (!weekWinner || percentage > weekWinner.percentage) {
-              weekWinner = { userId, percentage }
+          // Find the winner: whoever has the most points this week
+          if (memberPoints.length > 0) {
+            // Sort by points descending
+            memberPoints.sort((a, b) => b.totalPoints - a.totalPoints)
+            const weekWinner = memberPoints[0]
+            
+            // Only award if they actually logged some points
+            if (weekWinner.totalPoints > 0) {
+              weeklyWinners.set(weekStartStr, { userId: weekWinner.userId, weekNumber: weekNum })
             }
-          }
-
-          if (weekWinner) {
-            weeklyWinners.set(weekKey, { userId: weekWinner.userId, weekNumber: weekNum })
           }
         }
 

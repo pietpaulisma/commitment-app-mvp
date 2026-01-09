@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 import { usePageState } from '@/hooks/usePageState'
-import { calculateDailyTarget, getDaysSinceStart, canUseRecoveryDayToday, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
+import { calculateDailyTarget, getDaysSinceStart, canUseRecoveryDayToday, RECOVERY_DAY_TARGET_MINUTES, getThisWeekMondayString } from '@/utils/targetCalculation'
 import { hasUsedRecoveryDayThisWeek, getActiveRecoveryDay, activateRecoveryDay, updateRecoveryDayProgress, cancelRecoveryDay, type UserRecoveryDay } from '@/utils/recoveryDayHelpers'
 import { NotificationService } from '@/services/notificationService'
 import { COLORS } from '@/utils/colors'
@@ -22,7 +22,6 @@ import {
   ChevronDown,
   Star,
   Activity,
-  Smile,
   Calendar,
   Trash2,
   Menu,
@@ -148,7 +147,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [todayLogs, setTodayLogs] = useState<any[]>([])
   const [selectedWeight, setSelectedWeight] = useState(0)
   const [isDecreasedExercise, setIsDecreasedExercise] = useState(false)
-  const [lockedWeights, setLockedWeights] = useState<Record<string, number>>({})
+  // Use lazy initialization to load locked weights from localStorage immediately
+  const [lockedWeights, setLockedWeights] = useState<Record<string, number>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('workout-locked-weights')
+        return stored ? JSON.parse(stored) : {}
+      } catch (error) {
+        console.warn('Failed to load locked weights from localStorage:', error)
+        return {}
+      }
+    }
+    return {}
+  })
+  const [hasLoadedLockedWeights, setHasLoadedLockedWeights] = useState(false)
+  const [hasSyncedFromDatabase, setHasSyncedFromDatabase] = useState(false)
   const [progressAnimated, setProgressAnimated] = useState(false)
   const [allExercisesExpanded, setAllExercisesExpanded] = useState(false)
   const [recoveryExpanded, setRecoveryExpanded] = useState(false)
@@ -185,6 +198,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [personalRecordDate, setPersonalRecordDate] = useState<string | null>(null)
   const [groupRecord, setGroupRecord] = useState<number | null>(null)
   const [groupRecordUser, setGroupRecordUser] = useState<string | null>(null)
+  const [showRecordConfirmation, setShowRecordConfirmation] = useState(false)
+  const [pendingWorkoutSubmit, setPendingWorkoutSubmit] = useState<(() => Promise<void>) | null>(null)
   
   // Recovery Day state
   const [isRecoveryDayActive, setIsRecoveryDayActive] = useState(false)
@@ -192,6 +207,14 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
   const [canUseRecoveryDay, setCanUseRecoveryDay] = useState(false)
   const [isActivatingRecoveryDay, setIsActivatingRecoveryDay] = useState(false)
   const [isCancellingRecoveryDay, setIsCancellingRecoveryDay] = useState(false)
+  
+  // Rest Day state (for flexible rest day challenge)
+  const [isRestDay, setIsRestDay] = useState(false)
+  const [restDaysConfig, setRestDaysConfig] = useState<number[]>([1])
+  
+  // On rest days (Monday), always use insane styling regardless of weekMode
+  // This is because flexible rest day challenge IS the insane mode for that day
+  const useInsaneStyling = isRestDay || weekMode === 'insane'
 
   const router = useRouter()
 
@@ -325,33 +348,151 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
     }
   }
 
-  const loadLockedWeightsFromStorage = (): Record<string, number> => {
+  // Save locked weights to database
+  const saveLockedWeightsToDatabase = async (weights: Record<string, number>) => {
+    if (!user) return
     try {
-      const stored = localStorage.getItem('workout-locked-weights')
-      return stored ? JSON.parse(stored) : {}
+      await supabase
+        .from('profiles')
+        .update({ locked_weights: weights })
+        .eq('id', user.id)
     } catch (error) {
-      console.warn('Failed to load locked weights from localStorage:', error)
-      return {}
+      console.warn('Failed to save locked weights to database:', error)
     }
   }
 
-  // Load locked weights from localStorage on component mount
+  // Mark as loaded on mount (since we used lazy initialization)
   useEffect(() => {
-    const storedWeights = loadLockedWeightsFromStorage()
-    setLockedWeights(storedWeights)
+    setHasLoadedLockedWeights(true)
   }, [])
 
-  // Save locked weights to localStorage whenever they change
+  // Sync locked weights from database when profile loads
   useEffect(() => {
-    saveLockedWeightsToStorage(lockedWeights)
-  }, [lockedWeights])
-
-  // Load flexible rest day state from profile
-  useEffect(() => {
-    if (profile) {
-      setHasFlexibleRestDay(profile.has_flexible_rest_day || false)
+    if (profile && !hasSyncedFromDatabase) {
+      const dbWeights = profile.locked_weights || {}
+      
+      // Check if database has any locked weights
+      if (Object.keys(dbWeights).length > 0) {
+        // Use database weights as the source of truth
+        setLockedWeights(dbWeights)
+        // Also update localStorage to stay in sync
+        saveLockedWeightsToStorage(dbWeights)
+      } else {
+        // Database has no weights - check if localStorage has data to sync
+        try {
+          const stored = localStorage.getItem('workout-locked-weights')
+          const localWeights = stored ? JSON.parse(stored) : {}
+          if (Object.keys(localWeights).length > 0) {
+            // Sync localStorage to database
+            saveLockedWeightsToDatabase(localWeights)
+          }
+        } catch (error) {
+          console.warn('Failed to read localStorage for database sync:', error)
+        }
+      }
+      
+      setHasSyncedFromDatabase(true)
     }
-  }, [profile])
+  }, [profile, hasSyncedFromDatabase])
+
+  // Save locked weights to localStorage and database whenever they change (but only after initial load)
+  useEffect(() => {
+    // Only save if we've completed initial loading to prevent overwriting with empty state
+    if (hasLoadedLockedWeights && hasSyncedFromDatabase) {
+      saveLockedWeightsToStorage(lockedWeights)
+      // Also persist to database for reliability (user must be loaded)
+      if (user) {
+        saveLockedWeightsToDatabase(lockedWeights)
+      }
+    }
+  }, [lockedWeights, hasLoadedLockedWeights, hasSyncedFromDatabase, user])
+
+  // Load flexible rest day state from profile or check Monday's logs
+  useEffect(() => {
+    const checkFlexibleRestDay = async () => {
+      if (!profile || !user) return
+
+      // First check if profile already has the flag
+      if (profile.has_flexible_rest_day) {
+        setHasFlexibleRestDay(true)
+        return
+      }
+
+      try {
+        // Get current week's Monday using local timezone
+        const mondayString = getThisWeekMondayString()
+        
+        // Also get the Monday Date object for days since start calculation
+        const today = new Date()
+        const currentDay = today.getDay()
+        const daysToMonday = currentDay === 0 ? 6 : currentDay - 1
+        const monday = new Date(today)
+        monday.setDate(today.getDate() - daysToMonday)
+        monday.setHours(0, 0, 0, 0)
+
+        // Check if flexible rest day has already been used this week
+        const { data: usedRestDay } = await supabase
+          .from('flexible_rest_days')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('week_start_date', mondayString)
+          .maybeSingle()
+
+        if (usedRestDay) {
+          setHasFlexibleRestDay(false)
+          return
+        }
+
+        // Check if user achieved double target on Monday
+        const { data: mondayLogs } = await supabase
+          .from('logs')
+          .select('points')
+          .eq('user_id', user.id)
+          .eq('date', mondayString)
+
+        const mondayPoints = mondayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
+
+        // Get Monday's target using the proper calculation with user's week mode
+        if (profile.group_id) {
+          const { data: group } = await supabase
+            .from('groups')
+            .select('start_date')
+            .eq('id', profile.group_id)
+            .single()
+
+          // Get group settings for rest days
+          const { data: groupSettings } = await supabase
+            .from('group_settings')
+            .select('rest_days')
+            .eq('group_id', profile.group_id)
+            .maybeSingle()
+
+          const restDays = groupSettings?.rest_days || [1]
+
+          if (group?.start_date) {
+            const daysSinceStart = Math.floor((monday.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
+            
+            // Use the user's week mode (SANE or INSANE) to calculate the proper target
+            const userWeekMode = profile.week_mode || 'sane'
+            const mondayTarget = calculateDailyTarget({
+              daysSinceStart,
+              weekMode: userWeekMode,
+              restDays,
+              currentDayOfWeek: 1 // Monday
+            })
+
+            if (mondayPoints >= mondayTarget) {
+              setHasFlexibleRestDay(true)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking flexible rest day:', error)
+      }
+    }
+
+    checkFlexibleRestDay()
+  }, [profile, user])
 
   // Check if user has already posted today
   useEffect(() => {
@@ -566,6 +707,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       if (groupResult.data?.start_date) {
         const daysSinceStart = getDaysSinceStart(groupResult.data.start_date)
         const restDays = settingsResult.data?.rest_days || [1]
+        
+        // Update rest day state
+        setRestDaysConfig(restDays)
+        const todayDayOfWeek = new Date().getDay()
+        const isTodayRestDay = restDays.includes(todayDayOfWeek)
+        setIsRestDay(isTodayRestDay)
 
         // Use override mode if provided, otherwise use current context mode
         const targetMode = modeOverride || weekMode
@@ -737,8 +884,21 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
         if (!error) {
           setHasFlexibleRestDay(true)
 
-          // Optional: Show notification
-          alert('🎉 Congratulations! You earned a flexible rest day by completing your double Monday target!')
+          // Post celebration to group chat
+          if (profile.group_id) {
+            await supabase
+              .from('chat_messages')
+              .insert({
+                group_id: profile.group_id,
+                user_id: user.id,
+                message: `🔥 ${profile.username} crushed Monday's double target and earned a flexible rest day! 💪`,
+                message_type: 'system',
+                created_at: new Date().toISOString()
+              })
+          }
+
+          // Show celebratory notification
+          alert('🎉 AMAZING! You earned a flexible rest day by completing Monday\'s double target! Use it any day this week to skip your workout without penalty!')
         }
       }
     } catch (error) {
@@ -1702,7 +1862,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
 
             // Determine achievement level
             const percentage = dailyTarget > 0 ? (totalPoints / dailyTarget) * 100 : 0
-            const intensity = weekMode === 'insane' ? 'INSANE' : 'sane'
+            // On rest days, always show as insane since it's the flex rest day challenge
+            const intensity = (isRestDay || weekMode === 'insane') ? 'INSANE' : 'sane'
             let achievementEmoji = '🎯'
             let achievementText = 'completed their workout'
 
@@ -1924,69 +2085,83 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
       // Execute the workout save
       if (!user || !selectedWorkoutExercise || workoutCount <= 0) return
 
-      setLoading(true)
-      try {
-        const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+      // Check if this would be a new personal record
+      const isNewPersonalRecord = personalRecord !== null && workoutCount > personalRecord
 
-        const { error } = await supabase
-          .from('logs')
-          .insert({
-            user_id: user.id,
-            exercise_id: selectedWorkoutExercise.id,
-            count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
-            weight: selectedWeight,
-            duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
-            points: points,
-            date: getLocalDateString(),
-            timestamp: Date.now()
-          })
+      const submitWorkout = async () => {
+        setLoading(true)
+        try {
+          const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
 
-        if (error) {
-          alert('Error logging workout: ' + error.message)
-        } else {
-          // Reset state
-          setWorkoutInputOpen(false)
-          setSelectedWorkoutExercise(null)
-          setWorkoutCount(0)
-          setSelectedWeight(0)
-          setIsDecreasedExercise(false)
-          setSliderPosition(0)
-          setIsSliderComplete(false)
+          const { error } = await supabase
+            .from('logs')
+            .insert({
+              user_id: user.id,
+              exercise_id: selectedWorkoutExercise.id,
+              count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
+              weight: selectedWeight,
+              duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
+              points: points,
+              date: getLocalDateString(),
+              timestamp: Date.now()
+            })
 
-          // Refresh data
-          if (onWorkoutAdded) {
-            onWorkoutAdded()
+          if (error) {
+            alert('Error logging workout: ' + error.message)
+          } else {
+            // Reset state
+            setWorkoutInputOpen(false)
+            setSelectedWorkoutExercise(null)
+            setWorkoutCount(0)
+            setSelectedWeight(0)
+            setIsDecreasedExercise(false)
+            setSliderPosition(0)
+            setIsSliderComplete(false)
+
+            // Refresh data
+            if (onWorkoutAdded) {
+              onWorkoutAdded()
+            }
+            loadDailyProgress()
+            loadTodaysWorkouts()
+
+            // Update recovery day progress if on recovery day and this was a recovery exercise
+            if (isRecoveryDayActive && selectedWorkoutExercise.type === 'recovery' && selectedWorkoutExercise.is_time_based) {
+              const newMinutes = dailyProgress + Math.floor(workoutCount)
+              await updateRecoveryDayProgress(user.id, newMinutes)
+              setDailyProgress(newMinutes)
+            }
+
+            // Check for automatic mode switching after exercise submission (skip on recovery day)
+            if (!isRecoveryDayActive) {
+              await checkAutomaticModeSwitch()
+            }
+
+            // Haptic feedback
+            if (navigator.vibrate) {
+              navigator.vibrate(100)
+            }
+
+            // Call onClose to trigger dashboard reload
+            if (onClose) {
+              onClose();
+            }
           }
-          loadDailyProgress()
-          loadTodaysWorkouts()
-
-          // Update recovery day progress if on recovery day and this was a recovery exercise
-          if (isRecoveryDayActive && selectedWorkoutExercise.type === 'recovery' && selectedWorkoutExercise.is_time_based) {
-            const newMinutes = dailyProgress + Math.floor(workoutCount)
-            await updateRecoveryDayProgress(user.id, newMinutes)
-            setDailyProgress(newMinutes)
-          }
-
-          // Check for automatic mode switching after exercise submission (skip on recovery day)
-          if (!isRecoveryDayActive) {
-            await checkAutomaticModeSwitch()
-          }
-
-          // Haptic feedback
-          if (navigator.vibrate) {
-            navigator.vibrate(100)
-          }
-
-          // Call onClose to trigger dashboard reload
-          if (onClose) {
-            onClose();
-          }
+        } catch (error) {
+          console.error('Error saving workout:', error)
+          alert('An error occurred while saving your workout.')
+        } finally {
+          setLoading(false)
         }
-      } catch (error) {
-        console.error('Error saving workout:', error)
-        alert('An error occurred while saving your workout.')
-      } finally {
-        setLoading(false)
+      }
+
+      if (isNewPersonalRecord) {
+        // Show confirmation modal for new personal record
+        setPendingWorkoutSubmit(() => submitWorkout)
+        setShowRecordConfirmation(true)
+      } else {
+        // Submit directly
+        await submitWorkout()
       }
     } else {
       // Reset slider if not completed
@@ -2105,7 +2280,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     progressPercentage >= 100 
                       ? isRecoveryDayActive
                         ? 'bg-gradient-to-r from-green-600 via-green-500 to-emerald-500'
-                        : weekMode === 'insane'
+                        : useInsaneStyling
                           ? 'bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400'
                           : 'bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500'
                       : 'bg-white'
@@ -2114,7 +2289,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     boxShadow: progressPercentage >= 100
                       ? isRecoveryDayActive
                         ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(22, 163, 74, 0.6)'
-                        : weekMode === 'insane'
+                        : useInsaneStyling
                           ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(234, 88, 12, 0.6)'
                           : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6)'
                       : 'none'
@@ -2129,12 +2304,12 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       width: `${progressPercentage}%`,
                       background: isRecoveryDayActive
                         ? 'linear-gradient(90deg, rgb(22, 163, 74) 0%, rgb(34, 197, 94) 40%, rgb(74, 222, 128) 100%)'
-                        : weekMode === 'insane'
+                        : useInsaneStyling
                           ? 'linear-gradient(90deg, rgb(234, 88, 12) 0%, rgb(249, 115, 22) 40%, rgb(251, 146, 60) 100%)'
                           : 'linear-gradient(90deg, rgb(29, 78, 216) 0%, rgb(37, 99, 235) 40%, rgb(59, 130, 246) 100%)',
                       boxShadow: isRecoveryDayActive
                         ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(22, 163, 74, 0.6), 4px 0 20px rgba(34, 197, 94, 0.5), 8px 0 30px rgba(74, 222, 128, 0.3)'
-                        : weekMode === 'insane'
+                        : useInsaneStyling
                           ? 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(234, 88, 12, 0.6), 4px 0 20px rgba(249, 115, 22, 0.5), 8px 0 30px rgba(251, 146, 60, 0.3)'
                           : 'inset 0 2px 4px rgba(255, 255, 255, 0.3), inset 0 -2px 8px rgba(29, 78, 216, 0.6), 4px 0 20px rgba(37, 99, 235, 0.5), 8px 0 30px rgba(59, 130, 246, 0.3)'
                     }}
@@ -2496,7 +2671,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     className="flex items-center justify-between w-full mb-2 px-4"
                   >
                     <div className="flex items-center gap-4">
-                      <Activity size={24} className={weekMode === 'insane' ? 'text-orange-500' : 'text-blue-400'} />
+                      <Activity size={24} className={useInsaneStyling ? 'text-orange-500' : 'text-blue-400'} />
                       <h4 className="text-4xl font-black text-white uppercase tracking-tight">REPS</h4>
                     </div>
                     <div className="flex items-center gap-2">
@@ -2523,7 +2698,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     className="flex items-center justify-between w-full mb-2 px-4"
                   >
                     <div className="flex items-center gap-4">
-                      <Smile size={24} className="text-green-400" />
+                      <Plus size={24} className="text-green-400" />
                       <h4 className="text-4xl font-black text-white uppercase tracking-tight">
                         {isRecoveryDayActive ? 'RECOVERY' : 'HEAL'}
                       </h4>
@@ -2610,36 +2785,45 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     </div>
                   )}
                   
-                  {/* Use Recovery Day Option - Only show when available and not already active */}
-                  {!isRecoveryDayActive && canUseRecoveryDay && (
-                    <div className="bg-zinc-900/50 border border-zinc-700/50 rounded-xl p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                            <span className="text-lg">🧘</span>
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-zinc-200">Recovery Day</div>
-                            <div className="text-xs text-zinc-500">1× per week • {RECOVERY_DAY_TARGET_MINUTES} min target</div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={handleActivateRecoveryDay}
-                          disabled={isActivatingRecoveryDay}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            isActivatingRecoveryDay 
-                              ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed' 
-                              : 'bg-green-600/20 text-green-400 border border-green-500/30 hover:bg-green-600/30'
-                          }`}
-                        >
-                          {isActivatingRecoveryDay ? 'Activating...' : 'Use Today'}
-                        </button>
-                      </div>
+                  {/* Special Day Options - Recovery Day & Flex Rest Day side by side */}
+                  {!isRecoveryDayActive && (
+                    <div className="flex gap-2">
+                      {/* Recovery Day Button */}
+                      <button
+                        onClick={handleActivateRecoveryDay}
+                        disabled={isActivatingRecoveryDay || !canUseRecoveryDay}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                          !canUseRecoveryDay
+                            ? 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed border border-zinc-700/30'
+                            : isActivatingRecoveryDay 
+                              ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700/50' 
+                              : 'bg-zinc-900/50 text-green-400 border border-green-500/20 hover:bg-zinc-800/70 hover:border-green-500/40 active:bg-green-500/10 active:border-green-500/50'
+                        }`}
+                      >
+                        <span className={`text-lg ${!canUseRecoveryDay ? 'opacity-40' : ''}`}>🧘</span>
+                        <span>{isActivatingRecoveryDay ? 'Activating...' : 'Recovery Day'}</span>
+                      </button>
+
+                      {/* Flex Rest Day Button */}
+                      <button 
+                        onClick={useFlexibleRestDay}
+                        disabled={isUsingFlexibleRestDay || !hasFlexibleRestDay}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                          !hasFlexibleRestDay
+                            ? 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed border border-zinc-700/30'
+                            : isUsingFlexibleRestDay
+                              ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700/50'
+                              : 'bg-zinc-900/50 text-amber-400 border border-amber-500/20 hover:bg-zinc-800/70 hover:border-amber-500/40 active:bg-amber-500/10 active:border-amber-500/50'
+                        }`}
+                      >
+                        <span className={`text-lg ${!hasFlexibleRestDay ? 'opacity-40' : ''}`}>🎉</span>
+                        <span>{isUsingFlexibleRestDay ? 'Using...' : 'Flex Rest Day'}</span>
+                      </button>
                     </div>
                   )}
                   
-                  {/* Week Mode Toggle - Only show when NOT on recovery day */}
-                  {!isRecoveryDayActive && isWeekModeAvailable(groupDaysSinceStart) && (
+                  {/* Week Mode Toggle - Only show when NOT on recovery day and NOT on rest day */}
+                  {!isRecoveryDayActive && !isRestDay && isWeekModeAvailable(groupDaysSinceStart) && (
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mode</span>
                       <div className="bg-black/40 p-0.5 rounded-full border border-white/10 flex items-center relative h-10 w-40">
@@ -2673,9 +2857,19 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       </div>
                     </div>
                   )}
+                  
+                  {/* Rest Day Challenge indicator - show on rest days */}
+                  {isRestDay && !isRecoveryDayActive && (
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mode</span>
+                      <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-full px-4 py-2">
+                        <span className="text-xs font-black text-orange-400 uppercase tracking-wider">🔥 REST DAY CHALLENGE</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Divider */}
-                  {!isRecoveryDayActive && isWeekModeAvailable(groupDaysSinceStart) && profile?.group_id && (
+                  {!isRecoveryDayActive && (isWeekModeAvailable(groupDaysSinceStart) || isRestDay) && profile?.group_id && (
                     <div className="border-t border-white/10" />
                   )}
 
@@ -2750,23 +2944,6 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                 </div>
               </div>
 
-              {/* Flexible Rest Day Button */}
-              {hasFlexibleRestDay && (
-                <div className="py-4 px-4">
-                  <button
-                    onClick={useFlexibleRestDay}
-                    disabled={isUsingFlexibleRestDay}
-                    className={`w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 font-medium shadow-lg ${isUsingFlexibleRestDay ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                  >
-                    <Calendar className="w-5 h-5" />
-                    {isUsingFlexibleRestDay ? 'Using Flexible Rest Day...' : 'Use Flexible Rest Day'}
-                  </button>
-                  <p className="text-xs text-gray-400 text-center mt-2">
-                    Automatically earn today&apos;s sane mode points and post to chat
-                  </p>
-                </div>
-              )}
             </>
           )}
 
@@ -2805,13 +2982,36 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                         }
 
                   return (
-                    <div
-                      className="absolute inset-y-0 left-0 transition-all duration-500 ease-out z-0"
-                      style={{
-                        width: `${progressPercentage}%`,
-                        ...progressBarStyle
-                      }}
-                    />
+                    <>
+                      {/* Progress bar fill */}
+                      <div
+                        className="absolute inset-y-0 left-0 transition-all duration-500 ease-out z-0"
+                        style={{
+                          width: `${progressPercentage}%`,
+                          ...progressBarStyle
+                        }}
+                      />
+                      {/* 75% recovery threshold marker - subtle dotted line with heal icon */}
+                      <div
+                        className="absolute top-0 bottom-0 z-[1] pointer-events-none flex flex-col items-center"
+                        style={{
+                          left: '75%',
+                        }}
+                      >
+                        {/* Dotted line */}
+                        <div
+                          className="flex-1"
+                          style={{
+                            width: '1px',
+                            backgroundImage: 'repeating-linear-gradient(to bottom, rgba(34, 197, 94, 0.45) 0px, rgba(34, 197, 94, 0.45) 3px, transparent 3px, transparent 6px)',
+                          }}
+                        />
+                        {/* Small heal cross icon at bottom */}
+                        <div className="absolute bottom-1 -translate-x-1/2 left-1/2">
+                          <Plus size={10} className="text-green-500/50" strokeWidth={2.5} />
+                        </div>
+                      </div>
+                    </>
                   )
                         })()}
 
@@ -2889,8 +3089,8 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       NEW!
                     </span>
                   )}
-                    </div>
-                  </div>
+                </div>
+              </div>
 
               {/* Group Record */}
               <div className={`px-3 py-2.5 rounded-lg ${
@@ -2914,7 +3114,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       })()
                     ) : 'GROUP'}
                   </span>
-                  </div>
+                </div>
                 <span className={`text-xl font-black tabular-nums ${
                   groupRecord !== null ? 'text-white' : 'text-zinc-500'
                 }`}>
@@ -2922,7 +3122,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                     selectedWorkoutExercise.unit === 'hour' ? `${Math.round(groupRecord * 60)}m` : groupRecord
                   ) : '-'}
                 </span>
-                </div>
+              </div>
             </div>
 
             {/* Main scrollable content area - Dynamic content with inputs */}
@@ -3210,59 +3410,75 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                   onClick={async () => {
                     if (!user || !selectedWorkoutExercise || workoutCount <= 0 || loading) return
 
-                  // Stop stopwatch if running
-                  if (isStopwatchRunning) {
-                    pauseStopwatch()
-                  }
+                    // Stop stopwatch if running
+                    if (isStopwatchRunning) {
+                      pauseStopwatch()
+                    }
 
-                    setLoading(true)
-                    try {
-                      const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
+                    // Check if this would be a new personal record
+                    const isNewPersonalRecord = personalRecord !== null && workoutCount > personalRecord
 
-                      const { error } = await supabase
-                        .from('logs')
-                        .insert({
-                          user_id: user.id,
-                          exercise_id: selectedWorkoutExercise.id,
-                          sport_name: selectedWorkoutExercise.type === 'sport' ? selectedSport : null,
-                          count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
-                          weight: selectedWeight,
-                          duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
-                          points: points,
-                          date: getLocalDateString(),
-                          timestamp: Date.now()
-                        })
+                    const submitWorkout = async () => {
+                      setLoading(true)
+                      try {
+                        const points = calculateWorkoutPoints(selectedWorkoutExercise, workoutCount, selectedWeight, isDecreasedExercise)
 
-                      if (error) {
-                        console.error('Supabase Insert Error:', error)
-                        alert('Error logging workout: ' + error.message + '\nCode: ' + error.code)
-                      } else {
-                        // Refresh data
-                        if (onWorkoutAdded) {
-                          onWorkoutAdded()
+                        const { error } = await supabase
+                          .from('logs')
+                          .insert({
+                            user_id: user.id,
+                            exercise_id: selectedWorkoutExercise.id,
+                            sport_name: selectedWorkoutExercise.type === 'sport' ? selectedSport : null,
+                            count: selectedWorkoutExercise.unit === 'rep' ? Math.floor(workoutCount) : 0,
+                            weight: selectedWeight,
+                            duration: selectedWorkoutExercise.is_time_based ? Math.floor(workoutCount) : 0,
+                            points: points,
+                            date: getLocalDateString(),
+                            timestamp: Date.now()
+                          })
+
+                        if (error) {
+                          console.error('Supabase Insert Error:', error)
+                          alert('Error logging workout: ' + error.message + '\nCode: ' + error.code)
+                        } else {
+                          // Refresh data
+                          if (onWorkoutAdded) {
+                            onWorkoutAdded()
+                          }
+                          loadDailyProgress()
+                          loadTodaysWorkouts()
+
+                          // Check for automatic mode switching after exercise submission (skip on recovery day)
+                          if (!isRecoveryDayActive) {
+                            await checkAutomaticModeSwitch()
+                          }
+
+                          // Reset workout input
+                          setWorkoutInputOpen(false)
+                          setWorkoutCount(0)
+                          setSelectedWeight(selectedWorkoutExercise ? (lockedWeights[selectedWorkoutExercise.id] || 0) : 0)
+                          setIsDecreasedExercise(false)
+
+                          // Haptic feedback
+                          if (navigator.vibrate) {
+                            navigator.vibrate(100)
+                          }
                         }
-                        loadDailyProgress()
-                        loadTodaysWorkouts()
-
-                        // Check for automatic mode switching after exercise submission
-                        await checkAutomaticModeSwitch()
-
-                        // Reset workout input
-                        setWorkoutInputOpen(false)
-                        setWorkoutCount(0)
-                        setSelectedWeight(selectedWorkoutExercise ? (lockedWeights[selectedWorkoutExercise.id] || 0) : 0)
-                        setIsDecreasedExercise(false)
-
-                        // Haptic feedback
-                        if (navigator.vibrate) {
-                          navigator.vibrate(100)
-                        }
+                      } catch (error) {
+                        console.error('Error saving workout:', error)
+                        alert('An error occurred while saving your workout.')
+                      } finally {
+                        setLoading(false)
                       }
-                    } catch (error) {
-                      console.error('Error saving workout:', error)
-                      alert('An error occurred while saving your workout.')
-                    } finally {
-                      setLoading(false)
+                    }
+
+                    if (isNewPersonalRecord) {
+                      // Show confirmation modal for new personal record
+                      setPendingWorkoutSubmit(() => submitWorkout)
+                      setShowRecordConfirmation(true)
+                    } else {
+                      // Submit directly
+                      await submitWorkout()
                     }
                   }}
                   disabled={loading || workoutCount <= 0}
@@ -3276,7 +3492,7 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
                       return 'bg-gradient-to-r from-green-600 to-emerald-500 text-white shadow-lg shadow-green-500/30'
                     }
                     
-                    return weekMode === 'insane'
+                    return useInsaneStyling
                       ? 'bg-gradient-to-r from-orange-600 to-red-500 text-white shadow-lg shadow-orange-500/30'
                       : 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/30'
                   })()
@@ -3377,6 +3593,91 @@ export default function WorkoutModal({ isOpen, onClose, onWorkoutAdded, isAnimat
             </div>
           )
         }
+
+        {/* Personal Record Confirmation Modal */}
+        {showRecordConfirmation && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[130] flex items-center justify-center p-4">
+            <div className="relative bg-zinc-900 border border-yellow-500/30 rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl shadow-yellow-500/10">
+              
+              {/* Header with trophy */}
+              <div className="relative overflow-hidden">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(234,179,8,0.2) 0%, rgba(234,179,8,0.05) 100%)'
+                  }}
+                />
+                
+                <div className="relative p-6 text-center">
+                  <div className="inline-flex p-4 rounded-2xl bg-yellow-500/20 mb-4">
+                    <Trophy className="w-10 h-10 text-yellow-400" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-2">New Personal Record!</h3>
+                  <p className="text-zinc-400 text-sm">
+                    You&apos;re about to set a new PR for <span className="text-yellow-400 font-semibold">{selectedWorkoutExercise?.name}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Record comparison */}
+              <div className="px-6 pb-4">
+                <div className="bg-black/40 rounded-xl p-4 border border-white/5">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-zinc-500 text-sm">Previous record</span>
+                    <span className="text-white font-bold tabular-nums">
+                      {personalRecord !== null ? (
+                        selectedWorkoutExercise?.unit === 'hour' || selectedWorkoutExercise?.is_time_based 
+                          ? `${personalRecord} ${selectedWorkoutExercise?.unit === 'hour' ? 'hours' : 'min'}`
+                          : `${personalRecord} ${selectedWorkoutExercise?.unit === 'rep' ? 'reps' : selectedWorkoutExercise?.unit}`
+                      ) : '-'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-yellow-400 text-sm font-semibold">New record</span>
+                    <span className="text-yellow-400 font-black text-lg tabular-nums">
+                      {selectedWorkoutExercise?.unit === 'hour' || selectedWorkoutExercise?.is_time_based 
+                        ? `${workoutCount} ${selectedWorkoutExercise?.unit === 'hour' ? 'hours' : 'min'}`
+                        : `${workoutCount} ${selectedWorkoutExercise?.unit === 'rep' ? 'reps' : selectedWorkoutExercise?.unit}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Confirmation message */}
+              <div className="px-6 pb-4">
+                <p className="text-zinc-300 text-sm text-center leading-relaxed">
+                  Did you complete all <span className="text-yellow-400 font-bold">{workoutCount}</span> {selectedWorkoutExercise?.unit === 'rep' ? 'reps' : selectedWorkoutExercise?.unit === 'hour' || selectedWorkoutExercise?.is_time_based ? 'minutes' : 'units'} in a single session?
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="p-6 pt-2 space-y-3">
+                <button
+                  onClick={async () => {
+                    setShowRecordConfirmation(false)
+                    if (pendingWorkoutSubmit) {
+                      await pendingWorkoutSubmit()
+                      setPendingWorkoutSubmit(null)
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full py-4 rounded-xl font-black text-base uppercase tracking-wider bg-gradient-to-r from-yellow-500 to-amber-500 text-black shadow-lg shadow-yellow-500/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {loading ? 'Submitting...' : 'Yes, Log My New PR! 🏆'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRecordConfirmation(false)
+                    setPendingWorkoutSubmit(null)
+                  }}
+                  className="w-full py-3 rounded-xl font-semibold text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  Wait, let me double-check
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div >
     </>
   )

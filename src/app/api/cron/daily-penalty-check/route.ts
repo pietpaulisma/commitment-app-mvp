@@ -77,9 +77,9 @@ export async function GET(request: NextRequest) {
           continue
         }
 
-        // Skip if user is in sick mode
+        // Skip if user is currently in sick mode
         if (profile.is_sick_mode) {
-          console.log(`${profile.username}: Skipping penalty - sick mode enabled`)
+          console.log(`${profile.username}: Skipping penalty - sick mode currently enabled`)
 
           // Log this sick day in the database for historical tracking
           const { error: sickLogError } = await supabase
@@ -92,6 +92,27 @@ export async function GET(request: NextRequest) {
           if (sickLogError) {
             console.error(`Error logging sick day for ${profile.username}:`, sickLogError)
           }
+
+          // Update last penalty check without issuing penalty
+          await supabase
+            .from('profiles')
+            .update({ last_penalty_check: yesterdayStr })
+            .eq('id', profile.id)
+
+          continue
+        }
+
+        // Check if user WAS sick on the specific date we're checking (historical check)
+        // This handles the case where user was sick on that day but has since recovered
+        const { data: historicalSickRecord } = await supabase
+          .from('sick_mode')
+          .select('id')
+          .eq('user_id', profile.id)
+          .eq('date', yesterdayStr)
+          .maybeSingle()
+
+        if (historicalSickRecord) {
+          console.log(`${profile.username}: Skipping penalty - was in sick mode on ${yesterdayStr}`)
 
           // Update last penalty check without issuing penalty
           await supabase
@@ -272,9 +293,12 @@ export async function GET(request: NextRequest) {
         const daysSinceStart = Math.floor((yesterday.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
         const dayOfWeekForTarget = yesterday.getDay()
 
+        // IMPORTANT: Always use 'sane' mode for penalty evaluation
+        // If user hits sane target, they're safe regardless of their display mode
+        // Insane mode is for achievement tracking, not stricter penalties
         const dailyTarget = calculateDailyTarget({
           daysSinceStart,
-          weekMode: profile.week_mode || 'sane',
+          weekMode: 'sane',
           restDays: [group.rest_day_1, group.rest_day_2].filter(day => day !== null),
           recoveryDays: [5], // Default Friday
           currentDayOfWeek: dayOfWeekForTarget

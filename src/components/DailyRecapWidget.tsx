@@ -43,6 +43,8 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
   const [paidMembers, setPaidMembers] = useState<MemberStatus[]>([])
   const [sickMembers, setSickMembers] = useState<string[]>([])
   const [recoveryDayMembers, setRecoveryDayMembers] = useState<string[]>([])
+  const [restDayMembers, setRestDayMembers] = useState<string[]>([])
+  const [flexRestDayMembers, setFlexRestDayMembers] = useState<string[]>([])
   const [groupStreak, setGroupStreak] = useState(0)
   const [waivingPenalty, setWaivingPenalty] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -218,6 +220,8 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       const paidList: MemberStatus[] = []
       const sickList: string[] = []
       const recoveryDayList: string[] = []
+      const restDayList: string[] = []
+      const flexRestDayList: string[] = []
 
       // Get all exercises to check types
       const { data: exercises } = await supabase
@@ -256,7 +260,7 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
           continue
         }
 
-        // Handle rest days
+        // Handle rest days - show as "Rest Day" or "Flex Rest" instead of "Made It"
         if (isRestDay) {
           // Check for Flex Rest Day qualification
           if (member.has_flexible_rest_day) {
@@ -275,15 +279,15 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
               currentDayOfWeek: prevDayOfWeek
             })
 
-            // Qualified for flex rest day
+            // Qualified for flex rest day (earned by getting 200% the day before)
             if (prevDayPoints >= (prevDayTarget * 2)) {
-              completedList.push(member.username)
+              flexRestDayList.push(member.username)
               continue
             }
           }
 
           // Regular rest day
-          completedList.push(member.username)
+          restDayList.push(member.username)
           continue
         }
 
@@ -338,9 +342,11 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
         }
 
         // Calculate target for yesterday (regular day, no recovery day)
+        // IMPORTANT: Always use 'sane' mode for penalty/made-it evaluation
+        // If user hits sane target, they're safe regardless of their display mode
         const dailyTarget = calculateDailyTarget({
           daysSinceStart,
-          weekMode: member.week_mode || 'sane',
+          weekMode: 'sane',
           restDays,
           recoveryDays,
           currentDayOfWeek: dayOfWeek
@@ -426,6 +432,8 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
       setPaidMembers(paidList)
       setSickMembers(sickList)
       setRecoveryDayMembers(recoveryDayList)
+      setRestDayMembers(restDayList)
+      setFlexRestDayMembers(flexRestDayList)
 
       setStats({
         total: members.length,
@@ -512,6 +520,34 @@ export function DailyRecapWidget({ isAdmin, groupId, userId }: DailyRecapWidgetP
               </div>
               <div className="text-xs text-green-200/60 space-y-0.5">
                 {completedMembers.map((username, idx) => (
+                  <div key={idx}>{username}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Rest Day */}
+          {restDayMembers.length > 0 && (
+            <div className="bg-indigo-900/20 border border-indigo-600/30 rounded-lg p-2">
+              <div className="text-xs text-indigo-300 font-medium mb-1">
+                🌙 Rest Day
+              </div>
+              <div className="text-xs text-indigo-200/60 space-y-0.5">
+                {restDayMembers.map((username, idx) => (
+                  <div key={idx}>{username}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Flex Rest Day (earned by 200% performance) */}
+          {flexRestDayMembers.length > 0 && (
+            <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-2">
+              <div className="text-xs text-amber-300 font-medium mb-1">
+                ✨ Flex Rest
+              </div>
+              <div className="text-xs text-amber-200/60 space-y-0.5">
+                {flexRestDayMembers.map((username, idx) => (
                   <div key={idx}>{username}</div>
                 ))}
               </div>

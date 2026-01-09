@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Trophy, Calendar, CheckCircle2, ChevronRight, Zap, Flame, Clock, CircleDollarSign, TrendingUp, AlertCircle, Menu, Star, Dumbbell, Moon, History, Coins, Heart, Sparkles, Search } from 'lucide-react';
+import { MessageCircle, Trophy, Calendar, CheckCircle2, ChevronRight, Zap, Flame, Clock, CircleDollarSign, TrendingUp, AlertCircle, Menu, Star, Dumbbell, Moon, History, Coins, Heart, Sparkles, Search, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeekMode } from '@/contexts/WeekModeContext';
@@ -61,6 +61,8 @@ export default function NewDashboard() {
     const [recapData, setRecapData] = useState<{
         completedMembers: string[];
         recoveryDayMembers: string[];
+        restDayMembers: string[];
+        flexRestDayMembers: string[];
         pendingMembers: Array<{ username: string; actual: number; target: number }>;
         paidMembers: Array<{ username: string; actual: number; target: number }>;
         waivedMembers: Array<{ username: string; reason?: string }>;
@@ -70,6 +72,8 @@ export default function NewDashboard() {
     }>({
         completedMembers: [],
         recoveryDayMembers: [],
+        restDayMembers: [],
+        flexRestDayMembers: [],
         pendingMembers: [],
         paidMembers: [],
         waivedMembers: [],
@@ -258,7 +262,12 @@ export default function NewDashboard() {
                         
                         const squad = data.squad.map((u: any) => {
                             const isOnRecoveryDay = recoveryDayStatus.has(u.id);
-                            const isOnFlexibleRestDay = flexibleRestDayUserIds.has(u.id);
+                            // Show as "Flexing" if:
+                            // 1. User has officially used flexible rest day today (record in table)
+                            // 2. OR: It's a rest day AND user has flexible rest day available AND they've logged workouts
+                            const hasUsedFlexRestDay = flexibleRestDayUserIds.has(u.id);
+                            const isFlexingOnRestDay = u.is_rest_day && u.has_flexible_rest_day && u.pct > 0;
+                            const isOnFlexibleRestDay = hasUsedFlexRestDay || isFlexingOnRestDay;
                             return {
                                 name: u.id === user.id ? "You" : u.username || "User",
                                 pct: u.is_sick_mode ? u.pct : u.pct, // Percentage already calculated correctly
@@ -379,7 +388,7 @@ export default function NewDashboard() {
                     // Get all group members
                     const { data: members } = await supabase
                         .from('profiles')
-                        .select('id, username, week_mode, is_sick_mode')
+                        .select('id, username, week_mode, is_sick_mode, has_flexible_rest_day')
                         .eq('group_id', profile.group_id);
 
                     if (!members || members.length === 0) {
@@ -432,8 +441,30 @@ export default function NewDashboard() {
                     const startDate = new Date(group.start_date);
                     const daysSinceStartForYesterday = Math.floor((yesterday.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
+                    // Get day-before-yesterday's logs (for flex rest day qualification check)
+                    const dayBeforeYesterday = new Date(yesterday);
+                    dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
+                    const dayBeforeYesterdayStr = dayBeforeYesterday.toISOString().split('T')[0];
+                    const dayBeforeYesterdayDayOfWeek = dayBeforeYesterday.getDay();
+                    const daysSinceStartForDayBefore = Math.floor((dayBeforeYesterday.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                    
+                    const { data: dayBeforeLogs } = await supabase
+                        .from('logs')
+                        .select('user_id, points')
+                        .eq('date', dayBeforeYesterdayStr)
+                        .in('user_id', members.map(m => m.id));
+                    
+                    // Create a map of day-before logs by user
+                    const dayBeforeLogsByUser = new Map<string, number>();
+                    dayBeforeLogs?.forEach(log => {
+                        const current = dayBeforeLogsByUser.get(log.user_id) || 0;
+                        dayBeforeLogsByUser.set(log.user_id, current + log.points);
+                    });
+
                     const completedList: string[] = [];
                     const recoveryDayList: string[] = [];
+                    const restDayList: string[] = [];
+                    const flexRestDayList: string[] = [];
                     const pendingList: Array<{ username: string; actual: number; target: number }> = [];
                     const paidList: Array<{ username: string; actual: number; target: number }> = [];
                     const waivedList: Array<{ username: string; reason?: string }> = [];
@@ -448,9 +479,27 @@ export default function NewDashboard() {
                             continue;
                         }
 
-                        // Check rest day
+                        // Check rest day - show as "Rest Day" or "Flex Rest" instead of "Made It"
                         if (isRestDay) {
-                            completedList.push(member.username);
+                            // Check if user has flexible rest day enabled and qualified
+                            if (member.has_flexible_rest_day) {
+                                const dayBeforePoints = dayBeforeLogsByUser.get(member.id) || 0;
+                                const dayBeforeTarget = calculateDailyTarget({
+                                    daysSinceStart: daysSinceStartForDayBefore,
+                                    weekMode: member.week_mode || 'sane',
+                                    restDays,
+                                    recoveryDays,
+                                    currentDayOfWeek: dayBeforeYesterdayDayOfWeek
+                                });
+                                
+                                // If they got 200% the day before, they earned a flex rest day
+                                if (dayBeforePoints >= dayBeforeTarget * 2) {
+                                    flexRestDayList.push(member.username);
+                                    continue;
+                                }
+                            }
+                            // Regular rest day
+                            restDayList.push(member.username);
                             continue;
                         }
 
@@ -492,10 +541,11 @@ export default function NewDashboard() {
                             continue;
                         }
 
-                        // Calculate target for regular day (default to 'sane' mode if not set)
+                        // Calculate target for regular day
+                        // IMPORTANT: Always use 'sane' mode for penalty/made-it evaluation
                         const dailyTarget = calculateDailyTarget({
                             daysSinceStart: daysSinceStartForYesterday,
-                            weekMode: member.week_mode || 'sane',
+                            weekMode: 'sane',
                             restDays,
                             recoveryDays,
                             currentDayOfWeek: yesterdayDayOfWeek
@@ -570,6 +620,8 @@ export default function NewDashboard() {
                     setRecapData({
                         completedMembers: completedList,
                         recoveryDayMembers: recoveryDayList,
+                        restDayMembers: restDayList,
+                        flexRestDayMembers: flexRestDayList,
                         pendingMembers: pendingList,
                         paidMembers: paidList,
                         waivedMembers: waivedList,
@@ -1430,31 +1482,39 @@ export default function NewDashboard() {
             <div className="relative z-10 max-w-md mx-auto min-h-screen flex flex-col pb-28">
 
                 {/* Header */}
-                <header className="px-6 pt-8 pb-4 flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <h1 className="text-xl font-black italic tracking-tighter text-white mb-1">THE COMMITMENT</h1>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm font-bold text-zinc-500 uppercase tracking-[0.2em]">{dayName}</span>
-                        </div>
-                    </div>
-
+                <header className="px-6 pt-8 flex justify-between items-center">
+                    <h1 className="text-[1.6rem] text-white uppercase leading-none flex items-center gap-0" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', letterSpacing: '-0.03em', fontWeight: 900 }}>
+                        <span>THE C</span>
+                        <svg width="42" height="18" viewBox="0 0 42 18" fill="none" className="relative" style={{ margin: '0 2px' }}>
+                            <defs>
+                                <linearGradient id="oGradient" x1="0%" y1="50%" x2="100%" y2="50%">
+                                    <stop offset="0%" stopColor="#60a5fa" />
+                                    <stop offset="100%" stopColor="#f97316" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="3" y="3" width="36" height="12" rx="6" stroke="url(#oGradient)" strokeWidth="5.5" fill="none" />
+                        </svg>
+                        <span>MMITMENT</span>
+                    </h1>
                     <button
                         onClick={() => window.location.href = '/profile'}
-                        className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center hover:bg-zinc-800 transition-colors shadow-lg"
+                        className="w-10 h-10 rounded-full bg-[#111] border border-white/10 flex items-center justify-center hover:bg-[#222] transition-all"
                     >
-                        <div className="w-5 h-5 rounded-full border-[1.5px] border-zinc-400 flex items-center justify-center">
-                            <span className="w-2 h-2 rounded-full bg-zinc-400" />
-                        </div>
+                        <Settings size={22} className="text-white" />
                     </button>
                 </header>
 
                 {/* --- MAIN CONTENT --- */}
-                <div className="px-5 flex flex-col gap-8 mb-8">
-                    <div className="px-1 relative">
+                <div className="px-5 flex flex-col mb-8">
+                    <div className="px-1 relative mt-6">
+                        <span className="text-sm font-bold uppercase tracking-[0.2em] block mb-1">
+                            <span className="text-zinc-500">{dayName.slice(0, -3)}</span>
+                            <span className="text-white">{dayName.slice(-3)}</span>
+                        </span>
                         <span className="block text-9xl font-black tracking-tighter leading-[0.8] text-white drop-shadow-2xl">{daysRemaining}</span>
                     </div>
 
-                    <div>
+                    <div className="mt-6">
                         <div className="flex justify-between items-center px-4 mb-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Time Remaining</span>
                         </div>
@@ -1478,7 +1538,7 @@ export default function NewDashboard() {
                         </div>
                     </div>
 
-                    <div>
+                    <div className="mt-8">
                         <GlassCard noPadding className="overflow-visible min-h-[240px]">
                             <CardHeader title="Squad Status" icon={Flame} colorClass="text-orange-500" />
                             <div className="px-4 py-3 flex flex-col">
@@ -1539,7 +1599,7 @@ export default function NewDashboard() {
                                 colorClass="text-orange-500"
                             />
                             <div className="p-4 grid grid-cols-2 gap-3">
-                                {/* Left column: Made It, Recovery Day */}
+                                {/* Left column: Made It, Rest Day, Flex Rest, Recovery Day */}
                                 <div className="flex flex-col gap-2">
                                     {/* Made It - using opal colors */}
                                     {recapData.completedMembers.length > 0 && (
@@ -1553,6 +1613,42 @@ export default function NewDashboard() {
                                             </div>
                                             <div className="text-xs font-bold text-zinc-300 space-y-0.5">
                                                 {recapData.completedMembers.map((username, idx) => (
+                                                    <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Rest Day - soft indigo/slate colors */}
+                                    {recapData.restDayMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(129, 140, 248, 0.15) 100%)',
+                                            borderColor: 'rgba(99, 102, 241, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(129, 140, 248)' }}>
+                                                <Moon size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Rest Day</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-zinc-300 space-y-0.5">
+                                                {recapData.restDayMembers.map((username, idx) => (
+                                                    <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Flex Rest Day - amber/gold colors for earned achievement */}
+                                    {recapData.flexRestDayMembers.length > 0 && (
+                                        <div className="rounded-xl p-2.5 border" style={{
+                                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.15) 100%)',
+                                            borderColor: 'rgba(245, 158, 11, 0.2)'
+                                        }}>
+                                            <div className="flex items-center gap-2 mb-1.5" style={{ color: 'rgb(245, 158, 11)' }}>
+                                                <Sparkles size={14} />
+                                                <span className="text-[10px] font-black uppercase tracking-wide">Flex Rest</span>
+                                            </div>
+                                            <div className="text-xs font-bold text-zinc-300 space-y-0.5">
+                                                {recapData.flexRestDayMembers.map((username, idx) => (
                                                     <div key={idx}>{username.slice(0, 4).toUpperCase()}</div>
                                                 ))}
                                             </div>

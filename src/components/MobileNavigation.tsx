@@ -101,7 +101,7 @@ export default function MobileNavigation() {
 
       {/* Bottom Navigation for Mobile */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 shadow-lg">
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6">
+        <div className={`grid ${visibleItems.length <= 4 ? 'grid-cols-4' : visibleItems.length === 5 ? 'grid-cols-5' : 'grid-cols-6'}`}>
           {visibleItems.map((item) => {
             const isActive = pathname === item.href || 
               (item.href === '/admin' && pathname.startsWith('/admin') && pathname !== '/admin/users' && pathname !== '/admin/groups' && pathname !== '/admin/exercises') ||

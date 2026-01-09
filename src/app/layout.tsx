@@ -6,6 +6,7 @@ import { WeekModeProvider } from "@/contexts/WeekModeContext";
 import OnboardingGuard from "@/components/OnboardingGuard";
 import { PenaltyAutoChecker } from "@/components/PenaltyAutoChecker";
 import { DemoModeWrapper } from "@/components/DemoModeWrapper";
+import { ErrorCapture } from "@/components/ErrorCapture";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -164,6 +165,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ErrorCapture />
         <AuthProvider>
           <WeekModeProvider>
             <DemoModeWrapper>

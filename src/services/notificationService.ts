@@ -227,7 +227,8 @@ export class NotificationService {
     return {
       chat_messages: data.chat_messages,
       workout_completions: data.workout_completions,
-      system_messages: data.system_messages !== undefined ? data.system_messages : true, // Default to true for existing users
+      // Map group_achievements from DB to system_messages in code
+      system_messages: data.group_achievements !== undefined ? data.group_achievements : true,
       quiet_hours_enabled: data.quiet_hours_enabled,
       quiet_hours_start: data.quiet_hours_start,
       quiet_hours_end: data.quiet_hours_end
@@ -238,11 +239,20 @@ export class NotificationService {
    * Update user's notification preferences
    */
   static async updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<void> {
+    // Map system_messages to group_achievements for database compatibility
+    const dbPreferences: any = { ...preferences }
+    if ('system_messages' in dbPreferences) {
+      dbPreferences.group_achievements = dbPreferences.system_messages
+      delete dbPreferences.system_messages
+    }
+    
     const { error } = await supabase
       .from('notification_preferences')
       .upsert({
         user_id: userId,
-        ...preferences
+        ...dbPreferences
+      }, {
+        onConflict: 'user_id'
       })
 
     if (error) {

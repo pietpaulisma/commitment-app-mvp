@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
-import { AlertTriangle } from 'lucide-react'
+import { Lock, Mail, ChevronRight, Sparkles } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -13,7 +13,11 @@ export default function Login() {
   const [message, setMessage] = useState('')
   const isSignUp = false
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,9 +26,7 @@ export default function Login() {
     setMessage('')
 
     try {
-
       if (isSignUp) {
-        // Sign up new user
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -32,7 +34,6 @@ export default function Login() {
         if (error) throw error
         setMessage('Check your email to confirm your account!')
       } else {
-        // Sign in existing user
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -52,114 +53,206 @@ export default function Login() {
   }
 
   return (
-    <div 
-      className="min-h-screen text-white relative overflow-hidden flex items-center justify-center"
-      style={{
-        background: '#000000',
-        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif'
-      }}
-    >
+    <div className="min-h-screen bg-black text-white relative overflow-hidden flex items-center justify-center">
+      {/* Animated background gradients */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Primary opal gradient - bottom left */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(96, 165, 250, 0.15) 0%, rgba(79, 70, 229, 0.1) 40%, transparent 70%)',
+            filter: 'blur(60px)',
+          }}
+        />
+        {/* Secondary purple gradient - top right */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
+          className="absolute -top-1/4 -right-1/4 w-[500px] h-[500px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(79, 70, 229, 0.08) 40%, transparent 70%)',
+            filter: 'blur(60px)',
+          }}
+        />
+        {/* Subtle accent - center */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          transition={{ duration: 2, delay: 0.5 }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px]"
+          style={{
+            background: 'radial-gradient(ellipse, rgba(96, 165, 250, 0.03) 0%, transparent 50%)',
+          }}
+        />
+      </div>
+
+      {/* Content */}
       <motion.div 
         initial={{ opacity: 0, y: 30 }} 
-        animate={{ opacity: 1, y: 0 }} 
-        className="text-center space-y-8 max-w-md mx-auto px-4 w-full"
+        animate={{ opacity: mounted ? 1 : 0, y: mounted ? 0 : 30 }} 
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 text-center space-y-8 max-w-md mx-auto px-6 w-full"
       >
-        {/* Header */}
-        <div className="space-y-4">
-          <div className="w-16 h-16 bg-red-600 rounded-2xl mx-auto flex items-center justify-center mb-6">
-            <AlertTriangle className="w-8 h-8 text-white" />
+        {/* Logo/Brand */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="space-y-4"
+        >
+          <div className="flex justify-center mb-6">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="relative"
+            >
+              <img 
+                src="/logo.png" 
+                alt="Commitment" 
+                className="h-16 w-auto drop-shadow-2xl"
+              />
+            </motion.div>
           </div>
           
           <div>
-            <h1 className="text-4xl md:text-5xl font-black mb-4">COMMITMENT</h1>
-            <p className="text-xl md:text-2xl text-gray-300 font-bold">
-              Welcome back to <span className="text-red-400 underline">the lifestyle</span>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">
+              Welcome Back
+            </h1>
+            <p className="text-zinc-400 text-lg">
+              Continue your commitment journey
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Error/Success Messages */}
         {message && (
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`p-4 border rounded-2xl text-sm font-bold ${
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className={`p-4 rounded-2xl text-sm font-medium border backdrop-blur-sm ${
               message.includes('Check your email') 
-                ? 'bg-green-900/50 text-green-400 border-green-600'
-                : 'bg-red-900/50 text-red-400 border-red-600'
+                ? 'bg-emerald-950/50 text-emerald-400 border-emerald-500/30'
+                : 'bg-red-950/50 text-red-400 border-red-500/30'
             }`}
           >
             {message}
           </motion.div>
         )}
 
-        {/* Login Form */}
+        {/* Login Card */}
         <motion.div
-          className="bg-gray-900/50 border border-gray-700 rounded-2xl p-6 md:p-8 backdrop-blur-sm"
-          animate={{
-            boxShadow: '0 15px 40px rgba(220, 38, 38, 0.2)'
-          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
-                disabled={loading}
-              />
+          {/* Card gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+          
+          <div className="relative z-10 p-6 sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email Input */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider text-left pl-1">
+                  Email
+                </label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">
+                    <Mail size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full pl-12 pr-4 py-4 bg-zinc-900/50 border border-white/10 rounded-2xl text-white text-base placeholder-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
               
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-4 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-lg font-medium placeholder-gray-400 focus:border-red-500 focus:outline-none backdrop-blur-sm transition-all"
-                disabled={loading}
-                minLength={6}
-              />
-            </div>
+              {/* Password Input */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider text-left pl-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">
+                    <Lock size={18} />
+                  </div>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full pl-12 pr-4 py-4 bg-zinc-900/50 border border-white/10 rounded-2xl text-white text-base placeholder-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    disabled={loading}
+                    minLength={6}
+                  />
+                </div>
+              </div>
 
-            <motion.button
-              type="submit"
-              disabled={loading}
-              className="w-full relative overflow-hidden"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                background: 'linear-gradient(135deg, #B91C1C 0%, #7F1D1D 100%)',
-                borderRadius: '12px',
-                padding: '16px',
-                border: '1px solid rgba(185, 28, 28, 0.4)',
-                boxShadow: '0 0 15px rgba(185, 28, 28, 0.3)'
-              }}
-            >
-              <span className="text-white text-lg font-black">
-                {loading ? 'SIGNING IN...' : 'LOGIN TO CONTINUE'}
-              </span>
-            </motion.button>
-          </form>
+              {/* Login Button */}
+              <motion.button
+                type="submit"
+                disabled={loading}
+                className="relative w-full h-14 rounded-2xl flex items-center justify-center gap-3 transition-all overflow-hidden group"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  background: 'linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(79, 70, 229) 100%)',
+                  boxShadow: '0 0 30px 5px rgba(96, 165, 250, 0.2), 0 0 15px 0px rgba(79, 70, 229, 0.3)',
+                }}
+              >
+                <span className="text-white text-base font-bold tracking-wide">
+                  {loading ? 'Signing in...' : 'Continue'}
+                </span>
+                {!loading && <ChevronRight size={20} className="text-white group-hover:translate-x-1 transition-transform" />}
+              </motion.button>
+            </form>
+          </div>
         </motion.div>
 
         {/* Sign up link */}
-        <div className="text-center">
-          <p className="text-gray-500 font-medium">
-            Don&apos;t have an account?{' '}
-            <motion.button
-              onClick={handleSignUp}
-              className="text-gray-400 hover:text-red-400 underline font-medium transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Sign up here
-            </motion.button>
-          </p>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="space-y-4"
+        >
+          <div className="flex items-center justify-center gap-3">
+            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent flex-1" />
+            <span className="text-zinc-600 text-sm">New here?</span>
+            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent flex-1" />
+          </div>
+          
+          <motion.button
+            onClick={handleSignUp}
+            className="w-full h-14 rounded-2xl flex items-center justify-center gap-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Sparkles size={18} className="text-blue-400" />
+            <span className="text-zinc-300 font-semibold group-hover:text-white transition-colors">
+              Start your commitment
+            </span>
+          </motion.button>
+        </motion.div>
 
+        {/* Footer text */}
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="text-zinc-600 text-xs"
+        >
+          By continuing, you agree to our commitment protocol
+        </motion.p>
       </motion.div>
     </div>
   )

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { createCumulativeGradient } from '@/utils/gradientUtils'
-import { calculateDailyTarget, getDaysSinceStart, canUseRecoveryDayToday, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
+import { calculateDailyTarget, getDaysSinceStart, canUseRecoveryDayToday, RECOVERY_DAY_TARGET_MINUTES, getThisWeekMondayString } from '@/utils/targetCalculation'
 import { hasUsedRecoveryDayThisWeek, getActiveRecoveryDay, activateRecoveryDay, updateRecoveryDayProgress, cancelRecoveryDay, type UserRecoveryDay } from '@/utils/recoveryDayHelpers'
 import { useWeekMode } from '@/contexts/WeekModeContext'
 import { getUserColor, getUserColorHover } from '@/utils/colorUtils'
@@ -49,6 +49,10 @@ export default function MobileWorkoutLogger() {
   const [canUseRecoveryDay, setCanUseRecoveryDay] = useState(false)
   const [isActivatingRecoveryDay, setIsActivatingRecoveryDay] = useState(false)
   const [isCancellingRecoveryDay, setIsCancellingRecoveryDay] = useState(false)
+  const [isRestDay, setIsRestDay] = useState(false)
+  const [restDays, setRestDays] = useState<number[]>([1]) // Default Monday
+  const [groupStartDate, setGroupStartDate] = useState<string | null>(null)
+  const [isUsingFlexibleRestDay, setIsUsingFlexibleRestDay] = useState(false)
 
   // Helper function to check if user has active recovery day today
   const checkIfRecoveryDay = async () => {
@@ -184,7 +188,11 @@ export default function MobileWorkoutLogger() {
   }
 
   // Get colors based on week mode like dashboard
+  // On rest days (Monday), always use orange/insane styling
   const getModeColor = () => {
+    if (isRestDay) {
+      return '#f97316' // Orange for rest day challenge
+    }
     switch (weekMode) {
       case 'sane':
         return '#3b82f6' // Blue for sane mode
@@ -194,6 +202,9 @@ export default function MobileWorkoutLogger() {
         return '#3b82f6' // Default to blue
     }
   }
+  
+  // Effective mode for styling - rest days are always "insane" style
+  const effectiveMode = isRestDay ? 'insane' : weekMode
   
   const userColor = getModeColor()
   const userColorHover = getUserColorHover(userColor)
@@ -232,9 +243,12 @@ export default function MobileWorkoutLogger() {
     loadData()
   }, [])
 
-  const checkFlexibleRestDay = async (userId: string) => {
+  const checkFlexibleRestDay = async (userId: string, profile?: any) => {
     try {
-      // Get current week's Monday
+      // Get current week's Monday using local timezone
+      const mondayString = getThisWeekMondayString()
+      
+      // Also get the Monday Date object for days since start calculation and weekStartDate state
       const today = new Date()
       const currentDay = today.getDay()
       const daysToMonday = currentDay === 0 ? 6 : currentDay - 1 // 0 = Sunday, 1 = Monday
@@ -242,8 +256,6 @@ export default function MobileWorkoutLogger() {
       monday.setDate(today.getDate() - daysToMonday)
       monday.setHours(0, 0, 0, 0)
       setWeekStartDate(monday)
-
-      const mondayString = monday.toISOString().split('T')[0]
 
       // Check if flexible rest day has been used this week
       const { data: usedRestDay } = await supabase
@@ -259,7 +271,14 @@ export default function MobileWorkoutLogger() {
         return
       }
 
-      // Check if user achieved double target on Monday
+      // First check if profile already has the flag set (earned via WorkoutModal or previous session)
+      const profileToCheck = profile || userProfile
+      if (profileToCheck?.has_flexible_rest_day) {
+        setHasFlexibleRestDay(true)
+        return
+      }
+
+      // Otherwise, check if user achieved double target on Monday
       const { data: mondayLogs } = await supabase
         .from('logs')
         .select('points')
@@ -268,24 +287,35 @@ export default function MobileWorkoutLogger() {
 
       const mondayPoints = mondayLogs?.reduce((sum, log) => sum + log.points, 0) || 0
       
-      // Get Monday's target (which is now double the normal amount)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('group_id')
-        .eq('id', userId)
-        .single()
-
-      if (profile?.group_id) {
+      // Get Monday's target using the proper calculation with user's week mode
+      const groupId = profileToCheck?.group_id
+      if (groupId) {
         const { data: group } = await supabase
           .from('groups')
           .select('start_date')
-          .eq('id', profile.group_id)
+          .eq('id', groupId)
           .single()
+
+        // Get group settings for rest days
+        const { data: groupSettings } = await supabase
+          .from('group_settings')
+          .select('rest_days')
+          .eq('group_id', groupId)
+          .maybeSingle()
+
+        const configuredRestDays = groupSettings?.rest_days || [1]
 
         if (group?.start_date) {
           const daysSinceStart = Math.floor((monday.getTime() - new Date(group.start_date).getTime()) / (1000 * 60 * 60 * 24))
-          const baseTarget = 1 + Math.max(0, daysSinceStart)
-          const mondayTarget = baseTarget * 2 // Monday target is double
+          
+          // Use the user's week mode (SANE or INSANE) to calculate the proper target
+          const userWeekMode = profileToCheck?.week_mode || 'sane'
+          const mondayTarget = calculateDailyTarget({
+            daysSinceStart,
+            weekMode: userWeekMode,
+            restDays: configuredRestDays,
+            currentDayOfWeek: 1 // Monday
+          })
 
           if (mondayPoints >= mondayTarget) {
             setHasFlexibleRestDay(true)
@@ -297,15 +327,76 @@ export default function MobileWorkoutLogger() {
     }
   }
 
-  const useFlexibleRestDay = async () => {
-    if (!user || !weekStartDate) return
+  // Check if user just earned a flexible rest day (called after logging workout on Monday)
+  const checkFlexibleRestDayEarned = async () => {
+    if (!user || !userProfile || hasFlexibleRestDay) return
 
+    try {
+      const today = new Date()
+      const currentDayOfWeek = today.getDay()
+
+      // Only check on rest days (Monday by default)
+      if (!restDays.includes(currentDayOfWeek)) {
+        return
+      }
+
+      // Get group start date
+      if (!groupStartDate) return
+
+      const daysSinceStart = getDaysSinceStart(groupStartDate)
+      const baseTarget = 1 + Math.max(0, daysSinceStart)
+      const restDayTarget = baseTarget * 2 // Rest day target is double
+
+      // Check if user has met the target
+      const totalPointsToday = getTotalPoints()
+
+      if (totalPointsToday >= restDayTarget) {
+        // Award flexible rest day - update profile
+        const { error } = await supabase
+          .from('profiles')
+          .update({ has_flexible_rest_day: true })
+          .eq('id', user.id)
+
+        if (!error) {
+          setHasFlexibleRestDay(true)
+
+          // Post celebration to group chat
+          if (userProfile.group_id) {
+            await supabase
+              .from('chat_messages')
+              .insert({
+                group_id: userProfile.group_id,
+                user_id: user.id,
+                message: `🔥 ${userProfile.username} crushed Monday's double target and earned a flexible rest day! 💪`,
+                message_type: 'system',
+                created_at: new Date().toISOString()
+              })
+          }
+
+          // Show celebratory notification
+          alert('🎉 AMAZING! You earned a flexible rest day by completing Monday\'s double target! Use it any day this week to skip your workout without penalty!')
+
+          // Haptic feedback
+          if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100, 50, 100])
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking flexible rest day earned:', error)
+    }
+  }
+
+  const useFlexibleRestDay = async () => {
+    if (!user || !weekStartDate || !userProfile || isUsingFlexibleRestDay) return
+
+    setIsUsingFlexibleRestDay(true)
     try {
       const mondayString = weekStartDate.toISOString().split('T')[0]
       const today = new Date().toISOString().split('T')[0]
 
       // Record that the flexible rest day was used
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('flexible_rest_days')
         .insert({
           user_id: user.id,
@@ -314,21 +405,73 @@ export default function MobileWorkoutLogger() {
           earned_date: mondayString
         })
 
-      if (error) {
-        console.error('Error using flexible rest day:', error)
+      if (insertError) {
+        console.error('Error using flexible rest day:', insertError)
         alert('Error using flexible rest day. Please try again.')
         return
       }
+
+      // Auto-log points to fill bar to 100%
+      const { error: logError } = await supabase
+        .from('logs')
+        .insert({
+          user_id: user.id,
+          exercise_id: 'flexible_rest_day',
+          points: dailyTarget,
+          date: today,
+          count: 1,
+          weight: 0,
+          duration: 0,
+          timestamp: Date.now()
+        })
+
+      if (logError) {
+        console.error('Error logging flexible rest day points:', logError)
+      }
+
+      // Update the profile flag to false
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ has_flexible_rest_day: false })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Error updating profile:', updateError)
+      }
+
+      // Post to group chat
+      if (userProfile.group_id) {
+        await supabase
+          .from('chat_messages')
+          .insert({
+            group_id: userProfile.group_id,
+            user_id: user.id,
+            message: `🛌 ${userProfile.username} used their flexible rest day and automatically earned ${dailyTarget} points!`,
+            message_type: 'system',
+            created_at: new Date().toISOString()
+          })
+      }
+
+      // Reload today's logs to show the new points
+      await loadTodaysLogs(user.id)
+      await updateDailyCheckin()
 
       // Hide the button
       setHasFlexibleRestDay(false)
       
       // Show success message
-      alert('🎉 Flexible rest day activated! You can skip today&apos;s workout without penalty.')
+      alert(`✅ Flexible rest day used! You earned ${dailyTarget} points automatically.`)
+
+      // Haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100])
+      }
       
     } catch (error) {
       console.error('Error using flexible rest day:', error)
       alert('Error using flexible rest day. Please try again.')
+    } finally {
+      setIsUsingFlexibleRestDay(false)
     }
   }
 
@@ -337,14 +480,21 @@ export default function MobileWorkoutLogger() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
 
+      let profile = null
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
         
+        profile = profileData
         setUserProfile(profile)
+        
+        // Sync context with profile's week_mode to ensure consistency
+        if (profile?.week_mode && profile.week_mode !== weekMode) {
+          setWeekModeWithSync(profile.week_mode, user.id)
+        }
 
         if (profile?.group_id) {
           await loadDailyTarget(user.id, profile)
@@ -363,7 +513,7 @@ export default function MobileWorkoutLogger() {
 
       if (user) {
         await loadTodaysLogs(user.id)
-        await checkFlexibleRestDay(user.id)
+        await checkFlexibleRestDay(user.id, profile)
         await checkIfRecoveryDay()
       }
     } catch (error) {
@@ -392,6 +542,9 @@ export default function MobileWorkoutLogger() {
         .single()
 
       if (group?.start_date) {
+        // Store group start date for later use
+        setGroupStartDate(group.start_date)
+        
         // Get group settings for rest days
         const { data: groupSettings } = await supabase
           .from('group_settings')
@@ -399,12 +552,24 @@ export default function MobileWorkoutLogger() {
           .eq('group_id', profile.group_id)
           .maybeSingle()
 
+        const configuredRestDays = groupSettings?.rest_days || [1]
+        setRestDays(configuredRestDays)
+
+        // Check if today is a rest day
+        const todayDayOfWeek = new Date().getDay()
+        const isTodayRestDay = configuredRestDays.includes(todayDayOfWeek)
+        setIsRestDay(isTodayRestDay)
+
         // Calculate today's target using centralized utility
+        // On rest days, we always use the doubled target (which is already handled by calculateDailyTarget)
         const daysSinceStart = getDaysSinceStart(group.start_date)
+        // Use week_mode from profile (database) instead of context to avoid race condition
+        // where context defaults to 'insane' before database value loads
+        const userWeekMode = profile.week_mode || weekMode || 'insane'
         const target = calculateDailyTarget({
           daysSinceStart,
-          weekMode: weekMode, // Use individual user's mode from context
-          restDays: groupSettings?.rest_days || [1],
+          weekMode: userWeekMode,
+          restDays: configuredRestDays,
           isUserRecoveryDay: false
         })
         
@@ -612,8 +777,13 @@ async function updateDailyCheckin() {
         await updateDailyCheckin()
         await checkIfRecoveryDay() // Refresh recovery day status
         
-        // Check for automatic mode switching after exercise submission
-        await checkAutomaticModeSwitch()
+        // Check for automatic mode switching after exercise submission (skip on recovery day)
+        if (!isRecoveryDay) {
+          await checkAutomaticModeSwitch()
+        }
+        
+        // Check if user just earned a flexible rest day (on rest days)
+        await checkFlexibleRestDayEarned()
         
         // Show success with haptic feedback on mobile
         if (navigator.vibrate) {
@@ -742,7 +912,7 @@ async function updateDailyCheckin() {
               className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ease-out ${
                 isRecoveryDay
                   ? 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-600'
-                  : weekMode === 'insane'
+                  : effectiveMode === 'insane'
                     ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
                     : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
               }`}
@@ -750,7 +920,7 @@ async function updateDailyCheckin() {
                 width: `${Math.min(100, (isRecoveryDay ? getRecoveryPoints() : getCappedTotalPoints()) / Math.max(1, dailyTarget) * 100)}%`,
                 boxShadow: isRecoveryDay
                   ? '0 0 20px 3px rgba(34, 197, 94, 0.3), 0 0 10px 0px rgba(34, 197, 94, 0.4)'
-                  : weekMode === 'insane'
+                  : effectiveMode === 'insane'
                     ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
                     : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
               }}
@@ -760,9 +930,9 @@ async function updateDailyCheckin() {
             <div className="relative h-full flex items-center justify-between px-6 text-white">
               <div className="flex flex-col items-start">
                 <span className="font-bold text-xs tracking-widest uppercase" style={{
-                  color: isRecoveryDay ? '#22c55e' : weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                  color: isRecoveryDay ? '#22c55e' : effectiveMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
                 }}>
-                  {isRecoveryDay ? '🧘 RECOVERY DAY' : 'LOG WORKOUT'}
+                  {isRecoveryDay ? '🧘 RECOVERY DAY' : isRestDay ? '🔥 REST DAY CHALLENGE' : 'LOG WORKOUT'}
                 </span>
                 <span className="text-xs text-zinc-400 font-bold">
                   {isRecoveryDay 
@@ -823,56 +993,41 @@ async function updateDailyCheckin() {
         </div>
       )}
       
-      {/* Use Recovery Day Option - Only show when available and not already active */}
-      {!isRecoveryDay && canUseRecoveryDay && (
+      {/* Special Day Options - Recovery Day & Flex Rest Day side by side */}
+      {!isRecoveryDay && (
         <div className="bg-black border-t border-white/10">
-          <div className="px-4 py-4">
-            <div className="bg-zinc-900/50 border border-zinc-700/50 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                    <span className="text-lg">🧘</span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-zinc-200">Recovery Day</div>
-                    <div className="text-xs text-zinc-500">1× per week • {RECOVERY_DAY_TARGET_MINUTES} min target</div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleActivateRecoveryDay}
-                  disabled={isActivatingRecoveryDay}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActivatingRecoveryDay 
-                      ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed' 
-                      : 'bg-green-600/20 text-green-400 border border-green-500/30 hover:bg-green-600/30'
-                  }`}
-                >
-                  {isActivatingRecoveryDay ? 'Activating...' : 'Use Today'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Flexible Rest Day Section */}
-      {hasFlexibleRestDay && (
-        <div className="bg-black border-t border-white/10">
-          <div className="px-4 py-6">
-            <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-600/30 rounded-3xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-bold text-green-400 mb-1">🎉 Flexible Rest Day Earned!</div>
-                  <div className="text-xs text-gray-300">You crushed Monday's double target. Use this to skip any day this week.</div>
-                </div>
-                <button 
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-3xl text-sm font-medium transition-colors"
-                  onClick={useFlexibleRestDay}
-                >
-                  Use Rest Day
-                </button>
-              </div>
-            </div>
+          <div className="px-4 py-3 flex gap-2">
+            {/* Recovery Day Button */}
+            <button
+              onClick={handleActivateRecoveryDay}
+              disabled={isActivatingRecoveryDay || !canUseRecoveryDay}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                !canUseRecoveryDay
+                  ? 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed border border-zinc-700/30'
+                  : isActivatingRecoveryDay 
+                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700/50' 
+                    : 'bg-zinc-900/50 text-green-400 border border-green-500/20 hover:bg-zinc-800/70 hover:border-green-500/40 active:bg-green-500/10 active:border-green-500/50'
+              }`}
+            >
+              <span className={`text-lg ${!canUseRecoveryDay ? 'opacity-40' : ''}`}>🧘</span>
+              <span>{isActivatingRecoveryDay ? 'Activating...' : 'Recovery Day'}</span>
+            </button>
+
+            {/* Flex Rest Day Button */}
+            <button 
+              onClick={useFlexibleRestDay}
+              disabled={isUsingFlexibleRestDay || !hasFlexibleRestDay}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                !hasFlexibleRestDay
+                  ? 'bg-zinc-800/50 text-zinc-600 cursor-not-allowed border border-zinc-700/30'
+                  : isUsingFlexibleRestDay
+                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700/50'
+                    : 'bg-zinc-900/50 text-amber-400 border border-amber-500/20 hover:bg-zinc-800/70 hover:border-amber-500/40 active:bg-amber-500/10 active:border-amber-500/50'
+              }`}
+            >
+              <span className={`text-lg ${!hasFlexibleRestDay ? 'opacity-40' : ''}`}>🎉</span>
+              <span>{isUsingFlexibleRestDay ? 'Using...' : 'Flex Rest Day'}</span>
+            </button>
           </div>
         </div>
       )}
@@ -896,7 +1051,7 @@ async function updateDailyCheckin() {
                   >
                     <div className="text-center">
                       <div className="text-2xl font-black mb-1" style={{
-                        color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                        color: effectiveMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
                       }}>
                         {exercise.points_per_unit}
                       </div>
@@ -960,7 +1115,7 @@ async function updateDailyCheckin() {
                   className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${
                     isRecoveryDay
                       ? 'border-green-500/30 focus:border-green-500/50'
-                      : weekMode === 'insane'
+                      : effectiveMode === 'insane'
                         ? 'border-white/10 focus:border-orange-500/50'
                         : 'border-white/10 focus:border-blue-400/50'
                   }`}
@@ -1011,7 +1166,7 @@ async function updateDailyCheckin() {
                         <div className="text-2xl font-black" style={{
                           color: selectedExercise.type === 'recovery'
                             ? '#22c55e'
-                            : weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                            : effectiveMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
                         }}>
                           {selectedExercise.points_per_unit}
                         </div>
@@ -1036,7 +1191,7 @@ async function updateDailyCheckin() {
                       min="0"
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${weekMode === 'insane'
+                      className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${effectiveMode === 'insane'
                         ? 'border-white/10 focus:border-orange-500/50'
                         : 'border-white/10 focus:border-blue-400/50'
                         }`}
@@ -1055,7 +1210,7 @@ async function updateDailyCheckin() {
                         min="0"
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
-                        className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${weekMode === 'insane'
+                        className={`w-full px-4 py-3 border rounded-xl outline-none transition-colors text-base bg-white/5 text-white ${effectiveMode === 'insane'
                           ? 'border-white/10 focus:border-orange-500/50'
                           : 'border-white/10 focus:border-blue-400/50'
                           }`}
@@ -1092,7 +1247,7 @@ async function updateDailyCheckin() {
                             }
 
                             return <span className="text-lg font-black" style={{
-                              color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                              color: effectiveMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
                             }}>{rawPoints}</span>
                           })()}
                         </div>
@@ -1103,12 +1258,12 @@ async function updateDailyCheckin() {
                   {/* Submit Button - New design system */}
                   <button
                     type="submit"
-                    className={`w-full font-black py-4 rounded-xl transition-all duration-300 ${weekMode === 'insane'
+                    className={`w-full font-black py-4 rounded-xl transition-all duration-300 ${effectiveMode === 'insane'
                       ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 text-white'
                       : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600 text-white'
                       }`}
                     style={{
-                      boxShadow: weekMode === 'insane'
+                      boxShadow: effectiveMode === 'insane'
                         ? '0 0 20px 3px rgba(249, 115, 22, 0.3), 0 0 10px 0px rgba(249, 115, 22, 0.4)'
                         : '0 0 20px 3px rgba(96, 165, 250, 0.25), 0 0 10px 0px rgba(79, 70, 229, 0.3)'
                     }}
@@ -1131,7 +1286,7 @@ async function updateDailyCheckin() {
               <div className="bg-white/5 p-4 border border-white/10 rounded-xl">
                 <div className="text-center">
                   <div className="text-3xl font-black mb-1" style={{
-                    color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                    color: effectiveMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
                   }}>
                     {getTotalPoints()}
                   </div>
@@ -1141,7 +1296,7 @@ async function updateDailyCheckin() {
               <div className="bg-white/5 p-4 border border-white/10 rounded-xl">
                 <div className="text-center">
                   <div className="text-3xl font-black mb-1" style={{
-                    color: weekMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
+                    color: effectiveMode === 'insane' ? COLORS.orange.rgb.primary : COLORS.opal.rgb.primary
                   }}>
                     {getRecoveryPercentage()}%
                   </div>
@@ -1187,7 +1342,7 @@ async function updateDailyCheckin() {
                         <div
                           className={`absolute left-0 top-0 bottom-0 transition-all duration-500 ${isRecoveryExercise
                             ? 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-600'
-                            : weekMode === 'insane'
+                            : effectiveMode === 'insane'
                               ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-red-600'
                               : 'bg-gradient-to-r from-blue-400 via-blue-500 to-purple-600'
                             }`}

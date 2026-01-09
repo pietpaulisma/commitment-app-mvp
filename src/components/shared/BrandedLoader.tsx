@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
-import packageJson from '../../../package.json'
 
 interface LoadingStage {
   key: string
@@ -90,7 +88,7 @@ export default function BrandedLoader({
 
         {/* Version number */}
         <p className="text-xs text-gray-600 font-mono mt-2">
-          v{packageJson.version}
+          v{process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0'}
         </p>
       </div>
 

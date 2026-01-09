@@ -24,6 +24,7 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
   const [isOnboardingDemoMode, setIsOnboardingDemoMode] = useState(false)
   const mountedRef = useRef(false)
   const lastPathnameRef = useRef(pathname)
+  const hasVerifiedOnboardingRef = useRef(false) // Track if we've ever verified onboarding_completed = true
 
   // Check for onboarding demo mode on mount
   useEffect(() => {
@@ -118,11 +119,18 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
     }
   }, [])
 
-  // Reset hasChecked when pathname changes or when profile changes 
-  // This allows the guard to re-evaluate when navigating or after profile updates
+  // Reset hasChecked only when pathname changes (not when profile changes)
+  // This prevents race conditions during profile refetches
   useEffect(() => {
     setHasChecked(false)
-  }, [pathname, profile?.onboarding_completed])
+  }, [pathname])
+  
+  // Track when we've verified onboarding is complete - this prevents redirects during refetches
+  useEffect(() => {
+    if (profile?.onboarding_completed === true) {
+      hasVerifiedOnboardingRef.current = true
+    }
+  }, [profile?.onboarding_completed])
 
   // Detect when coming from onboarding page and trigger profile refresh
   useEffect(() => {
@@ -198,13 +206,36 @@ export default function OnboardingGuard({ children }: OnboardingGuardProps) {
       }
       return
     }
-
-    // Only redirect if we haven't checked yet (prevent infinite loops)
-    if (!hasChecked) {
-      setHasChecked(true)
-      router.replace('/onboarding')
+    
+    // If we've previously verified onboarding was complete, don't redirect
+    // This prevents redirects during profile refetches where profile is temporarily null
+    if (hasVerifiedOnboardingRef.current) {
+      if (!hasChecked) {
+        setHasChecked(true)
+      }
+      return
     }
-  }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile, forceComplete, isOnboardingDemoMode])
+
+    // If we have a profile but onboarding_completed is explicitly false (not undefined), redirect
+    // This prevents redirecting during loading states where profile might be partially loaded
+    if (profile && profile.onboarding_completed === false) {
+      if (!hasChecked) {
+        setHasChecked(true)
+        router.replace('/onboarding')
+      }
+      return
+    }
+
+    // No profile at all after loading completed - redirect to onboarding
+    // But only if we're sure loading is done (not just a momentary null state)
+    // AND we haven't previously verified onboarding was complete
+    if (!profile && !authLoading && !profileLoading && !hasVerifiedOnboardingRef.current) {
+      if (!hasChecked) {
+        setHasChecked(true)
+        router.replace('/onboarding')
+      }
+    }
+  }, [user, profile, isLoading, isAuthPage, isOnboardingPage, isSupremeAdmin, router, isCreatingSupremeAdmin, hasChecked, createSupremeAdminProfile, forceComplete, isOnboardingDemoMode, authLoading, profileLoading])
 
 
   // Update loading stages based on current state

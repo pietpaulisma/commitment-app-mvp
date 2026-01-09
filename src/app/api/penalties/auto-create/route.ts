@@ -3,16 +3,17 @@ import { createClient } from '@supabase/supabase-js'
 import { calculateDailyTarget, RECOVERY_DAY_TARGET_MINUTES } from '@/utils/targetCalculation'
 import webpush from 'web-push'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
 /**
  * Auto-create penalty for current user if they failed yesterday's target
  * Called when user opens the app
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Initialize Supabase at runtime to avoid build-time errors
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Get the body to check for client-provided date
     const body = await request.json().catch(() => ({}))

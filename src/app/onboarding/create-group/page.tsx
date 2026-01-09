@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import OnboardingLayout from '@/components/OnboardingLayout'
+import { motion } from 'motion/react'
+import { ChevronLeft, ChevronRight, Crown, Users, Calendar, DollarSign } from 'lucide-react'
 
 export default function CreateGroupPage() {
   const router = useRouter()
@@ -21,7 +22,6 @@ export default function CreateGroupPage() {
       return
     }
     
-    // Set default start date to today
     const today = new Date().toISOString().split('T')[0]
     setStartDate(today)
   }, [user, router])
@@ -34,17 +34,17 @@ export default function CreateGroupPage() {
     setError('')
     
     if (!groupName.trim()) {
-      setError('Group name is required to proceed.')
+      setError('Group name is required')
       return
     }
 
     if (groupName.trim().length < 3) {
-      setError('Group name must be at least 3 characters long.')
+      setError('Group name must be at least 3 characters')
       return
     }
 
     if (!startDate) {
-      setError('Start date is required.')
+      setError('Start date is required')
       return
     }
 
@@ -53,14 +53,13 @@ export default function CreateGroupPage() {
     today.setHours(0, 0, 0, 0)
 
     if (selectedDate < today) {
-      setError('Start date cannot be in the past.')
+      setError('Start date cannot be in the past')
       return
     }
 
     setIsSubmitting(true)
 
     try {
-      // Create the group
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
         .insert({
@@ -74,7 +73,6 @@ export default function CreateGroupPage() {
 
       if (groupError) throw groupError
 
-      // Update user profile to be group admin and join the group
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -85,14 +83,11 @@ export default function CreateGroupPage() {
 
       if (profileError) throw profileError
 
-      // Note: Initial invite code creation skipped - feature not yet implemented
-      console.log('Group created successfully. Invite codes feature coming soon.')
-
-      // Success! Now go to profile setup with group context
+      console.log('Group created successfully')
       router.push('/onboarding/profile')
     } catch (error: any) {
       console.error('Error creating group:', error)
-      setError(error.message || 'Failed to create group. The system rejected your request.')
+      setError(error.message || 'Failed to create group')
       setIsSubmitting(false)
     }
   }
@@ -101,156 +96,218 @@ export default function CreateGroupPage() {
     return null
   }
 
+  // Glass Card Component
+  const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+    <div className={`relative bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-xl p-6 ${className}`}>
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  )
+
   return (
-    <OnboardingLayout showBackButton onBack={handleBack}>
-      <div className="px-6 py-8 min-h-full">
+    <div className="min-h-screen bg-black text-white">
+      {/* Background gradients */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full opacity-60"
+          style={{
+            background: 'radial-gradient(circle, rgba(249, 115, 22, 0.12) 0%, rgba(234, 88, 12, 0.08) 40%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+        />
+        <div
+          className="absolute -top-1/4 -right-1/4 w-[500px] h-[500px] rounded-full opacity-50"
+          style={{
+            background: 'radial-gradient(circle, rgba(251, 146, 60, 0.1) 0%, rgba(249, 115, 22, 0.06) 40%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+        />
+      </div>
+
+      {/* Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5">
+        <div className="flex items-center justify-between px-4 h-14">
+          <motion.button
+            onClick={handleBack}
+            className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors p-2 -ml-2 rounded-xl hover:bg-white/5"
+            whileHover={{ x: -2 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ChevronLeft size={20} />
+            <span className="text-sm font-medium">Back</span>
+          </motion.button>
+          
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i < 1 ? 'w-6 bg-gradient-to-r from-orange-400 to-amber-400' : 'w-6 bg-white/20'
+                }`}
+              />
+            ))}
+          </div>
+          
+          <div className="w-20" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 px-6 py-8 pb-32 max-w-md mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-black text-orange-400 mb-2 tracking-tight">
-            LEADERSHIP PROTOCOL
-          </h1>
-          <p className="text-gray-400 text-sm">
-            Take responsibility for others&apos; commitment.
-          </p>
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-400 rounded-2xl mx-auto flex items-center justify-center mb-4">
+            <Crown className="w-7 h-7 text-white" />
+          </div>
+          <h1 className="text-3xl font-black">Create Group</h1>
+          <p className="text-zinc-400">Lead your accountability squad</p>
         </div>
 
-        {/* Warning */}
-        <div className="bg-orange-900/20 border border-orange-600/50 p-6 mb-8">
-          <div className="text-center">
-            <div className="text-orange-400 font-mono text-xs uppercase tracking-widest mb-2">
-              ADMIN RESPONSIBILITY
+        {/* Admin Note */}
+        <GlassCard className="border-orange-500/20">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Crown className="w-5 h-5 text-orange-400" />
             </div>
-            <p className="text-orange-200 text-sm leading-relaxed">
-              As a group admin, you will be responsible for monitoring and guiding your members. 
-              Their failures reflect on your leadership. Their success is your success.
-            </p>
+            <div>
+              <p className="text-orange-400 font-semibold text-sm mb-1">Leadership Role</p>
+              <p className="text-zinc-400 text-sm">
+                As admin, you&apos;ll manage members, generate invite codes, and oversee group progress.
+              </p>
+            </div>
           </div>
-        </div>
+        </GlassCard>
 
-        {/* Form */}
-        <div className="space-y-6 mb-8">
-          {/* Group name */}
-          <div>
-            <label className="block text-sm font-bold text-orange-400 mb-2 uppercase tracking-wide">
-              Group Name
-            </label>
-            <input
-              type="text"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-orange-400 transition-colors"
-              placeholder="Iron Wolves, Steel Warriors, etc."
-              disabled={isSubmitting}
-              required
-              maxLength={50}
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              Choose something that inspires commitment and fear
+        {/* Form Fields */}
+        <div className="space-y-6">
+          {/* Group Name */}
+          <GlassCard>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Users size={16} className="text-orange-400" />
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Group Name
+                </label>
+              </div>
+              <input
+                type="text"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-white placeholder-zinc-600 focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                placeholder="Iron Wolves, Steel Warriors..."
+                disabled={isSubmitting}
+                required
+                maxLength={50}
+              />
+              <p className="text-xs text-zinc-600">Choose something that inspires commitment</p>
             </div>
-          </div>
+          </GlassCard>
 
-          {/* Start date */}
-          <div>
-            <label className="block text-sm font-bold text-orange-400 mb-2 uppercase tracking-wide">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-orange-400 transition-colors"
-              disabled={isSubmitting}
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              When your group&apos;s commitment journey begins
+          {/* Start Date */}
+          <GlassCard>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Calendar size={16} className="text-orange-400" />
+                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Start Date
+                </label>
+              </div>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-white focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+                disabled={isSubmitting}
+                required
+              />
+              <p className="text-xs text-zinc-600">When your group&apos;s journey begins</p>
             </div>
-          </div>
+          </GlassCard>
 
           {/* Penalty Amount */}
-          <div>
-            <label className="block text-sm font-bold text-orange-400 mb-2 uppercase tracking-wide">
-              Penalty Amount: €{penaltyAmount}
-            </label>
-            <input
-              type="range"
-              min="10"
-              max="1000"
-              step="10"
-              value={penaltyAmount}
-              onChange={(e) => setPenaltyAmount(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-              disabled={isSubmitting}
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>€10</span>
-              <span>€1000</span>
+          <GlassCard>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <DollarSign size={16} className="text-orange-400" />
+                  <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                    Daily Penalty
+                  </label>
+                </div>
+                <span className="text-2xl font-black text-orange-400">€{penaltyAmount}</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                step="10"
+                value={penaltyAmount}
+                onChange={(e) => setPenaltyAmount(parseInt(e.target.value))}
+                className="w-full h-2 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-orange-500"
+                disabled={isSubmitting}
+              />
+              <div className="flex justify-between text-xs text-zinc-600">
+                <span>€10</span>
+                <span>€100</span>
+              </div>
+              <p className="text-xs text-zinc-600">What members pay for missing their commitment</p>
             </div>
-            <div className="text-xs text-gray-500 mt-1">
-              The penalty each member pays for missing their commitment
-            </div>
-          </div>
+          </GlassCard>
         </div>
 
-        {/* Admin privileges preview */}
-        <div className="bg-gray-900/50 border border-gray-700 p-6 mb-8">
-          <h3 className="text-white font-bold mb-4 uppercase tracking-wide">
-            Your Admin Powers
-          </h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-orange-400 flex-shrink-0"></div>
-              <span className="text-gray-300">Monitor all member activity and progress</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-orange-400 flex-shrink-0"></div>
-              <span className="text-gray-300">Generate invite codes to recruit members</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-orange-400 flex-shrink-0"></div>
-              <span className="text-gray-300">Set group challenges and targets</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-orange-400 flex-shrink-0"></div>
-              <span className="text-gray-300">Remove members who break commitment</span>
-            </div>
+        {/* Admin Powers Preview */}
+        <GlassCard>
+          <h3 className="text-white font-bold mb-4">Your Admin Powers</h3>
+          <div className="space-y-3">
+            {[
+              'Monitor all member activity',
+              'Generate invite codes',
+              'Set group challenges',
+              'Remove uncommitted members'
+            ].map((power, index) => (
+              <div key={index} className="flex items-center gap-3 text-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                <span className="text-zinc-400">{power}</span>
+              </div>
+            ))}
           </div>
-        </div>
+        </GlassCard>
 
-        {/* Error display */}
+        {/* Error */}
         {error && (
-          <div className="bg-red-900/50 border border-red-600 p-4 mb-6">
-            <div className="text-red-200 text-sm font-mono">
-              {error}
-            </div>
-          </div>
-        )}
-
-        {/* Create button */}
-        <button
-          onClick={handleCreateGroup}
-          disabled={isSubmitting || !groupName.trim() || !startDate}
-          className="w-full bg-orange-600 text-black py-4 px-6 border border-orange-400 hover:bg-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-black text-lg"
-        >
-          {isSubmitting ? 'ESTABLISHING LEADERSHIP...' : 'ACCEPT LEADERSHIP'}
-        </button>
-
-        <div className="text-center mt-4">
-          <p className="text-xs text-gray-600 font-mono leading-relaxed">
-            By creating a group, you accept full responsibility for its members.<br/>
-            <span className="text-orange-400">Lead by example.</span>
-          </p>
-        </div>
-
-        {/* Processing state */}
-        {isSubmitting && (
-          <div className="text-center mt-4">
-            <div className="animate-pulse text-orange-400 font-mono text-sm">
-              CREATING GROUP & ASSIGNING ADMIN ROLE...
-            </div>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-red-950/50 border border-red-500/30 rounded-2xl"
+          >
+            <p className="text-red-400 text-sm">{error}</p>
+          </motion.div>
         )}
       </div>
-    </OnboardingLayout>
+
+      {/* Bottom Button */}
+      <div className="fixed bottom-6 left-4 right-4 z-20">
+        <div className="max-w-md mx-auto">
+          <motion.button
+            onClick={handleCreateGroup}
+            disabled={isSubmitting || !groupName.trim() || !startDate}
+            className="w-full h-14 rounded-2xl flex items-center justify-center gap-2 transition-all overflow-hidden disabled:opacity-50"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              background: !isSubmitting && groupName.trim() && startDate 
+                ? 'linear-gradient(135deg, rgb(249, 115, 22) 0%, rgb(234, 88, 12) 100%)' 
+                : 'linear-gradient(135deg, rgb(63, 63, 70) 0%, rgb(39, 39, 42) 100%)',
+              boxShadow: !isSubmitting && groupName.trim() && startDate ? '0 0 30px 5px rgba(249, 115, 22, 0.2)' : 'none',
+            }}
+          >
+            <span className="text-white font-bold">
+              {isSubmitting ? 'Creating...' : 'Create Group'}
+            </span>
+            {!isSubmitting && <ChevronRight size={20} className="text-white" />}
+          </motion.button>
+        </div>
+      </div>
+    </div>
   )
 }

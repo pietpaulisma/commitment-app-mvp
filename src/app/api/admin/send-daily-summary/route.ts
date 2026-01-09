@@ -5,9 +5,6 @@ import { getWeekDates, getSeason, getSeasonYear, isMonday } from '@/utils/season
 import { configureVapid } from '@/utils/vapidConfig'
 import webpush from 'web-push'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
 /**
  * Simplified admin endpoint:
  * 1. Auto-accept expired penalties
@@ -19,7 +16,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 export async function POST(request: NextRequest) {
   try {
     console.log('[send-daily-summary] Starting...')
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Initialize Supabase at runtime to avoid build-time errors
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Configure web-push for notifications (at runtime, not build time)
     configureVapid()
@@ -242,9 +243,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Calculate target
+      // IMPORTANT: Always use 'sane' mode for penalty/completion evaluation
+      // If user hits sane target, they're safe regardless of their display mode
       const dailyTarget = calculateDailyTarget({
         daysSinceStart,
-        weekMode: member.week_mode || 'sane',
+        weekMode: 'sane',
         restDays,
         recoveryDays,
         currentDayOfWeek: dayOfWeek

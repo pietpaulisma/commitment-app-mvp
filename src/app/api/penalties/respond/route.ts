@@ -60,9 +60,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Penalty already responded to' }, { status: 400 })
     }
 
-    // Verify deadline hasn't passed
-    if (new Date(penalty.deadline) < new Date()) {
-      return NextResponse.json({ error: 'Deadline has passed' }, { status: 400 })
+    const isExpired = new Date(penalty.deadline) < new Date()
+
+    // Only block DISPUTES after deadline - accepts should always be allowed
+    // (User can always pay the fine, but can't dispute after the deadline)
+    if (isExpired && action === 'dispute') {
+      return NextResponse.json({ error: 'Deadline has passed - disputes are no longer allowed' }, { status: 400 })
     }
 
     let chatMessageId = ''

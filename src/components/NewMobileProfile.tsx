@@ -33,7 +33,6 @@ import { PotManagementSection } from './settings/PotManagementSection'
 import { GroupSettingsSection } from './settings/GroupSettingsSection'
 import { ChatSettingsSection } from './settings/ChatSettingsSection'
 import { supabase } from '@/lib/supabase'
-import packageJson from '../../package.json'
 import { GlassCard } from './dashboard/v2/GlassCard'
 import { CardHeader } from './dashboard/v2/CardHeader'
 import { COLORS } from '@/utils/colors'
@@ -101,6 +100,20 @@ export default function NewMobileProfile() {
       }
 
       setIsSickMode(newSickMode)
+
+      // When enabling sick mode, log today's date to sick_mode table for historical tracking
+      // This ensures the penalty system knows you were sick on this specific date
+      if (newSickMode) {
+        const today = new Date()
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+        
+        await supabase
+          .from('sick_mode')
+          .upsert(
+            { user_id: user.id, date: todayStr },
+            { onConflict: 'user_id,date' }
+          )
+      }
 
       // Post system message to group chat
       if (profile?.group_id && profile?.username) {
@@ -744,7 +757,7 @@ export default function NewMobileProfile() {
           </section>
 
           <div className="text-center pb-8">
-            <p className="text-[10px] text-zinc-600 font-mono tracking-widest uppercase">v{packageJson.version}</p>
+            <p className="text-[10px] text-zinc-600 font-mono tracking-widest uppercase">v{process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0'}</p>
           </div>
 
         </div>
@@ -785,6 +798,7 @@ export default function NewMobileProfile() {
             }
           ]}
           onComplete={() => setShowTestPenaltyModal(false)}
+          onDismiss={() => setShowTestPenaltyModal(false)}
           isTestMode={true}
         />
       )}

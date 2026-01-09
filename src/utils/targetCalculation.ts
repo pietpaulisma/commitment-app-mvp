@@ -70,6 +70,28 @@ export function getTodayDateString(): string {
 }
 
 /**
+ * Format a Date object as YYYY-MM-DD string in local timezone
+ */
+export function formatDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Get this week's Monday as YYYY-MM-DD string in local timezone
+ */
+export function getThisWeekMondayString(): string {
+  const today = new Date()
+  const currentDay = today.getDay()
+  const daysToMonday = currentDay === 0 ? 6 : currentDay - 1
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - daysToMonday)
+  return formatDateString(monday)
+}
+
+/**
  * Check if recovery day can be used today
  * Recovery days can be used any day except Monday (day 1)
  */

@@ -4,32 +4,24 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import OnboardingLayout from '@/components/OnboardingLayout'
+import { motion } from 'motion/react'
+import { ChevronLeft, ChevronRight, User, Palette, Check } from 'lucide-react'
 import EmojiPicker from '@/components/EmojiPicker'
 
 export default function ProfileSetupPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [username, setUsername] = useState('')
-  const [personalColor, setPersonalColor] = useState('#ef4444') // Default red
-  const [customIcon, setCustomIcon] = useState('💪') // Default muscle
+  const [personalColor, setPersonalColor] = useState('#3B82F6')
+  const [customIcon, setCustomIcon] = useState('💪')
   const [birthDate, setBirthDate] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const availableColors = [
-    { color: '#ef4444', name: 'Blood Red' },
-    { color: '#f97316', name: 'Fire Orange' },
-    { color: '#f59e0b', name: 'Warning Yellow' },
-    { color: '#84cc16', name: 'Toxic Green' },
-    { color: '#06b6d4', name: 'Ice Blue' },
-    { color: '#3b82f6', name: 'Electric Blue' },
-    { color: '#6366f1', name: 'Royal Purple' },
-    { color: '#8b5cf6', name: 'Dark Purple' },
-    { color: '#ec4899', name: 'Neon Pink' },
-    { color: '#6b7280', name: 'Steel Gray' }
+    '#3B82F6', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B',
+    '#EF4444', '#EC4899', '#6366F1', '#14B8A6', '#F97316'
   ]
-
 
   useEffect(() => {
     if (!user) {
@@ -45,24 +37,23 @@ export default function ProfileSetupPage() {
     setError('')
     
     if (!username.trim()) {
-      setError('Username is required to continue.')
+      setError('Username is required')
       return
     }
     
     if (!birthDate) {
-      setError('Birthday is required to continue.')
+      setError('Birthday is required')
       return
     }
 
     if (username.trim().length < 2) {
-      setError('Username must be at least 2 characters long.')
+      setError('Username must be at least 2 characters')
       return
     }
 
     setIsSubmitting(true)
 
     try {
-      // First, get the user's current group to check for uniqueness
       const { data: currentProfile } = await supabase
         .from('profiles')
         .select('group_id')
@@ -70,7 +61,6 @@ export default function ProfileSetupPage() {
         .single()
 
       if (currentProfile?.group_id) {
-        // Check if color is already taken in this group
         const { data: colorConflict } = await supabase
           .from('profiles')
           .select('id')
@@ -80,12 +70,11 @@ export default function ProfileSetupPage() {
           .single()
 
         if (colorConflict) {
-          setError('This color is already taken by another group member. Please choose a different color.')
+          setError('This color is already taken by another group member')
           setIsSubmitting(false)
           return
         }
 
-        // Check if icon is already taken in this group
         const { data: iconConflict } = await supabase
           .from('profiles')
           .select('id')
@@ -95,13 +84,12 @@ export default function ProfileSetupPage() {
           .single()
 
         if (iconConflict) {
-          setError('This icon is already taken by another group member. Please choose a different icon.')
+          setError('This icon is already taken by another group member')
           setIsSubmitting(false)
           return
         }
       }
 
-      // Update profile with uniqueness guaranteed
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -114,11 +102,9 @@ export default function ProfileSetupPage() {
         .eq('id', user?.id)
 
       if (updateError) {
-        // If it's a column not found error, proceed without the missing columns for now
         if (updateError.message.includes('custom_icon') || updateError.message.includes('personal_color')) {
-          console.warn('Profile customization columns not yet available in database, proceeding with basic profile update')
+          console.warn('Profile customization columns not available, proceeding with basic update')
           
-          // Try updating just the basic fields
           const { error: basicUpdateError } = await supabase
             .from('profiles')
             .update({
@@ -135,11 +121,10 @@ export default function ProfileSetupPage() {
         }
       }
 
-      // Onboarding complete! Go to dashboard
       router.push('/dashboard')
     } catch (error: any) {
       console.error('Profile setup failed:', error)
-      setError(error.message || 'Failed to save profile. The system rejected your data.')
+      setError(error.message || 'Failed to save profile')
       setIsSubmitting(false)
     }
   }
@@ -148,146 +133,201 @@ export default function ProfileSetupPage() {
     return null
   }
 
+  // Glass Card Component
+  const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+    <div className={`relative bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-xl p-6 ${className}`}>
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  )
+
   return (
-    <OnboardingLayout showBackButton onBack={handleBack}>
-      <div className="px-6 py-8 min-h-full">
+    <div className="min-h-screen bg-black text-white">
+      {/* Background gradients */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full opacity-60"
+          style={{
+            background: 'radial-gradient(circle, rgba(96, 165, 250, 0.12) 0%, rgba(79, 70, 229, 0.08) 40%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+        />
+        <div
+          className="absolute -top-1/4 -right-1/4 w-[500px] h-[500px] rounded-full opacity-50"
+          style={{
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, rgba(79, 70, 229, 0.06) 40%, transparent 70%)',
+            filter: 'blur(80px)',
+          }}
+        />
+      </div>
+
+      {/* Header */}
+      <div className="sticky top-0 z-50 backdrop-blur-xl bg-black/50 border-b border-white/5">
+        <div className="flex items-center justify-between px-4 h-14">
+          <motion.button
+            onClick={handleBack}
+            className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors p-2 -ml-2 rounded-xl hover:bg-white/5"
+            whileHover={{ x: -2 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ChevronLeft size={20} />
+            <span className="text-sm font-medium">Back</span>
+          </motion.button>
+          
+          <div className="flex gap-1">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i < 2 ? 'w-6 bg-gradient-to-r from-blue-400 to-purple-500' : 'w-6 bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+          
+          <div className="w-20" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 px-6 py-8 pb-32 max-w-md mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-black text-red-400 mb-2 tracking-tight">
-            IDENTITY PROTOCOL
-          </h1>
-          <p className="text-gray-400 text-sm">
-            Define yourself within your group. Choose wisely - no duplicates allowed.
-          </p>
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl mx-auto flex items-center justify-center mb-4">
+            <User className="w-7 h-7 text-white" />
+          </div>
+          <h1 className="text-3xl font-black">Your Identity</h1>
+          <p className="text-zinc-400">Define yourself within your group</p>
         </div>
 
-        {/* Preview */}
-        <div className="bg-gray-900/50 border border-gray-700 p-6 mb-8">
+        {/* Preview Card */}
+        <GlassCard>
           <div className="text-center">
             <div 
-              className="w-16 h-16 border-2 flex items-center justify-center mx-auto mb-3"
-              style={{ 
-                backgroundColor: personalColor,
-                borderColor: personalColor 
-              }}
+              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3"
+              style={{ backgroundColor: personalColor }}
             >
-              <span className="text-2xl">{customIcon}</span>
+              <span className="text-3xl">{customIcon}</span>
             </div>
-            <div className="text-white font-bold">
+            <div className="text-white font-bold text-lg">
               {username || 'Username'}
             </div>
-            <div className="text-xs text-gray-400 uppercase tracking-widest mt-1">
-              COMMITTED MEMBER
+            <div className="text-xs text-zinc-500 uppercase tracking-widest mt-1">
+              Committed Member
             </div>
           </div>
+        </GlassCard>
+
+        {/* Form Fields */}
+        <div className="space-y-6">
+          {/* Username */}
+          <GlassCard>
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-white placeholder-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                placeholder="Enter your username"
+                disabled={isSubmitting}
+                required
+              />
+              <p className="text-xs text-zinc-600">This will be your display name in the group</p>
+            </div>
+          </GlassCard>
+
+          {/* Birthday */}
+          <GlassCard>
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                Birthday
+              </label>
+              <input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-white focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                disabled={isSubmitting}
+                required
+              />
+              <p className="text-xs text-zinc-600">Double points required on your birthday!</p>
+            </div>
+          </GlassCard>
+
+          {/* Color Selection */}
+          <GlassCard>
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                Your Color
+              </label>
+              <div className="grid grid-cols-5 gap-3">
+                {availableColors.map((color) => (
+                  <motion.button
+                    key={color}
+                    onClick={() => setPersonalColor(color)}
+                    disabled={isSubmitting}
+                    className={`aspect-square rounded-xl transition-all ${
+                      personalColor === color 
+                        ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0A0A0A] scale-105' 
+                        : 'hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  />
+                ))}
+              </div>
+            </div>
+          </GlassCard>
+
+          {/* Icon Selection */}
+          <GlassCard>
+            <EmojiPicker
+              selectedEmoji={customIcon}
+              onEmojiSelect={setCustomIcon}
+              disabled={isSubmitting}
+            />
+          </GlassCard>
         </div>
 
-        {/* Form */}
-        <div className="space-y-6 mb-8">
-          {/* Username field */}
-          <div>
-            <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-              Username
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
-              placeholder="Enter your username"
-              disabled={isSubmitting}
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              This will be your display name in the group
-            </div>
-          </div>
-
-          {/* Birthday field */}
-          <div>
-            <label className="block text-sm font-bold text-red-400 mb-2 uppercase tracking-wide">
-              Birthday
-            </label>
-            <input
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-700 text-white focus:outline-none focus:border-red-400 transition-colors"
-              disabled={isSubmitting}
-              required
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              Used for birthday celebrations in your group
-            </div>
-          </div>
-
-          {/* Color selection */}
-          <div>
-            <label className="block text-sm font-bold text-red-400 mb-3 uppercase tracking-wide">
-              Your Color Identity
-            </label>
-            <div className="grid grid-cols-5 gap-3">
-              {availableColors.map(({ color, name }) => (
-                <button
-                  key={color}
-                  onClick={() => setPersonalColor(color)}
-                  disabled={isSubmitting}
-                  className={`w-12 h-12 border-2 transition-all ${
-                    personalColor === color 
-                      ? 'border-white scale-110' 
-                      : 'border-gray-600 hover:border-gray-400'
-                  }`}
-                  style={{ backgroundColor: color }}
-                  title={name}
-                />
-              ))}
-            </div>
-            <div className="text-xs text-gray-500 mt-2">
-              This color represents you in the system
-            </div>
-          </div>
-
-          {/* Icon selection */}
-          <EmojiPicker
-            selectedEmoji={customIcon}
-            onEmojiSelect={setCustomIcon}
-            disabled={isSubmitting}
-          />
-        </div>
-
-        {/* Error display */}
+        {/* Error */}
         {error && (
-          <div className="bg-red-900/50 border border-red-600 p-4 mb-6">
-            <div className="text-red-200 text-sm font-mono">
-              {error}
-            </div>
-          </div>
-        )}
-
-        {/* Continue button */}
-        <button
-          onClick={handleContinue}
-          disabled={isSubmitting || !username.trim()}
-          className="w-full bg-red-600 text-white py-4 px-6 border border-red-400 hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-black text-lg"
-        >
-          {isSubmitting ? 'REGISTERING IDENTITY...' : 'COMPLETE COMMITMENT'}
-        </button>
-
-        <div className="text-center mt-4">
-          <p className="text-xs text-gray-600 font-mono">
-            This information will be visible to your accountability group
-          </p>
-        </div>
-
-        {/* Processing state */}
-        {isSubmitting && (
-          <div className="text-center mt-4">
-            <div className="animate-pulse text-red-400 font-mono text-sm">
-              UPDATING SYSTEM RECORDS...
-            </div>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-red-950/50 border border-red-500/30 rounded-2xl"
+          >
+            <p className="text-red-400 text-sm">{error}</p>
+          </motion.div>
         )}
       </div>
-    </OnboardingLayout>
+
+      {/* Bottom Button */}
+      <div className="fixed bottom-6 left-4 right-4 z-20">
+        <div className="max-w-md mx-auto">
+          <motion.button
+            onClick={handleContinue}
+            disabled={isSubmitting || !username.trim()}
+            className="w-full h-14 rounded-2xl flex items-center justify-center gap-2 transition-all overflow-hidden disabled:opacity-50"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              background: !isSubmitting && username.trim() 
+                ? 'linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(79, 70, 229) 100%)' 
+                : 'linear-gradient(135deg, rgb(63, 63, 70) 0%, rgb(39, 39, 42) 100%)',
+              boxShadow: !isSubmitting && username.trim() ? '0 0 30px 5px rgba(96, 165, 250, 0.2)' : 'none',
+            }}
+          >
+            <span className="text-white font-bold">
+              {isSubmitting ? 'Saving...' : 'Complete Setup'}
+            </span>
+            {!isSubmitting && <ChevronRight size={20} className="text-white" />}
+          </motion.button>
+        </div>
+      </div>
+    </div>
   )
 }

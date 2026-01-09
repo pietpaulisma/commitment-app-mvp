@@ -26,6 +26,7 @@ export type UserProfile = {
   donation_rate: number
   onboarding_completed: boolean
   has_flexible_rest_day?: boolean
+  locked_weights?: Record<string, number>
   created_at: string
   updated_at: string
   avatar_url?: string

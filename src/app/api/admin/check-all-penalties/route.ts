@@ -344,9 +344,12 @@ export async function POST(request: NextRequest) {
         const daysSinceStart = Math.floor((yesterdayDate.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
         const dayOfWeekForTarget = yesterdayDate.getDay()
 
+        // IMPORTANT: Always use 'sane' mode for penalty evaluation
+        // If user hits sane target, they're safe regardless of their display mode
+        // Insane mode is for achievement tracking, not stricter penalties
         const dailyTarget = calculateDailyTarget({
           daysSinceStart,
-          weekMode: member.week_mode || 'sane',
+          weekMode: 'sane',
           restDays,
           recoveryDays,
           currentDayOfWeek: dayOfWeekForTarget
