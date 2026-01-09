@@ -8,16 +8,23 @@ import webpush from 'web-push'
  * Called when user opens the app
  */
 export async function POST(request: NextRequest) {
+  console.log('[auto-create] === STARTING AUTO-CREATE PENALTY CHECK ===')
+  
   try {
+    console.log('[auto-create] Step 1: Initializing Supabase...')
     // Initialize Supabase at runtime to avoid build-time errors
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+    console.log('[auto-create] Step 1: ✅ Supabase initialized')
 
+    console.log('[auto-create] Step 2: Parsing request body...')
     // Get the body to check for client-provided date
     const body = await request.json().catch(() => ({}))
+    console.log('[auto-create] Step 2: ✅ Body parsed:', JSON.stringify(body))
 
+    console.log('[auto-create] Step 3: Configuring VAPID...')
     // Configure web-push for notifications (at runtime, not build time)
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
     const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || ''
@@ -26,20 +33,30 @@ export async function POST(request: NextRequest) {
 
     if (vapidPublicKey && vapidPrivateKey) {
       webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey)
+      console.log('[auto-create] Step 3: ✅ VAPID configured')
+    } else {
+      console.log('[auto-create] Step 3: ⚠️ VAPID not configured (missing keys)')
     }
 
+    console.log('[auto-create] Step 4: Checking auth header...')
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
+      console.log('[auto-create] Step 4: ❌ No auth header')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    console.log('[auto-create] Step 4: ✅ Auth header present')
 
+    console.log('[auto-create] Step 5: Validating user token...')
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
     if (authError || !user) {
+      console.log('[auto-create] Step 5: ❌ Auth error:', authError?.message)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    console.log('[auto-create] Step 5: ✅ User authenticated:', user.id)
 
+    console.log('[auto-create] Step 6: Fetching user profile...')
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -48,13 +65,17 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (profileError || !profile) {
+      console.log('[auto-create] Step 6: ❌ Profile error:', profileError?.message)
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
+    console.log('[auto-create] Step 6: ✅ Profile found:', profile.username)
 
     const groupId = profile.group_id
     if (!groupId) {
+      console.log('[auto-create] Step 6: ❌ User not in group')
       return NextResponse.json({ error: 'User not in a group' }, { status: 400 })
     }
+    console.log('[auto-create] Step 6: ✅ Group ID:', groupId)
 
     // Get yesterday's date - use client-provided date if available (for timezone accuracy)
     // Otherwise fall back to server-calculated UTC date
@@ -90,6 +111,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    console.log('[auto-create] Step 7: Fetching group settings and data...')
     // Get group settings and data
     // Use maybeSingle() for group_settings to handle case where no settings exist
     const [groupSettingsRes, groupDataRes] = await Promise.all([
@@ -104,11 +126,15 @@ export async function POST(request: NextRequest) {
         .eq('id', groupId)
         .single()
     ])
+    console.log('[auto-create] Step 7: ✅ Group queries complete')
+    console.log('[auto-create] Step 7: groupSettingsRes.error:', groupSettingsRes.error?.message)
+    console.log('[auto-create] Step 7: groupDataRes.error:', groupDataRes.error?.message)
 
     if (!groupDataRes.data) {
-      console.error('[auto-create] Group not found for groupId:', groupId)
+      console.error('[auto-create] Step 7: ❌ Group not found for groupId:', groupId)
       return NextResponse.json({ error: 'Group not found' }, { status: 404 })
     }
+    console.log('[auto-create] Step 7: ✅ Group data found, start_date:', groupDataRes.data.start_date)
 
     // Fallback to groups table if group_settings doesn't exist
     const groupData = groupDataRes.data
@@ -132,8 +158,10 @@ export async function POST(request: NextRequest) {
     const groupStartDate = new Date(groupData.start_date)
     console.log('[auto-create] Using restDays:', restDays, 'penaltyAmount:', penaltyAmount)
 
+    console.log('[auto-create] Step 8: Checking sick mode...')
     // Check if user is currently in sick mode - if so, log it for today
     if (profile.is_sick_mode) {
+      console.log('[auto-create] Step 8: User is currently in sick mode')
       // Log this sick day for historical tracking (so recaps show correctly)
       try {
         await supabase
@@ -142,8 +170,9 @@ export async function POST(request: NextRequest) {
             { user_id: user.id, date: yesterdayStr },
             { onConflict: 'user_id,date' }
           )
+        console.log('[auto-create] Step 8: ✅ Logged sick day')
       } catch (sickLogError) {
-        console.log('[auto-create] Could not log sick day (table may not exist):', sickLogError)
+        console.log('[auto-create] Step 8: ⚠️ Could not log sick day (table may not exist):', sickLogError)
       }
       
       return NextResponse.json({
@@ -151,32 +180,48 @@ export async function POST(request: NextRequest) {
         reason: 'User is currently in sick mode'
       })
     }
+    console.log('[auto-create] Step 8: ✅ User not in sick mode')
 
+    console.log('[auto-create] Step 9: Checking historical sick records...')
     // Check if user WAS sick on the specific date we're checking (historical check)
     // This handles the case where user was sick on that day but has since recovered
-    const { data: historicalSickRecord } = await supabase
+    const { data: historicalSickRecord, error: sickRecordError } = await supabase
       .from('sick_mode')
       .select('id')
       .eq('user_id', user.id)
       .eq('date', yesterdayStr)
       .maybeSingle()
 
+    if (sickRecordError) {
+      console.log('[auto-create] Step 9: ⚠️ Error querying sick_mode:', sickRecordError.message)
+      // Continue execution - don't fail if sick_mode table has issues
+    }
+
     if (historicalSickRecord) {
+      console.log('[auto-create] Step 9: User was sick on this date')
       return NextResponse.json({
         noPenalty: true,
         reason: 'User was in sick mode on this date'
       })
     }
+    console.log('[auto-create] Step 9: ✅ No historical sick record')
 
+    console.log('[auto-create] Step 10: Checking recovery day...')
     // Check if user had an active recovery day for yesterday
-    const { data: yesterdayRecoveryDay } = await supabase
+    const { data: yesterdayRecoveryDay, error: recoveryDayError } = await supabase
       .from('user_recovery_days')
       .select('id, recovery_minutes, is_complete')
       .eq('user_id', user.id)
       .eq('used_date', yesterdayStr)
       .maybeSingle()
 
+    if (recoveryDayError) {
+      console.log('[auto-create] Step 10: ⚠️ Error querying user_recovery_days:', recoveryDayError.message)
+      // Continue execution - don't fail if table has issues
+    }
+
     if (yesterdayRecoveryDay) {
+      console.log('[auto-create] Step 10: User had a recovery day')
       // User had activated a recovery day for yesterday
       if (yesterdayRecoveryDay.is_complete || yesterdayRecoveryDay.recovery_minutes >= RECOVERY_DAY_TARGET_MINUTES) {
         // User completed their recovery day - no penalty
