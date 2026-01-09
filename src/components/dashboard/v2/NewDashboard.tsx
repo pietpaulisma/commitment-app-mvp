@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { MessageCircle, Trophy, Calendar, CheckCircle2, ChevronRight, Zap, Flame, Clock, CircleDollarSign, TrendingUp, AlertCircle, Menu, Star, Dumbbell, Moon, History, Coins, Heart, Sparkles, Search, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +29,7 @@ import { TimePeriod, TIME_PERIOD_LABELS, getNextTimePeriod, getDateRangeForPerio
 import { getRecoveryDayStatusForUsers, getActiveRecoveryDay } from '@/utils/recoveryDayHelpers';
 
 export default function NewDashboard() {
+    const router = useRouter();
     const { user } = useAuth();
     const { weekMode } = useWeekMode();
     const [time, setTime] = useState<Date | null>(null);
@@ -1497,7 +1499,7 @@ export default function NewDashboard() {
                         <span>MMITMENT</span>
                     </h1>
                     <button
-                        onClick={() => window.location.href = '/profile'}
+                        onClick={() => router.push('/profile')}
                         className="w-10 h-10 rounded-full bg-[#111] border border-white/10 flex items-center justify-center hover:bg-[#222] transition-all"
                     >
                         <Settings size={22} className="text-white" />

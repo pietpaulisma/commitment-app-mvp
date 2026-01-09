@@ -37,10 +37,10 @@ export async function GET(request: NextRequest) {
 
     console.log(`[daily-recap] Processing date: ${yesterdayStr} (day ${dayOfWeek})`)
 
-    // Get all active groups
+    // Get all active groups (only select columns that exist in groups table)
     const { data: groups, error: groupsError } = await supabase
       .from('groups')
-      .select('id, name, start_date, rest_day_1, rest_day_2, penalty_amount')
+      .select('id, name, start_date')
       .not('id', 'is', null)
 
     if (groupsError) {
@@ -58,17 +58,16 @@ export async function GET(request: NextRequest) {
       console.log(`[daily-recap] Processing group: ${group.name} (${group.id})`)
 
       try {
-        // Get group settings (may not exist)
+        // Get group settings (may not exist) - rest_days and penalty_amount are in group_settings
         const { data: groupSettings } = await supabase
           .from('group_settings')
           .select('rest_days, penalty_amount')
           .eq('group_id', group.id)
           .maybeSingle()
 
-        // Determine rest days and penalty amount
-        const restDays: number[] = groupSettings?.rest_days || 
-          [group.rest_day_1, group.rest_day_2].filter((d): d is number => d !== null)
-        const penaltyAmount = groupSettings?.penalty_amount || group.penalty_amount || 10
+        // Determine rest days and penalty amount (defaults if no group_settings)
+        const restDays: number[] = groupSettings?.rest_days || []
+        const penaltyAmount = groupSettings?.penalty_amount || 10
 
         const isRestDay = restDays.includes(dayOfWeek)
         const groupStartDate = new Date(group.start_date)

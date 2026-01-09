@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
     console.log('[auto-create] Step 7: Fetching group settings and data...')
     // Get group settings and data
     // Use maybeSingle() for group_settings to handle case where no settings exist
+    // Note: rest_days, recovery_days, penalty_amount are in group_settings, not groups
     const [groupSettingsRes, groupDataRes] = await Promise.all([
       supabase
         .from('group_settings')
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
         .maybeSingle(),  // Use maybeSingle instead of single to avoid error when no row exists
       supabase
         .from('groups')
-        .select('start_date, rest_day_1, rest_day_2, penalty_amount')
+        .select('start_date')  // Only select columns that exist in groups table
         .eq('id', groupId)
         .single()
     ])
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
     }
     console.log('[auto-create] Step 7: ✅ Group data found, start_date:', groupDataRes.data.start_date)
 
-    // Fallback to groups table if group_settings doesn't exist
+    // Get settings from group_settings table (with defaults if not found)
     const groupData = groupDataRes.data
     let restDays: number[] = []
     let recoveryDays: number[] = []
@@ -148,11 +149,8 @@ export async function POST(request: NextRequest) {
       recoveryDays = Array.isArray(groupSettingsRes.data.recovery_days) ? groupSettingsRes.data.recovery_days : []
       penaltyAmount = groupSettingsRes.data.penalty_amount || 10
     } else {
-      // Fallback to groups table columns
-      console.log('[auto-create] No group_settings found, using groups table fallback')
-      if (groupData.rest_day_1 !== null) restDays.push(groupData.rest_day_1)
-      if (groupData.rest_day_2 !== null) restDays.push(groupData.rest_day_2)
-      penaltyAmount = groupData.penalty_amount || 10
+      // No group_settings found - use defaults
+      console.log('[auto-create] No group_settings found, using defaults (no rest days, €10 penalty)')
     }
 
     const groupStartDate = new Date(groupData.start_date)
