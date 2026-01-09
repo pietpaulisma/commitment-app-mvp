@@ -68,49 +68,72 @@ export async function POST(request: NextRequest) {
     const yesterdayDate = new Date(yesterdayStr)
     const dayOfWeek = yesterdayDate.getDay()
 
-    // Check if penalty already exists for yesterday
+    console.log('[auto-create] Checking penalties for user:', profile.username, 'date:', yesterdayStr, 'dayOfWeek:', dayOfWeek)
+
+    // Check if penalty already exists for yesterday (use maybeSingle to avoid error)
     const { data: existingPenalty } = await supabase
       .from('pending_penalties')
-      .select('id')
+      .select('id, status')
       .eq('user_id', user.id)
       .eq('date', yesterdayStr)
-      .single()
+      .maybeSingle()
 
     if (existingPenalty) {
       // Penalty already exists, return it
+      console.log('[auto-create] Penalty already exists:', existingPenalty.id, 'status:', existingPenalty.status)
       return NextResponse.json({
         penaltyExists: true,
+        penaltyId: existingPenalty.id,
+        penaltyStatus: existingPenalty.status,
         message: 'Penalty already exists for this date'
       })
     }
 
     // Get group settings and data
+    // Use maybeSingle() for group_settings to handle case where no settings exist
     const [groupSettingsRes, groupDataRes] = await Promise.all([
       supabase
         .from('group_settings')
         .select('rest_days, recovery_days, penalty_amount')
         .eq('group_id', groupId)
-        .single(),
+        .maybeSingle(),  // Use maybeSingle instead of single to avoid error when no row exists
       supabase
         .from('groups')
-        .select('start_date')
+        .select('start_date, rest_day_1, rest_day_2, penalty_amount')
         .eq('id', groupId)
         .single()
     ])
 
     if (!groupDataRes.data) {
+      console.error('[auto-create] Group not found for groupId:', groupId)
       return NextResponse.json({ error: 'Group not found' }, { status: 404 })
     }
 
-    const restDays = Array.isArray(groupSettingsRes.data?.rest_days) ? groupSettingsRes.data.rest_days : []
-    const recoveryDays = Array.isArray(groupSettingsRes.data?.recovery_days) ? groupSettingsRes.data.recovery_days : []
-    const penaltyAmount = groupSettingsRes.data?.penalty_amount || 10
-    const groupStartDate = new Date(groupDataRes.data.start_date)
+    // Fallback to groups table if group_settings doesn't exist
+    const groupData = groupDataRes.data
+    let restDays: number[] = []
+    let recoveryDays: number[] = []
+    let penaltyAmount = 10
 
-    // Check if user was in sick mode
+    if (groupSettingsRes.data) {
+      // Use group_settings if available
+      restDays = Array.isArray(groupSettingsRes.data.rest_days) ? groupSettingsRes.data.rest_days : []
+      recoveryDays = Array.isArray(groupSettingsRes.data.recovery_days) ? groupSettingsRes.data.recovery_days : []
+      penaltyAmount = groupSettingsRes.data.penalty_amount || 10
+    } else {
+      // Fallback to groups table columns
+      console.log('[auto-create] No group_settings found, using groups table fallback')
+      if (groupData.rest_day_1 !== null) restDays.push(groupData.rest_day_1)
+      if (groupData.rest_day_2 !== null) restDays.push(groupData.rest_day_2)
+      penaltyAmount = groupData.penalty_amount || 10
+    }
+
+    const groupStartDate = new Date(groupData.start_date)
+    console.log('[auto-create] Using restDays:', restDays, 'penaltyAmount:', penaltyAmount)
+
+    // Check if user is currently in sick mode - if so, log it for today
     if (profile.is_sick_mode) {
       // Log this sick day for historical tracking (so recaps show correctly)
-      // This replaces the cron job approach - sick days are logged when users open the app
       try {
         await supabase
           .from('sick_mode')
@@ -119,13 +142,28 @@ export async function POST(request: NextRequest) {
             { onConflict: 'user_id,date' }
           )
       } catch (sickLogError) {
-        // Don't fail if table doesn't exist yet - just log and continue
         console.log('[auto-create] Could not log sick day (table may not exist):', sickLogError)
       }
       
       return NextResponse.json({
         noPenalty: true,
-        reason: 'User was in sick mode'
+        reason: 'User is currently in sick mode'
+      })
+    }
+
+    // Check if user WAS sick on the specific date we're checking (historical check)
+    // This handles the case where user was sick on that day but has since recovered
+    const { data: historicalSickRecord } = await supabase
+      .from('sick_mode')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('date', yesterdayStr)
+      .maybeSingle()
+
+    if (historicalSickRecord) {
+      return NextResponse.json({
+        noPenalty: true,
+        reason: 'User was in sick mode on this date'
       })
     }
 
@@ -158,7 +196,7 @@ export async function POST(request: NextRequest) {
             date: yesterdayStr,
             target_points: RECOVERY_DAY_TARGET_MINUTES,
             actual_points: yesterdayRecoveryDay.recovery_minutes || 0,
-            penalty_amount: groupSettingsRes.data?.penalty_amount || 10,
+            penalty_amount: penaltyAmount,
             status: 'pending',
             deadline: deadline.toISOString()
           })
@@ -180,6 +218,7 @@ export async function POST(request: NextRequest) {
 
     // Check if yesterday was a rest day
     const isRestDay = restDays.includes(dayOfWeek)
+    console.log('[auto-create] isRestDay:', isRestDay, 'dayOfWeek:', dayOfWeek, 'restDays:', restDays)
 
     if (isRestDay) {
       // Check for Flex Rest Day qualification
@@ -208,15 +247,20 @@ export async function POST(request: NextRequest) {
         })
 
         const qualifiedForFlexRest = prevDayPoints >= prevDayTarget * 2
+        console.log('[auto-create] Flex rest day check: prevDayPoints:', prevDayPoints, 'needed:', prevDayTarget * 2, 'qualified:', qualifiedForFlexRest)
 
         if (qualifiedForFlexRest) {
+          console.log('[auto-create] User qualified for flex rest day - no penalty')
           return NextResponse.json({
             noPenalty: true,
             reason: 'User qualified for flex rest day'
           })
         }
+        // User has flex rest day feature but didn't qualify - will fall through to check target
+        console.log('[auto-create] User has flex rest day but did NOT qualify - checking target')
       } else {
         // Regular rest day, no penalty
+        console.log('[auto-create] Regular rest day - no penalty')
         return NextResponse.json({
           noPenalty: true,
           reason: 'Rest day'
@@ -228,9 +272,11 @@ export async function POST(request: NextRequest) {
     const daysSinceStart = Math.floor((yesterdayDate.getTime() - groupStartDate.getTime()) / (1000 * 60 * 60 * 24))
 
     // Calculate daily target
+    // IMPORTANT: Always use 'sane' mode for penalty evaluation
+    // If user hits sane target, they're safe regardless of their display mode
     const dailyTarget = calculateDailyTarget({
       daysSinceStart,
-      weekMode: profile.week_mode || 'sane',
+      weekMode: 'sane',
       restDays,
       recoveryDays,
       currentDayOfWeek: dayOfWeek
@@ -267,15 +313,21 @@ export async function POST(request: NextRequest) {
     const cappedRecoveryPoints = Math.min(totalRecoveryPoints, recoveryCapLimit)
     const actualPoints = totalNonRecoveryPoints + cappedRecoveryPoints
 
+    console.log('[auto-create] Target calculation - dailyTarget:', dailyTarget, 'actualPoints:', actualPoints, 'logs:', logs?.length || 0)
+
     // Check if user met target
     if (actualPoints >= dailyTarget) {
+      console.log('[auto-create] User met target - no penalty needed')
       return NextResponse.json({
         noPenalty: true,
-        reason: 'User met target'
+        reason: 'User met target',
+        actualPoints,
+        dailyTarget
       })
     }
 
     // User failed target - create pending penalty
+    console.log('[auto-create] User FAILED target - creating penalty. Actual:', actualPoints, 'Target:', dailyTarget)
     const deadline = new Date()
     deadline.setHours(deadline.getHours() + 24)
 
@@ -295,9 +347,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (penaltyError) {
-      console.error('Error creating penalty:', penaltyError)
-      return NextResponse.json({ error: 'Failed to create penalty' }, { status: 500 })
+      console.error('[auto-create] Error creating penalty:', penaltyError)
+      return NextResponse.json({ error: 'Failed to create penalty', details: penaltyError.message }, { status: 500 })
     }
+    
+    console.log('[auto-create] ✅ Penalty created successfully:', newPenalty.id)
 
     // Send push notification to user
     try {

@@ -9,7 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+---
+
+## [0.6.11] - 2026-01-09
+
+### Fixed
+- **Penalty Auto-Create Bug**: Fixed issue where penalties weren't being created when `group_settings` table had no row for the group - now properly falls back to `groups` table for rest days and penalty amount
+- **Existing Penalty Check**: Changed `.single()` to `.maybeSingle()` to prevent silent errors when checking for existing penalties
+- **Improved Logging**: Added comprehensive logging throughout the penalty auto-create flow to help diagnose issues
+
+---
+
+## [0.6.10] - 2026-01-07
+
+### Fixed
+- **Settings Screen Redirect**: Fixed race condition where users were briefly redirected to onboarding when accessing settings/profile
+- **Workout Progress Percentage**: Fixed mismatch between workout screen and dashboard percentages for users in "sane" mode (weekly progression)
+
+---
+
+## [0.6.8] - 2026-01-07
+
 ### Added
+- **Global Error Boundary**: Added error screen with "Report Error to Developers" button that sends crash details to `/admin/error-logs`
+- **Error Capture System**: Captures console errors before crashes for better debugging
+- **75% Recovery Marker**: Added subtle dotted line at 75% mark in workout input header to indicate recovery threshold
+- **Recovery Marker Icon**: Small heal/plus icon at the bottom of the 75% marker for visual clarity
 - **Dashboard Stats**: Added "Most Popular Exercise" widget showing the most logged exercise of the week for both Group and Personal views
 - **Time Period Selectors**: Added clickable time period cycling (TODAY → THIS WEEK → THIS MONTH → THIS YEAR) for:
   - Group Favorite / Your Top Exercise widget (default: TODAY)
@@ -18,11 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Season Champions History**: Added History button with improved modal showing only seasons with actual data
 
 ### Fixed
+- **Mobile Navigation**: Fixed Profile button being hidden in portrait mode for regular users (5 items weren't fitting in 4-column grid)
 - **Chat Unread Indicator**: Fixed always-green pulsing indicator - now properly tracks unread messages using localStorage
 - **Chat Unread Indicator**: Changed from pulsing dot to subtle green glow on the entire chat button for better visibility
 - **Chat Unread Indicator**: Indicator now correctly disappears after opening and viewing the chat
 
 ### Changed
+- **HEAL Section Icon**: Changed HEAL category icon from smiley to green cross/plus for better visual consistency
 - **Overperformers Widget**: Renamed from "Weekly Overperformers" to just "Overperformers" (time period shown on right)
 - **Peak Time Widget**: Simplified title from "Peak Time: 9PM" to just "Peak Time"
 - **Season Champions Widget**: Renamed from "SEASON WINNERS 2025" to "Season Champions"
@@ -32,6 +59,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Project Cleanup**: Removed 17 orphaned/legacy files (~4,500 lines), reorganized file structure with dedicated folders for modals, scripts, and documentation
 - **File Structure**: Added comprehensive file structure map to CLAUDE.md for easier navigation
 - **Time Period Utilities**: Created `src/utils/timePeriodHelpers.ts` with reusable date range calculations
+
+---
+
+## [0.6.6] - 2026-01-06
+
+### Fixed
+- **Penalty Auto-Accept Bug**: Fixed critical bug where expired penalties were never auto-accepted because the API blocked all responses after deadline (now only blocks disputes, allows accepts)
+- **Penalty Modal Accidental Dismissal**: Removed backdrop click dismissal - users can no longer accidentally close the penalty modal by tapping outside it
+- **Penalty Modal Persistence**: Added visibility change listener so the penalty modal re-appears when users return to the app after dismissing it
+
+### Technical
+- **Improved Logging**: Added comprehensive `[PenaltyAutoChecker]` console logs for debugging penalty creation and auto-accept flows
 
 ---
 
