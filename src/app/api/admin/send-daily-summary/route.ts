@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
         try {
           const { data: subscriptions } = await supabase
             .from('push_subscriptions')
-            .select('subscription')
+            .select('user_id, endpoint, p256dh, auth')
             .eq('user_id', userId)
 
           if (subscriptions && subscriptions.length > 0) {
@@ -322,7 +322,15 @@ export async function POST(request: NextRequest) {
 
             for (const sub of subscriptions) {
               try {
-                await webpush.sendNotification(sub.subscription, payload, {
+                // Build the push subscription object from individual columns
+                const pushSubscription = {
+                  endpoint: sub.endpoint,
+                  keys: {
+                    p256dh: sub.p256dh,
+                    auth: sub.auth
+                  }
+                }
+                await webpush.sendNotification(pushSubscription, payload, {
                   TTL: 3600,
                   urgency: 'high'
                 })
