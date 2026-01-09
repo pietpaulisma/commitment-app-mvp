@@ -9,5 +9,10 @@
       "main": true
     }
   },
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/daily-recap",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }

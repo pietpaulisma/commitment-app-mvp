@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.12] - 2026-01-09
+
+### Fixed
+- **API Runtime 500 Errors**: Fixed module-scope environment variable reads that caused 500 errors on `/api/penalties/auto-create`, `/api/penalties/my-pending`, and `/api/dashboard/squad-status`
+
+### Added
+- **Unified Daily Recap Cron**: Single cron job (`/api/cron/daily-recap`) that runs at 00:00 to check workouts, create penalties, auto-accept expired penalties, and post summary to chat
+
+---
+
 ## [0.6.11] - 2026-01-09
 
 ### Fixed
