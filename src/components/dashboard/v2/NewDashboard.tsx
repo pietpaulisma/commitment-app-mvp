@@ -338,11 +338,15 @@ export default function NewDashboard() {
                             }
                         });
 
-                        // Convert to history array with days ago
+                        // Convert to history array with days ago (using calendar dates in local timezone)
+                        const now = new Date();
+                        const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                         const history = Array.from(userLatestTrans.values())
                             .filter(u => u.amount > 0)
                             .map(u => {
-                                const daysAgo = Math.floor((Date.now() - new Date(u.date).getTime()) / (1000 * 60 * 60 * 24));
+                                const date = new Date(u.date);
+                                const dateLocal = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                                const daysAgo = Math.round((todayLocal.getTime() - dateLocal.getTime()) / (1000 * 60 * 60 * 24));
                                 return {
                                     name: u.username,
                                     amt: u.amount,
@@ -353,10 +357,12 @@ export default function NewDashboard() {
 
                         setPotHistory(history);
 
-                        // Get user's contribution history for personal view
+                        // Get user's contribution history for personal view (using calendar dates in local timezone)
                         const userTransactions = transactions?.filter(t => t.user_id === user.id) || [];
                         const userHistory = userTransactions.slice(0, 8).map(t => {
-                            const days = Math.floor((Date.now() - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24));
+                            const txDate = new Date(t.created_at);
+                            const txDateLocal = new Date(txDate.getFullYear(), txDate.getMonth(), txDate.getDate());
+                            const days = Math.round((todayLocal.getTime() - txDateLocal.getTime()) / (1000 * 60 * 60 * 24));
                             return {
                                 amount: Math.abs(t.amount),
                                 days,

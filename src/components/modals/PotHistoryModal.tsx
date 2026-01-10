@@ -61,8 +61,11 @@ export function PotHistoryModal({ groupId, onClose }: PotHistoryModalProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    
+    // Compare calendar dates in local timezone by normalizing to midnight
+    const dateLocal = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const nowLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const diffDays = Math.round((nowLocal.getTime() - dateLocal.getTime()) / (1000 * 60 * 60 * 24))
 
     if (diffDays === 0) return 'Today'
     if (diffDays === 1) return 'Yesterday'
