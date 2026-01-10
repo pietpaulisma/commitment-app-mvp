@@ -45,11 +45,13 @@ export const SquadMemberRow = ({ name, pct, mode, isLive, isRecoveryDay = false,
             };
     
     const baseHeight = 24;
-    const scaleFactor = Math.max(1, pct / 100);
-    const dynamicHeight = isSick ? 24 : Math.min(baseHeight * 3, baseHeight * scaleFactor);
+    
+    // Bar height is fixed at 24px - no dynamic scaling to prevent row overlap
+    const dynamicHeight = baseHeight;
 
     // Ensure minimum width for low percentages to prevent cutoff
-    const barWidth = isSick ? 100 : Math.max(pct, 12); // Sick mode shows full width grey bar
+    // Cap bar width at 100% to prevent overflow
+    const barWidth = isSick ? 100 : Math.min(Math.max(pct, 12), 100); // Sick mode shows full width grey bar
     
     // Mode label
     const modeLabel = isSick
@@ -99,7 +101,7 @@ export const SquadMemberRow = ({ name, pct, mode, isLive, isRecoveryDay = false,
                 )}
             </div>
             <div className="flex-1 flex items-center relative min-h-[28px]">
-                <div className="w-full bg-zinc-800/40 rounded-md h-6 overflow-visible relative flex items-center">
+                <div className="w-full bg-zinc-800/40 rounded-md h-6 overflow-hidden relative flex items-center">
                     {isSick ? (
                         // Sick mode: show greyed out bar with subtle diagonal stripes
                         <div className={`absolute left-0 rounded-md ${barGradient} transition-all duration-1000 ease-out z-10 overflow-hidden opacity-30`}
@@ -116,8 +118,8 @@ export const SquadMemberRow = ({ name, pct, mode, isLive, isRecoveryDay = false,
                         <span className="absolute left-2 text-xs font-black text-zinc-700 select-none">0%</span>
                     ) : (
                         <div className={`absolute left-0 rounded-md ${barGradient} transition-all duration-1000 ease-out z-10 flex items-center justify-end px-2 overflow-hidden`}
-                            style={{ width: `${Math.min(barWidth, 100)}%`, height: `${dynamicHeight}px`, zIndex: pct > 100 ? 20 : 10, ...shadowStyle }}>
-                            {pct > 100 && <div className="absolute top-[-50%] bottom-[-50%] left-[-50%] right-[-50%] bg-white/20 animate-[shimmer_0.8s_infinite] skew-x-12 origin-center mix-blend-overlay" />}
+                            style={{ width: `${barWidth}%`, height: `${dynamicHeight}px`, ...shadowStyle }}>
+                            {pct > 100 && <div className="absolute inset-0 bg-white/20 animate-[shimmer_0.8s_infinite] skew-x-12 origin-center mix-blend-overlay" />}
                             <span className={`relative z-20 text-xs font-black tracking-tight mix-blend-multiply ${isFlexibleRestDay ? 'text-black' : isRecoveryDay ? 'text-black/70' : isInsane ? 'text-black' : 'text-black/70'}`}>{pct}%</span>
                         </div>
                     )}

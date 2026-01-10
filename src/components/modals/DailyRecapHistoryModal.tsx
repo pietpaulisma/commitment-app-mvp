@@ -101,9 +101,19 @@ export function DailyRecapHistoryModal({ groupId, onClose }: DailyRecapHistoryMo
                 .order('date', { ascending: false })
                 .range(0, 9999)
 
-            if (logs) {
-                // Debug info removed
-            }
+            // Group logs by date and user for efficient lookup
+            const logsByDateAndUser = new Map<string, Map<string, typeof logs>>()
+            logs?.forEach(log => {
+                const normalizedDate = log.date.substring(0, 10)
+                if (!logsByDateAndUser.has(normalizedDate)) {
+                    logsByDateAndUser.set(normalizedDate, new Map())
+                }
+                const dateMap = logsByDateAndUser.get(normalizedDate)!
+                if (!dateMap.has(log.user_id)) {
+                    dateMap.set(log.user_id, [])
+                }
+                dateMap.get(log.user_id)!.push(log)
+            })
 
 
 
