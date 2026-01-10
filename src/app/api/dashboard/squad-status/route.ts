@@ -98,23 +98,14 @@ export async function GET(request: Request) {
 
     const daysSinceStart = group?.start_date ? getDaysSinceStart(group.start_date) : 1
 
-    // Calculate daily target (base calculation)
-    const dailyTarget = calculateDailyTarget({
-      daysSinceStart,
-      weekMode: 'insane',
-      restDays,
-      recoveryDays,
-      currentDayOfWeek // Pass the correct day of week
-    })
-
-    // Process logs with recovery capping (same logic as RectangularDashboard)
-    const memberPointsMap = new Map()
+    // Process logs to get raw regular and recovery points per user (capping done per-member later)
+    const memberPointsMap = new Map<string, { regular: number, recovery: number }>()
     todayLogs?.forEach(log => {
       if (!memberPointsMap.has(log.user_id)) {
         memberPointsMap.set(log.user_id, { regular: 0, recovery: 0 })
       }
 
-      const current = memberPointsMap.get(log.user_id)
+      const current = memberPointsMap.get(log.user_id)!
       const type = exerciseTypeMap.get(log.exercise_id)
 
       if (type === 'recovery') {
@@ -124,25 +115,7 @@ export async function GET(request: Request) {
       }
     })
 
-    // Apply recovery capping for each member
-    const pointsByUser = new Map<string, number>()
-    groupUsers.forEach(u => {
-      if (memberPointsMap.has(u.id)) {
-        const { regular, recovery } = memberPointsMap.get(u.id)
-        let effectiveRecovery = recovery
-
-        if (!isRecoveryDay && recovery > 0) {
-          const maxRecoveryAllowed = Math.floor(dailyTarget * 0.25)
-          effectiveRecovery = Math.min(recovery, maxRecoveryAllowed)
-        }
-
-        pointsByUser.set(u.id, regular + effectiveRecovery)
-      } else {
-        pointsByUser.set(u.id, 0)
-      }
-    })
-
-    console.log('API - Users with points today:', pointsByUser.size)
+    console.log('API - Users with raw points:', memberPointsMap.size)
 
     // Get profiles with week_mode, sick_mode, and flexible rest day status to calculate targets
     const { data: profilesWithMode } = await supabaseAdmin
@@ -163,9 +136,8 @@ export async function GET(request: Request) {
     // Check if today is a rest day
     const isRestDay = restDays.includes(currentDayOfWeek)
 
-    // Map users to squad data with proper individual targets
+    // Map users to squad data with proper individual targets and recovery capping
     const squad = groupUsers.map(u => {
-      const points = pointsByUser.get(u.id) || 0
       const profileMode = profilesWithMode?.find(p => p.id === u.id)
       const memberWeekMode = profileMode?.week_mode as 'sane' | 'insane' | null
       const isSickMode = profileMode?.is_sick_mode || false
@@ -187,10 +159,24 @@ export async function GET(request: Request) {
             currentDayOfWeek
           })
 
-      // For recovery day users, points are the recovery minutes logged
-      const effectivePoints = isUserRecoveryDay 
-        ? (userRecoveryDay?.recovery_minutes || 0)
-        : points
+      // Calculate effective points with recovery capping based on member's individual target
+      let effectivePoints: number
+      if (isUserRecoveryDay) {
+        // For recovery day users, points are the recovery minutes logged
+        effectivePoints = userRecoveryDay?.recovery_minutes || 0
+      } else {
+        // Get raw regular and recovery points for this user
+        const rawPoints = memberPointsMap.get(u.id) || { regular: 0, recovery: 0 }
+        
+        // Apply recovery capping using member's individual target (consistent with WorkoutModal)
+        let cappedRecovery = rawPoints.recovery
+        if (!isRecoveryDay && rawPoints.recovery > 0) {
+          const maxRecoveryAllowed = Math.floor(memberDailyTarget * 0.25)
+          cappedRecovery = Math.min(rawPoints.recovery, maxRecoveryAllowed)
+        }
+        
+        effectivePoints = rawPoints.regular + cappedRecovery
+      }
       
       const pct = Math.round((effectivePoints / memberDailyTarget) * 100)
 

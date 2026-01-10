@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.14] - 2026-01-10
+
+### Fixed
+- **Squad Status Percentage Mismatch**: Fixed bug where workout log modal showed different percentage (e.g., 105%) than dashboard (e.g., 110%) for the same user. The squad status API was using a hardcoded "insane" mode for recovery capping instead of each member's actual mode.
+- **Progress Bar Overflow**: Fixed squad status progress bars overlapping when users exceeded 100% by large amounts (e.g., 267%). Bars now cap at 100% width with a shimmer effect to indicate overperformance.
+
+---
+
 ## [0.6.13] - 2026-01-09
 
 ### Fixed
