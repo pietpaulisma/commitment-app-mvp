@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.15] - 2026-01-10
+
+### Fixed
+- **Pot History "Days Ago" Calculation**: Fixed timezone bug where transactions showed incorrect days ago (e.g., "1 day ago" for today's transaction) by using local calendar dates instead of timestamp math
+
+---
+
 ## [0.6.14] - 2026-01-10
 
 ### Fixed
